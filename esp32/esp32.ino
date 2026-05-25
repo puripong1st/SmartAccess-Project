@@ -21,8 +21,8 @@ const char *ssid = "Wokwi-GUEST";
 const char *password = "";
 
 // --- ตั้งค่าระบบเชื่อมโยง IoT Cloud ---
-const char *server_url = "https://project-REDACTED_ADMIN_PASSWORDs-projects.vercel.app/api/"
-                         "esp32/display?room=CE-402";
+const char *server_url =
+    "https://project-sigma-ivory-21.vercel.app/api/esp32/display?room=CE-402";
 const char *api_key = "REDACTED_ESP32_API_KEY";
 const char *room_code = "CE-402";
 
@@ -421,7 +421,7 @@ void loop() {
           if (idx != -1) {
             baseUrl = regUrl.substring(0, idx);
           } else {
-            baseUrl = "https://project-REDACTED_ADMIN_PASSWORDs-projects.vercel.app";
+            baseUrl = "https://project-sigma-ivory-21.vercel.app";
           }
           qrText = baseUrl + "/?scan=" + String(active_token) +
                    "&room=" + String(requested_room);
