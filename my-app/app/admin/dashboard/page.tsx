@@ -555,7 +555,7 @@ const char *password = "";
 
 // --- ตั้งค่าระบบเชื่อมโยง IoT Cloud ---
 const char *server_url = "${origin}/api/esp32/display?room=${roomCode}";
-const char *api_key = "REDACTED_ESP32_API_KEY";
+const char *api_key = "YOUR_ESP32_API_KEY_HERE";
 const char *room_code = "${roomCode}";
 
 
