@@ -15,6 +15,7 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
   const [loading, setLoading] = useState<boolean>(false);
   const [tokenRegistered, setTokenRegistered] = useState<boolean>(false);
   const [showBanner, setShowBanner] = useState<boolean>(false);
+  const [pushBlocked, setPushBlocked] = useState<boolean>(false);
 
   useEffect(() => {
     // Check support
@@ -122,7 +123,20 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
       setTokenRegistered(true);
       setShowBanner(false);
     } catch (error) {
-      console.error('[FCM] Token registration failed:', error);
+      const msg = error instanceof Error ? error.message : String(error);
+
+      // กรณีพบบ่อย: เบราว์เซอร์บล็อกบริการพุชของ Google (พบใน Brave / Firefox ที่ปิด Google services,
+      // หรือเปิดผ่าน http ที่ไม่ใช่ localhost). FCM จะโยน AbortError: "push service error"
+      if (/push service error|AbortError/i.test(msg)) {
+        console.warn(
+          '[FCM] บริการพุชถูกบล็อกโดยเบราว์เซอร์ — ' +
+          'หากใช้ Brave ให้เปิด brave://settings/privacy → "Use Google services for push messaging" แล้วรีโหลด. ' +
+          'ต้องเปิดผ่าน HTTPS (หรือ localhost) เท่านั้น'
+        );
+        setPushBlocked(true);
+      } else {
+        console.error('[FCM] Token registration failed:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -228,13 +242,15 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
           title={tokenRegistered ? "ปิดการแจ้งเตือน" : "เปิดการแจ้งเตือนพุช"}
           disabled={loading}
         >
-          <span style={styles.widgetIcon}>{tokenRegistered ? '🔔' : '🔕'}</span>
+          <span style={styles.widgetIcon}>{pushBlocked ? '🚫' : tokenRegistered ? '🔔' : '🔕'}</span>
           <span style={styles.widgetText}>
-            {loading 
-              ? 'กำลังทำรายการ...' 
-              : tokenRegistered 
-                ? 'เปิดแจ้งเตือนแล้ว' 
-                : 'รับแจ้งเตือนพุช'}
+            {loading
+              ? 'กำลังทำรายการ...'
+              : pushBlocked
+                ? 'เบราว์เซอร์บล็อกพุช'
+                : tokenRegistered
+                  ? 'เปิดแจ้งเตือนแล้ว'
+                  : 'รับแจ้งเตือนพุช'}
           </span>
         </button>
       </div>

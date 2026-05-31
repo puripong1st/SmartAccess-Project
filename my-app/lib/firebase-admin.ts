@@ -6,17 +6,12 @@ import { getPool } from './db';
 // Firebase Admin SDK types (เราใช้ REST API โดยตรงเพื่อไม่ต้องเพิ่ม dependency)
 interface FCMMessage {
   token: string;
-  notification: {
-    title: string;
-    body: string;
-  };
+  // หมายเหตุ: เราส่งแบบ "data-only" (ไม่มีฟิลด์ notification) โดยเจตนา
+  // เพื่อให้ Service Worker เป็นผู้สร้างการแจ้งเตือนเองผ่าน onBackgroundMessage
+  // กันปัญหาเบราว์เซอร์แสดงการแจ้งเตือนซ้ำซ้อน (double notification)
   webpush?: {
     fcm_options?: {
       link?: string;
-    };
-    notification?: {
-      icon?: string;
-      badge?: string;
     };
   };
   data?: Record<string, string>;
@@ -232,15 +227,16 @@ export async function sendPushToTokens(
     tokens.map((token) =>
       sendFCMNotification({
         token,
-        notification: { title, body },
         webpush: {
           fcm_options: { link: url || '/' },
-          notification: {
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-96x96.png',
-          },
         },
-        data: { url: url || '/' },
+        // ส่งเนื้อหาทั้งหมดผ่าน data ให้ SW สร้าง notification เอง (ดู firebase-messaging-sw.js)
+        data: {
+          title,
+          body,
+          url: url || '/',
+          icon: '/icons/icon-192x192.png',
+        },
       })
     )
   );
