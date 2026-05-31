@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 12:45:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 12:47:28 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -13,7 +13,7 @@
 
 <a id="toc-by-chapter"></a>
 <a id="toc"></a>
-## 📋 ตัวเลขหัวข้อฉบับสมบูรณ์ 100%
+## 📋 สำหรับนำไปจัดทำเล่มโครงงาน (จัดตามบทวิทยานิพนธ์)
 ### สำหรับนำไปจัดทำเล่มโครงงาน — จัดตามบทวิทยานิพนธ์
 
 ---
@@ -272,7 +272,7 @@ sequenceDiagram
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-2"></a>
 ## 2. โครงสร้างไฟล์สำคัญ
@@ -318,7 +318,7 @@ Project/
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-3"></a>
 ## 3. การติดตั้งและรันเว็บ
@@ -418,7 +418,7 @@ CRON_SECRET=some-random-cron-secret
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-4"></a>
 ## 4. วิธีใช้งานเว็บสำหรับนักศึกษา
@@ -491,7 +491,7 @@ CRON_SECRET=some-random-cron-secret
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-5"></a>
 ## 5. วิธีใช้งานเว็บสำหรับ Admin
@@ -585,7 +585,7 @@ GET /api/export/pdf?id=<student_id>
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-6"></a>
 ## 6. วิธีใช้งานบอร์ด ESP32
@@ -675,7 +675,7 @@ flowchart TD
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-7"></a>
 ## 7. วิธีเปิด Wokwi Simulator
@@ -709,7 +709,7 @@ ESP32_WOKWI_URL=http://localhost:8180
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-8"></a>
 ## 8. การต่อวงจรตาม Wokwi
@@ -774,7 +774,7 @@ flowchart LR
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-9"></a>
 ## 9. การต่อวงจรประตูจริง
@@ -867,7 +867,7 @@ Buck 5V GND ----------- ESP32 GND
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-10"></a>
 ## 10. วิธีทำอุปกรณ์จำลองประตูติดกับบอร์ด
@@ -966,7 +966,7 @@ flowchart TB
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-11"></a>
 ## 11. ฐานข้อมูลและตารางสำคัญ
@@ -1006,7 +1006,7 @@ erDiagram
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-12"></a>
 ## 12. อธิบายโค้ดฝั่ง ESP32 รายฟังก์ชัน
@@ -1171,7 +1171,7 @@ erDiagram
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-13"></a>
 ## 13. อธิบายโค้ดฝั่งเว็บและ API รายฟังก์ชัน
@@ -1287,7 +1287,7 @@ Event ที่รองรับ:
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-14"></a>
 ## 14. อธิบายหน้าเว็บหลัก
@@ -1389,7 +1389,7 @@ Icon components ในไฟล์นี้ เช่น `ClockIcon`, `UsersIcon
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-15"></a>
 ## 15. อธิบาย API routes
@@ -1456,7 +1456,7 @@ Icon components ในไฟล์นี้ เช่น `ClockIcon`, `UsersIcon
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-16"></a>
 ## 16. Flow สำคัญของการเปิดประตู
@@ -1479,7 +1479,7 @@ flowchart TD
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-17"></a>
 ## 17. Troubleshooting
@@ -1500,7 +1500,7 @@ flowchart TD
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-18"></a>
 ## 18. Checklist ก่อนสาธิตระบบ
@@ -1535,7 +1535,7 @@ flowchart TD
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-19"></a>
 ## 19. สรุปหน้าที่แต่ละชั้นของระบบ
@@ -1559,7 +1559,7 @@ flowchart TD
 ส่วนนี้เขียนสำหรับคนที่ "ไม่เคยใช้งานระบบนี้เลย" และต้องการเข้าใจ **ทุกอย่าง** ตั้งแต่ภาพรวม → รายละเอียดเชิงลึก → เหตุผลทางวิศวกรรมที่อยู่เบื้องหลังการออกแบบ
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-20"></a>
 ## 20. นิยามคำศัพท์พื้นฐาน (สำหรับมือใหม่)
@@ -1585,7 +1585,7 @@ flowchart TD
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-21"></a>
 ## 21. ภาพรวมสถาปัตยกรรมแบบ Layered (4 ชั้น)
@@ -1640,7 +1640,7 @@ flowchart TB
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-22"></a>
 ## 22. หน้าจอผู้ใช้งานนักศึกษา — เจาะลึกแต่ละ State
@@ -1697,7 +1697,7 @@ sequenceDiagram
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-23"></a>
 ## 23. หน้าจอ Admin — เจาะลึกทุก Tab พร้อมเหตุผลที่ออกแบบแบบนี้
@@ -1754,7 +1754,7 @@ flowchart LR
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-24"></a>
 ## 24. หน้าจอ TFT บน ESP32 — เจาะลึก State Machine
@@ -1787,7 +1787,7 @@ stateDiagram-v2
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-25"></a>
 ## 25. อธิบายโค้ด `esp32.ino` แบบ "บรรทัดต่อบรรทัด" (ส่วนสำคัญ)
@@ -1824,7 +1824,7 @@ tone(BUZZER_PIN, 2000, 200);
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-26"></a>
 ## 26. อธิบายโค้ดเว็บแบบ "Request Lifecycle" — รับ request 1 ครั้งเกิดอะไรขึ้นบ้าง
@@ -1885,7 +1885,7 @@ return NextResponse.json({...})                                    // ตอบ 
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-27"></a>
 ## 27. Supabase ทำอะไรในระบบนี้ (เจาะลึก)
@@ -1955,7 +1955,7 @@ RETURNING count;
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-28"></a>
 ## 28. Vercel ทำอะไรกับ my-app (เจาะลึก)
@@ -1996,7 +1996,7 @@ flowchart TB
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-29"></a>
 ## 29. เปรียบเทียบ: ทำไมบางส่วนเร็ว / บางส่วนช้า
@@ -2049,7 +2049,7 @@ flowchart LR
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-30"></a>
 ## 30. อัลกอริทึมสำคัญ (Pseudocode)
@@ -2131,7 +2131,7 @@ POST /api/auth/login:
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-31"></a>
 ## 31. Network & Security Architecture
@@ -2192,7 +2192,7 @@ flowchart TB
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-32"></a>
 ## 32. Flowchart รวม "End-to-End" (สมัคร → เข้าห้อง)
@@ -2245,7 +2245,7 @@ flowchart TD
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-33"></a>
 ## 33. คำถามที่พบบ่อย (FAQ)
@@ -2284,7 +2284,7 @@ A: `room_code` = ห้องที่ ESP32 ตัวนี้รับผิ�
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-34"></a>
 ## 34. สรุปแบบ "1 นาที"
@@ -2298,7 +2298,7 @@ A: `room_code` = ห้องที่ ESP32 ตัวนี้รับผิ�
 # ภาคผนวกระดับวิศวกร — ส่วนที่ลงรายละเอียดยิ่งขึ้น
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-35"></a>
 ## 35. Schema DDL เต็มรูปแบบ (สร้างโดย `initDatabase()`)
@@ -2594,7 +2594,7 @@ erDiagram
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-36"></a>
 ## 36. ESP32 — GPIO Timing และข้อจำกัดเชิงฮาร์ดแวร์
@@ -2641,7 +2641,7 @@ T+4100    | resetCache → loop() ปกติ
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-37"></a>
 ## 37. รายการ Environment Variables ทุกตัว
@@ -2706,7 +2706,7 @@ T+4100    | resetCache → loop() ปกติ
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-38"></a>
 ## 38. Deployment Runbook (ไป Production)
@@ -2743,14 +2743,14 @@ flowchart TD
 2. ถ้า schema เพี้ยน: restore Supabase backup (ใน dashboard มี point-in-time)
 3. ถ้า ESP32 รับคำสั่งเปิดประตูค้าง: เข้า Dashboard → ตั้ง `room_cmd_<room>` = `idle` ผ่าน Settings
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
 <!-- หมายเหตุ: เนื้อหา §71.19–71.23 (PDPA / Information Security / พ.ร.บ.คอมพิวเตอร์ / Terms / Privacy)
      อยู่ในตำแหน่งที่ถูกต้องแล้วในภาค §71 ด้านล่าง — เดิมเคยมีสำเนาซ้ำตรงนี้ ได้ลบออกเพื่อแก้ลำดับหัวข้อ -->
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-39"></a>
 ## 39. Monitoring & Observability
@@ -2779,7 +2779,7 @@ flowchart LR
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-40"></a>
 ## 40. การ Migrate / เพิ่มฟีเจอร์ใหม่ (Future-proofing)
@@ -2806,7 +2806,7 @@ flowchart LR
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-41"></a>
 ## 41. Performance Profiling แบบลงรายละเอียด
@@ -2845,7 +2845,7 @@ Total: ~800ms
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-42"></a>
 ## 42. Code Smells ที่ควร refactor (Tech Debt)
@@ -2861,7 +2861,7 @@ Total: ~800ms
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-43"></a>
 ## 43. Glossary (ภาคผนวกศัพท์เทคนิคเพิ่มเติม)
@@ -2886,7 +2886,7 @@ Total: ~800ms
 ---
 
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-44"></a>
 ## 44. ทำไมหน้าจอ TFT บน ESP32 จึงเปลี่ยนสถานะ "ช้า" ไม่เรียลไทม์
@@ -3148,9 +3148,9 @@ flowchart TD
 
 ---
 
-> **อัปเดตล่าสุด**: 2026-05-27 18:15:00 +07:00 — เพิ่มสารบัญแบบกดได้, ปุ่มกลับสารบัญทุก section, และ §44 อธิบายความช้าของ TFT แบบละเอียด
+> **อัปเดตล่าสุด**: 2026-05-27 18:15:00 +07:00 — เพิ่มสารบัญแบบกดได้, ปุ่มกลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงานทุก section, และ §44 อธิบายความช้าของ TFT แบบละเอียด
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -3381,7 +3381,7 @@ flowchart TD
 
 > **บทเรียน**: ต้นทุนของการ "เลือก DB ผิด region" สูงกว่าค่าใช้จ่ายในการ migrate มาก — เลือกให้ถูกตั้งแต่ต้น
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -3643,7 +3643,7 @@ export async function withRetry<T>(
 - Delay 100ms → 200ms → 400ms → 800ms
 - ใช้กับ Discord webhook (เผื่อ rate limit ชั่วคราว)
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -3872,7 +3872,7 @@ await fetch('/api/system/settings', {
 - 🟡 degraded: DB ปกติแต่ latency > 500ms หรือ rate limiter ล่ม
 - 🔴 unhealthy: DB ล่ม
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -3934,7 +3934,7 @@ Next.js 15 มี Server Actions แต่โปรเจกต์ไม่ใ�
 - ✅ REST API route ใช้ได้ทั้ง browser + ESP32 + 3rd party
 - → เลือก REST เป็นหลัก
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4096,7 +4096,7 @@ Attacker อยู่ใน Wi-Fi เดียวกับ ESP32
 - ใช้ fail-secure lock (ไฟตัด = ล็อก)
 - มี UPS สำรองไฟให้ระบบล็อก
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4211,7 +4211,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 - compare("bXXXXXX...", "bYYYYY...") → fail ที่ char 2 → 10ns
 - → ถ้าวัดเวลาแม่นพอ → guess key ทีละตัว
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4244,7 +4244,7 @@ const headers = [
 ];
 ```
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4351,7 +4351,7 @@ void setup() {
 - CS — ESP32 มี internal pull-up — ปลอดภัยตอน boot
 - ปุ่ม emergency (ถ้ามี) — ต้อง pull-up 10kΩ ภายนอก + กดลง GND
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4409,7 +4409,7 @@ flowchart LR
 
 → Adapter 12V + buck = สมเหตุสมผลที่สุด
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4459,7 +4459,7 @@ flowchart LR
 | Wi-Fi radiator | TFT flicker | TFT cable < 10cm |
 | Buck noise | Power ripple → ESP32 reset | Output cap 470µF |
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4526,7 +4526,7 @@ http.addHeader("Connection", "keep-alive");
 **ปัญหา**: Vercel ปิด connection หลัง ~10 วินาที idle → ESP32 ต้อง handshake ใหม่
 → ลด overhead นี้: poll ทุก 2 วินาที = ใช้ socket เดียวได้ ~5 polls
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4580,7 +4580,7 @@ flowchart LR
 
 → Vercel เหมาะกว่าสำหรับโปรเจกต์ขนาดนี้ที่ต้องใช้ `pg`
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4644,7 +4644,7 @@ flowchart LR
 - ❌ ESP32 ต้องรัน tunnel client → CPU/RAM เพิ่ม
 - → ไม่คุ้มกับ latency 2 วินาทีที่ลดลง
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4745,7 +4745,7 @@ const data = await db.query(`
 
 โปรเจกต์นี้ระวังเรื่องนี้ — ใช้ JOIN ทุกที่ที่ต้องการข้อมูลที่เกี่ยวข้อง
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4807,7 +4807,7 @@ POSTGRES_URL_DIRECT=postgres://...           # ใช้ตอน migration / DD
 
 DDL ไม่ทำงานผ่าน pgBouncer transaction mode → ต้อง direct
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4857,7 +4857,7 @@ INSERT INTO rate_limits ... ON CONFLICT DO UPDATE SET count=count+1
 
 **แก้ในอนาคต**: ใช้ Supabase Realtime หรือ Redis pub/sub
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4933,7 +4933,7 @@ describe('POST /api/auth/login', () => {
 });
 ```
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -4996,7 +4996,7 @@ describe('POST /api/auth/login', () => {
 | ESP32 firmware | ทุกรุ่น | git tag |
 | `.env` | offline copy | encrypted in password manager |
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5045,7 +5045,7 @@ Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
 3. **เพิ่ม cache HTTP header** `Cache-Control: max-age=2` → ESP32 cache เอง
 4. **MQTT push แทน polling** → 1 connection ตลอดวัน แทน 43k requests
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5090,7 +5090,7 @@ Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
 
 โปรเจกต์นี้ใช้ inline เป็นหลักเพราะ component ไม่ reuse บ่อย
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5136,7 +5136,7 @@ Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
 
 → ใช้ icon ✓ ✗ คู่กับสี → robust
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5181,7 +5181,7 @@ Next.js จะ:
 - Self-host (ไม่ Google CDN runtime) → privacy + speed
 - Inline `font-display: swap` → ไม่ FOIT
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5247,7 +5247,7 @@ async function cleanupLogs(req) {
 - ส่งเฉพาะที่ขอ — ไม่ทั้ง DB
 - บันทึก disclosure log
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5299,7 +5299,7 @@ async function cleanupLogs(req) {
 - DPO contact info
 - DSAR (Data Subject Access Request) workflow
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5355,7 +5355,7 @@ SEO: 100/100 (สำหรับหน้าที่เปิดสาธาร
 - Dashboard mount/unmount → ควร gc คืน
 - Listener cleanup ใน useEffect cleanup function
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5725,7 +5725,7 @@ flowchart TD
    - หากค่าแฮชตรงกับคีย์ที่กำหนด บอร์ดจะเปลี่ยนค่าใน `otadata` ให้หันไปบูตจากพาร์ทิชันใหม่ (`ota_1`)
    - **กรณีขัดข้อง:** หากบูตระบบใหม่แล้วชิปรันโปรแกรมไม่ผ่าน (เช่น เกิดปัญหาเชื่อมต่ออินเทอร์เน็ตล้มเหลว) ตัวชิปจะมีระบบความเสถียรย้อนกลับ (Automatic Rollback) เพื่อหันกลับมาบูตและรันโปรแกรมเวอร์ชันเก่าที่ปลอดภัยบน `ota_0` โดยอัตโนมัติ ช่วยป้องกันอุปกรณ์เสียหายหรือค้างโดยไม่มีผู้ควบคุม
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-71-16"></a>
 ### 71.16 โครงสร้างสถานะและการทำงานแบบมัลติคอร์บนเฟิร์มแวร์ ESP32 (ESP32 Multi-Core FreeRTOS & State Machine)
@@ -5835,7 +5835,7 @@ my-app/
 - **API Controller Layer (app/api/):** ทำหน้าที่เป็นพนักงานรับสาร แปลง HTTP request ตรวจสอบโครงสร้างข้อมูล ปรับล้างข้อมูลอินพุต และส่งต่อให้ส่วนลอจิกถัดไป
 - **Business Logic Layer (lib/):** คลังเก็บกฎธุรกิจที่สำคัญที่สุด (เช่น นโยบายรหัสผ่านแอดมิน, วงจรชีวิตโทเคนคิวอาร์) ทำหน้าที่เชื่อมโยงข้อมูลกับฐานข้อมูล และบริการภายนอก (Discord Webhook)
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5881,7 +5881,7 @@ my-app/
 4. **Retention:** ≥ 90 วัน, Data Pruning เมื่อสิ้นปีการศึกษา
 5. **Data Subject Rights:** Right to Access + Right to be Forgotten ผ่านอีเมล DPO ของคณะครุศาสตร์อุตสาหกรรม มทร.พระนคร (dpo@rmutp.ac.th)
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -5958,7 +5958,7 @@ flowchart LR
     style LAN fill:#fef
 ```
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6040,7 +6040,7 @@ flowchart TB
 | 3.0 Admin Approve | ม.24(5) | LI | Medium (admin view PII) |
 | 5.0 Log Event | ม.26 (พ.ร.บ.คอม) | Legal Obligation | High (เก็บ IP, 90+ วัน) |
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6091,7 +6091,7 @@ flowchart TB
 
 **ไม่มี GPL/AGPL ในระบบ** — ปลอดภัยเรื่อง copyleft contagion (สามารถใช้เชิงพาณิชย์ได้โดยไม่ต้องเปิดซอร์ส)
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6139,7 +6139,7 @@ flowchart TB
 
 **ผลประเมิน:** ระบบไม่บังคับต้องทำ DPIA เต็มรูปแบบ แต่ทำ ROPA + DFD §71.25 ก็เพียงพอตามแนวปฏิบัติ
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6215,7 +6215,7 @@ flowchart TB
 - **High-current trace:** แยกชั้นไป relay coil — อย่าวิ่งใต้ ESP32 RF antenna
 - **Antenna keep-out:** อย่าวาง trace ใต้ ESP32 antenna 8mm × 6mm
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6287,7 +6287,7 @@ C = 100nF, 400V (X7R ceramic)
 
 ต่อ R+C อนุกรม คร่อม COM-NO contact
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6381,7 +6381,7 @@ responses:
 }
 ```
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6464,7 +6464,7 @@ jobs:
 - [ ] Performance: ไม่มี N+1 query
 - [ ] Test cases ครอบคลุม happy + error path
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6559,7 +6559,7 @@ flowchart LR
 [Action items + owner + due date]
 ```
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6635,7 +6635,7 @@ flowchart LR
 - เป้าหมาย: ≥ 95/100
 - TODO: เพิ่ม skip-to-content link, color contrast บางจุดยังต่ำกว่า 4.5:1
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6699,7 +6699,7 @@ SUS Score = (ผลรวม × 2.5) → 0-100
   - "อะไรที่ทำให้สับสน?"
   - "ถ้าปรับได้ 1 อย่าง จะปรับอะไร?"
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6758,7 +6758,7 @@ Patil, S., et al. (2018). RFID Based Door Lock. IRJET, 5(6), 2113-2118.
 Sharma, R., et al. (2020). BLE Beacon-based Access Control. Procedia CS, 167, 1834-1843.
 ```
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6823,7 +6823,7 @@ Sharma, R., et al. (2020). BLE Beacon-based Access Control. Procedia CS, 167, 18
 | ราย 1 ปี | เปลี่ยน relay (ห้อง high-traffic), เช็ค magnetic lock pull force |
 | ราย 4 ปี | เปลี่ยน relay ทุกห้อง |
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -6934,7 +6934,7 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 
 ไม่กระทบ bandwidth ของมหาวิทยาลัยอย่างมีนัยสำคัญ (มหาวิทยาลัยปกติมี ≥ 1 Gbps uplink)
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -7021,7 +7021,7 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 </button>
 ```
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -7317,7 +7317,7 @@ COMMENT ON TABLE consent_records IS
 
 **หลังแก้ตาม P0+P1:** ระดับ Compliance จะขึ้นเป็น **8/10** เพียงพอสำหรับการใช้งานจริงในสถาบันการศึกษา
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -7800,7 +7800,7 @@ SELECT version, COUNT(*) FROM consent_records GROUP BY version;
 - ⚠️ ถ้าผู้ใช้ใช้ VPN → IP เปลี่ยน → ดู consent เดิมไม่ได้ผ่าน GET (ต้องใส่ consent_uuid)
 - ⚠️ Modal ไม่มี trap focus → กด Tab อาจหลุดออกนอก modal
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-71-41"></a>
 ### 71.41 การตรวจสอบความสมบูรณ์และระบบอัพเดตแดชบอร์ดระดับพรีเมียม (System Audit & Dashboard Upgrades)
@@ -8154,9 +8154,9 @@ void handleLocalOTALoop() {
 3. **การเข้าทำความเข้ากันได้ผ่าน Wokwi Simulator:**
    - Wokwi Simulator รองรับการจำลองโครงข่ายและการสลับพาร์ติชัน OTA โดยผู้พัฒนาสามารถแก้ไขสคริปต์ใน Wokwi เพื่อรันคำสั่ง `performHTTPSOTA()` เทสผลลัพธ์ของไลบรารี `httpUpdate` ร่วมกับ Next.js ได้อย่างไร้รอยต่อ
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -8279,7 +8279,7 @@ void handleLocalOTALoop() {
 >    - แก้ไขข้อผิดพลาดด้านสถานะ (UX State Bug) ในแดชบอร์ดหลักที่ [page.tsx](my-app/app/admin/dashboard/page.tsx) ที่คอยดึงข้อมูลเฉพาะตอนเปิดแท็บทำเนียบ `"all"` เท่านั้น
 >    - ปรับโค้ดให้ `useEffect` ดึงข้อมูลสถิติของทั้งนักเรียนทั้งหมด (`fetchAll`) และรายงานเหตุการณ์ (`fetchLogs`) โดยอัตโนมัติตั้งแต่ตอนเข้าหน้าเว็บครั้งแรกที่แท็บ `"pending"` และแท็บห้องปฏิบัติการ `"rooms"` เพื่อให้กราฟสถิติ Zero-Dependency SVG Analytics Dashboard โหลดข้อมูลขึ้นมาพร้อมใช้งานทันทีโดยไม่ต้องทำการรีเฟรชหรือกดเปลี่ยนแท็บเพื่อดึงข้อมูลอีกต่อไป
 
-<p align="right"><a href="#toc">⬆ กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 
 ---
@@ -8452,7 +8452,7 @@ if (format === "dataurl") {
 | app/admin/dashboard/page.tsx | แก้ไขหลายจุด |
 | lib/db.ts | แก้ไข (KV invalidation) |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 
 ---
@@ -8489,7 +8489,7 @@ if (format === "dataurl") {
 - `rcfg_{ROOM}_auto_approve_end_time` — เวลาสิ้นสุดอนุมัติ
 - `rcfg_{ROOM}_auto_approve_days` — วันที่อนุมัติ (0=อา, 1=จ, ... 6=ส)
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ## 71.44 การปรับแต่งประสิทธิภาพเพื่อลดภาระ Vercel/Supabase (Free Plan Performance Tuning)
 
@@ -8570,7 +8570,7 @@ if (format === "dataurl") {
 ### สิ่งที่ยังคงไว้ (ไม่แตะ)
 rate-limit, CSP/security headers, parameterized query, role-based field filtering, รูปแบบ JWT/bcrypt, schema และ index เดิม — ไม่มีการลบหรือลดความเข้มงวด
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ## 71.45 ระบบแจ้งเตือนหลายช่องทาง: Discord + Telegram + LINE (Multi-Channel Notifications)
 
@@ -8613,7 +8613,7 @@ rate-limit, CSP/security headers, parameterized query, role-based field filterin
 - endpoint ทดสอบ [test-webhook](my-app/app/api/system/test-webhook/route.ts) ยังเป็น **owner-only** และไม่ log token
 - คีย์ใหม่ถูกเพิ่ม in `ALLOWED_SETTING_KEYS` + prefix รายห้องใน whitelist ของ [settings route](my-app/app/api/system/settings/route.ts)
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -8678,7 +8678,7 @@ flowchart TD
 3. **Multi-Channel Notification Trigger**:
    หลังจากบันทึกข้อมูลสำเร็จ ระบบจะประมวลผลดึงผู้ถูกปฏิเสธรอบดังกล่าวขึ้นมาเป็น Array แล้วทำการส่งออกข้อความแจ้งเตือนความล้มเหลวในการผ่านเข้าห้องปฏิบัติการทางช่องทางการสื่อสารต่าง ๆ ขนานกันผ่านคำสั่ง `Promise.allSettled()`
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -8755,7 +8755,7 @@ String payload = timestamp + ":" + endpoint;
 ```
 การเลือกใช้กลไกการถอดและเข้ารหัสที่ฝังระดับสถาปัตยกรรมหน่วยประมวลผล (Hardware-accelerated Cryptography) บนชิป ESP32 ทำให้การคำนวณเสร็จสิ้นภายในเวลาน้อยกว่า 1.2 มิลลิวินาที ไม่กระทบต่อ Timing และสัญญาณไฟของอุปกรณ์บอร์ด
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -8822,7 +8822,7 @@ UPDATE students
 ```
 *ผลลัพธ์การยกระดับประสิทธิภาพ*: จากการทดสอบระบบ สามารถประมวลผลอนุมัตินักศึกษาพร้อมกันได้สูงถึง 50 คนเสร็จสิ้นภายในเวลาน้อยกว่า 15 มิลลิวินาที ซึ่งเร็วกว่าการลูปเขียนข้อมูลในแบบเดิมถึง 25 เท่าตัว
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -8861,7 +8861,7 @@ UPDATE students
 
 *มาตรการป้องกันความปลอดภัยสูงสุด*: เมื่อรันและสแกนฐานข้อมูลเสร็จสิ้นแล้ว วิศวกร**ต้องเปลี่ยนสถานะตัวแปร** `SKIP_DB_INIT=true` และนำ `ALLOW_DEV_SEED` ออกจากคลาวด์โปรดักชันในทันที เพื่อปิดช่องทางและสกัดกั้นการใช้ API ของระบบภายนอกในการแฝงรันสคริปต์สแกนตาราง (Fast Path Database Protection) ซึ่งช่วยลดเวลา Cold Start ของเซิร์ฟเวอร์ในการรับส่ง Request แรกของวันลงอย่างเห็นได้ชัด
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -9032,7 +9032,7 @@ flowchart TD
 - **ไม่มีการลบข้อมูล (No-Delete Restriction)**: บนหน้าแดชบอร์ด Admin ไม่มีปุ่มให้กดลบแถวประวัติใด ๆ ทั้งสิ้น และ API ไม่อนุญาตให้ใช้คำสั่ง DELETE ในเส้นทางนี้
 - **ความถูกต้องตามมาตรฐาน (Correlation Key)**: การบันทึก `student_id` และข้อมูล IP ที่ผ่านการตรวจสอบด้วยมาตรการ Zero-Trust ในโมดูล API Security จะถูกบันทึกคู่กับเวลาเซิร์ฟเวอร์แบบ UTC ตลอดเวลา ทำให้สามารถนำรายงาน PDF Audit ที่ระบบส่งมอบ ไปจับคู่ตรวจสอบเปรียบเทียบย้อนหลัง (Correlation) กับวันเวลาและลายเซ็นดิจิทัลที่ปรากฏในแอปพลิเคชัน Discord, Telegram และ LINE ได้อย่างเป็นเนื้อเดียวกันเพื่อใช้เป็นพยานหลักฐานทางกฎหมายที่ไม่มีการดัดแปลงแก้ไข
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-71-52"></a>
 ## 71.52 ระบบดักจับการหมดอายุของสิทธิ์เข้าถึงและล็อกเอาต์อัตโนมัติ (Global 401 Unauthorized Interceptor & Automated Logout Engine)
@@ -9072,7 +9072,7 @@ flowchart TD
 1. **หลักความปลอดภัยสูงสุด (Fail-Secure Principle):** ป้องกันไม่ให้แผงควบคุมระบบจัดการการเข้าถึงห้องเรียนซึ่งเป็นพื้นที่ควบคุมความปลอดภัยทางกายภาพค้างอยู่ในหน้าจอของผู้ใช้รายอื่นที่มาสวมรอยใช้เครื่องต่อ
 2. **การล้างสถานะอย่างถาวร (Secure Session Pruning):** การเรียก `setUser(null)` ร่วมกับการตั้งพารามิเตอร์ `?reason=idle` จะนำทางผู้ใช้งานกลับไปสู่หน้าจอลงชื่อเข้าใช้งานอย่างปลอดภัย พร้อมแสดงกล่องข้อความเตือนอย่างสุภาพว่า **"Session หมดอายุเนื่องจากไม่มีกิจกรรม"** ช่วยเพิ่มมิติความมั่นคงปลอดภัยและความน่าเชื่อถือให้สมบูรณ์แบบสูงสุด
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-71-53"></a>
 ## 71.53 บันทึกการปรับปรุงระบบรอบล่าสุด (Engineering Changelog & Deep-Dive)
@@ -9204,7 +9204,7 @@ flowchart TD
 | `my-app/vercel.json` | **ไฟล์ใหม่** — Vercel Cron |
 | routes: `approve`, `door`, `reject`, `bypass`, `auth/login` | ใช้ `logEvent` เก็บ IP/อุปกรณ์/severity |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-71-54"></a>
 ## 71.54 ชุดทดสอบความปลอดภัยและการทำงานแบบอัตโนมัติ (Automated Safety & Security Test Suite)
@@ -9235,7 +9235,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 4. **JWT sign/verify** — token ถูกต้อง verify ผ่าน, token ที่ถูก forge ลายเซ็นถูกปฏิเสธ, token ขยะคืน `null` ไม่ throw
 5. **`getClientIp`** — ใช้ IP ขวาสุดของ X-Forwarded-For เสมอ (กันการปลอม V05), fallback `x-real-ip`, คืน `anonymous` เมื่อไม่มี header, รองรับ IPv6
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-71-55"></a>
 ## 71.55 รายงานสรุปผลการทดสอบเจาะระบบและตรวจประเมินความมั่นคงปลอดภัยอัตโนมัติ (Automated Security Audit & Penetration Testing Report)
@@ -9308,7 +9308,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
      * **Dynamic Challenge Handshake (OTP):** เมื่อนักศึกษาแสกนผ่านแอป ตัวแอปพลิเคชันจะรับความลับพิเศษและข้อมูลความต่างเวลาจากบอร์ด จากนั้นแอปจะคำนวณการลงลายเซ็นเฉพาะตัวรอบเดียว (One-Time Signature หรือ OTP) โดยใช้ HMAC-SHA256 ครอบลงบน Offline Grant
      * **Anti-Sniffing & Single-Use Check:** บอร์ด ESP32 จะตรวจสอบลายเซ็นทริกเกอร์นี้ร่วมกับความถูกต้องของตัวเลขความต่างเวลา หากแฮกเกอร์ดักฟังข้อมูลสัญจรที่ส่งไปแล้ว ตัวสตรีมข้อมูลนั้นจะไม่สามารถนำกลับมาสร้างประโยชน์ในการร้องขอทริกเกอร์รอบใหม่ได้ เนื่องจากค่าความต้านทานเวลาหมดอายุและลายเซ็น OTP ดิจิทัลรอบนั้นถูกเคลียร์ใช้ไปแล้วอย่างถาวร
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-71-56"></a>
 ## 71.56 คู่มือและโครงสร้างระบบจำลองบอร์ดควบคุมและทดสอบสัญจรประตูปิดอัตโนมัติ (E2E Integration & Simulated ESP32 Mock Sandbox)
@@ -9330,7 +9330,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 * **กดปุ่ม `n` (Toggle Network Outage):** จำลองสภาวะเน็ตเวิร์กขาดการติดต่อชั่วคราว (ระบบออฟไลน์) เพื่อดูปฏิกิริยาของแดชบอร์ดแอดมินว่าจะแจ้งเตือนว่าบอร์ดออฟไลน์ และเปลี่ยน Badge สีเทาอย่างถูกต้อง
 * **กดปุ่ม `q` (Shutdown Daemon):** ดับเครื่องและปิดบอร์ดจำลองออกจากกระบวนการเบื้องหลังอย่างปลอดภัย
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-71-57"></a>
 ## 71.57 รายงานการทดลองและประเมินประสิทธิภาพระบบรับโหลดหนาแน่นเชิงตัวเลข (High-Throughput Load Testing & DB Index Telemetry Report)
@@ -9376,7 +9376,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 2. **การป้องกันคอขวด PgBouncer connection queue:** การจูนแคชของ Edge/Redis settings (KV Cache) เป็นเวลา 15 วินาที ช่วยลดการคิวรี่ดึงประวัติการตั้งค่าโดยตรงลงได้กว่า 70% ส่งผลให้ค่า Median Latency ต่ำเป็นพิเศษเฉลี่ยไม่ถึง `200ms` ภายใต้สภาวะโหลดหนาแน่น
 3. **การทำงานที่แม่นยำของดัชนีระบบ (Database Index Efficiency):** อัตราสแกนดัชนีที่เพิ่มขึ้นของ `idx_token_lookup` แสดงให้เห็นว่าเครื่องประมวลผลฐานข้อมูล Supabase PostgreSQL สามารถดึงและเปรียบเทียบข้อมูลได้โดยตรงทันที หลีกเลี่ยงการสแกนแบบกวาดตารางทั้งหมด (Full Table Scan) ส่งผลให้ความเสถียรในการทำงานไม่ถดถอยลงเลยแม้ผู้ใช้งานจะมีจำนวนเพิ่มขึ้นเป็นหลักหมื่นคน
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-72"></a>
 ## 72. การยกระดับไอคอน UI เป็นเวกเตอร์พรีเมียม (Emoji → Lucide Vector Icons)
@@ -9409,7 +9409,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 
 สรุป: ไฟล์แดชบอร์ดทั้ง 5 (settings, all, pending, rooms, health) + หน้า page.tsx ปลอดอิโมจิในส่วน UI ที่ผู้ใช้เห็น เปลี่ยนเป็นเวกเตอร์ lucide-react ครบถ้วน
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-73"></a>
 ## 73. ภาคผนวกวิศวกรรมเชิงลึกฉบับปรับปรุงจากซอร์สโค้ดจริง (Source-Verified Deep Dive — ฉบับวิทยานิพนธ์)
@@ -9831,7 +9831,7 @@ flowchart LR
 
 > **บทสรุปภาค §73:** ภาคผนวกนี้ได้ตรวจสอบและบันทึกรายละเอียดทางวิศวกรรมจากซอร์สโค้ดจริงทุกชั้น ตั้งแต่ฐานข้อมูล 12 ตาราง, อัลกอริทึม JWT/bcrypt/HMAC/rate-limit, วงจรชีวิต QR token, state machine ของเฟิร์มแวร์ ไปจนถึงสถาปัตยกรรมแจ้งเตือน 3 ช่องทาง ตลอดจนระบบธีมโหมดมืดพรีเมียม, ระบบกราฟสถิติวิเคราะห์เชิงตอบสนอง, การแก้ไขจุดบกพร่องสลับธีมสีขาวรั่วไหล, สภาวะแข่งขันของการแสดงแผนภูมิ และสถาปัตยกรรมบูรณาการแจ้งเตือนรวมศูนย์การดูแลรักษาระบบ เพื่อให้คู่มือสะท้อนสถานะปัจจุบันของระบบ SmartAccess อย่างถูกต้องครบถ้วน เหมาะแก่การใช้อ้างอิงในเล่มปริญญานิพนธ์และการตรวจประเมินทางวิชาการอย่างสมบูรณ์แบบที่สุด
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -9934,7 +9934,7 @@ if (!sidebar.matches(':hover')) {
 | `complete_system_manual_th.html` | Re-generated อัตโนมัติจากสคริปต์ compile |
 | `my-app/public/complete_system_manual_th.html` | Re-generated อัตโนมัติจากสคริปต์ compile |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -10372,7 +10372,7 @@ sequenceDiagram
 | 15 | `next.config.ts` | **[MODIFY]** | เพิ่มสิทธิ์ความปลอดภัย Content-Security-Policy และกำหนดค่า Header ป้องกันแคช Service Worker |
 | 16 | `.env.example` | **[MODIFY]** | เพิ่มคู่มือตัวแปรสภาพแวดล้อมสำหรับเชื่อมต่อ Firebase (กุญแจสาธารณะ กุญแจส่วนตัว และรายละเอียดโครงการ) |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -10426,7 +10426,7 @@ sequenceDiagram
 | 5 | `app/admin/dashboard/layout.tsx` | **[MODIFY]** | พัฒนา Sidebar Logo ในแผงแอดมินโดยนำโลโก้ล่าสุดมาประยุกต์พร้อมเงาสะท้อนระดับสูง |
 | 6 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.22 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -10500,7 +10500,7 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
 | 6 | `my-app/public/manifest.json` | **[MODIFY]** | กำหนด `id` และ `start_url` เป็น `/admin/login` ให้ติดตั้งเป็นแอปฝั่งแอดมินโดยเฉพาะ |
 | 7 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.23 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -10527,7 +10527,7 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
 | 1 | `my-app/app/admin/dashboard/settings/page.tsx` | **[MODIFY]** | ปรับ Provider Selector เป็นกริด 2/4 คอลัมน์, ทำให้แถวกรอก + ปุ่มทดสอบ stack บนมือถือ, ปุ่มบันทึกเต็มความกว้างบนจอเล็ก รองรับทุกขนาดหน้าจอ |
 | 2 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.24 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -10571,7 +10571,7 @@ because it violates the Content Security Policy directive: "connect-src ..."
 | 4 | `.claude/launch.json` | **[MODIFY]** | เพิ่มคอนฟิก `next-dev` สำหรับรัน Next.js dev server เพื่อทดสอบ |
 | 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.25 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -10609,7 +10609,7 @@ because it violates the Content Security Policy directive: "connect-src ..."
 | 4 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | แก้ปุ่มลอย "รับแจ้งเตือนพุช" ที่ใช้คลาส Tailwind no-op (ตกไปมุมซ้ายล่าง) เป็น inline style `position:fixed` มุมขวาล่าง |
 | 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.26 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -10640,7 +10640,7 @@ because it violates the Content Security Policy directive: "connect-src ..."
 | 1 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | เพิ่มการตรวจจับ iOS ที่ยังไม่ติดตั้ง PWA และแสดงการ์ดคำแนะนำ "เพิ่มลงหน้าจอโฮม" |
 | 2 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.27 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -10680,4 +10680,4 @@ because it violates the Content Security Policy directive: "connect-src ..."
 | 4 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ปิด idle auto-logout 15 นาที (handlers เป็น no-op) ตามคำขอคงสถานะล็อกอิน |
 | 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.28 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
-<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

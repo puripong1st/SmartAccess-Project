@@ -1587,6 +1587,9 @@ const htmlTemplate = `<!DOCTYPE html>
         li.appendChild(a);
         if (targetList) {
           targetList.appendChild(li);
+        } else if (text.includes("สำหรับนำไปจัดทำเล่มโครงงาน")) {
+          // Place the thesis book section at the very top of the sidebar above other groups
+          tocMenu.insertBefore(li, tocMenu.firstChild);
         } else {
           tocMenu.appendChild(li);
         }
@@ -1839,7 +1842,7 @@ const htmlTemplate = `<!DOCTYPE html>
       // 4. Find all "กลับสารบัญ" links and prepend premium export buttons next to them!
       const paragraphs = document.querySelectorAll("#compiledContent p");
       paragraphs.forEach(p => {
-        if (p.innerHTML.includes("กลับสารบัญ")) {
+        if (p.innerHTML.includes("กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน") || p.innerHTML.includes("กลับสารบัญ")) {
           // Find the active h2 section this paragraph belongs to by searching upwards
           let prev = p.previousElementSibling;
           let parentHeaderId = null;
