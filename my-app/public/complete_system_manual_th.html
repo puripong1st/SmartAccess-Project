@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:06:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:26:35 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -6149,6 +6149,12 @@ await fetch(&#39;/api/system/settings&#39;, {
 <li>API Status — แสดง API endpoint latency พร้อม progress bar</li>
 <li>Runtime — แสดง Node.js info + Memory breakdown กราฟ</li>
 </ol>
+<p><strong>กลไกการเขียนโค้ดตรวจสอบสถานะฐานข้อมูลแบบเรียลไทม์ (Database Health Checking Mechanics):</strong><br>ในการประเมินประสิทธิภาพของ Supabase PostgreSQL ตัวระบบหลังบ้าน Next.js (<code>my-app/app/api/system/health/route.ts</code>) จะทำการยิงชุดทดสอบไปที่ฐานข้อมูลหลักโดยตรงเพื่อวิเคราะห์ค่าสถิติ 3 ประการ:</p>
+<ol>
+<li><strong>การตรวจสอบความเร็วการตอบรับ (Ping Latency check):</strong><br>ใช้ไลบรารี <code>pg</code> ยิงคิวรี SQL พื้นฐาน <code>SELECT 1</code> พร้อมการจับเวลาด้วยฟังก์ชันประสิทธิภาพสูง <code>performance.now()</code> เพื่อหาความเร็ว Latency ในหน่วยมิลลิวินาที (ms) ของ Connection Pool ปัจจุบัน</li>
+<li><strong>การวัดปริมาณและความถูกต้องของข้อมูล (Metric count &amp; Data validation):</strong><br>ทำการยิงคิวรีนับสถิติจำนวนแถวทั้งหมดในตาราง เช่น <code>SELECT COUNT(*) FROM students</code> และ <code>SELECT COUNT(*) FROM access_logs</code> เพื่อประเมินความพร้อมใช้งานและวัดปริมาณภาระงานในระบบ</li>
+<li><strong>การประเมินทรัพยากรรันไทม์หลังบ้าน (Node.js Memory Probe):</strong><br>ใช้ฟังก์ชัน <code>process.memoryUsage()</code> เพื่อวิเคราะห์การใช้หน่วยความจำหลักแบ่งเป็น RSS, Heap Used, Heap Total และ External Memory เพื่อใช้เป็นข้อมูลชี้วัดและป้องกันปัญหา Memory Leak ในอนาคต</li>
+</ol>
 <p><strong>สถานะรวมระบบ:</strong></p>
 <ul>
 <li>🟢 healthy: DB ปกติ + latency &lt; 500ms</li>
@@ -9713,6 +9719,18 @@ jobs:
 <li><input disabled="" type="checkbox"> Performance: ไม่มี N+1 query</li>
 <li><input disabled="" type="checkbox"> Test cases ครอบคลุม happy + error path</li>
 </ul>
+<h4>71.31.4 ระบบคอมไพเลอร์เอกสารคู่มืออัตโนมัติ (Documentation Compiler Automation Script)</h4>
+<p>เพื่อช่วยประหยัดเวลาและลดข้อผิดพลาดของทีมผู้พัฒนาในการสร้างเอกสารวิทยานิพนธ์และคู่มือระบบ (Documentation Pipeline) ระบบได้รับการบูรณาการ <strong>สคริปต์คอมไพเลอร์คู่มืออัตโนมัติ (<code>compile_manual.js</code>)</strong> ไว้ในระบบการจัดการโค้ดและการส่งมอบงานแบบอัตโนมัติ โดยมีคุณสมบัติดังนี้:</p>
+<ol>
+<li><strong>การแปลง Markdown เป็น HTML แบบออฟไลน์ (Offline Document Compilation):</strong><br>ตัวคอมไพเลอร์จะดึงข้อมูลเอกสารฉบับ Markdown (<code>complete_system_manual_th.md</code>) แปลงไปสู่คู่มือฉบับ HTML ระดับพรีเมียมอย่างสมบูรณ์แบบโดยอัตโนมัติผ่านคำสั่ง <code>node my-app/scripts/compile_manual.js</code></li>
+<li><strong>การทำงานอัตโนมัติในกระบวนการส่งมอบงาน (Documentation Pipeline):</strong><ul>
+<li>ตรวจสอบและดาวน์โหลดไลบรารีวิเคราะห์เอกสารอย่าง <code>marked</code></li>
+<li>ทำความสะอาดและแปลงสัญลักษณ์จำเพาะ (เช่น การแปลงสัญกรณ์บล็อกคำแจ้งเตือน <code>&gt; [!NOTE]</code> ไปสู่กล่องแจ้งเตือน Callout ในฝั่งเบราว์เซอร์)</li>
+<li>แปลงสัญกรณ์ <strong>Mermaid.js</strong> และจัดเตรียมแทรกสคริปต์วาดรูปภาพไดอะแกรมเชิงพลวัต</li>
+<li>แทรกระบบควบคุมโหมดมืด (Harmony Palette), ระบบสืบค้นข้อมูลใน Sidebar และปุ่มส่งออกข้อมูลเอกสารแบบแยกส่วนแยกหน้า (PDF/PNG) เพื่อลดเวลาจัดทำรูปเล่มได้อย่างมหาศาล</li>
+</ul>
+</li>
+</ol>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-32"></a></p>
 <h3>71.32 Incident Response Plan (NIST 800-61) + แบบฟอร์มแจ้ง สคส.</h3>
@@ -13176,6 +13194,7 @@ if (decoded.role === &quot;door_operator&quot;) {
 <ol>
 <li><strong>In-Memory Config Cache Fallback</strong>:<br>เมื่อติดต่อฐานข้อมูลล้มเหลวขณะ ESP32 ร้องขอรายละเอียดแสดงผล ระบบจะดึงค่าคอนฟิกเกอเรชันเริ่มต้นจาก <code>getFallbackSettings()</code> ในไฟล์ <code>lib/resilience.ts</code> แทนการระเบิดข้อผิดพลาด (Server Error) ทำให้หน้าจอ TFT ของบอร์ดหน้าห้องไม่เกิดอาการจอขาวหรือดับลง และยังคงแสดงหน้าสถานะจำกัดได้อย่างราบรื่น</li>
 <li><strong>Offline LocalStorage Queue</strong>:<br>ฝั่งสมาร์ทโฟนของนักศึกษา หากยิงส่งฟอร์มขอเปิดประตูแล้วคลาวด์ปิดล็อกไม่ตอบสนอง โค้ดฝั่ง Client จะจัดเก็บคำขอดังกล่าวลงใน queue ท้องถิ่น <code>localStorage</code> รอจังหวะสัญญานกลับมาเพื่อลองยิงประมวลผลใหม่อีกรอบโดยที่ผู้ใช้งานไม่ต้องพิมพ์รายละเอียดใหม่</li>
+<li><strong>กลไกการแจ้งเตือนสภาวะวิกฤตเชิงรุก (Proactive Outage Alerting):</strong><br>เมื่อโมดูลตรวจวัดสถานภาพ (Health Checker) ยิงทดสอบระบบแล้วพบค่าความผิดปกติรุนแรง เช่น ฐานข้อมูล Supabase เข้าสู่สภาวะล่มชะงัก (<code>status: unhealthy</code>) หรือมีค่าดีเลย์ Latency สูงเกินเกณฑ์มาตรฐานชี้วัดวิกฤต (<code>status: degraded</code> เกิน 500ms ติดต่อกัน 3 รอบการคิวรี) ตัวระบบจะส่งคำสั่งด่วนข้ามผ่านไปยัง <strong>Discord Webhook</strong> แจ้งเตือนฉุกเฉินเข้าสู่แผงควบคุมของแอดมินข้ามระบบแบบเรียลไทม์ โดยจะแนบรายละเอียดโค้ดความผิดพลาด (Error Code), ค่าพิกัดเซิร์ฟเวอร์ย่อยที่เกิดปัญหา (Region), และสเตตัสการใช้หน่วยความจำขณะเกิดเหตุ เพื่อกระตุ้นให้วิศวกรควบคุมระบบรับทราบเหตุและเข้ากู้คืนระบบได้ทันท่วงทีโดยไม่ต้องรอให้ผู้ใช้งานมาแจ้งร้องเรียนเข้ามาครับ</li>
 </ol>
 <h3>71.49.3 แผนกู้คืนฐานข้อมูลและชุดข้อมูลจำลองอย่างปลอดภัย (Failsafe Database Seeding Runbook)</h3>
 <p>กรณีที่ฐานข้อมูลเกิดการเสียหายอย่างหนัก (Data Corruption) หรือจำต้องย้ายสัญญานไปเชื่อมกับเครื่องแม่ข่ายSupabase คอร์ใหม่ในยามวิกฤต วิศวกรควบคุมระบบสามารถใช้สคริปต์สำหรับการล้างและสร้างตารางความสัมพันธ์ขึ้นใหม่ (Schema Initialization &amp; Seeding) ได้ทันทีตามขั้นตอนต่อไปนี้:</p>
@@ -14537,6 +14556,7 @@ RETURNING count, reset_time;
 </li>
 <li><strong>การเข้าสลับธีมบนหน้าจอควบคุม (Layout Navigation Elements):</strong><ul>
 <li>ติดตั้งปุ่มดึงค่าและสลับธีมแบบ Soft-transition ในแถบเมนูด้านข้างของหน้าแดชบอร์ดแอดมิน และในส่วนแถบนำทางส่วนบนของหน้าลงทะเบียนนักศึกษา เพื่อความสะดวกและง่ายต่อการใช้งาน</li>
+<li>ตัวคอมโพเนนต์ปุ่มสลับธีมได้รับการออกแบบโดยใช้ CSS Micro-animations และไอคอนเวกเตอร์ SVG (รูปพระอาทิตย์และพระจันทร์เรืองแสง) เมื่อมีการกดคลิกสลับธีม ตัวแอนิเมชันจะทำการหมุนไอคอน 360 องศาขนานไปกับการจางเข้าออกของความสว่างอย่างนุ่มนวล ช่วยยกระดับความรู้สึกพรีเมียมให้แก่ส่วนต่อประสานผู้ใช้ได้อย่างดีเยี่ยม</li>
 </ul>
 </li>
 </ol>
@@ -14611,6 +14631,13 @@ RETURNING count, reset_time;
 <li><strong>การย้ายระบบสื่อสารรวมศูนย์:</strong> ตรวจพบการเรียกใช้โมดูลอ้างอิง <code>sendDiscordNotification</code> ตัวเดิมจาก <code>lib/discord.ts</code> ภายในฟังก์ชันจัดการ API ล้างข้อมูลจราจรคอมพิวเตอร์ที่หมดอายุ <code>/api/system/logs/cleanup</code> ส่งผลให้ข้อมูลประวัติการทำงานบำรุงรักษาระบบ (Maintenance Cleanup) ข้อมูลถูกจำกัดการส่งไปเฉพาะบนแผง Discord Webhook เท่านั้น โดยไม่มีการส่งต่อไปยัง LINE และ Telegram</li>
 <li>ดำเนินการอัปเกรดระบบสื่อสารความปลอดภัยของ API โดยเปลี่ยนตัวสถาปัตยกรรมตัวยิงข้อความเป็น <code>sendNotification</code> จาก <code>@/lib/notify</code> ส่งผลให้การยิงแจ้งเตือนการล้างประวัติ (ทั้งการกดลบมือ POST และการรันอัตโนมัติ GET) จะกระจายตัวออกไปยังทั้ง <strong>Discord Webhook, LINE Messaging API และ Telegram Bot API</strong> ขนานพร้อมกันทันที</li>
 <li><strong>การออกแบบกลไกป้องกันขยะแจ้งเตือน (Notification Spam Guard):</strong> เพื่อป้องกันไม่ให้ช่องแจ้งเตือนแอดมินเกิดสภาวะขยะแจ้งเตือน (Notification Spamming) จากกระบวนการทำงานอัตโนมัติของเซิร์ฟเวอร์ (Vercel Cron) ทุก 12 ชั่วโมง ระบบจึงถูกออกแบบให้ทำการประมวลผลลบอย่างนุ่มนวลและตอบกลับสถานะเสร็จสิ้นแบบปกติโดยไม่ต้องสั่งยิงแจ้งเตือนและประทับล็อกบันทึกเหตุการณ์ลงระบบ <strong>ในกรณีที่ไม่มีข้อมูล Log หมดอายุเลย (ลบออก 0 รายการ)</strong> ระบบจะจัดส่งข้อความแจ้งเตือนความปลอดภัยและความก้าวหน้าไปทุกกลุ่มช่องทางและประทับล็อก Audit log <strong>เฉพาะเมื่อมีผลลัพธ์การลบจริงที่มากกว่า 0 รายการเท่านั้น (<code>affectedRows &gt; 0</code>)</strong></li>
+</ul>
+</li>
+<li><p><strong>สัมฤทธิผลของการแสดงผล UI Themes ในหน้าจอใช้งานจริง (Premium Visual Outcomes &amp; Dashboard Harmony):</strong></p>
+<ul>
+<li><strong>การเรนเดอร์ในโหมดมืดที่สมบูรณ์แบบ (Absolute Dark Mode Aesthetics):</strong> ผลลัพธ์จากการทดสอบใช้งานและตรวจสอบสไตล์บนหน้าจอขนาดต่าง ๆ พบว่าระบบสามารถสลัดคราบรอยรั่วสีขาว (Color Leaks) ออกได้อย่างหมดจด 100% หน้าจอแผงแดชบอร์ดหลัก ห้องเรียน การจัดการสิทธิ์ผู้ใช้งาน และหน้าจอควบคุม IoT บอร์ดแสดงผลเป็นสีม่วงเข้มระดับพรีเมียม (Deep Violet/Space Black) อย่างกลมกลืน ช่วยลดอาการล้าของดวงตาแอดมินขณะเฝ้าระวังระบบเป็นเวลานาน</li>
+<li><strong>ความนุ่มนวลและการเรนเดอร์แผนภูมิ (Dynamic Recharts Fluidity):</strong> การสลับแท็บเมนูและการเปิดหน้าแดชบอร์ดครั้งแรกสามารถดึงประวัติสถิติและเรนเดอร์กราฟ Recharts ขึ้นมาแสดงผลอย่างนิ่มนวลและรวดเร็ว โดยเฉดสีของเส้นกราฟ แท่งสถิติ และ Tooltip จะปรับเปลี่ยนตามสถานะโหมดธีมแบบ Real-time โดยไม่ก่อให้เกิดสภาวะกราฟค้างหรือหน้าจอโย้ตัว (CLS - Cumulative Layout Shift) แต่อย่างใด</li>
+<li><strong>ความสวยงามสะดุดตาของเอฟเฟกต์โกลว์ (Premium Glassmorphism Glow):</strong> ขอบของการ์ดข้อมูล ลิงก์สถานะออนไลน์ของอุปกรณ์ และปุ่มสวิตช์เปิด/ปิดการทำงานมีเอฟเฟกต์แสงเงากึ่งโปร่งใส (Backdrop Blur with Neon Glow) โทนสีม่วง-ชมพู (Purple/Pink Harmony Palette) สอดรับตามอัตลักษณ์องค์กรอย่างโดดเด่นและสร้างความตื่นตาตื่นใจให้แก่ผู้ใช้งานตั้งแต่แรกเห็น</li>
 </ul>
 </li>
 </ol>
@@ -15025,7 +15052,11 @@ export function getVapidKey(): string {
 <li><strong>ตรวจวัดคุณลักษณะเครื่องผู้ใช้:</strong> ตรวจเช็คว่าเบราว์เซอร์รองรับสิทธิ์ <code>serviceWorker</code>, <code>Notification</code>, และ <code>PushManager</code> หรือไม่ หากเป็นอุปกรณ์ดั้งเดิมที่ไม่สนับสนุน ระบบจะไม่แสดงปุ่มหรือแบนเนอร์รบกวนสายตาใดๆ</li>
 <li><strong>ระบบทริกเกอร์สองระดับ (Double-Trigger System):</strong><ol>
 <li><strong>Floating Prompt Banner:</strong> แสดงแผงแจ้งเตือนลอยตัวด้านล่างสุดของแผงเพื่อชักชวนให้ผู้ใช้งานกดยอมรับสิทธิ์แจ้งเตือนหากสถานะสิทธิ์เป็น <code>default</code> (ยังไม่เคยตัดสินใจ) โดยผู้ใช้สามารถกดยกเลิก &quot;ไว้ทีหลัง&quot; เพื่อซ่อนแผงได้</li>
-<li><strong>Dashboard Settings Widget:</strong> ปุ่มควบคุมลอยตัวขนาดเล็กบริเวณด้านขวาบนของหน้าเว็บ (แสดงข้อความ &quot;รับแจ้งเตือนพุช&quot; หรือ &quot;เปิดแจ้งเตือนแล้ว&quot;) ซึ่งทำงานสลับสถานะ (Toggle) เพื่อให้ผู้ใช้เปิดรับสิทธิ์หรือยกเลิกการแจ้งเตือนได้ทุกเมื่ออย่างยืดหยุ่น</li>
+<li><strong>Dashboard Settings Widget (ปุ่มสวิตช์เปิด/ปิดบนหน้าจอ):</strong> ได้รับการพัฒนาเป็น UI Component ขนาดกะทัดรัด (Toggle Button Widget) วาดด้วย CSS Harmony Palette ธีมม่วง-ชมพู มีสัญรูปไอคอนระฆังแจ้งเตือนสั่นสะเทือนแบบ Micro-animations แสดงสถานะการเปิด/ปิดสิทธิ์พุชอย่างชัดเจน:<ul>
+<li><strong>สถานะปิด:</strong> แสดงไอคอนระฆังมีเส้นคาดทับ (Bell Off) พร้อมป้ายข้อความกึ่งโปร่งแสงสีเทาอ่อน &quot;รับการแจ้งเตือนพุช&quot; เมื่อกดคลิกจะทริกเกอร์ระบบขอสิทธิ์เบราว์เซอร์</li>
+<li><strong>สถานะเปิดสำเร็จ:</strong> แสดงไอคอนระฆังเรืองแสงพรีเมียม (Glowing Bell) สลับสปริงตอบสนองความเคลื่อนไหว และป้ายคำอธิบายสีม่วงโปร่งแสงระบุสถานะ &quot;เปิดแจ้งเตือนแล้ว&quot; พร้อมสลับสีการ์ดแบคกราวด์เป็นแบบนีออนเรืองแสงสะดุดตา</li>
+</ul>
+</li>
 </ol>
 </li>
 <li><strong>สถาปัตยกรรมแลกโทเค็น PWA ไร้รอยต่อ:</strong> เมื่อผู้ใช้งานกดยอมรับ คอมโพเนนต์จะเริ่มต้นการทำงานร่วมกับเบราว์เซอร์ไคลเอนต์ Firebase SDK โดยทำการติดต่อกับ FCM Endpoint ผ่าน VAPID Key เพื่อให้ได้รหัสเฉพาะของอุปกรณ์ชิ้นนั้นๆ (<code>fcm_token</code>) แล้วส่งค่า POST ลงทะเบียนไปยังระบบหลังบ้าน <code>/api/notifications/register</code> โดยอัตโนมัติ พร้อมประเมินบทบาทของผู้ใช้อัตโนมัติ (เป็น Admin หากเข้าใช้เส้นทาง <code>/admin/</code> หรือเป็น Student หากลงทะเบียนขอเปิดประตู)</li>
