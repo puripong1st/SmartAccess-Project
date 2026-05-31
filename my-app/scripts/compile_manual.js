@@ -1023,9 +1023,9 @@ const htmlTemplate = `<!DOCTYPE html>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" defer></script>
 
-  <!-- Mermaid.js for Dynamic Diagrams (ESM) -->
-  <script type="module">
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  <!-- Mermaid.js for Dynamic Diagrams (Standard CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
     mermaid.initialize({
       startOnLoad: false, // CRITICAL: Stop auto-rendering to prevent mobile CPU freezing!
       theme: 'default',
@@ -1051,7 +1051,6 @@ const htmlTemplate = `<!DOCTYPE html>
         width: 175 // กว้างขึ้นต่อกล่องข้อความ กันตัวอักษรไทยล้น
       }
     });
-    window.mermaid = mermaid;
   </script>
 
   <script>

@@ -24,7 +24,7 @@ const cspDirectives = [
   "img-src 'self' data: blob:",
   // FCM Web SDK ต้องต่อหลาย endpoint: firebaseinstallations (FID), fcmregistrations (ออกโทเคน),
   // fcm/googleapis (ส่งข้อความ), oauth2 (token), และ wss สำหรับ Realtime/SSE บางกรณี
-  `connect-src 'self' ${supabaseHost} https://*.supabase.co wss://*.supabase.co https://fcm.googleapis.com https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://oauth2.googleapis.com`,
+  `connect-src 'self' ${supabaseHost} https://*.supabase.co wss://*.supabase.co https://fcm.googleapis.com https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://oauth2.googleapis.com https://cdn.jsdelivr.net`,
   "manifest-src 'self'",
   "media-src 'self'",
   "worker-src 'self' blob:",
