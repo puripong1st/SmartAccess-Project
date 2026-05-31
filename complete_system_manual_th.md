@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 18:26:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 18:34:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10908,8 +10908,8 @@ const DashboardCharts = dynamic(() => import("../../components/DashboardCharts")
 | 2 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ปรับเงื่อนไขการซ่อนปุ่มเมนู `.desktop-hide-trigger` ใน CSS เป็น 1025px และฝังชุดระบบ Swipe-to-Reveal touch gestures ปัดจอเปิด-ปิดแถบเนวิเกชัน |
 | 3 | `my-app/app/admin/dashboard/pending/page.tsx` | **[MODIFY]** | ถอด inline display ของโมบายล์วิวออก และครอบการ์ดลงใน `mobile-card-grid-container` เพื่อจัดกริดสวยงาม |
 | 4 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มบันทึกสถาปัตยกรรมและรายละเอียดเปลี่ยนผ่าน UI/UX §73.30 พร้อมอัปเดตวันเวลาสรุปเอกสารล่าสุด |
-| 5 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ย้ายโครงสร้าง DOM กลับไปเหมือนเดิม (ให้กราฟและสถิติอยู่ด้านบนสุด) แก้ปัญหา Swipe Gesture เด้ง/กระตุก (UI Flashing) โดยเพิ่ม inline-transition ไปยังจุดหมายแล้วหน่วงเวลา `setTimeout` 300ms ค่อยเคลียร์สไตล์ และแก้ปัญหาแตะเมนูไม่ติด (Safari Touch Cancel) โดยให้เคลียร์สไตล์เฉพาะตอนที่มีการเลื่อนนิ้ว (Swipe) เท่านั้น ไม่รบกวนการแตะ (Tap) |
-| 6 | `my-app/app/admin/dashboard/pending/page.tsx` | **[MODIFY]** | เพิ่มระบบ Auto-scroll (scrollIntoView) บนมือถือ ให้หน้าจอเลื่อนลงมาที่รายการรออนุมัติอัตโนมัติเมื่อโหลดหน้าเว็บครั้งแรกใน PWA |
+| 5 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | แก้ไขปัญหาดึงหน้าจอ UI เก่าติดมือ (Safari Native Swipe-to-Go-Back Conflict) ด้วยการดักจับและยกเลิก Native Event (`preventDefault`) ทันทีที่พบการขยับนิ้วใน Edge Zone |
+| 6 | `my-app/app/globals.css` | **[MODIFY]** | เพิ่ม CSS Property `overscroll-behavior-x: none` ให้กับ `body` เพื่อบล็อกการสไลด์เพื่อย้อนกลับ (Native Swipe Back) ของ iOS/macOS บนหน้าจอ Dashboard ให้ทำงานแยกกับระบบ Custom Swipe Menu 100% |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 

@@ -491,9 +491,17 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     if (!g.isSwiping || g.direction !== "open") return;
 
     const t = e.touches[0];
+    const dx = t.clientX - g.startX;
+    const dy = t.clientY - g.startY;
+
+    // 🔥 Safari iOS Native Swipe-Back Blocker:
+    // ทันทีที่นิ้วขยับไปทางขวา (dx > 0) ให้ Block Native Event ของ Safari ทันที!
+    // ป้องกันไม่ให้ Safari ดึงหน้าเว็บเก่า (UI เก่า) ติดมือออกมา
+    if (e.cancelable && dx > 0 && Math.abs(dx) > Math.abs(dy)) {
+      e.preventDefault();
+    }
+
     g.currentX = t.clientX; g.currentY = t.clientY;
-    const dx = g.currentX - g.startX;
-    const dy = g.currentY - g.startY;
 
     // ล็อกทิศทางเมื่อเคลื่อนเกิน 10px
     if (!g.directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
@@ -512,7 +520,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     }
 
     if (g.directionLocked && dx > 0) {
-      if (e.cancelable) e.preventDefault();
       applyTransform(dx, "open");
     }
   }, [applyTransform, clearInlineStyles]);

@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 18:26:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 18:34:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -16021,13 +16021,13 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>5</td>
 <td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>ย้ายโครงสร้าง DOM กลับไปเหมือนเดิม (ให้กราฟและสถิติอยู่ด้านบนสุด) แก้ปัญหา Swipe Gesture เด้ง/กระตุก (UI Flashing) โดยเพิ่ม inline-transition ไปยังจุดหมายแล้วหน่วงเวลา <code>setTimeout</code> 300ms ค่อยเคลียร์สไตล์ และแก้ปัญหาแตะเมนูไม่ติด (Safari Touch Cancel) โดยให้เคลียร์สไตล์เฉพาะตอนที่มีการเลื่อนนิ้ว (Swipe) เท่านั้น ไม่รบกวนการแตะ (Tap)</td>
+<td>แก้ไขปัญหาดึงหน้าจอ UI เก่าติดมือ (Safari Native Swipe-to-Go-Back Conflict) ด้วยการดักจับและยกเลิก Native Event (<code>preventDefault</code>) ทันทีที่พบการขยับนิ้วใน Edge Zone</td>
 </tr>
 <tr>
 <td>6</td>
-<td><code>my-app/app/admin/dashboard/pending/page.tsx</code></td>
+<td><code>my-app/app/globals.css</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>เพิ่มระบบ Auto-scroll (scrollIntoView) บนมือถือ ให้หน้าจอเลื่อนลงมาที่รายการรออนุมัติอัตโนมัติเมื่อโหลดหน้าเว็บครั้งแรกใน PWA</td>
+<td>เพิ่ม CSS Property <code>overscroll-behavior-x: none</code> ให้กับ <code>body</code> เพื่อบล็อกการสไลด์เพื่อย้อนกลับ (Native Swipe Back) ของ iOS/macOS บนหน้าจอ Dashboard ให้ทำงานแยกกับระบบ Custom Swipe Menu 100%</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
