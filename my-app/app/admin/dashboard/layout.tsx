@@ -125,28 +125,6 @@ const LogoutIcon = () => (
   </svg>
 );
 
-// โลโก้แบรนด์แบบ inline SVG — คมชัดทุกขนาดหน้าจอ (แทนภาพ raster ที่ดูเป็นก้อนทึบ)
-const BrandMark = ({ size = 40 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 48 48" fill="none" style={{ flexShrink: 0, borderRadius: 11, boxShadow: "0 4px 12px rgba(124,58,237,0.30)" }} aria-label="SmartAccess Logo" role="img">
-    <defs>
-      <linearGradient id="smartaccess-brand-grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#7C3AED" />
-        <stop offset="1" stopColor="#DB2777" />
-      </linearGradient>
-    </defs>
-    <rect width="48" height="48" rx="12" fill="url(#smartaccess-brand-grad)" />
-    {/* ตัวกุญแจ */}
-    <rect x="15" y="22" width="18" height="14" rx="3.5" fill="#fff" />
-    <path d="M18.5 22v-3a5.5 5.5 0 0 1 11 0v3" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" fill="none" />
-    {/* รูกุญแจ */}
-    <circle cx="24" cy="28" r="2.3" fill="#7C3AED" />
-    <rect x="22.9" y="29" width="2.2" height="4" rx="1.1" fill="#7C3AED" />
-    {/* คลื่นสัญญาณไร้สาย */}
-    <path d="M34 16a7 7 0 0 1 0 9" stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity="0.85" fill="none" />
-    <path d="M14 16a7 7 0 0 0 0 9" stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity="0.85" fill="none" />
-  </svg>
-);
-
 const LockIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -1411,7 +1389,13 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           className={`sidebar-responsive ${mobileMenuOpen ? 'open' : ''}`}
         >
           <div style={{ padding: "24px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-            <BrandMark size={40} />
+            <img
+              src="/icons/icon-128x128.png"
+              width={40}
+              height={40}
+              alt="SmartAccess Logo"
+              style={{ flexShrink: 0, borderRadius: 11, boxShadow: "0 4px 12px rgba(124,58,237,0.30)" }}
+            />
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: "var(--smartaccess-purple-dark)", letterSpacing: "0.5px" }}>SmartAccess</div>
               <div style={{ fontSize: 10.5, color: "var(--text-secondary)", fontWeight: 600 }}>บอร์ดควบคุมครุศาสตร์</div>
