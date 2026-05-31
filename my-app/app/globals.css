@@ -100,6 +100,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* iOS Safari: ตัด delay ~300ms (double-tap-zoom) ออกจากองค์ประกอบที่กดได้
+   ช่วยให้ "แตะครั้งเดียวติดทันที" โดยเฉพาะการแตะครั้งแรกของเซสชัน
+   และตัด tap-highlight สีเทาที่กระพริบบน iOS */
+button, a, [role="button"], input, select, textarea, label {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ── Custom Scrollbar ── */
 ::-webkit-scrollbar {
   width: 6px;

@@ -615,8 +615,13 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         el.removeEventListener("touchcancel", finish, passiveOpts);
       }
     };
-    // ผูกใหม่เมื่อเมนูเปิด/ปิด เพราะ edge zone ถูก mount/unmount ตาม mobileMenuOpen
-  }, [applyTransform, clearInlineStyles, setMobileMenuOpen, mobileMenuOpen]);
+    // ผูกใหม่เมื่อ:
+    //  - mobileMenuOpen เปลี่ยน (edge zone ถูก mount/unmount ตามสถานะเมนู)
+    //  - user เปลี่ยนจาก null → object: เพราะมี `if (!user) return <spinner>` ด้านล่าง
+    //    ตอน render แรก (user ยังเป็น null) JSX จริงยังไม่ mount → ref ทุกตัวเป็น null
+    //    ทำให้ effect รอบแรกผูก listener ไม่ติด ต้องรอ user มาแล้ว rerun ถึงจะผูกติดจริง
+    //    (นี่คือสาเหตุที่ก่อนหน้านี้ต้องกดปุ่มเปิดเมนูก่อน ปัดขอบจอถึงจะทำงาน)
+  }, [applyTransform, clearInlineStyles, setMobileMenuOpen, mobileMenuOpen, user]);
 
   const isOwner = user?.role === "owner";
 

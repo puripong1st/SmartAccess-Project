@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 19:30:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 20:05:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -16063,6 +16063,43 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>เปลี่ยน gesture handler เป็น native non-passive listener, เพิ่ม <code>edgeRef</code> + ค่าคงที่ <code>TAP_SLOP</code>/<code>COMMIT_THRESHOLD</code>, แยก tap จาก swipe เพื่อกัน Safari ตัด click และบล็อก native back-swipe</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<h2>ภาคผนวก (เพิ่มเติม): แก้อาการสไลด์เปิดเมนูไม่ติดตอนแรก + แตะเมนูครั้งแรกต้องย้ำหลายรอบ</h2>
+<p>ต่อเนื่องจากการแก้ Touch Gesture ก่อนหน้า พบอีก 2 อาการและแก้แล้ว:</p>
+<h3>อาการ 1: ต้องกดปุ่ม &quot;เปิดเมนู&quot; ก่อน 1 ครั้ง การปัดขอบจอถึงจะใช้ได้</h3>
+<ul>
+<li><strong>สาเหตุ:</strong> ใน <code>layout.tsx</code> มีการ <code>return &lt;spinner&gt;</code> เมื่อ <code>user</code> ยังเป็น <code>null</code> (กำลังโหลดเซสชัน) ซึ่งอยู่ &quot;ใต้&quot; <code>useEffect</code> ที่ผูก native touch listener ตอน render รอบแรก JSX จริงยังไม่ mount → <code>sidebarRef</code>/<code>overlayRef</code>/<code>edgeRef</code> ทุกตัวเป็น <code>null</code> → ผูก listener ไม่ติด เมื่อ <code>user</code> โหลดเสร็จ effect ไม่ rerun (dependency ไม่เปลี่ยน) listener จึงไม่เคยถูกผูก จนกว่าจะกดปุ่มเปิดเมนู (ทำให้ <code>mobileMenuOpen</code> เปลี่ยน → effect rerun → เพิ่งผูกติด)</li>
+<li><strong>แก้ไข:</strong> เพิ่ม <code>user</code> เข้าไปใน dependency array ของ <code>useEffect</code> gesture ทำให้ effect rerun ทันทีที่ <code>user</code> เปลี่ยนจาก <code>null → object</code> และผูก listener ติดกับ DOM จริง → ปัดขอบจอเปิดเมนูได้เลยตั้งแต่โหลดหน้าเสร็จ ไม่ต้องกดปุ่มก่อน</li>
+</ul>
+<h3>อาการ 2: แตะปุ่มเมนูไป tab แรกของเซสชันต้องกดย้ำหลายรอบ (รอบถัดไปกดครั้งเดียวติด)</h3>
+<ul>
+<li><strong>สาเหตุ:</strong> iOS Safari หน่วงการคลิก ~300ms (รอจังหวะ double-tap-zoom) บนองค์ประกอบที่กดได้ซึ่งไม่ได้กำหนด <code>touch-action</code> ทำให้การแตะครั้งแรกมักถูกกลืน</li>
+<li><strong>แก้ไข:</strong> เพิ่มกฎใน <code>app/globals.css</code> ให้ <code>button, a, [role=&quot;button&quot;], input, select, textarea, label</code> มี <code>touch-action: manipulation</code> (ตัด delay) และ <code>-webkit-tap-highlight-color: transparent</code> (ตัดไฮไลต์เทากระพริบ)</li>
+<li><strong>หมายเหตุ:</strong> หากยังพบว่า &quot;ไปแท็บแรกของเซสชันช้า&quot; เฉพาะตอนรัน <code>npm run dev</code> ให้พิจารณาว่าเป็นการ compile เส้นทาง (route) ครั้งแรกของ Next.js dev server ไม่ใช่บั๊ก touch — ทดสอบยืนยันด้วย <code>npm run build &amp;&amp; npm run start</code></li>
+</ul>
+<h3>ตารางไฟล์ที่แก้ไข</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>ไฟล์</th>
+<th>ประเภท</th>
+<th>รายละเอียด</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่ม <code>user</code> ใน dependency array ของ gesture <code>useEffect</code> ให้ผูก native touch listener ติดทันทีหลัง <code>user</code> โหลด (ปัดขอบจอเปิดเมนูได้เลย)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่ม <code>touch-action: manipulation</code> + <code>-webkit-tap-highlight-color: transparent</code> ให้องค์ประกอบที่กดได้ทั้งหมด ตัด delay ~300ms ของ iOS</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 19:30:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 20:05:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10939,5 +10939,28 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | # | ไฟล์ | ประเภท | รายละเอียด |
 |---|------|--------|-----------|
 | 1 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | เปลี่ยน gesture handler เป็น native non-passive listener, เพิ่ม `edgeRef` + ค่าคงที่ `TAP_SLOP`/`COMMIT_THRESHOLD`, แยก tap จาก swipe เพื่อกัน Safari ตัด click และบล็อก native back-swipe |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+---
+
+## ภาคผนวก (เพิ่มเติม): แก้อาการสไลด์เปิดเมนูไม่ติดตอนแรก + แตะเมนูครั้งแรกต้องย้ำหลายรอบ
+
+ต่อเนื่องจากการแก้ Touch Gesture ก่อนหน้า พบอีก 2 อาการและแก้แล้ว:
+
+### อาการ 1: ต้องกดปุ่ม "เปิดเมนู" ก่อน 1 ครั้ง การปัดขอบจอถึงจะใช้ได้
+- **สาเหตุ:** ใน `layout.tsx` มีการ `return <spinner>` เมื่อ `user` ยังเป็น `null` (กำลังโหลดเซสชัน) ซึ่งอยู่ "ใต้" `useEffect` ที่ผูก native touch listener ตอน render รอบแรก JSX จริงยังไม่ mount → `sidebarRef`/`overlayRef`/`edgeRef` ทุกตัวเป็น `null` → ผูก listener ไม่ติด เมื่อ `user` โหลดเสร็จ effect ไม่ rerun (dependency ไม่เปลี่ยน) listener จึงไม่เคยถูกผูก จนกว่าจะกดปุ่มเปิดเมนู (ทำให้ `mobileMenuOpen` เปลี่ยน → effect rerun → เพิ่งผูกติด)
+- **แก้ไข:** เพิ่ม `user` เข้าไปใน dependency array ของ `useEffect` gesture ทำให้ effect rerun ทันทีที่ `user` เปลี่ยนจาก `null → object` และผูก listener ติดกับ DOM จริง → ปัดขอบจอเปิดเมนูได้เลยตั้งแต่โหลดหน้าเสร็จ ไม่ต้องกดปุ่มก่อน
+
+### อาการ 2: แตะปุ่มเมนูไป tab แรกของเซสชันต้องกดย้ำหลายรอบ (รอบถัดไปกดครั้งเดียวติด)
+- **สาเหตุ:** iOS Safari หน่วงการคลิก ~300ms (รอจังหวะ double-tap-zoom) บนองค์ประกอบที่กดได้ซึ่งไม่ได้กำหนด `touch-action` ทำให้การแตะครั้งแรกมักถูกกลืน
+- **แก้ไข:** เพิ่มกฎใน `app/globals.css` ให้ `button, a, [role="button"], input, select, textarea, label` มี `touch-action: manipulation` (ตัด delay) และ `-webkit-tap-highlight-color: transparent` (ตัดไฮไลต์เทากระพริบ)
+- **หมายเหตุ:** หากยังพบว่า "ไปแท็บแรกของเซสชันช้า" เฉพาะตอนรัน `npm run dev` ให้พิจารณาว่าเป็นการ compile เส้นทาง (route) ครั้งแรกของ Next.js dev server ไม่ใช่บั๊ก touch — ทดสอบยืนยันด้วย `npm run build && npm run start`
+
+### ตารางไฟล์ที่แก้ไข
+| # | ไฟล์ | ประเภท | รายละเอียด |
+|---|------|--------|-----------|
+| 1 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | เพิ่ม `user` ใน dependency array ของ gesture `useEffect` ให้ผูก native touch listener ติดทันทีหลัง `user` โหลด (ปัดขอบจอเปิดเมนูได้เลย) |
+| 2 | `my-app/app/globals.css` | **[MODIFY]** | เพิ่ม `touch-action: manipulation` + `-webkit-tap-highlight-color: transparent` ให้องค์ประกอบที่กดได้ทั้งหมด ตัด delay ~300ms ของ iOS |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
