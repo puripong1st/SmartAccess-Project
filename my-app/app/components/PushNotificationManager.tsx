@@ -16,14 +16,33 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
   const [tokenRegistered, setTokenRegistered] = useState<boolean>(false);
   const [showBanner, setShowBanner] = useState<boolean>(false);
   const [pushBlocked, setPushBlocked] = useState<boolean>(false);
+  // iOS ต้องเพิ่มลงหน้าโฮม (standalone) ก่อนถึงจะรับ Web Push ได้ (ข้อกำหนดของ Apple ตั้งแต่ iOS 16.4)
+  const [iosNeedsInstall, setIosNeedsInstall] = useState<boolean>(false);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // ตรวจ iOS/iPadOS (iPadOS รายงานตัวเป็น Mac จึงเช็ค touch ร่วม)
+    const ua = navigator.userAgent;
+    const isIOS = /iphone|ipad|ipod/i.test(ua) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+
     // Check support
     const isSupported =
-      typeof window !== 'undefined' &&
       'serviceWorker' in navigator &&
       'Notification' in window &&
       'PushManager' in window;
+
+    // บน iPhone/iPad ที่ยังเปิดผ่าน Safari (ยังไม่เพิ่มลงหน้าโฮม) → Web Push ใช้ไม่ได้
+    // แสดงคำแนะนำให้ผู้ใช้ติดตั้งเป็นแอปก่อน แทนที่จะไม่แสดงอะไรเลย
+    if (isIOS && !isStandalone) {
+      setIosNeedsInstall(true);
+      setSupported(isSupported);
+      return;
+    }
 
     setSupported(isSupported);
 
@@ -186,6 +205,30 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
       setLoading(false);
     }
   };
+
+  // iPhone/iPad บน Safari (ยังไม่เพิ่มลงหน้าโฮม) — แนะนำให้ติดตั้งเป็นแอปก่อน
+  if (iosNeedsInstall) {
+    return (
+      <div style={{ position: 'fixed', bottom: 20, right: 20, left: 20, maxWidth: 420, marginLeft: 'auto', zIndex: 999 }}>
+        <div style={{
+          background: 'rgba(15, 10, 30, 0.92)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(124,58,237,0.35)',
+          borderRadius: 16,
+          padding: '14px 16px',
+          boxShadow: '0 12px 30px rgba(0,0,0,0.45)',
+          color: '#fff',
+          fontSize: 12.5,
+          lineHeight: 1.55,
+        }}>
+          <strong style={{ display: 'block', fontSize: 13.5, marginBottom: 4 }}>🔔 เปิดแจ้งเตือนบน iPhone</strong>
+          iOS รับการแจ้งเตือนได้เฉพาะเมื่อเพิ่มเว็บลงหน้าจอโฮมก่อน:
+          แตะปุ่ม <b>แชร์</b> (□↑) ด้านล่าง → <b>เพิ่มลงในหน้าจอโฮม</b> → เปิดแอปจากไอคอน แล้วกดเปิดแจ้งเตือนอีกครั้ง
+        </div>
+      </div>
+    );
+  }
 
   // If not supported, do not show anything
   if (!supported) return null;

@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 14:30:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 14:55:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10601,5 +10601,36 @@ because it violates the Content Security Policy directive: "connect-src ..."
 | 3 | `my-app/next.config.ts` | **[MODIFY]** | เพิ่ม `'unsafe-eval'` ใน CSP `script-src` เฉพาะโหมด development แก้ Next.js dev error |
 | 4 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | แก้ปุ่มลอย "รับแจ้งเตือนพุช" ที่ใช้คลาส Tailwind no-op (ตกไปมุมซ้ายล่าง) เป็น inline style `position:fixed` มุมขวาล่าง |
 | 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.26 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
+
+<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+
+---
+
+### 73.27 ข้อกำหนด Web Push บน iOS/iPadOS และการเพิ่มคำแนะนำติดตั้ง PWA (iOS Web Push Requirements & Install Hint)
+
+#### 73.27.1 อาการและสาเหตุ (Symptom & Root Cause)
+
+* **อาการ:** ทดสอบบน iPhone 15 (iOS ล่าสุด) แล้วการแจ้งเตือน PWA ไม่เด้งเลย
+* **สาเหตุ (ข้อจำกัดของ Apple ไม่ใช่บั๊กโค้ด):** iOS/iPadOS รองรับ Web Push API ตั้งแต่ **iOS 16.4 เป็นต้นไป** แต่มีเงื่อนไขบังคับ:
+  1. ต้อง **เพิ่มเว็บลงหน้าจอโฮม (Add to Home Screen)** แล้วเปิดจากไอคอนในโหมด standalone เท่านั้น — เปิดผ่าน Safari ปกติจะ **ไม่มี** `Notification`/`PushManager` ให้ใช้เลย
+  2. ต้องร้องขอสิทธิ์จาก user gesture ภายในแอปที่ติดตั้งแล้ว
+  3. ต้องเสิร์ฟผ่าน HTTPS (โปรดักชัน ไม่ใช่ localhost)
+* เดิมเมื่อเปิดบน Safari (ยังไม่ติดตั้ง) คอมโพเนนต์ `PushNotificationManager` จะคืนค่า `null` (ไม่แสดงอะไร) ทำให้ผู้ใช้งงว่าทำไมไม่มีปุ่ม/ไม่เด้ง
+
+#### 73.27.2 การแก้ไข (Resolution)
+
+* ตรวจสอบ metadata สำหรับ PWA บน iOS ครบถ้วนแล้ว: `appleWebApp.capable: true` (เรนเดอร์เป็น `apple-mobile-web-app-capable`), `manifest`, และ `apple-touch-icon` ใน `app/layout.tsx`
+* เพิ่มการตรวจจับ **iOS + ยังไม่อยู่ในโหมด standalone** ใน `PushNotificationManager.tsx` (ใช้ `display-mode: standalone` และ `navigator.standalone`, รองรับ iPadOS ที่รายงานตัวเป็น Mac ผ่าน `maxTouchPoints`)
+* หากพบกรณีนี้ จะแสดง **การ์ดคำแนะนำ** มุมขวาล่างแทนการซ่อนทั้งหมด: บอกผู้ใช้ให้แตะปุ่มแชร์ → "เพิ่มลงในหน้าจอโฮม" → เปิดแอปจากไอคอน แล้วจึงเปิดการแจ้งเตือนได้
+
+> [!IMPORTANT]
+> บน iPhone/iPad ต้องติดตั้ง PWA ลงหน้าโฮมก่อนเสมอ การแจ้งเตือนพุชจะใช้งานไม่ได้หากเปิดผ่านแท็บ Safari ปกติ — เป็นข้อกำหนดของ iOS เอง
+
+#### 73.27.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)
+
+| ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
+|---|---|---|---|
+| 1 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | เพิ่มการตรวจจับ iOS ที่ยังไม่ติดตั้ง PWA และแสดงการ์ดคำแนะนำ "เพิ่มลงหน้าจอโฮม" |
+| 2 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.27 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>

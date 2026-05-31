@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 14:30:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 14:55:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -15602,6 +15602,48 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>เพิ่มประวัติการบันทึก §73.26 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับสารบัญ</a></p><hr>
+<h3>73.27 ข้อกำหนด Web Push บน iOS/iPadOS และการเพิ่มคำแนะนำติดตั้ง PWA (iOS Web Push Requirements &amp; Install Hint)</h3>
+<h4>73.27.1 อาการและสาเหตุ (Symptom &amp; Root Cause)</h4>
+<ul>
+<li><strong>อาการ:</strong> ทดสอบบน iPhone 15 (iOS ล่าสุด) แล้วการแจ้งเตือน PWA ไม่เด้งเลย</li>
+<li><strong>สาเหตุ (ข้อจำกัดของ Apple ไม่ใช่บั๊กโค้ด):</strong> iOS/iPadOS รองรับ Web Push API ตั้งแต่ <strong>iOS 16.4 เป็นต้นไป</strong> แต่มีเงื่อนไขบังคับ:<ol>
+<li>ต้อง <strong>เพิ่มเว็บลงหน้าจอโฮม (Add to Home Screen)</strong> แล้วเปิดจากไอคอนในโหมด standalone เท่านั้น — เปิดผ่าน Safari ปกติจะ <strong>ไม่มี</strong> <code>Notification</code>/<code>PushManager</code> ให้ใช้เลย</li>
+<li>ต้องร้องขอสิทธิ์จาก user gesture ภายในแอปที่ติดตั้งแล้ว</li>
+<li>ต้องเสิร์ฟผ่าน HTTPS (โปรดักชัน ไม่ใช่ localhost)</li>
+</ol>
+</li>
+<li>เดิมเมื่อเปิดบน Safari (ยังไม่ติดตั้ง) คอมโพเนนต์ <code>PushNotificationManager</code> จะคืนค่า <code>null</code> (ไม่แสดงอะไร) ทำให้ผู้ใช้งงว่าทำไมไม่มีปุ่ม/ไม่เด้ง</li>
+</ul>
+<h4>73.27.2 การแก้ไข (Resolution)</h4>
+<ul>
+<li>ตรวจสอบ metadata สำหรับ PWA บน iOS ครบถ้วนแล้ว: <code>appleWebApp.capable: true</code> (เรนเดอร์เป็น <code>apple-mobile-web-app-capable</code>), <code>manifest</code>, และ <code>apple-touch-icon</code> ใน <code>app/layout.tsx</code></li>
+<li>เพิ่มการตรวจจับ <strong>iOS + ยังไม่อยู่ในโหมด standalone</strong> ใน <code>PushNotificationManager.tsx</code> (ใช้ <code>display-mode: standalone</code> และ <code>navigator.standalone</code>, รองรับ iPadOS ที่รายงานตัวเป็น Mac ผ่าน <code>maxTouchPoints</code>)</li>
+<li>หากพบกรณีนี้ จะแสดง <strong>การ์ดคำแนะนำ</strong> มุมขวาล่างแทนการซ่อนทั้งหมด: บอกผู้ใช้ให้แตะปุ่มแชร์ → &quot;เพิ่มลงในหน้าจอโฮม&quot; → เปิดแอปจากไอคอน แล้วจึงเปิดการแจ้งเตือนได้</li>
+</ul>
+<div class="alert-box alert-important"><strong>IMPORTANT:</strong> บน iPhone/iPad ต้องติดตั้ง PWA ลงหน้าโฮมก่อนเสมอ การแจ้งเตือนพุชจะใช้งานไม่ได้หากเปิดผ่านแท็บ Safari ปกติ — เป็นข้อกำหนดของ iOS เอง</div><h4>73.27.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>รายชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายรายละเอียด</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/components/PushNotificationManager.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มการตรวจจับ iOS ที่ยังไม่ติดตั้ง PWA และแสดงการ์ดคำแนะนำ &quot;เพิ่มลงหน้าจอโฮม&quot;</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มประวัติการบันทึก §73.27 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>
