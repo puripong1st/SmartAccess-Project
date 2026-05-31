@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 21:05:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 21:15:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10998,5 +10998,36 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | 1 | `app/api/esp32/display/route.ts` | **[MODIFY]** | ผนวกกลไก Heartbeat อัปเดต `esp32_heartbeats` และแนบ `offline_pin` ใน Payload อัตโนมัติ |
 | 2 | `app/api/esp32/firmware-ota/route.ts` | **[MODIFY]** | แปลงการ Redirect สู่ Supabase Signed URL อายุขัย 60 วินาที เพิ่มระดับการปกป้อง IP (Intellectual Property) |
 | 3 | `esp32/esp32.ino` | **[MODIFY]** | พัฒนาสถาปัตยกรรม Local AP Fallback บันทึก PIN ลง SPIFFS และจัดการฟอร์ม HTML ออฟไลน์ |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+---
+
+<a id="sec-73-24"></a>
+### 73.24 การบังคับใช้ Row-Level Security (RLS) เพื่อป้องกันช่องโหว่ IDOR
+
+วันที่บันทึก: 31 พฤษภาคม 2026
+
+#### 73.24.1 บริบทและเป้าหมาย (Context & Goals)
+จากการทำ Security Audit ผ่านกระบวนการ /grill-me พบว่าสถาปัตยกรรมดั้งเดิมใช้การดึงข้อมูลจาก Database ผ่าน PostgreSQL Pool ธรรมดาด้วยสิทธิ์ระดับผู้ดูแลระบบ (Superuser) ส่งผลให้ Row-Level Security (RLS) ของ Supabase ถูกข้าม (Bypassed) โดยสมบูรณ์ 
+
+เพื่อยกระดับความปลอดภัยให้เป็นไปตามมาตรฐานการจัดการข้อมูลส่วนบุคคล (PDPA) และอุดช่องโหว่ Insecure Direct Object Reference (IDOR) จึงได้มีการอัปเกรดฐานข้อมูลให้บังคับใช้สิทธิ์การเข้าถึงข้อมูลรายบรรทัดอย่างเข้มงวด
+
+#### 73.24.2 การสร้าง Supabase Authenticated Client
+แทนที่จะใช้ `pg` pool ตลอดเวลา ได้มีการเพิ่มไลบรารีใหม่ `lib/supabase-client.ts` เพื่อสร้าง Supabase Client ที่ทำการผูกติด (Attach) JWT Token ของ Session ผู้ใช้ (นักศึกษาหรือผู้ดูแลระบบ) ไปกับทุก HTTP Request เข้าหา Database ทำให้ Database รับรู้สิทธิ์ของผู้ใช้คนนั้น ๆ และปฏิเสธการดึงข้อมูลที่อยู่นอกเหนือขอบเขตได้ทันที
+
+#### 73.24.3 การประกาศนโยบาย RLS (Row-Level Security Policies)
+ได้มีการดำเนินการรันสคริปต์ `scripts/apply-rls.js` เพื่อล็อกความปลอดภัยตารางที่สำคัญดังนี้:
+1. **ตาราง `students`**: ป้องกันนักศึกษาแอบแก้ไข URL Parameter (IDOR) เพื่อดูข้อมูลของนักศึกษาคนอื่น ระบบจะให้สิทธิ์ระดับ Admin สามารถดูข้อมูลได้ทั้งหมด (อาศัยข้อมูล Role จาก JWT)
+2. **ตาราง `access_logs`**: ห้ามมิให้ผู้ใดแก้ไขหรือลบประวัติการเข้าใช้งานห้องปฏิบัติการ เว้นแต่จะเป็นสิทธิ์ `owner` ซึ่งมีอำนาจระดับสูงสุดเท่านั้น เป็นการปกป้องความสมบูรณ์ของระบบ Log
+3. **ตาราง `esp32_heartbeats`**: จำกัดให้เปิดดูเฉพาะผู้ที่มีสิทธิ์ `owner`, `door_operator` และ `log_viewer` เท่านั้น
+
+#### 73.24.4 ตารางสรุปไฟล์ที่แก้ไข
+
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `lib/supabase-client.ts` | **[NEW]** | สคริปต์ตัวกลางสำหรับสร้าง Supabase Client ที่แนบ JWT ของระบบเดิมเข้าสู่ Context ของ Database |
+| 2 | `scripts/apply-rls.js` | **[NEW]** | สคริปต์แบบใช้งานครั้งเดียวสำหรับการส่งคำสั่ง SQL เปิดใช้ฟังก์ชัน `ENABLE ROW LEVEL SECURITY` และ `CREATE POLICY` |
+| 3 | `app/api/auth/me/route.ts` | **[MODIFY]** | ทำการ Refactor เปลี่ยนให้ API นำเข้า `createAuthenticatedClient` เพื่อพิสูจน์การทำงานของ RLS ว่าบล็อกและอนุญาตการเข้าถึงได้ถูกต้อง |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
