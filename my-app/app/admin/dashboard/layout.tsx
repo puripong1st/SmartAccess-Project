@@ -332,6 +332,8 @@ const DashboardCharts = dynamic(() => import("../../components/DashboardCharts")
 });
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
+  const sidebarRef = useRef<HTMLElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
@@ -426,44 +428,117 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, setTab, setEditingAdmin, setActiveRoomDetails]);
 
-  // 📱 Swipe-to-reveal mobile/tablet drawer gesture controls
+  // 📱 High-Performance Swipe-to-Reveal mobile/tablet drawer gesture controls
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
-    let touchEndX = 0;
-    let touchEndY = 0;
+    let currentTouchX = 0;
+    let currentTouchY = 0;
+    let isSwiping = false;
+    let swipeDirection: "open" | "close" | null = null;
+
+    const sidebar = sidebarRef.current;
+    const overlay = overlayRef.current;
+    if (!sidebar || !overlay) return;
 
     const handleTouchStart = (e: TouchEvent) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchEndX = e.touches[0].clientX;
-      touchEndY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      currentTouchX = touch.clientX;
+      currentTouchY = touch.clientY;
+      
+      // Determine if we are swiping to open (touch starts near left edge) or close (sidebar is open)
+      if (!mobileMenuOpen && touchStartX < 90) {
+        isSwiping = true;
+        swipeDirection = "open";
+        // Disable transitions for instant response during drag
+        sidebar.style.transition = "none";
+        overlay.style.transition = "none";
+        overlay.style.pointerEvents = "auto";
+      } else if (mobileMenuOpen) {
+        isSwiping = true;
+        swipeDirection = "close";
+        // Disable transitions
+        sidebar.style.transition = "none";
+        overlay.style.transition = "none";
+      }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      touchEndX = e.touches[0].clientX;
-      touchEndY = e.touches[0].clientY;
-    };
+      if (!isSwiping) return;
 
-    const handleTouchEnd = () => {
-      const deltaX = touchEndX - touchStartX;
-      const deltaY = Math.abs(touchEndY - touchStartY);
+      const touch = e.touches[0];
+      currentTouchX = touch.clientX;
+      currentTouchY = touch.clientY;
 
-      // Only handle horizontal swipes that are longer than 60px with minimal vertical displacement
-      if (Math.abs(deltaX) > 60 && deltaY < 50) {
-        if (deltaX > 0 && touchStartX < 50) {
-          // Swipe right from the left edge (within 50px) -> pull out sidebar drawer
-          setMobileMenuOpen(true);
-        } else if (deltaX < 0 && mobileMenuOpen) {
-          // Swipe left anywhere when menu is open -> close sidebar drawer
-          setMobileMenuOpen(false);
+      const deltaX = currentTouchX - touchStartX;
+      const deltaY = currentTouchY - touchStartY;
+
+      // Lock swipe to horizontal if user moves primarily horizontally
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+        // Prevent default browser behavior (e.g. pull-to-refresh or back gestures if possible)
+        if (e.cancelable) {
+          e.preventDefault();
+        }
+
+        if (swipeDirection === "open") {
+          // Closed is -260px. Swipe right increases translateX up to 0px
+          const translateX = Math.max(-260, Math.min(0, -260 + deltaX));
+          sidebar.style.transform = `translateX(${translateX}px)`;
+          
+          // Calculate opacity from 0 to 1
+          const progress = (260 + translateX) / 260;
+          overlay.style.opacity = `${progress}`;
+          overlay.style.backdropFilter = `blur(${progress * 2}px)`;
+        } else if (swipeDirection === "close") {
+          // Open is 0px. Swipe left decreases translateX down to -260px
+          const translateX = Math.max(-260, Math.min(0, deltaX));
+          sidebar.style.transform = `translateX(${translateX}px)`;
+          
+          // Calculate opacity
+          const progress = (260 + translateX) / 260;
+          overlay.style.opacity = `${progress}`;
+          overlay.style.backdropFilter = `blur(${progress * 2}px)`;
         }
       }
     };
 
-    document.addEventListener("touchstart", handleTouchStart, { passive: true });
-    document.addEventListener("touchmove", handleTouchMove, { passive: true });
-    document.addEventListener("touchend", handleTouchEnd, { passive: true });
+    const handleTouchEnd = () => {
+      if (!isSwiping) return;
+      isSwiping = false;
+
+      const deltaX = currentTouchX - touchStartX;
+      
+      // Re-enable transitions
+      sidebar.style.transition = "";
+      overlay.style.transition = "";
+      sidebar.style.transform = "";
+      overlay.style.opacity = "";
+      overlay.style.backdropFilter = "";
+      overlay.style.pointerEvents = "";
+
+      if (swipeDirection === "open") {
+        // Open if dragged more than 80px
+        if (deltaX > 80) {
+          setMobileMenuOpen(true);
+        } else {
+          setMobileMenuOpen(false);
+        }
+      } else if (swipeDirection === "close") {
+        // Close if dragged left more than 80px
+        if (deltaX < -80) {
+          setMobileMenuOpen(false);
+        } else {
+          setMobileMenuOpen(true);
+        }
+      }
+      swipeDirection = null;
+    };
+
+    document.addEventListener("touchstart", handleTouchStart, { passive: false });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("touchend", handleTouchEnd, { passive: false });
 
     return () => {
       document.removeEventListener("touchstart", handleTouchStart);
@@ -1241,7 +1316,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
       <div style={{ display: "flex", minHeight: "100vh", flexDirection: "row", maxWidth: "100vw", overflowX: "hidden" }}>
 
         {/* Sidebar Navigation */}
-        <aside className={`sidebar-responsive ${mobileMenuOpen ? 'open' : ''}`}>
+        <aside ref={sidebarRef} className={`sidebar-responsive ${mobileMenuOpen ? 'open' : ''}`}>
           <div style={{ padding: "24px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
             <BrandMark size={40} />
             <div>
@@ -1355,12 +1430,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        {mobileMenuOpen && (
-          <div
-            style={{ position: "fixed", inset: 0, background: "rgba(30, 27, 75, 0.2)", backdropFilter: "blur(2px)", zIndex: 9990 }}
-            onClick={() => setMobileMenuOpen(false)}
-          />
-        )}
+        <div
+          ref={overlayRef}
+          className={`sidebar-overlay-responsive ${mobileMenuOpen ? 'open' : ''}`}
+          onClick={() => setMobileMenuOpen(false)}
+        />
 
         {/* Main Content Area */}
         <main className="main-content-responsive" style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>

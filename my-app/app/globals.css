@@ -807,3 +807,24 @@ body {
 @view-transition {
   navigation: auto;
 }
+
+/* 📱 Premium Sidebar Drawer Overlay with high-performance CSS transition */
+.sidebar-overlay-responsive {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 27, 75, 0.2);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  z-index: 9990;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-overlay-responsive.open {
+  opacity: 1;
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
