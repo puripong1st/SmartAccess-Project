@@ -1590,11 +1590,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           {/* Inner Content Area — Bulletproof layout lock for mobile screens */}
           <div className="p-4 md:p-6" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
 
-            {/* Render children sub-routes pages (Room Selector and Pending List) first */}
-            <div key={tab} className="animate-fade-in" style={{ marginBottom: 24 }}>
-              {children}
-            </div>
-
             {/* ── Premium Metric Summary Cards Grid (Shown only on the main pending tab) ── */}
             {tab === "pending" && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 20 }} className="animate-fade-in">
@@ -1695,6 +1690,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                 )}
               </>
             )}
+
+            {/* Render children sub-routes pages (Room Selector and Pending List) */}
+            <div key={tab} className="animate-fade-in" style={{ paddingBottom: 24 }}>
+              {children}
+            </div>
 
           </div>
         </main>

@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 18:00:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 18:12:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10908,8 +10908,8 @@ const DashboardCharts = dynamic(() => import("../../components/DashboardCharts")
 | 2 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ปรับเงื่อนไขการซ่อนปุ่มเมนู `.desktop-hide-trigger` ใน CSS เป็น 1025px และฝังชุดระบบ Swipe-to-Reveal touch gestures ปัดจอเปิด-ปิดแถบเนวิเกชัน |
 | 3 | `my-app/app/admin/dashboard/pending/page.tsx` | **[MODIFY]** | ถอด inline display ของโมบายล์วิวออก และครอบการ์ดลงใน `mobile-card-grid-container` เพื่อจัดกริดสวยงาม |
 | 4 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มบันทึกสถาปัตยกรรมและรายละเอียดเปลี่ยนผ่าน UI/UX §73.30 พร้อมอัปเดตวันเวลาสรุปเอกสารล่าสุด |
-| 5 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | จัดลำดับ Layout ใหม่ ดันเนื้อหาห้องเรียน ({children}) ขึ้นบนสุด และลบ Animation `hover-spin` ออกจากการ์ดสถิติเพื่อแก้ปัญหา UI ค้างบนมือถือ |
-| 6 | `my-app/app/admin/dashboard/pending/page.tsx` | **[MODIFY]** | ปรับปรุงประสิทธิภาพปุ่มสลับห้องเรียน (Room Selection) บนมือถือ โดยเพิ่ม `touch-action: manipulation` เพื่อขจัดความหน่วง 300ms (Click Delay) |
+| 5 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ย้ายโครงสร้าง DOM กลับไปเหมือนเดิม (ให้กราฟและสถิติอยู่ด้านบนสุด) เพื่อความคุ้นเคยของผู้ใช้ |
+| 6 | `my-app/app/admin/dashboard/pending/page.tsx` | **[MODIFY]** | เพิ่มระบบ Auto-scroll (scrollIntoView) บนมือถือ ให้หน้าจอเลื่อนลงมาที่รายการรออนุมัติอัตโนมัติเมื่อโหลดหน้าเว็บครั้งแรกใน PWA |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 

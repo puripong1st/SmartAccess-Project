@@ -65,13 +65,23 @@ export default function PendingPage() {
   } = useDashboard();
 
   const [pageLoading, setPageLoading] = React.useState(true);
+  
+  // Auto-scroll on mobile to the Pending List section on first load
+  const pendingSectionRef = React.useRef<HTMLDivElement>(null);
+  
   React.useEffect(() => {
-    const t = setTimeout(() => setPageLoading(false), 450);
+    const t = setTimeout(() => {
+      setPageLoading(false);
+      // If on mobile/PWA, automatically scroll down to the pending section
+      if (window.innerWidth <= 768 && pendingSectionRef.current) {
+        pendingSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 450);
     return () => clearTimeout(t);
   }, []);
 
   return (
-    <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20 }}>
+    <div ref={pendingSectionRef} className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20 }}>
       
       {/* Beautiful Classroom Filter Tabs & Audio Controls */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
