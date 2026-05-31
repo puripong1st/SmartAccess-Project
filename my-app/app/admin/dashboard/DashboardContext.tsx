@@ -747,12 +747,14 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     };
   }, [router]);
 
-  // Auth me check
+  // Auth check + ต่ออายุ session ทุกครั้งที่เปิดแอป (sliding session)
+  // ใช้ /api/auth/refresh ที่ทั้งตรวจสอบสิทธิ์และออกคุกกี้ใหม่อายุ 30 วัน
+  // ผลคือผู้ใช้ที่เปิดแอปสม่ำเสมอจะคงสถานะล็อกอินไปเรื่อยๆ จนกว่าจะกด Logout
   useEffect(() => {
-    fetch("/api/auth/me")
+    fetch("/api/auth/refresh", { method: "POST" })
       .then(r => r.json())
       .then(d => {
-        if (d.error) router.push("/admin/login");
+        if (d.error || !d.user) router.push("/admin/login");
         else setUser(d.user);
       })
       .catch(() => router.push("/admin/login"));

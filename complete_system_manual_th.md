@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 14:55:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 12:45:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -122,6 +122,7 @@
 - [73.15 การพัฒนาระบบธีมและโหมดมืดพรีเมียม (Harmony Palette)](#sec-73-15)
 - [73.17 การออกแบบโครงสร้างความก้าวหน้าและการแสดงสถานะแบบอะซิงโครนัส](#sec-73-17)
 - [73.19 โครงสร้างแถบควบคุมสารบัญนำทางพลวัตแบบประสานสัญจรร่วมกัน](#sec-73-19)
+- [73.22 การปรับปรุงแบรนด์และการอัปเดตไอคอนพรีเมียมเรืองแสง (Unified Glowing Neon Rebranding & Icon Redesign)](#sec-73-22)
 
 ---
 
@@ -149,6 +150,12 @@
 - [73.18 แก้ไขปัญหาจุดบกพร่องของโหมดมืดและการแสดงผลกราฟในรอบการเข้าถึงครั้งแรก](#sec-73-18)
 - [73.20 การแก้ไขปัญหาแถบสารบัญด้านซ้ายตัดรายการและ Scroll ไม่ตรงเป้า](#sec-73-20)
 - [73.21 การพัฒนาและติดตั้งระบบ Progressive Web App (PWA) และการแจ้งเตือนพุชผ่าน Firebase Cloud Messaging (FCM)](#sec-73-21)
+- [73.23 การแก้ไขข้อบกพร่องระบบแจ้งเตือนพุช PWA และปรับเป้าหมายการติดตั้งแอป (PWA Push Notification Bug-Fix & Admin Install Target)](#sec-73-23)
+- [73.24 การปรับปรุง UI ศูนย์ตั้งค่าการแจ้งเตือนให้ใช้งานง่ายและรองรับทุกหน้าจอ (Notification Settings UI Overhaul & Full Responsiveness)](#sec-73-24)
+- [73.25 การแก้ไขบั๊กระดับระบบแบบเบ็ดเสร็จ: CSP บล็อก FCM, Migration ตกหล่น, และโลโก้/UI (Full-System Bug-Fix: CSP, Skipped Migrations, Logo & UI)](#sec-73-25)
+- [73.26 ต้นตอที่แท้จริงของ UI เพี้ยน: Tailwind ไม่ถูกตั้งค่า + แก้ Dev CSP eval (Root Cause of Broken UI: Tailwind Not Wired Up + Dev CSP eval Fix)](#sec-73-26)
+- [73.27 ข้อกำหนด Web Push บน iOS/iPadOS และการเพิ่มคำแนะนำติดตั้ง PWA (iOS Web Push Requirements & Install Hint)](#sec-73-27)
+- [73.28 คงสถานะล็อกอินแบบ PWA จนกว่าจะกด Logout (Persistent Login Session for PWA)](#sec-73-28)
 
 ---
 
@@ -10632,5 +10639,45 @@ because it violates the Content Security Policy directive: "connect-src ..."
 |---|---|---|---|
 | 1 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | เพิ่มการตรวจจับ iOS ที่ยังไม่ติดตั้ง PWA และแสดงการ์ดคำแนะนำ "เพิ่มลงหน้าจอโฮม" |
 | 2 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.27 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
+
+<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+
+---
+
+### 73.28 คงสถานะล็อกอินแบบ PWA จนกว่าจะกด Logout (Persistent Login Session for PWA)
+
+#### 73.28.1 บริบท — ทำไมดูเหมือน "ต้องล็อกอินใหม่" ทุกครั้งที่เปิดแอป
+
+ผู้ใช้รายงานว่าบน iPhone เมื่อปัดแอปทิ้งแล้วเปิดใหม่ต้องล็อกอินซ้ำ แต่ถ้าเข้าผ่านการแจ้งเตือน PWA กลับไม่ต้องล็อกอิน ตรวจสอบแล้วพบว่า **ไม่ใช่บั๊กของระบบ auth** — คุกกี้ session (`smartaccess_admin_token`, httpOnly) ยัง persist อยู่จริง สาเหตุที่ดูเหมือนต้องล็อกอินใหม่มาจาก 3 จุด:
+
+1. `manifest.json` ตั้ง `start_url` เป็น `/admin/login` → เปิดจากไอคอน PWA จะไปหน้าล็อกอินเสมอ และหน้าล็อกอินเดิม **ไม่ตรวจสอบว่าล็อกอินอยู่แล้ว** จึงไม่เด้งเข้าแดชบอร์ดให้
+2. มี **idle auto-logout 15 นาที** (เตะออกเมื่อไม่มีการเคลื่อนไหว)
+3. JWT เดิมหมดอายุใน **8 ชั่วโมง**
+
+(การเข้าผ่านแจ้งเตือนเปิด `/admin/dashboard` ตรงๆ คุกกี้ที่ยังไม่หมดอายุจึงพาเข้าได้เลย)
+
+#### 73.28.2 การแก้ไข — Session คงอยู่จนกว่าจะกด Logout
+
+ตามที่ผู้ดูแลระบบเลือก ปรับให้คงสถานะล็อกอินแบบแอปจริงจนกว่าจะกด Logout:
+
+1. **ขยายอายุ session เป็น 30 วัน** ใน `lib/auth.ts` (ทั้ง JWT `expiresIn` และ cookie `maxAge` ใช้ค่าคงที่ `SESSION_MAX_AGE_SECONDS`)
+2. **Sliding session — ต่ออายุอัตโนมัติทุกครั้งที่เปิดแอป** ใน `DashboardContext.tsx` เรียก `POST /api/auth/refresh` ตอนโหลดแดชบอร์ด (เดิมเรียกแค่ `/api/auth/me`) เพื่อออกคุกกี้ใหม่อายุ 30 วัน → ผู้ใช้ที่เปิดแอปสม่ำเสมอจะไม่หลุดเลย
+3. **เด้งเข้าแดชบอร์ดอัตโนมัติถ้าล็อกอินอยู่** ใน `app/admin/login/page.tsx` ตรวจ `/api/auth/me` ตอนเปิดหน้า ถ้า session ยังใช้ได้จะ `router.replace("/admin/dashboard")` ทันที (มีตัวโหลดกันฟอร์มกระพริบ) — แก้อาการเปิดจากไอคอนแล้วเจอหน้าล็อกอินทั้งที่ยังล็อกอินอยู่
+4. **ปิด idle auto-logout 15 นาที** ใน `app/admin/dashboard/layout.tsx` (handlers เป็น no-op)
+
+> [!WARNING]
+> นี่เป็นการแลกความสะดวกกับความปลอดภัย — เครื่องที่ล็อกอินค้างไว้จะเข้าระบบแอดมินได้จนกว่าจะกด Logout หรือครบ 30 วัน ควรใช้กับอุปกรณ์ส่วนตัวเท่านั้น และยังคงมีการตรวจ `is_active` ของบัญชี + 401 interceptor เตะออกอัตโนมัติเมื่อบัญชีถูกปิดใช้งาน
+
+ตรวจสอบบน dev server แล้ว: `POST /api/auth/refresh` คืน 200 พร้อม user, และเปิด `/admin/login` ขณะมี session ถูกเด้งไป `/admin/dashboard` อัตโนมัติ ไม่ต้องล็อกอินซ้ำ
+
+#### 73.28.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)
+
+| ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
+|---|---|---|---|
+| 1 | `my-app/lib/auth.ts` | **[MODIFY]** | ขยายอายุ JWT + cookie เป็น 30 วัน (`SESSION_MAX_AGE_SECONDS`) |
+| 2 | `my-app/app/admin/dashboard/DashboardContext.tsx` | **[MODIFY]** | เปลี่ยน bootstrap เป็น `POST /api/auth/refresh` เพื่อต่ออายุ session ทุกครั้งที่เปิดแอป (sliding) |
+| 3 | `my-app/app/admin/login/page.tsx` | **[MODIFY]** | ตรวจ session ตอนเปิดหน้า ถ้าล็อกอินอยู่เด้งเข้าแดชบอร์ดอัตโนมัติ + ตัวโหลดกันฟอร์มกระพริบ |
+| 4 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ปิด idle auto-logout 15 นาที (handlers เป็น no-op) ตามคำขอคงสถานะล็อกอิน |
+| 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.28 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>

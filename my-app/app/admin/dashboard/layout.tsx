@@ -395,15 +395,14 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   // ช่องทางแจ้งเตือนที่กำลังตั้งค่าใน room modal (segmented selector)
   const [roomNotifyChannel, setRoomNotifyChannel] = useState<"discord" | "telegram" | "line">("discord");
 
+  // ตามคำขอ: คงสถานะล็อกอินแบบ PWA จนกว่าจะกด Logout เอง
+  // จึงปิด idle auto-logout (เดิมเตะออกหลังไม่มีกิจกรรม 15 นาที) — handlers เป็น no-op
   const handleTimeout = useCallback(() => {
-    fetch("/api/auth/logout", { method: "POST" })
-      .finally(() => {
-        router.push("/admin/login?reason=idle");
-      });
-  }, [router]);
+    /* idle auto-logout disabled — session คงอยู่จนกด Logout */
+  }, []);
 
-  const handleWarning = useCallback((isWarning: boolean) => {
-    setShowWarning(isWarning);
+  const handleWarning = useCallback((_isWarning: boolean) => {
+    /* ไม่แสดงคำเตือนหมดเวลา idle อีกต่อไป */
   }, []);
 
   const { resetTimer } = useIdleTimer(handleTimeout, handleWarning);

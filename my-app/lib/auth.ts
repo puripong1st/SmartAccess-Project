@@ -53,8 +53,12 @@ export function canOperateRoom(admin: AdminPayload, roomCode: string): boolean {
   return rooms.includes("*") || rooms.includes(roomCode);
 }
 
+// คงสถานะล็อกอินแบบ PWA จนกว่าจะกด Logout — อายุ session 30 วัน
+// (ต่ออายุอัตโนมัติทุกครั้งที่เปิดแอปผ่าน /api/auth/refresh เพื่อให้ผู้ใช้ที่ใช้งานสม่ำเสมอไม่หลุดเลย)
+const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60; // 30 วัน
+
 export function signToken(payload: AdminPayload): string {
-  return jwt.sign(payload, JWT_SECRET!, { expiresIn: "8h" });
+  return jwt.sign(payload, JWT_SECRET!, { expiresIn: SESSION_MAX_AGE_SECONDS });
 }
 
 export function verifyToken(token: string): AdminPayload | null {
@@ -96,7 +100,7 @@ export function setAuthCookie(token: string): {
     httpOnly: true,
     // Vulnerability 4 fix: only send cookie over HTTPS in production
     secure: process.env.NODE_ENV === "production",
-    maxAge: 8 * 60 * 60, // 8 hours
+    maxAge: SESSION_MAX_AGE_SECONDS, // 30 วัน — คงสถานะล็อกอินจนกว่าจะกด Logout
     path: "/",
     sameSite: "lax",
   };

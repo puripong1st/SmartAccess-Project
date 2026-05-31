@@ -1,5 +1,5 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { IconAlert } from "../../components/Icons";
@@ -79,6 +79,24 @@ function AdminLoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isIdle = searchParams.get("reason") === "idle";
+  // ถ้ายังล็อกอินอยู่ (คุกกี้ session ยังไม่หมดอายุ) ให้เด้งเข้าแดชบอร์ดทันที
+  // แก้อาการเปิดแอป PWA จากไอคอนแล้วต้องล็อกอินซ้ำทั้งที่ session ยังอยู่
+  const [checkingSession, setCheckingSession] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/me")
+      .then(r => r.json())
+      .then(d => {
+        if (active && d && !d.error && d.user) {
+          router.replace("/admin/dashboard");
+        } else if (active) {
+          setCheckingSession(false);
+        }
+      })
+      .catch(() => { if (active) setCheckingSession(false); });
+    return () => { active = false; };
+  }, [router]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -101,6 +119,16 @@ function AdminLoginPageInner() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // ระหว่างตรวจสอบ session ที่มีอยู่ — แสดงตัวโหลด กันหน้าฟอร์มกระพริบตอนเปิดแอป
+  if (checkingSession) {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--bg-primary)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <span className="animate-spin" style={{ display: "inline-block", width: 28, height: 28, border: "3px solid var(--border-medium)", borderTopColor: "var(--smartaccess-purple)", borderRadius: "50%" }} />
+        <span style={{ color: "var(--text-secondary)", fontSize: 13, fontWeight: 600 }}>กำลังตรวจสอบสถานะการเข้าสู่ระบบ...</span>
+      </div>
+    );
   }
 
   return (
