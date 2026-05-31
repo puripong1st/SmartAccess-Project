@@ -563,10 +563,12 @@ body {
   z-index: 9999 !important;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   transform: translateX(-100%);
+  pointer-events: none;
 }
 
 .sidebar-responsive.open {
   transform: translateX(0);
+  pointer-events: auto;
 }
 
 @media (min-width: 1025px) {
@@ -581,6 +583,7 @@ body {
     transform: none !important;
     z-index: 100 !important;
     flex-shrink: 0 !important;
+    pointer-events: auto !important;
   }
   
   .main-content-responsive {

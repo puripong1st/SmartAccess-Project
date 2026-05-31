@@ -428,136 +428,159 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, setTab, setEditingAdmin, setActiveRoomDetails]);
 
-  // 📱 High-Performance Swipe-to-Reveal mobile/tablet drawer gesture controls
-  // ใช้ Ref ในการเก็บสถานะล่าสุดเพื่อหลีกเลี่ยงการล้างและผูก Event Listener ใหม่ทุกครั้งที่เมนูสไลด์เปิด/ปิด
-  // ซึ่งส่งผลให้การรูดปัดนิ้วจากขอบจอด้านซ้ายทำงานได้ลื่นไหล 100% โดยไม่ต้องกดปุ่มเปิดเมนูก่อน
+  // 📱 Native-App-Quality Swipe Drawer Gesture System
+  // ใช้ Dedicated Edge Touch Zone + Direct DOM Touch Handlers แทน Global Event Listeners
+  // เพื่อหลีกเลี่ยง overflowX:hidden และ z-index stacking ที่บล็อกการรับ touch events
   const menuOpenRef = useRef(mobileMenuOpen);
-  useEffect(() => {
-    menuOpenRef.current = mobileMenuOpen;
-  }, [mobileMenuOpen]);
+  useEffect(() => { menuOpenRef.current = mobileMenuOpen; }, [mobileMenuOpen]);
 
-  useEffect(() => {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let currentTouchX = 0;
-    let currentTouchY = 0;
-    let isSwiping = false;
-    let swipeDirection: "open" | "close" | null = null;
+  // Gesture state ทั้งหมดเก็บเป็น ref เพื่อไม่ trigger re-render ระหว่างลากนิ้ว
+  const gestureRef = useRef({
+    startX: 0, startY: 0, currentX: 0, currentY: 0,
+    isSwiping: false, direction: null as "open" | "close" | null,
+    directionLocked: false,
+  });
 
+  const applyTransform = useCallback((deltaX: number, mode: "open" | "close") => {
     const sidebar = sidebarRef.current;
     const overlay = overlayRef.current;
     if (!sidebar || !overlay) return;
 
-    const handleTouchStart = (e: TouchEvent) => {
-      // ดักจับเฉพาะบนอุปกรณ์หน้าจอเล็ก (max-width: 1024px)
-      if (window.innerWidth > 1024) return;
+    if (mode === "open") {
+      const tx = Math.max(-260, Math.min(0, -260 + deltaX));
+      sidebar.style.transform = `translateX(${tx}px)`;
+      sidebar.style.pointerEvents = "auto"; // เปิด pointer-events ระหว่างลากนิ้ว
+      const p = (260 + tx) / 260;
+      overlay.style.opacity = `${p}`;
+      overlay.style.backdropFilter = `blur(${p * 2}px)`;
+      overlay.style.pointerEvents = p > 0.05 ? "auto" : "none";
+    } else {
+      const tx = Math.max(-260, Math.min(0, deltaX));
+      sidebar.style.transform = `translateX(${tx}px)`;
+      const p = (260 + tx) / 260;
+      overlay.style.opacity = `${p}`;
+      overlay.style.backdropFilter = `blur(${p * 2}px)`;
+    }
+  }, []);
 
-      const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-      currentTouchX = touch.clientX;
-      currentTouchY = touch.clientY;
-      
-      const isOpen = menuOpenRef.current;
+  const clearInlineStyles = useCallback(() => {
+    const sidebar = sidebarRef.current;
+    const overlay = overlayRef.current;
+    if (!sidebar || !overlay) return;
+    sidebar.style.transition = "";
+    sidebar.style.transform = "";
+    sidebar.style.pointerEvents = "";
+    overlay.style.transition = "";
+    overlay.style.opacity = "";
+    overlay.style.backdropFilter = "";
+    overlay.style.pointerEvents = "";
+  }, []);
 
-      // ตรวจจับจุดเริ่มต้นสัมผัส:
-      // 1. ถ้าเมนูปิดอยู่ (!isOpen) และเริ่มสัมผัสจากขอบด้านซ้ายสุด (touchStartX < 100px)
-      // 2. ถ้าเมนูเปิดอยู่ (isOpen) สัมผัสตรงจุดใดก็ได้บนหน้าจอเพื่อปัดปิด
-      if (!isOpen && touchStartX < 100) {
-        isSwiping = true;
-        swipeDirection = "open";
-        // ปิด transition ชั่วคราวเพื่อให้เลื่อนตามนิ้วแบบ Real-time (60fps/120fps)
-        sidebar.style.transition = "none";
-        overlay.style.transition = "none";
-        overlay.style.pointerEvents = "auto";
-      } else if (isOpen) {
-        isSwiping = true;
-        swipeDirection = "close";
-        sidebar.style.transition = "none";
-        overlay.style.transition = "none";
+  // ─── Touch Handlers สำหรับ Edge Zone (ปัดขวาเปิด) ───
+  const onEdgeTouchStart = useCallback((e: React.TouchEvent) => {
+    if (window.innerWidth > 1024) return;
+    const t = e.touches[0];
+    const g = gestureRef.current;
+    g.startX = t.clientX; g.startY = t.clientY;
+    g.currentX = t.clientX; g.currentY = t.clientY;
+    g.isSwiping = true; g.direction = "open"; g.directionLocked = false;
+
+    const sidebar = sidebarRef.current;
+    const overlay = overlayRef.current;
+    if (sidebar) sidebar.style.transition = "none";
+    if (overlay) { overlay.style.transition = "none"; overlay.style.pointerEvents = "auto"; }
+  }, []);
+
+  const onEdgeTouchMove = useCallback((e: React.TouchEvent) => {
+    const g = gestureRef.current;
+    if (!g.isSwiping || g.direction !== "open") return;
+
+    const t = e.touches[0];
+    g.currentX = t.clientX; g.currentY = t.clientY;
+    const dx = g.currentX - g.startX;
+    const dy = g.currentY - g.startY;
+
+    // ล็อกทิศทางเมื่อเคลื่อนเกิน 10px
+    if (!g.directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      if (Math.abs(dy) > Math.abs(dx)) {
+        // ผู้ใช้ปัดแนวตั้ง → ยกเลิก swipe
+        g.isSwiping = false; g.direction = null;
+        clearInlineStyles();
+        return;
       }
-    };
+      g.directionLocked = true;
+    }
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isSwiping) return;
+    if (g.directionLocked && dx > 0) {
+      if (e.cancelable) e.preventDefault();
+      applyTransform(dx, "open");
+    }
+  }, [applyTransform, clearInlineStyles]);
 
-      const touch = e.touches[0];
-      currentTouchX = touch.clientX;
-      currentTouchY = touch.clientY;
+  const onEdgeTouchEnd = useCallback(() => {
+    const g = gestureRef.current;
+    if (!g.isSwiping || g.direction !== "open") return;
+    g.isSwiping = false;
+    const dx = g.currentX - g.startX;
+    clearInlineStyles();
+    if (dx > 70) {
+      setMobileMenuOpen(true);
+    }
+    g.direction = null;
+  }, [clearInlineStyles, setMobileMenuOpen]);
 
-      const deltaX = currentTouchX - touchStartX;
-      const deltaY = currentTouchY - touchStartY;
+  // ─── Touch Handlers สำหรับ Overlay + Sidebar (ปัดซ้ายปิด) ───
+  const onDrawerTouchStart = useCallback((e: React.TouchEvent) => {
+    if (window.innerWidth > 1024) return;
+    if (!menuOpenRef.current) return;
 
-      // ล็อกการเลื่อนเฉพาะในแนวตั้ง/แนวนอน: ถ้าปัดไปแนวนอนมากกว่าแนวตั้งและเลื่อนเกิน 10px
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-        // ปิดกั้นการเลื่อนหน้าจอเบราว์เซอร์ปกติระว่างปัดเมนู
-        if (e.cancelable) {
-          e.preventDefault();
-        }
+    const t = e.touches[0];
+    const g = gestureRef.current;
+    g.startX = t.clientX; g.startY = t.clientY;
+    g.currentX = t.clientX; g.currentY = t.clientY;
+    g.isSwiping = true; g.direction = "close"; g.directionLocked = false;
 
-        if (swipeDirection === "open") {
-          // ซ่อนอยู่ทางซ้ายคือ -260px การลากไปขวา (deltaX > 0) จะดึง translateX เข้าใกล้ 0px
-          const translateX = Math.max(-260, Math.min(0, -260 + deltaX));
-          sidebar.style.transform = `translateX(${translateX}px)`;
-          
-          // คำนวณความโปร่งใสของ Overlay ตามระยะลาก (0.0 ถึง 1.0)
-          const progress = (260 + translateX) / 260;
-          overlay.style.opacity = `${progress}`;
-          overlay.style.backdropFilter = `blur(${progress * 2}px)`;
-        } else if (swipeDirection === "close") {
-          // เมนูเปิดอยู่คือ 0px การลากไปซ้าย (deltaX < 0) จะดึง translateX เข้าหา -260px
-          const translateX = Math.max(-260, Math.min(0, deltaX));
-          sidebar.style.transform = `translateX(${translateX}px)`;
-          
-          const progress = (260 + translateX) / 260;
-          overlay.style.opacity = `${progress}`;
-          overlay.style.backdropFilter = `blur(${progress * 2}px)`;
-        }
+    const sidebar = sidebarRef.current;
+    const overlay = overlayRef.current;
+    if (sidebar) sidebar.style.transition = "none";
+    if (overlay) overlay.style.transition = "none";
+  }, []);
+
+  const onDrawerTouchMove = useCallback((e: React.TouchEvent) => {
+    const g = gestureRef.current;
+    if (!g.isSwiping || g.direction !== "close") return;
+
+    const t = e.touches[0];
+    g.currentX = t.clientX; g.currentY = t.clientY;
+    const dx = g.currentX - g.startX;
+    const dy = g.currentY - g.startY;
+
+    if (!g.directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      if (Math.abs(dy) > Math.abs(dx)) {
+        g.isSwiping = false; g.direction = null;
+        clearInlineStyles();
+        return;
       }
-    };
+      g.directionLocked = true;
+    }
 
-    const handleTouchEnd = () => {
-      if (!isSwiping) return;
-      isSwiping = false;
+    if (g.directionLocked && dx < 0) {
+      if (e.cancelable) e.preventDefault();
+      applyTransform(dx, "close");
+    }
+  }, [applyTransform, clearInlineStyles]);
 
-      const deltaX = currentTouchX - touchStartX;
-      
-      // คืนค่า transition ปกติ
-      sidebar.style.transition = "";
-      overlay.style.transition = "";
-      sidebar.style.transform = "";
-      overlay.style.opacity = "";
-      overlay.style.backdropFilter = "";
-      overlay.style.pointerEvents = "";
-
-      if (swipeDirection === "open") {
-        // ถ้าลากขวาเกิน 80px ให้เปิดเมนูสำเร็จ
-        if (deltaX > 80) {
-          setMobileMenuOpen(true);
-        } else {
-          setMobileMenuOpen(false);
-        }
-      } else if (swipeDirection === "close") {
-        // ถ้าลากซ้ายเกิน -80px ให้ปิดเมนูสำเร็จ
-        if (deltaX < -80) {
-          setMobileMenuOpen(false);
-        } else {
-          setMobileMenuOpen(true);
-        }
-      }
-      swipeDirection = null;
-    };
-
-    document.addEventListener("touchstart", handleTouchStart, { passive: false });
-    document.addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.addEventListener("touchend", handleTouchEnd, { passive: false });
-
-    return () => {
-      document.removeEventListener("touchstart", handleTouchStart);
-      document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [setMobileMenuOpen]);
+  const onDrawerTouchEnd = useCallback(() => {
+    const g = gestureRef.current;
+    if (!g.isSwiping || g.direction !== "close") return;
+    g.isSwiping = false;
+    const dx = g.currentX - g.startX;
+    clearInlineStyles();
+    if (dx < -70) {
+      setMobileMenuOpen(false);
+    }
+    g.direction = null;
+  }, [clearInlineStyles, setMobileMenuOpen]);
 
   const isOwner = user?.role === "owner";
 
@@ -1328,7 +1351,13 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
       <div style={{ display: "flex", minHeight: "100vh", flexDirection: "row", maxWidth: "100vw", overflowX: "hidden" }}>
 
         {/* Sidebar Navigation */}
-        <aside ref={sidebarRef} className={`sidebar-responsive ${mobileMenuOpen ? 'open' : ''}`}>
+        <aside
+          ref={sidebarRef}
+          className={`sidebar-responsive ${mobileMenuOpen ? 'open' : ''}`}
+          onTouchStart={onDrawerTouchStart}
+          onTouchMove={onDrawerTouchMove}
+          onTouchEnd={onDrawerTouchEnd}
+        >
           <div style={{ padding: "24px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
             <BrandMark size={40} />
             <div>
@@ -1442,10 +1471,35 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
+        {/* 📱 Invisible Edge Touch Zone — พื้นที่สัมผัสโปร่งใสริมขอบจอซ้ายสำหรับปัดเปิดเมนู */}
+        {/* ความกว้าง 28px, z-index สูงกว่า content แต่ต่ำกว่า sidebar เปิดอยู่ */}
+        {/* ใช้ touch-action: pan-y เพื่อบอกเบราว์เซอร์ว่าเราจัดการแนวนอนเอง */}
+        {!mobileMenuOpen && (
+          <div
+            onTouchStart={onEdgeTouchStart}
+            onTouchMove={onEdgeTouchMove}
+            onTouchEnd={onEdgeTouchEnd}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: 28,
+              height: "100%",
+              zIndex: 9998,
+              touchAction: "pan-y",
+              background: "transparent",
+            }}
+            aria-hidden="true"
+          />
+        )}
+
         <div
           ref={overlayRef}
           className={`sidebar-overlay-responsive ${mobileMenuOpen ? 'open' : ''}`}
           onClick={() => setMobileMenuOpen(false)}
+          onTouchStart={onDrawerTouchStart}
+          onTouchMove={onDrawerTouchMove}
+          onTouchEnd={onDrawerTouchEnd}
         />
 
         {/* Main Content Area */}
