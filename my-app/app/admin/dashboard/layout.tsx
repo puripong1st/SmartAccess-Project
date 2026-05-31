@@ -1524,8 +1524,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         </aside>
 
         {/* 📱 Invisible Edge Touch Zone — พื้นที่สัมผัสโปร่งใสริมขอบจอซ้ายสำหรับปัดเปิดเมนู */}
-        {/* ความกว้าง 28px, z-index สูงกว่า content แต่ต่ำกว่า sidebar เปิดอยู่ */}
-        {/* ใช้ touch-action: pan-y เพื่อบอกเบราว์เซอร์ว่าเราจัดการแนวนอนเอง */}
         {!mobileMenuOpen && (
           <div
             onTouchStart={onEdgeTouchStart}
@@ -1538,7 +1536,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
               width: 28,
               height: "100%",
               zIndex: 9998,
-              touchAction: "pan-y",
+              touchAction: "none", /* 🔥 เปลี่ยนเป็น none เพื่อบล็อก Safari Swipe-to-Go-Back ถาวร 100% บนขอบจอ */
               background: "transparent",
             }}
             aria-hidden="true"
