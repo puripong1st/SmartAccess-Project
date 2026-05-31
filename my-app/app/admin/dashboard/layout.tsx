@@ -426,6 +426,52 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, setTab, setEditingAdmin, setActiveRoomDetails]);
 
+  // 📱 Swipe-to-reveal mobile/tablet drawer gesture controls
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchEndX = e.touches[0].clientX;
+      touchEndY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      touchEndX = e.touches[0].clientX;
+      touchEndY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = () => {
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = Math.abs(touchEndY - touchStartY);
+
+      // Only handle horizontal swipes that are longer than 60px with minimal vertical displacement
+      if (Math.abs(deltaX) > 60 && deltaY < 50) {
+        if (deltaX > 0 && touchStartX < 50) {
+          // Swipe right from the left edge (within 50px) -> pull out sidebar drawer
+          setMobileMenuOpen(true);
+        } else if (deltaX < 0 && mobileMenuOpen) {
+          // Swipe left anywhere when menu is open -> close sidebar drawer
+          setMobileMenuOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchmove", handleTouchMove, { passive: true });
+    document.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [mobileMenuOpen, setMobileMenuOpen]);
+
   const isOwner = user?.role === "owner";
 
   // Highlight Arduino C++ code helper in Layout

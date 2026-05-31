@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 15:53:40 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 15:58:30 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10881,14 +10881,19 @@ const DashboardCharts = dynamic(() => import("../../components/DashboardCharts")
 **4. การปรับปรุงขนาด Touch-Targets ตามเกณฑ์มาตรฐาน WCAG 2.2:**
 ระบุกลุ่ม CSS Selector ของปุ่มที่มีการสัมผัสบ่อยในมีเดียคิวรี `@media (max-width: 1024px)` เพื่อกำหนดความสูงขั้นต่ำ `min-height: 44px` และเพิ่ม Padding ด้านในช่วยให้อาจารย์ใช้นิ้วสัมผัสปุ่มเพื่อปล่อยล็อกประตู หรือจัดการปฏิเสธสิทธิ์ได้อย่างแม่นยำ ปราศจากความผิดพลาดในการกดโดนปุ่มข้างเคียง
 
+**5. การเลื่อนปัดนิ้วบนจอสัมผัสเพื่อเปิด-ปิดแถบนำทาง (Swipe-to-Reveal Navigation Gesture):**
+เพื่อความสะดวกในการเปิดดูแถบนำทางบนสมาร์ตโฟนและ iPad โดยไม่ต้องพยายามเอื้อมนิ้วไปคลิกปุ่ม "เปิดเมนู" ด้านบน ได้พัฒนาระบบดักฟังเหตุการณ์การปัดนิ้วในแนวนอน (Horizontal Swipe Gestures) ผ่านการผูก Event Listener `touchstart`, `touchmove` และ `touchend` ในระดับเอกสาร (`document`) ภายใน `app/admin/dashboard/layout.tsx` โดยมีตรรกะตรวจจับอย่างประณีต:
+- **ปัดขวาเพื่อเปิดเมนู (Swipe Right to Open Drawer):** เมื่อตรวจพบแรงกดและลากนิ้วไปทางขวาเริ่มต้นจากขอบซ้ายสุดของจอภาพ (พื้นที่ภายใน 50px แรกจากขอบจอ) เป็นระยะทางกว้างกว่า 60px และมีความเบี่ยงเบนในแนวตั้งไม่เกิน 50px จะทริกเกอร์เปลี่ยนสถานะเปิดแถบ Sidebar สไลด์ลอยแสดงทันที
+- **ปัดซ้ายเพื่อยุบเมนู (Swipe Left to Close Drawer):** เมื่อแถบสัญจรเปิดค้างอยู่ หากตรวจพบการลากปัดนิ้วไปทางซ้ายไม่ว่าจะจุดใดบนจอภาพ จะทำลายสถานะและสั่งหุบเก็บแถบข้างโดยทันทีแบบนุ่มนวล
+
 #### 73.30.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)
 
 | ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
 |---|---|---|---|
 | 1 | `my-app/app/globals.css` | **[MODIFY]** | อัปเดต Breakpoint ทั้งระบบเป็น 1024px/1025px, เพิ่มกริดการ์ดโมบายล์แบบตอบสนอง, และขยายขนาดปุ่มสัมผัสเป็นอย่างน้อย 44px |
-| 2 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ปรับเงื่อนไขการซ่อนปุ่มเมนู `.desktop-hide-trigger` ใน Layout Inline CSS เป็น 1025px สอดรับโครงสร้างข้างใหม่ |
+| 2 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ปรับเงื่อนไขการซ่อนปุ่มเมนู `.desktop-hide-trigger` ใน CSS เป็น 1025px และฝังชุดระบบ Swipe-to-Reveal touch gestures ปัดจอเปิด-ปิดแถบเนวิเกชัน |
 | 3 | `my-app/app/admin/dashboard/pending/page.tsx` | **[MODIFY]** | ถอด inline display ของโมบายล์วิวออก และครอบการ์ดลงใน `mobile-card-grid-container` เพื่อจัดกริดสวยงาม |
-| 4 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มบันทึกสถาปัตยกรรมและรายละเอียดเปลี่ยนผ่าน UI §73.30 พร้อมอัปเดตวันเวลาสรุปเอกสารล่าสุด |
+| 4 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มบันทึกสถาปัตยกรรมและรายละเอียดเปลี่ยนผ่าน UI/UX §73.30 พร้อมอัปเดตวันเวลาสรุปเอกสารล่าสุด |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
