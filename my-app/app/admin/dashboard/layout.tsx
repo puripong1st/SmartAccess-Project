@@ -486,7 +486,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     <div style={{ minHeight: "100vh", background: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <style dangerouslySetInnerHTML={{
         __html: `
-        @media (min-width: 768px) {
+        @media (min-width: 1025px) {
           .desktop-hide-trigger {
             display: none !important;
           }

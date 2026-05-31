@@ -367,8 +367,8 @@ export default function PendingPage() {
             </div>
 
             {/* 📱 Mobile View: Beautiful card items without sideways scrolls and swipe bugs */}
-            <div className="mobile-view" style={{ display: "none" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="mobile-view">
+              <div className="mobile-card-grid-container">
                 {filteredPending.map(student => (
                   <div
                     key={student.id}

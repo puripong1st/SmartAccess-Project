@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:47:30 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:53:40 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1063,6 +1063,7 @@
 <li><a href="#sec-73-15">73.15 การพัฒนาระบบธีมและโหมดมืดพรีเมียม (Harmony Palette)</a></li>
 <li><a href="#sec-73-17">73.17 การออกแบบโครงสร้างความก้าวหน้าและการแสดงสถานะแบบอะซิงโครนัส</a></li>
 <li><a href="#sec-73-19">73.19 โครงสร้างแถบควบคุมสารบัญนำทางพลวัตแบบประสานสัญจรร่วมกัน</a></li>
+<li><a href="#sec-73-30">73.30 การปรับปรุงการแสดงผลแบบสัญจรและแถบควบคุมแบบตอบสนองบนสมาร์ตโฟนและ iPad (Responsive UI/UX iPad and Mobile Admin Dashboard Overhaul)</a></li>
 </ul>
 <hr>
 <h3>📕 บทที่ 4: ผลการดำเนินงานและการทดสอบระบบ (Results &amp; Evaluation)</h3>
@@ -15920,6 +15921,67 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>เพิ่มประวัติการบันทึก §73.29 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-30"></a></p>
+<h3>73.30 การปรับปรุงการแสดงผลแบบสัญจรและแถบควบคุมแบบตอบสนองบนสมาร์ตโฟนและ iPad (Responsive UI/UX iPad and Mobile Admin Dashboard Overhaul)</h3>
+<h4>73.30.1 บริบทและปัญหาการจัดวางแผงควบคุมบนอุปกรณ์พกพา (UX/UI Responsive Issues)</h4>
+<p>หน้าต่างแดชบอร์ดผู้ดูแลระบบ (<strong>Admin Dashboard</strong>) มีบทบาทสำคัญในการควบคุมและอนุมัติสิทธิ์เข้าใช้งานห้องเรียนแบบเรียลไทม์ โดยผู้ใช้งานส่วนใหญ่ เช่น คณาจารย์หรือเจ้าหน้าที่ มักเปิดหน้าแดชบอร์ดค้างไว้บนแท็บเล็ต (<strong>iPad/Tablets</strong>) หรือสมาร์ตโฟน (<strong>Smartphones</strong>) ในขณะทำการสอน อย่างไรก็ตาม ระบบเดิมมีปัญหาข้อบกพร่องด้านการตอบสนองเชิงพื้นที่ (Responsiveness) 3 ประการหลัก:</p>
+<ol>
+<li><strong>คอขวดบน iPad ขนาด 768px - 1024px (Tablet Landscape/Portrait)</strong> — ระบบเดิมใช้จุดตัดการตอบสนอง (Breakpoint) ที่ <code>768px</code> ในการแบ่งแยกหน้าจอเดสก์ท็อปและโมบายล์ ทำให้หน้าจอ iPad ซึ่งมีความกว้างเฉลี่ยอยู่ระหว่าง 768px ถึง 1024px ถูกบังคับให้แสดงผลในรูปแบบเดสก์ท็อป ส่งผลให้ตารางรายชื่อที่มีคอลัมน์กว้างถูกบีบอัดจนเบียดเสียด หรือต้องเลื่อนแถบแนวนอน (Horizontal Scroll) ซึ่งสร้างอุปสรรคและลดความพึงพอใจในการใช้งานของอาจารย์อย่างมาก</li>
+<li><strong>แถบข้างบดบังพื้นที่ (Sidebar Obstruction)</strong> — บนหน้าจอแท็บเล็ตและหน้าจอพกพาขนาดกลาง แถบควบคุม Sidebar ด้านซ้ายถูกตรึงแบบคงที่ (Fixed Sidebar) แย่งชิงพื้นที่ความกว้างจอไปถึง 260px ทำให้เนื้อหาปฏิบัติการจริงเหลือพื้นที่น้อยมากและแสดงผลบิดเบี้ยว</li>
+<li><strong>พื้นที่สัมผัสขัดต่อหลักการเข้าถึง (Touch Targets &lt; 44px)</strong> — ปุ่มปฏิบัติการที่มีความสำคัญสูง เช่น ปุ่มอนุมัติ (Approve), ปุ่มปฏิเสธ (Reject), และกล่องเลือกกลุ่ม (Checkboxes) มีขนาดความสูงเพียง 32px และชนกันในแนวราบ ซึ่งขัดต่อแนวทางการเข้าถึงเนื้อหาเว็บ (WCAG 2.2) ที่ระบุว่าพื้นที่สัมผัสต้องกว้างและสูงไม่น้อยกว่า <strong>44 x 44 พิกเซล</strong> เพื่อหลีกเลี่ยงการใช้นิ้วมือกดสัมผัสผิดพลาด (Accidental Tap)</li>
+</ol>
+<h4>73.30.2 สถาปัตยกรรมและการปรับปรุงส่วนติดต่อผู้ใช้แบบมีส่วนร่วม (Responsive Architecture Resolution)</h4>
+<p><strong>1. การยกระดับจุดตัดการตอบสนอง (Media Query Breakpoint Realignment):</strong><br>ปรับเปลี่ยนค่าสัญจร Breakpoints ทั้งระบบใน <code>my-app/app/globals.css</code> จากเดิม <code>768px</code> ขยายขึ้นไปที่ <strong><code>1024px</code></strong> ส่งผลให้สมาร์ตโฟนทุกรุ่นรวมถึงแท็บเล็ตและ iPad ทุกขนาด (เช่น iPad Mini, Air, Pro ทั้งในแนวตั้งและแนวนอนบางส่วน) ได้รับสิทธิ์เข้าถึงอินเทอร์เฟซแบบโมบายล์พรีเมียม (Responsive Mobile-Centric Layout) ที่ผ่านการจัดวางสัดส่วนใหม่ทั้งหมด</p>
+<p><strong>2. ระบบจัดวางการ์ดข้อมูลแบบ Fluid Grid สำหรับแท็บเล็ต (<code>.mobile-card-grid-container</code>):</strong><br>ยกเลิกการบังคับซ่อนการ์ดโมบายล์ผ่านคุณสมบัติ inline style <code>style={{ display: &quot;none&quot; }}</code> ใน <code>pending/page.tsx</code> แล้วถ่ายโอนไปควบคุมผ่าน CSS Rule <code>!important</code> ในมีเดียคิวรีแทน พร้อมเปิดใช้งานคลาสจัดวางแบบกริดพลวัต:</p>
+<pre><code class="language-css">.mobile-card-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+</code></pre>
+<p>ส่งผลให้บน <strong>สมาร์ตโฟนขนาดปกติ</strong> รายการคำขอจะแสดงผลแบบ 1 คอลัมน์เรียงในแนวตั้ง และเมื่อเปลี่ยนไปเปิดบน <strong>iPad / แท็บเล็ต</strong> รายการการ์ดเหล่านั้นจะจัดเรียงตนเองแบบ 2 หรือ 3 คอลัมน์คู่ขนานในแนวนอนโดยอัตโนมัติตามพื้นที่เหลือเฟือของอุปกรณ์ เป็นการใช้สอยพื้นที่หน้าจอสัมผัสขนาดใหญ่ให้เกิดประโยชน์สูงสุด</p>
+<p><strong>3. การซ่อนและยุบเก็บแถบข้างนำทางอัจฉริยะ (Adaptive Sidebar Drawer):</strong></p>
+<ul>
+<li>ปรับเงื่อนไขการตรึง Sidebar ใน <code>globals.css</code> จาก <code>min-width: 768px</code> เป็น <strong><code>min-width: 1025px</code></strong> เพื่อสลับเข้าสู่โหมดสไลด์เก็บ (Drawer Navigation) ในแท็บเล็ตและ iPad โดยอัตโนมัติ ทำให้ผู้ใช้มีพื้นที่ในการเข้าถึง Grid การ์ดอนุมัติได้เต็มความกว้างหน้าจอ 100%</li>
+<li>ปรับปรุง Breakpoint ของตัวกระตุ้นการซ่อน (<code>.desktop-hide-trigger</code>) ใน <code>app/admin/dashboard/layout.tsx</code> เป็น <code>min-width: 1025px</code> เพื่อซิงก์ปุ่มเปิดเมนูหัวบนให้สอดคล้องกัน</li>
+</ul>
+<p><strong>4. การปรับปรุงขนาด Touch-Targets ตามเกณฑ์มาตรฐาน WCAG 2.2:</strong><br>ระบุกลุ่ม CSS Selector ของปุ่มที่มีการสัมผัสบ่อยในมีเดียคิวรี <code>@media (max-width: 1024px)</code> เพื่อกำหนดความสูงขั้นต่ำ <code>min-height: 44px</code> และเพิ่ม Padding ด้านในช่วยให้อาจารย์ใช้นิ้วสัมผัสปุ่มเพื่อปล่อยล็อกประตู หรือจัดการปฏิเสธสิทธิ์ได้อย่างแม่นยำ ปราศจากความผิดพลาดในการกดโดนปุ่มข้างเคียง</p>
+<h4>73.30.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>รายชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายรายละเอียด</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อัปเดต Breakpoint ทั้งระบบเป็น 1024px/1025px, เพิ่มกริดการ์ดโมบายล์แบบตอบสนอง, และขยายขนาดปุ่มสัมผัสเป็นอย่างน้อย 44px</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับเงื่อนไขการซ่อนปุ่มเมนู <code>.desktop-hide-trigger</code> ใน Layout Inline CSS เป็น 1025px สอดรับโครงสร้างข้างใหม่</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>my-app/app/admin/dashboard/pending/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ถอด inline display ของโมบายล์วิวออก และครอบการ์ดลงใน <code>mobile-card-grid-container</code> เพื่อจัดกริดสวยงาม</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มบันทึกสถาปัตยกรรมและรายละเอียดเปลี่ยนผ่าน UI §73.30 พร้อมอัปเดตวันเวลาสรุปเอกสารล่าสุด</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
