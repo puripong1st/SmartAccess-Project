@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:26:35 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:39:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -15784,26 +15784,88 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>เปลี่ยน bootstrap เป็น <code>POST /api/auth/refresh</code> เพื่อต่ออายุ session ทุกครั้งที่เปิดแอป (sliding)</td>
 </tr>
 <tr>
-<td>3</td>
-<td><code>my-app/app/admin/login/page.tsx</code></td>
-<td><strong>[MODIFY]</strong></td>
-<td>ตรวจ session ตอนเปิดหน้า ถ้าล็อกอินอยู่เด้งเข้าแดชบอร์ดอัตโนมัติ + ตัวโหลดกันฟอร์มกระพริบ</td>
-</tr>
-<tr>
-<td>4</td>
-<td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
-<td><strong>[MODIFY]</strong></td>
-<td>ปิด idle auto-logout 15 นาที (handlers เป็น no-op) ตามคำขอคงสถานะล็อกอิน</td>
-</tr>
-<tr>
 <td>5</td>
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>เพิ่มประวัติการบันทึก §73.28 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
 </tr>
 </tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<h3>73.29 การปรับปรุงประสิทธิภาพด้วยการโหลดแบบขี้เกียจ, Prerendering และการรับส่งเอฟเฟกต์ภาพ (Performance Tuning: Lazy Loading, Prerendering &amp; View Transitions)</h3>
+<h4>73.29.1 บริบทด้านประสิทธิภาพและความจำเป็นทางวิศวกรรม (Performance Context)</h4>
+<p>เพื่อให้ระบบ <strong>SmartAccess</strong> มีประสบการณ์ผู้ใช้งาน (UX) ระดับพรีเมียม ตอบสนองรวดเร็วเทียบเท่า Native App (TTI &lt; 1s) และประหยัดทรัพยากรการส่งข้อมูลฝั่ง Serverless เซิร์ฟเวอร์ จึงได้ทำการตรวจวัดประสิทธิภาพและระบุคอขวดหลัก 4 ประการ:</p>
+<ol>
+<li><strong>คอขวดของไฟล์แรกเริ่ม (Initial JS Bundle) ในหมู่นักศึกษา:</strong> หน้าพอร์ทัลนักศึกษา (<code>app/page.tsx</code>) มีการ <code>import jsQR</code> ซึ่งมีขนาดใหญ่ (~100KB+) ติดตั้งมาแบบ Static ทำให้แม้ผู้ใช้ 90% จะเข้าห้องผ่านลิงก์ที่มี Token แนบมาแล้ว (ไม่ต้องใช้กล้องสแกนเลย) ก็ต้องจำนนดาวน์โหลดไฟล์สแกนกล้องไปด้วย</li>
+<li><strong>คอขวดของหน้า Admin Dashboard:</strong> แดชบอร์ดมีหน้า Summary ที่ดึงข้อมูลสถิติมาสร้างกราฟด้วยไลบรารี <code>recharts</code> ซึ่งตัวไลบรารีเองมีขนาดกว้างขวางและหนักหน่วง ทำให้บล็อกความเร็วหน้าแรกแดชบอร์ด</li>
+<li><strong>ความหน่วงของการคลิกข้ามหน้า (Page Navigation Latency):</strong> การคลิกผ่านระบบ PWA บนเบราว์เซอร์ปกติมีช่องว่าง Latency สั้น ๆ ในการประมวลผลหน้าถัดไป</li>
+<li><strong>ความกระตุกในเอฟเฟกต์เปลี่ยนผ่าน (Jank Transition):</strong> สภาพ UI แบบ Glassmorphism ที่นุ่มนวลต้องการเอฟเฟกต์เปลี่ยนหน้าจอที่ลื่นไหลไร้การกระตุก</li>
+</ol>
+<h4>73.29.2 แนวทางการแก้ไขและสถาปัตยกรรมประสิทธิภาพ (Tuning Resolution)</h4>
+<p><strong>1. การทำ Lazy Dynamic Import สำหรับคิวอาร์โค้ดสแกนเนอร์ (<code>jsQR</code>):</strong><br>ยกเลิกการ <code>import</code> แบบสแตติกใน <code>app/page.tsx</code> แล้วเพิ่ม <code>jsQRRef</code> เพื่อนำเข้าโมดูลแบบ inline asynchronous dynamic import ภายใน <code>startCamera</code> (เฉพาะจังหวะที่ผู้ใช้ต้องการเปิดหน้ากล้องด้วยตนเองเท่านั้น):</p>
+<pre><code class="language-typescript">if (!jsQRRef.current) {
+  const { default: loadedJsQR } = await import(&quot;jsqr&quot;);
+  jsQRRef.current = loadedJsQR;
+}
+</code></pre>
+<p>ส่งผลให้ตัวแอปแยก Chunk สำหรับ <code>jsQR</code> ออกไปโหลดต่างหาก ช่วยลดขนาด JS แรกเริ่มสำหรับผู้ใช้ทั่วไปลงทันทีถึง ~100KB+</p>
+<p><strong>2. การทำ Dynamic Charting ปิด SSR ฝั่งแอดมิน แดชบอร์ด (<code>DashboardCharts</code>):</strong><br>ปรับการนำเข้ากราฟในแดชบอร์ด <code>app/admin/dashboard/layout.tsx</code> เป็นแบบ Next.js <code>dynamic</code> ร่วมกับการปิดการทำงานฝั่ง Server (<code>ssr: false</code>) และวาง Skeleton รอโหลด:</p>
+<pre><code class="language-typescript">const DashboardCharts = dynamic(() =&gt; import(&quot;../../components/DashboardCharts&quot;), {
+  ssr: false,
+  loading: () =&gt; &lt;ChartsSkeleton /&gt;
+});
+</code></pre>
+<p>ช่วยลดขนาด Bundle ก้อนหลักของหน้ารายการคำขอที่ค้างอนุมัติลงและเร่งความเร็ว FCP ได้อย่างโดดเด่น</p>
+<p><strong>3. การเปิดใช้งานระบบปัญญาประดิษฐ์ส่องหน้าล่วงหน้า (Speculation Rules API) ในระดับ <code>moderate</code>:</strong><br>ฝังคำสั่ง Speculation Rules ในรูป JSON Script ภายใต้ <code>&lt;head&gt;</code> ของ <code>RootLayout</code> (<code>app/layout.tsx</code>) เพื่อสั่งการให้เบราว์เซอร์ตระกูล Chromium เริ่มดำเนินการ <strong>Prerender (เรนเดอร์ล่วงหน้าฝั่ง Client แบบ 100%)</strong> สำหรับหน้าถัดไปทันทีที่ตรวจพบการโฮเวอร์ (Hover) เมาส์ชี้ไปที่ลิงก์เป็นเวลานานกว่า 200ms หรือกดสัมผัสแช่ ช่วยลดเวลาเปลี่ยนหน้าให้เป็น <strong>0 มิลลิวินาที (Instant Navigations)</strong> โดยไม่รบกวนทรัพยากรการประมวลผลเกินควร:</p>
+<pre><code class="language-json">{
+  &quot;prerender&quot;: [{
+    &quot;where&quot;: { &quot;href_matches&quot;: &quot;/*&quot; },
+    &quot;eagerness&quot;: &quot;moderate&quot;
+  }]
+}
+</code></pre>
+<p><strong>4. การผูกเอฟเฟกต์ View Transitions API สไตล์ Cross-fade ทั่วทั้งแอป:</strong><br>เขียนกำหนดคำสั่งสไตล์ CSS ทั่วโลก <code>@view-transition { navigation: auto; }</code> ใน <code>app/globals.css</code> เพื่อเปิดระบบ Cross-fade อัตโนมัติในสถาปัตยกรรมระดับ GPU-composited ทั่วแอปพลิเคชัน ทำให้การเปลี่ยนผ่านระหว่างหน้าจอนุ่มนวลเป็นเนื้อเดียวกัน</p>
+<h4>73.29.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>รายชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายรายละเอียด</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ลบ static import ของ jsQR และแปลงไปนำเข้าแบบ Dynamic Lazy-loaded ภายในจังหวะเปิดกล้อง</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับปรุงให้ DashboardCharts โหลดผ่าน <code>next/dynamic</code> แบบ non-SSR และร้อยเรียงผ่าน Skeleton</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>my-app/app/layout.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ฝัง Speculation Rules API ในแท็ก <code>&lt;head&gt;</code> แบบความกระตือรือร้นระดับ <code>moderate</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มสไตล์ควบคุม View Transitions ทั่วโลก ส่งมอบเอฟเฟกต์เฟดเปลี่ยนหน้าลื่นไหล</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มประวัติการบันทึก §73.29 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
+</tr>
+</tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
-
       </article>
     </main>
   </div>

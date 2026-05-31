@@ -789,3 +789,7 @@ body {
 
 
 
+/* ── View Transitions API ── */
+@view-transition {
+  navigation: auto;
+}

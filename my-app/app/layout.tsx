@@ -53,6 +53,20 @@ export default function RootLayout({
         {/* PWA — Apple Touch Icons */}
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        {/* Speculation Rules API for Instant Prerender on 200ms hover */}
+        <script
+          type="speculationrules"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              prerender: [
+                {
+                  where: { href_matches: "/*" },
+                  eagerness: "moderate",
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body style={{ minHeight: "100vh" }}>
         <ThemeProvider>

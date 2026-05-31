@@ -3,8 +3,9 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { DashboardProvider, useDashboard } from "./DashboardContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "../../components/ThemeProvider";
-import DashboardCharts from "../../components/DashboardCharts";
 import { AnimatedCounter } from "../../components/AnimatedCounter";
+import dynamic from "next/dynamic";
+
 
 // formatDateTime function copy
 function formatDateTimeLocal(dt: string | null | undefined): string {
@@ -324,6 +325,11 @@ const ChartsSkeleton = () => (
     ))}
   </div>
 );
+
+const DashboardCharts = dynamic(() => import("../../components/DashboardCharts"), {
+  ssr: false,
+  loading: () => <ChartsSkeleton />
+});
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { SmartAccess_FACULTIES, FACULTY_NAMES } from "@/lib/faculties";
 import { IconDoor, IconAlert, IconHourglass } from "./components/Icons";
 import { Camera, Zap, Loader2 } from "lucide-react";
-import jsQR from "jsqr";
 
 interface OfflineEntry {
   id: string;
@@ -116,6 +115,7 @@ function QRAccessBlockedScreen({ message }: { message?: string }) {
   const [cameraState, setCameraState] = useState<"idle" | "accessing" | "active" | "error">("idle");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const scanAnimationFrameRef = useRef<number | null>(null);
+  const jsQRRef = useRef<any>(null);
 
   const stopCamera = useCallback(() => {
     if (scanAnimationFrameRef.current) {
@@ -145,31 +145,35 @@ function QRAccessBlockedScreen({ message }: { message?: string }) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: "dontInvert",
-        });
+        const jsQR = jsQRRef.current;
+        
+        if (jsQR) {
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
 
-        if (code) {
-          const resultText = code.data;
-          console.log("QR Code detected:", resultText);
-          
-          try {
-            const url = new URL(resultText);
-            const scanToken = url.searchParams.get("scan");
-            const roomCode = url.searchParams.get("room") || "CE-401";
+          if (code) {
+            const resultText = code.data;
+            console.log("QR Code detected:", resultText);
             
-            if (scanToken) {
-              setScanResult(`พบคิวอาร์ห้อง ${roomCode}! กำลังเข้าสู่ระบบ...`);
-              stopCamera();
-              window.location.href = `/?scan=${scanToken}&room=${roomCode}`;
-              return;
-            }
-          } catch {
-            if (resultText && resultText.trim().length > 10) {
-              setScanResult("พบรหัสคิวอาร์! กำลังเข้าสู่ระบบ...");
-              stopCamera();
-              window.location.href = `/?scan=${resultText.trim()}&room=CE-401`;
-              return;
+            try {
+              const url = new URL(resultText);
+              const scanToken = url.searchParams.get("scan");
+              const roomCode = url.searchParams.get("room") || "CE-401";
+              
+              if (scanToken) {
+                setScanResult(`พบคิวอาร์ห้อง ${roomCode}! กำลังเข้าสู่ระบบ...`);
+                stopCamera();
+                window.location.href = `/?scan=${scanToken}&room=${roomCode}`;
+                return;
+              }
+            } catch {
+              if (resultText && resultText.trim().length > 10) {
+                setScanResult("พบรหัสคิวอาร์! กำลังเข้าสู่ระบบ...");
+                stopCamera();
+                window.location.href = `/?scan=${resultText.trim()}&room=CE-401`;
+                return;
+              }
             }
           }
         }
@@ -185,6 +189,11 @@ function QRAccessBlockedScreen({ message }: { message?: string }) {
     setShowScanner(true);
     setScanResult(null);
     try {
+      if (!jsQRRef.current) {
+        const { default: loadedJsQR } = await import("jsqr");
+        jsQRRef.current = loadedJsQR;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: "environment" } }
       });

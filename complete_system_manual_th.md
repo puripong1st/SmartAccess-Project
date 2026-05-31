@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 15:26:35 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 15:39:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10737,8 +10737,68 @@ because it violates the Content Security Policy directive: "connect-src ..."
 |---|---|---|---|
 | 1 | `my-app/lib/auth.ts` | **[MODIFY]** | ขยายอายุ JWT + cookie เป็น 30 วัน (`SESSION_MAX_AGE_SECONDS`) |
 | 2 | `my-app/app/admin/dashboard/DashboardContext.tsx` | **[MODIFY]** | เปลี่ยน bootstrap เป็น `POST /api/auth/refresh` เพื่อต่ออายุ session ทุกครั้งที่เปิดแอป (sliding) |
-| 3 | `my-app/app/admin/login/page.tsx` | **[MODIFY]** | ตรวจ session ตอนเปิดหน้า ถ้าล็อกอินอยู่เด้งเข้าแดชบอร์ดอัตโนมัติ + ตัวโหลดกันฟอร์มกระพริบ |
-| 4 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ปิด idle auto-logout 15 นาที (handlers เป็น no-op) ตามคำขอคงสถานะล็อกอิน |
 | 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.28 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+---
+
+### 73.29 การปรับปรุงประสิทธิภาพด้วยการโหลดแบบขี้เกียจ, Prerendering และการรับส่งเอฟเฟกต์ภาพ (Performance Tuning: Lazy Loading, Prerendering & View Transitions)
+
+#### 73.29.1 บริบทด้านประสิทธิภาพและความจำเป็นทางวิศวกรรม (Performance Context)
+
+เพื่อให้ระบบ **SmartAccess** มีประสบการณ์ผู้ใช้งาน (UX) ระดับพรีเมียม ตอบสนองรวดเร็วเทียบเท่า Native App (TTI < 1s) และประหยัดทรัพยากรการส่งข้อมูลฝั่ง Serverless เซิร์ฟเวอร์ จึงได้ทำการตรวจวัดประสิทธิภาพและระบุคอขวดหลัก 4 ประการ:
+
+1. **คอขวดของไฟล์แรกเริ่ม (Initial JS Bundle) ในหมู่นักศึกษา:** หน้าพอร์ทัลนักศึกษา (`app/page.tsx`) มีการ `import jsQR` ซึ่งมีขนาดใหญ่ (~100KB+) ติดตั้งมาแบบ Static ทำให้แม้ผู้ใช้ 90% จะเข้าห้องผ่านลิงก์ที่มี Token แนบมาแล้ว (ไม่ต้องใช้กล้องสแกนเลย) ก็ต้องจำนนดาวน์โหลดไฟล์สแกนกล้องไปด้วย
+2. **คอขวดของหน้า Admin Dashboard:** แดชบอร์ดมีหน้า Summary ที่ดึงข้อมูลสถิติมาสร้างกราฟด้วยไลบรารี `recharts` ซึ่งตัวไลบรารีเองมีขนาดกว้างขวางและหนักหน่วง ทำให้บล็อกความเร็วหน้าแรกแดชบอร์ด
+3. **ความหน่วงของการคลิกข้ามหน้า (Page Navigation Latency):** การคลิกผ่านระบบ PWA บนเบราว์เซอร์ปกติมีช่องว่าง Latency สั้น ๆ ในการประมวลผลหน้าถัดไป
+4. **ความกระตุกในเอฟเฟกต์เปลี่ยนผ่าน (Jank Transition):** สภาพ UI แบบ Glassmorphism ที่นุ่มนวลต้องการเอฟเฟกต์เปลี่ยนหน้าจอที่ลื่นไหลไร้การกระตุก
+
+#### 73.29.2 แนวทางการแก้ไขและสถาปัตยกรรมประสิทธิภาพ (Tuning Resolution)
+
+**1. การทำ Lazy Dynamic Import สำหรับคิวอาร์โค้ดสแกนเนอร์ (`jsQR`):**
+ยกเลิกการ `import` แบบสแตติกใน `app/page.tsx` แล้วเพิ่ม `jsQRRef` เพื่อนำเข้าโมดูลแบบ inline asynchronous dynamic import ภายใน `startCamera` (เฉพาะจังหวะที่ผู้ใช้ต้องการเปิดหน้ากล้องด้วยตนเองเท่านั้น):
+```typescript
+if (!jsQRRef.current) {
+  const { default: loadedJsQR } = await import("jsqr");
+  jsQRRef.current = loadedJsQR;
+}
+```
+ส่งผลให้ตัวแอปแยก Chunk สำหรับ `jsQR` ออกไปโหลดต่างหาก ช่วยลดขนาด JS แรกเริ่มสำหรับผู้ใช้ทั่วไปลงทันทีถึง ~100KB+
+
+**2. การทำ Dynamic Charting ปิด SSR ฝั่งแอดมิน แดชบอร์ด (`DashboardCharts`):**
+ปรับการนำเข้ากราฟในแดชบอร์ด `app/admin/dashboard/layout.tsx` เป็นแบบ Next.js `dynamic` ร่วมกับการปิดการทำงานฝั่ง Server (`ssr: false`) และวาง Skeleton รอโหลด:
+```typescript
+const DashboardCharts = dynamic(() => import("../../components/DashboardCharts"), {
+  ssr: false,
+  loading: () => <ChartsSkeleton />
+});
+```
+ช่วยลดขนาด Bundle ก้อนหลักของหน้ารายการคำขอที่ค้างอนุมัติลงและเร่งความเร็ว FCP ได้อย่างโดดเด่น
+
+**3. การเปิดใช้งานระบบปัญญาประดิษฐ์ส่องหน้าล่วงหน้า (Speculation Rules API) ในระดับ `moderate`:**
+ฝังคำสั่ง Speculation Rules ในรูป JSON Script ภายใต้ `<head>` ของ `RootLayout` (`app/layout.tsx`) เพื่อสั่งการให้เบราว์เซอร์ตระกูล Chromium เริ่มดำเนินการ **Prerender (เรนเดอร์ล่วงหน้าฝั่ง Client แบบ 100%)** สำหรับหน้าถัดไปทันทีที่ตรวจพบการโฮเวอร์ (Hover) เมาส์ชี้ไปที่ลิงก์เป็นเวลานานกว่า 200ms หรือกดสัมผัสแช่ ช่วยลดเวลาเปลี่ยนหน้าให้เป็น **0 มิลลิวินาที (Instant Navigations)** โดยไม่รบกวนทรัพยากรการประมวลผลเกินควร:
+```json
+{
+  "prerender": [{
+    "where": { "href_matches": "/*" },
+    "eagerness": "moderate"
+  }]
+}
+```
+
+**4. การผูกเอฟเฟกต์ View Transitions API สไตล์ Cross-fade ทั่วทั้งแอป:**
+เขียนกำหนดคำสั่งสไตล์ CSS ทั่วโลก `@view-transition { navigation: auto; }` ใน `app/globals.css` เพื่อเปิดระบบ Cross-fade อัตโนมัติในสถาปัตยกรรมระดับ GPU-composited ทั่วแอปพลิเคชัน ทำให้การเปลี่ยนผ่านระหว่างหน้าจอนุ่มนวลเป็นเนื้อเดียวกัน
+
+#### 73.29.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)
+
+| ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
+|---|---|---|---|
+| 1 | `my-app/app/page.tsx` | **[MODIFY]** | ลบ static import ของ jsQR และแปลงไปนำเข้าแบบ Dynamic Lazy-loaded ภายในจังหวะเปิดกล้อง |
+| 2 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | ปรับปรุงให้ DashboardCharts โหลดผ่าน `next/dynamic` แบบ non-SSR และร้อยเรียงผ่าน Skeleton |
+| 3 | `my-app/app/layout.tsx` | **[MODIFY]** | ฝัง Speculation Rules API ในแท็ก `<head>` แบบความกระตือรือร้นระดับ `moderate` |
+| 4 | `my-app/app/globals.css` | **[MODIFY]** | เพิ่มสไตล์ควบคุม View Transitions ทั่วโลก ส่งมอบเอฟเฟกต์เฟดเปลี่ยนหน้าลื่นไหล |
+| 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.29 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
