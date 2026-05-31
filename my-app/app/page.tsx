@@ -1632,7 +1632,7 @@ function RegistrationPageInner() {
         zIndex: 50
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFF", fontSize: 13, fontWeight: "bold" }}>S</div>
+          <img src="/icons/icon-128x128.png" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover" }} alt="SmartAccess Logo" />
           <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>SmartAccess</span>
         </div>
         <button
@@ -1674,12 +1674,12 @@ function RegistrationPageInner() {
         {/* Header Section */}
         <div className="animate-fade-in" style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-            <div
-              style={{ width: 56, height: 56, borderRadius: "50%", background: "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 8px 20px rgba(124,58,237,0.2)" }}
-              className="animate-pulse-soft"
-            >
-              <GraduationIcon />
-            </div>
+            <img 
+              src="/icons/icon-128x128.png" 
+              style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", boxShadow: "0 8px 20px rgba(124,58,237,0.25)" }} 
+              className="animate-pulse-soft" 
+              alt="SmartAccess Logo" 
+            />
             <div style={{ textAlign: "left" }}>
               <div style={{ fontSize: 12, color: "var(--smartaccess-purple)", fontWeight: 800, letterSpacing: 1.5, textTransform: "uppercase" }}>SmartAccess EDUCATION</div>
               <div style={{ fontSize: 14, color: "var(--text-secondary)", fontWeight: 500 }}>คณะครุศาสตร์ มทร.พระนคร</div>

@@ -64,6 +64,7 @@ const htmlTemplate = `<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>คู่มือระบบควบคุมประตู SmartAccess (Thesis Manual)</title>
+  <link rel="icon" type="image/png" href="/icons/icon-128x128.png">
   
   <!-- Google Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

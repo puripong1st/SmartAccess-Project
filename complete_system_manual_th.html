@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>คู่มือระบบควบคุมประตู SmartAccess (Thesis Manual)</title>
+  <link rel="icon" type="image/png" href="/icons/icon-128x128.png">
   
   <!-- Google Fonts & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -945,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 10:47:11 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 11:15:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -15240,6 +15241,93 @@ export function getVapidKey(): string {
 <td><code>.env.example</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>เพิ่มคู่มือตัวแปรสภาพแวดล้อมสำหรับเชื่อมต่อ Firebase (กุญแจสาธารณะ กุญแจส่วนตัว และรายละเอียดโครงการ)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับสารบัญ</a></p><hr>
+<p><a id="sec-73-22"></a></p>
+<h3>73.22 การปรับปรุงแบรนด์และการอัปเดตไอคอนพรีเมียมเรืองแสง (Unified Glowing Neon Rebranding &amp; Icon Redesign)</h3>
+<p>วันที่บันทึก: 31 พฤษภาคม 2026</p>
+<h4>73.22.1 บริบทและการปรับปรุงภาพลักษณ์แบรนด์ (Visual Branding &amp; Identity Rebranding)</h4>
+<p>ในการพัฒนาแอปพลิเคชันระบบการเข้าออกประตูอัจฉริยะ <strong>SmartAccess</strong> นอกเหนือจากการยกระดับขีดความสามารถทางวิศวกรรม (Engineering capabilities) ด้าน PWA และ Push Notification แล้ว องค์ประกอบด้านภาพลักษณ์การออกแบบ (Design Aesthetics) และความสม่ำเสมอของแบรนด์ (Brand Consistency) ถือเป็นหัวใจสำคัญอย่างยิ่งในการสร้างความน่าเชื่อถือและความพึงพอใจให้แก่ผู้ใช้งานเล่มปริญญานิพนธ์</p>
+<p>ระบบเดิมใช้ชุดไอคอนจำลองที่เป็น SVG Vector หรือไอคอนแบบสุ่มในแต่ละหน้า ส่งผลให้ระบบดูขาดความพร้อมเพรียงเชิงแบรนดิ้ง ทีมพัฒนาจึงได้ทำการปรับเปลี่ยนและสถาปนาอัตลักษณ์การออกแบบใหม่ทั้งหมด โดยนำไอคอนพรีเมียมตัวล่าสุดคือ <strong>ไอคอนแม่กุญแจเรืองแสงนีออน (Glowing Neon Lock Symbol - สีม่วงไล่เฉดชมพูบนพื้นหลังมืด)</strong> จากไฟล์ <code>/icons/icon-128x128.png</code> เข้ามาเป็น &quot;โลโก้หลักของโครงการ&quot; ทั่วทั้งโปรเจกต์แบบ 100% สอดคล้องตามหลักการ UI/UX ยุคใหม่ที่มีสไตล์ Minimalist Glassmorphism</p>
+<hr>
+<h4>73.22.2 รายละเอียดการเปลี่ยนแปลงและตรรกะการฝังรูปภาพ (Branding Implementation Details)</h4>
+<p>ทีมพัฒนาได้ระบุและเปลี่ยนจุดแสดงผลโลโก้และไอคอนทั้งหมดในระบบ Next.js และ HTML Manual ดังต่อไปนี้:</p>
+<ol>
+<li><p><strong>Favicon และ Browser Tab Web App (<code>my-app/app/layout.tsx</code>):</strong></p>
+<ul>
+<li>เปลี่ยนชุดรูปภาพ Favicon ของแท็บเบราว์เซอร์จากค่าเริ่มต้นของ Vercel ให้ชี้ไปที่รูปภาพอัตลักษณ์ใหม่ <code>/icons/icon-128x128.png</code> (และ <code>/icons/icon-192x192.png</code> สำหรับไอคอนลอยบนหน้าจอ iOS) เพื่อคงอัตลักษณ์เมื่อผู้ใช้เข้าผ่าน URL</li>
+</ul>
+</li>
+<li><p><strong>Favicon หน้าคู่มือวิทยานิพนธ์ (<code>my-app/scripts/compile_manual.js</code>):</strong></p>
+<ul>
+<li>เพิ่มคำสั่งระบุ Favicon ในส่วน <code>&lt;head&gt;</code> ของโครงสร้าง HTML Template เพื่อป้องกันไม่ให้คู่มือเว็บขึ้นไอคอนสามเหลี่ยมสีดำของ Vercel โดยระบุแท็ก:<br><code>&lt;link rel=&quot;icon&quot; type=&quot;image/png&quot; href=&quot;/icons/icon-128x128.png&quot;&gt;</code><br>ส่งผลให้เมื่อเปิดหน้าคู่มือระบบออนไลน์ผ่าน Vercel จะแสดงไอคอนแม่กุญแจเรืองแสงบนแท็บเบราว์เซอร์อย่างเป็นเอกภาพ</li>
+</ul>
+</li>
+<li><p><strong>หน้าจอหลักสำหรับนักศึกษา (Student Portal Landing Page - <code>my-app/app/page.tsx</code>):</strong></p>
+<ul>
+<li><strong>จุดที่ 1 (Navbar Logo):</strong> แทนที่กล่องอักษรสีม่วง <code>S</code> ดั้งเดิมด้วยแท็ก <code>&lt;img&gt;</code> ชี้ไปยัง <code>/icons/icon-128x128.png</code> ขนาด 32px พร้อมมุมโค้ง 8px (<code>borderRadius: 8</code>) ให้มีสไตล์หรูหราเข้ากัน</li>
+<li><strong>จุดที่ 2 (Header Section Welcome Icon):</strong> แทนที่กล่องไอคอนหมวกปริญญาดั้งเดิมด้วยการนำเสนอไอคอนเรืองแสงนีออนขนาด 56px พร้อมเอฟเฟกต์ภาพเบลอแบนเนอร์ลอยรอบตัวแบบชีพจรนุ่มนวล (<code>animate-pulse-soft</code>) และเงาสีม่วงสะท้อนหรูหรา (<code>boxShadow: &quot;0 8px 20px rgba(124,58,237,0.25)&quot;</code>)</li>
+</ul>
+</li>
+<li><p><strong>หน้าจอเข้าสู่ระบบแอดมิน (Admin Portal Login Page - <code>my-app/app/admin/login/page.tsx</code>):</strong></p>
+<ul>
+<li>แทนที่กล่องไอคอนโล่ keyhole SVG ดั้งเดิมที่มีสีกระจัดกระจาย ด้วยแท็ก <code>&lt;img&gt;</code> ที่โหลด <code>/icons/icon-128x128.png</code> ขนาด 72px และความมนกลม 50% (<code>borderRadius: &quot;50%&quot;</code>) สลักคู่กับแอนิเมชันวงแหวนเปล่งชีพจร (<code>animate-pulse-ring</code>) บนพื้นผิวเงาสะท้อนไล่เฉดนีออน เพื่อให้แผงล็อกอินเข้าสู่ศูนย์กลางระบบมีความปลอดภัยและดึงดูดสายตาอย่างพรีเมียมที่สุด</li>
+</ul>
+</li>
+<li><p><strong>หน้าจอแผงแอดมินและแถบข้าง (Admin Dashboard Layout Sidebar - <code>my-app/app/admin/dashboard/layout.tsx</code>):</strong></p>
+<ul>
+<li>แทนที่ปุ่ม SVG LockIcon ดั้งเดิมในแถบเนวิเกชัน Sidebar ด้านซ้ายสุด ด้วยโลโก้ไอคอนเรืองแสงขนาด 40px ความโค้งระดับพรีเมียม 10px (<code>borderRadius: &quot;10px&quot;</code>) เคียงข้างตัวอักษรสีม่วงเข้ม <strong>SmartAccess</strong> มอบประสบการณ์สัญจรรวมที่หรูหรา ทันสมัย และเป็นมาตรฐานเดียวกันในทุกมิติของโปรเจกต์</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h4>73.22.3 ผลลัพธ์และไฟล์ที่แก้ไข (Rebranding Artifact &amp; Affected Files Summary)</h4>
+<p>ภายหลังการปรับเปลี่ยนภาพลักษณ์แบรนด์ ระบบทั้งหมดผ่านกระบวนการทำความสะอาด ตรวจสอบความละเอียดของพิกเซล และไม่มีจุดโลโก้ดั้งเดิมหรือสัญลักษณ์ขัดแย้งคงเหลืออยู่เลย:</p>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>รายชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายรายละเอียด</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>app/layout.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อัปเดต metadata.icons และแท็ก apple link ให้ชี้ไปที่ไอคอนแบรนด์เรืองแสงนีออนล่าสุด</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/scripts/compile_manual.js</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ฝังแท็ก link rel icon ชี้ไปยังไอคอนโลโก้หลักในเทมเพลตสำหรับหน้าคู่มือฉบับ HTML</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>app/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เปลี่ยนแปลง navbar logo และ header icon ในหน้าแรกของระบบนักศึกษาเป็นโลโก้นีออน</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>app/admin/login/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับเปลี่ยนไอคอน KeyholeShieldIcon เป็นโลโก้แม่กุญแจเรืองแสงล่าสุดพร้อมกรอบชีพจร</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>app/admin/dashboard/layout.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>พัฒนา Sidebar Logo ในแผงแอดมินโดยนำโลโก้ล่าสุดมาประยุกต์พร้อมเงาสะท้อนระดับสูง</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มประวัติการบันทึก §73.22 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>

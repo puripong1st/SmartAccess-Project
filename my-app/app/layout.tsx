@@ -30,6 +30,11 @@ export const metadata: Metadata = {
   title: "SmartAccess Door Access System",
   description: "SmartAccess — ระบบควบคุมการเข้าออกห้องเรียนแบบไร้สาย (Innovative system for managing access rights and controlling classroom access via wireless network) คณะครุศาสตร์อุตสาหกรรม มหาวิทยาลัยเทคโนโลยีราชมงคลพระนคร",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon-128x128.png",
+    shortcut: "/icons/icon-128x128.png",
+    apple: "/icons/icon-192x192.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

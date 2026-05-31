@@ -1170,11 +1170,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         {/* Sidebar Navigation */}
         <aside className={`sidebar-responsive ${mobileMenuOpen ? 'open' : ''}`}>
           <div style={{ padding: "24px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
-            <div
-              style={{ width: 40, height: 40, borderRadius: "12px", background: "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 4px 10px rgba(124,58,237,0.2)" }}
-            >
-              <LockIcon />
-            </div>
+            <img 
+              src="/icons/icon-128x128.png" 
+              style={{ width: 40, height: 40, borderRadius: "10px", objectFit: "cover", boxShadow: "0 4px 10px rgba(124,58,237,0.25)" }} 
+              alt="SmartAccess Logo" 
+            />
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: "var(--smartaccess-purple-dark)", letterSpacing: "0.5px" }}>SmartAccess</div>
               <div style={{ fontSize: 10.5, color: "var(--text-secondary)", fontWeight: 600 }}>บอร์ดควบคุมครุศาสตร์</div>

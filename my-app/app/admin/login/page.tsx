@@ -112,12 +112,12 @@ function AdminLoginPageInner() {
       <div style={{ maxWidth: 420, width: "100%", position: "relative", zIndex: 10 }}>
         {/* Logo and Titles */}
         <div className="animate-fade-in" style={{ textAlign: "center", marginBottom: 32 }}>
-          <div
-            style={{ width: 72, height: 72, borderRadius: "50%", background: "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", color: "#fff", boxShadow: "0 10px 25px rgba(124,58,237,0.25)" }}
-            className="animate-pulse-ring"
-          >
-            <KeyholeShieldIcon />
-          </div>
+          <img 
+            src="/icons/icon-128x128.png" 
+            style={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover", margin: "0 auto 16px", boxShadow: "0 10px 25px rgba(124,58,237,0.3)" }} 
+            className="animate-pulse-ring" 
+            alt="SmartAccess Logo" 
+          />
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.5px", marginBottom: 4 }}>
             Admin Portal
           </h1>
