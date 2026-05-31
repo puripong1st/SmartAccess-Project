@@ -521,12 +521,36 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     const g = gestureRef.current;
     if (!g.isSwiping || g.direction !== "open") return;
     g.isSwiping = false;
-    const dx = g.currentX - g.startX;
-    clearInlineStyles();
-    if (dx > 70) {
-      setMobileMenuOpen(true);
+
+    if (g.directionLocked) {
+      const dx = g.currentX - g.startX;
+      const sidebar = sidebarRef.current;
+      const overlay = overlayRef.current;
+
+      if (sidebar && overlay) {
+        // ให้ transition ลื่นไหลไปยังจุดหมาย
+        sidebar.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+        overlay.style.transition = "opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.3s";
+
+        if (dx > 70) {
+          // ลากผ่านจุด threshold -> บังคับเปิด
+          sidebar.style.transform = `translateX(0px)`;
+          overlay.style.opacity = "1";
+          overlay.style.backdropFilter = "blur(12px)";
+          setMobileMenuOpen(true);
+        } else {
+          // ลากไม่ถึง -> เด้งกลับไปปิด
+          sidebar.style.transform = `translateX(-260px)`;
+          overlay.style.opacity = "0";
+          overlay.style.backdropFilter = "blur(0px)";
+        }
+
+        // ล้าง inline styles ออกหลังแอนิเมชันจบ เพื่อให้ CSS คลาสปกติทำงานต่อ
+        setTimeout(() => clearInlineStyles(), 300);
+      }
     }
     g.direction = null;
+    g.directionLocked = false;
   }, [clearInlineStyles, setMobileMenuOpen]);
 
   // ─── Touch Handlers สำหรับ Overlay + Sidebar (ปัดซ้ายปิด) ───
@@ -574,12 +598,34 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     const g = gestureRef.current;
     if (!g.isSwiping || g.direction !== "close") return;
     g.isSwiping = false;
-    const dx = g.currentX - g.startX;
-    clearInlineStyles();
-    if (dx < -70) {
-      setMobileMenuOpen(false);
+
+    if (g.directionLocked) {
+      const dx = g.currentX - g.startX;
+      const sidebar = sidebarRef.current;
+      const overlay = overlayRef.current;
+
+      if (sidebar && overlay) {
+        sidebar.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+        overlay.style.transition = "opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.3s";
+
+        if (dx < -70) {
+          // ลากผ่านจุด threshold -> บังคับปิด
+          sidebar.style.transform = `translateX(-260px)`;
+          overlay.style.opacity = "0";
+          overlay.style.backdropFilter = "blur(0px)";
+          setMobileMenuOpen(false);
+        } else {
+          // ลากไม่ถึง -> เด้งกลับไปเปิด
+          sidebar.style.transform = `translateX(0px)`;
+          overlay.style.opacity = "1";
+          overlay.style.backdropFilter = "blur(12px)";
+        }
+
+        setTimeout(() => clearInlineStyles(), 300);
+      }
     }
     g.direction = null;
+    g.directionLocked = false;
   }, [clearInlineStyles, setMobileMenuOpen]);
 
   const isOwner = user?.role === "owner";
