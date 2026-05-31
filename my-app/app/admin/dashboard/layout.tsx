@@ -1590,6 +1590,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           {/* Inner Content Area — Bulletproof layout lock for mobile screens */}
           <div className="p-4 md:p-6" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
 
+            {/* Render children sub-routes pages (Room Selector and Pending List) first */}
+            <div key={tab} className="animate-fade-in" style={{ marginBottom: 24 }}>
+              {children}
+            </div>
+
             {/* ── Premium Metric Summary Cards Grid (Shown only on the main pending tab) ── */}
             {tab === "pending" && (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 20 }} className="animate-fade-in">
@@ -1603,7 +1608,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                 ) : (
                   <>
                     {/* Card 1: Pending Queue */}
-                    <div className="premium-card hover-card hover-spin" style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16 }}>
+                    <div className="premium-card" style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16 }}>
                       <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(245, 158, 11, 0.1)", border: "1.5px solid rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#F59E0B" }}>
                         <ClockIcon className="w-6 h-6" />
                       </div>
@@ -1616,7 +1621,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                     </div>
 
                     {/* Card 2: Door Opens Today */}
-                    <div className="premium-card hover-card hover-spin" style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16 }}>
+                    <div className="premium-card" style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16 }}>
                       <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(16, 185, 129, 0.1)", border: "1.5px solid rgba(16, 185, 129, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10B981" }}>
                         <UnlockIcon />
                       </div>
@@ -1632,7 +1637,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
                     {/* Card 3: ESP32 Hardware Status */}
                     <div
-                      className="premium-card hover-card hover-spin"
+                      className="premium-card"
                       onClick={() => {
                         setTab("rooms");
                         router.push("/admin/dashboard/rooms");
@@ -1655,7 +1660,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
                     {/* Card 4: Discord Webhook Status */}
                     <div
-                      className="premium-card hover-card hover-spin"
+                      className="premium-card"
                       onClick={() => {
                         setTab("settings");
                         router.push("/admin/dashboard/settings");
@@ -1690,11 +1695,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                 )}
               </>
             )}
-
-            {/* Render children sub-routes pages with active fadeInUp animation on tab change */}
-            <div key={tab} className="animate-fade-in">
-              {children}
-            </div>
 
           </div>
         </main>

@@ -86,10 +86,13 @@ export default function PendingPage() {
               fontSize: 13,
               fontWeight: 700,
               cursor: "pointer",
+              touchAction: "manipulation",
+              userSelect: "none",
+              WebkitTapHighlightColor: "transparent",
               background: pendingRoomFilter === "all" ? "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)" : "transparent",
               color: pendingRoomFilter === "all" ? "#ffffff" : "var(--text-secondary)",
               boxShadow: pendingRoomFilter === "all" ? "0 4px 12px rgba(124, 58, 237, 0.2)" : "none",
-              transition: "all 0.2s ease"
+              transition: "all 0.1s ease" // ทำให้ตอบสนองเร็วขึ้น
             }}
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><DoorClosed size={14} /> ทุกห้องเรียน ({pending.length})</span>
@@ -107,10 +110,13 @@ export default function PendingPage() {
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: "pointer",
+                  touchAction: "manipulation",
+                  userSelect: "none",
+                  WebkitTapHighlightColor: "transparent",
                   background: pendingRoomFilter === r.room ? "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)" : "transparent",
                   color: pendingRoomFilter === r.room ? "#ffffff" : "var(--text-secondary)",
                   boxShadow: pendingRoomFilter === r.room ? "0 4px 12px rgba(124, 58, 237, 0.2)" : "none",
-                  transition: "all 0.2s ease"
+                  transition: "all 0.1s ease" // ทำให้ตอบสนองเร็วขึ้น
                 }}
               >
                 ห้อง {r.room} ({count})
