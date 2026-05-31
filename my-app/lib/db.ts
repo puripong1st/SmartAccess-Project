@@ -402,6 +402,26 @@ export async function initDatabase(): Promise<void> {
       END $$;
     `);
 
+    // PWA Push Notification — FCM Token Registration Table (Multi-device support)
+    await initPool.query(`
+      CREATE TABLE IF NOT EXISTS fcm_tokens (
+        id SERIAL PRIMARY KEY,
+        user_id INT NOT NULL,
+        role VARCHAR(20) NOT NULL CHECK (role IN ('student', 'admin')),
+        fcm_token VARCHAR(255) UNIQUE NOT NULL,
+        device_info VARCHAR(150),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await initPool.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_fcm_tokens_user') THEN
+          CREATE INDEX idx_fcm_tokens_user ON fcm_tokens (user_id, role);
+        END IF;
+      END $$;
+    `);
+
     // Seed default settings if not exists
     const defaultSettings = Object.entries(DEFAULT_SYSTEM_SETTINGS).map(([key, value]) => ({ key, value }));
 

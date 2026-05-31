@@ -16,11 +16,11 @@ const cspDirectives = [
   // Next.js App Router ships inline bootstrap/hydration scripts without nonces by default.
   // 'strict-dynamic' would cause modern browsers to ignore 'self' and 'unsafe-inline',
   // blocking those inline scripts and leaving the app stuck on a loading spinner.
-  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
-  `connect-src 'self' ${supabaseHost} https://*.supabase.co`,
+  `connect-src 'self' ${supabaseHost} https://*.supabase.co https://fcm.googleapis.com https://oauth2.googleapis.com`,
   "manifest-src 'self'",
   "media-src 'self'",
   "worker-src 'self' blob:",
@@ -70,6 +70,21 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders,
+      },
+      // Service Worker ต้องส่งด้วย correct scope — ไม่ cache
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      {
+        source: "/firebase-messaging-sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
       },
     ];
   },

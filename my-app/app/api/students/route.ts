@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPool, initDatabase, StudentRow, getSystemSettings } from "@/lib/db";
 import { getAdminFromCookie } from "@/lib/auth";
 import { sendDiscordNotification } from "@/lib/discord";
+import { notifyAdminNewRegistration } from "@/lib/push-notify";
 import { SmartAccess_FACULTIES } from "@/lib/faculties";
 import { openDoor } from "@/lib/esp32";
 import { consumeOfflineGrant, consumeQRToken } from "@/lib/qr";
@@ -323,6 +324,16 @@ export async function POST(req: NextRequest) {
           room: sanitizedRequestedRoom,
         }).catch((err) => console.error("[Register Existing Notification] failed:", err));
 
+        // PWA Push → แจ้งเตือนผู้ดูแลทุกคนเมื่อมีคำขอลงทะเบียนเข้ามาใหม่
+        runBackground(
+          notifyAdminNewRegistration(
+            `${sanitizedTitle}${sanitizedFirstName} ${sanitizedLastName}`,
+            existingStudent.student_id,
+            sanitizedRequestedRoom
+          ),
+          'admin push notification'
+        );
+
         return NextResponse.json({
           success: true,
           message: "ระบบได้รับคำขอลงทะเบียนของท่านแล้ว กรุณารอเจ้าหน้าที่ตรวจสอบความถูกต้องและอนุมัติเข้าห้อง",
@@ -397,6 +408,16 @@ export async function POST(req: NextRequest) {
         year: yearNum,
         room: sanitizedRequestedRoom,
       }).catch((err) => console.error("[Register New Notification] failed:", err));
+
+      // PWA Push → แจ้งเตือนผู้ดูแลทุกคนเมื่อมีคำขอลงทะเบียนเข้ามาใหม่
+      runBackground(
+        notifyAdminNewRegistration(
+          `${sanitizedTitle}${sanitizedFirstName} ${sanitizedLastName}`,
+          sanitizedStudentId,
+          sanitizedRequestedRoom
+        ),
+        'admin push notification'
+      );
 
       return NextResponse.json({
         success: true,

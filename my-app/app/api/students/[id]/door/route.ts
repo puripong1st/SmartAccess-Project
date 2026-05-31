@@ -4,6 +4,7 @@ import { getPool, initDatabase, StudentRow } from "@/lib/db";
 import { getAdminFromCookie, canOperateRoom } from "@/lib/auth";
 import { openDoor } from "@/lib/esp32";
 import { sendDiscordNotification } from "@/lib/discord";
+import { notifyStudentDoorOpen } from "@/lib/push-notify";
 import { logEvent, getRequestContext } from "@/lib/access-log";
 
 let initialized = false;
@@ -81,6 +82,14 @@ export async function POST(
       ip,
       userAgent,
     }).catch((err) => console.error("[Door Notification] failed:", err));
+
+    // PWA Push Notification → ยืนยันการเปิดประตูสำเร็จไปยังนักศึกษา
+    if (esp32Result.success) {
+      runBackground(
+        notifyStudentDoorOpen(studentId, student.requested_room),
+        'door open push notification'
+      );
+    }
 
     return NextResponse.json({ success: esp32Result.success, message: esp32Result.message, esp32: esp32Result });
   } catch (error) {

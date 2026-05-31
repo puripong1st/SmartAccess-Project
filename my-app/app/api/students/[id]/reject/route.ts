@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPool, initDatabase, StudentRow } from "@/lib/db";
 import { getAdminFromCookie } from "@/lib/auth";
 import { sendDiscordNotification } from "@/lib/discord";
+import { notifyStudentStatusChange } from "@/lib/push-notify";
 import { logEvent, getRequestContext } from "@/lib/access-log";
 
 let initialized = false;
@@ -67,6 +68,10 @@ export async function POST(
       ip,
       userAgent,
     }).catch((err) => console.error("[Reject Notification] failed:", err));
+
+    // PWA Push Notification → แจ้งเตือนนักศึกษาบนอุปกรณ์
+    notifyStudentStatusChange(studentId, 'rejected', student.requested_room, finalReason)
+      .catch((err) => console.error('[Reject Push] failed:', err));
 
     return NextResponse.json({ success: true, message: "ปฏิเสธคำขอสำเร็จ" });
   } catch (error) {

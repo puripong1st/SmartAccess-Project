@@ -1,7 +1,7 @@
-﻿﻿# คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
+﻿# คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-30 21:52:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 10:47:11 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -148,6 +148,7 @@
 - [73.16 การออกแบบระบบรายงานและสถิติวินิจฉัยเชิงลึกด้วยกราฟวิเคราะห์ Recharts](#sec-73-16)
 - [73.18 แก้ไขปัญหาจุดบกพร่องของโหมดมืดและการแสดงผลกราฟในรอบการเข้าถึงครั้งแรก](#sec-73-18)
 - [73.20 การแก้ไขปัญหาแถบสารบัญด้านซ้ายตัดรายการและ Scroll ไม่ตรงเป้า](#sec-73-20)
+- [73.21 การพัฒนาและติดตั้งระบบ Progressive Web App (PWA) และการแจ้งเตือนพุชผ่าน Firebase Cloud Messaging (FCM)](#sec-73-21)
 
 ---
 
@@ -9925,5 +9926,434 @@ if (!sidebar.matches(':hover')) {
 | `my-app/scripts/compile_manual.js` | แก้ CSS `.toc-group-list` max-height, อัปเดต `expandGroup()` ให้ใช้ scrollHeight, แก้ Auto-Scroll ให้เรียก `tocMenu.scrollTo()` แทน `link.scrollIntoView()` |
 | `complete_system_manual_th.html` | Re-generated อัตโนมัติจากสคริปต์ compile |
 | `my-app/public/complete_system_manual_th.html` | Re-generated อัตโนมัติจากสคริปต์ compile |
+
+<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+
+---
+
+<a id="sec-73-21"></a>
+### 73.21 การพัฒนาและติดตั้งระบบ Progressive Web App (PWA) และการแจ้งเตือนพุชผ่าน Firebase Cloud Messaging (FCM)
+
+วันที่บันทึก: 31 พฤษภาคม 2026
+
+#### 73.21.1 บริบทและความต้องการทางวิศวกรรม (Engineering Context & Requirements)
+
+ในระบบดั้งเดิม การแจ้งเตือนเหตุการณ์ด้านความปลอดภัยและการลงทะเบียนใหม่จำกัดอยู่เพียง Discord Webhook ซึ่งเป็นระบบแบบ Passive ที่ต้องเปิดแอปพลิเคชันภายนอกเพื่อดูความเคลื่อนไหว นอกจากนี้ เมื่อคำขอเข้าใช้งานห้องเรียนของนักศึกษาได้รับการอนุมัติหรือปฏิเสธโดยผู้ดูแลระบบ นักศึกษาจะไม่ได้รับการแจ้งเตือนในทันที ส่งผลให้เกิดความล่าช้าในการเข้าเรียนและสแกน QR Code
+
+เพื่อยกระดับความสามารถของระบบและแก้ปัญหานี้ จึงได้กำหนดสถาปัตยกรรมแบบไฮบริดที่แปลงระบบเว็บแอปพลิเคชันหลักของ **SmartAccess** ให้เป็น **Progressive Web App (PWA)** เพื่อเปิดใช้ระบบแจ้งเตือนแบบ **Push Notification** บนสมาร์ทโฟนแบบเนทีฟ โดยเฉพาะอย่างยิ่งบนระบบปฏิบัติการ iOS (เวอร์ชัน 16.4 ขึ้นไป) และ Android โดยมีเงื่อนไขการทำงานดังนี้:
+1. **Multi-device Support:** ผู้ใช้คนหนึ่ง (นักศึกษาหรือผู้ดูแลระบบ) สามารถลงทะเบียนอุปกรณ์เพื่อรับแจ้งเตือนได้หลายชิ้นพร้อมกัน (เช่น ทั้งบน iPhone, iPad, และ PC ของตนเอง)
+2. **Real-time Push Dispatch:** ระบบต้องส่งแจ้งเตือนพุชได้แบบเรียลไทม์ (มิลลิวินาที) เมื่อเกิดเหตุการณ์สำคัญในระบบ
+3. **No-Heavy-Dependency backend:** ในฝั่งหลังบ้าน (Next.js serverless functions) ต้องหลีกเลี่ยงการเพิ่มโมดูลภายนอกขนาดใหญ่เพื่อรักษาระดับการใช้หน่วยความจำและลดขนาด Bundle Size โดยเปลี่ยนมาใช้ Web Crypto API ในตัวรันไทม์ควบคู่กับ REST HTTP/v1 ของ Google APIs แทนการโหลด Firebase Admin SDK เต็มรูปแบบ
+4. **Resilient Token Pruning:** ต้องตรวจจับและลบโทเค็นที่หมดอายุหรือใช้การไม่ได้ (Expired/Revoked FCM Tokens) ออกจากฐานข้อมูลโดยอัตโนมัติ เพื่อรักษาขนาดตารางและไม่เกิด Overhead ในการส่งรอบถัดไป
+
+---
+
+#### 73.21.2 โครงสร้างฐานข้อมูลเพิ่มเติม (Database Schema Modification)
+
+การเชื่อมต่อความสัมพันธ์ระหว่างบัญชีผู้ใช้งาน (ผู้ดูแลระบบ/นักศึกษา) กับอุปกรณ์เครื่องปลายทาง ทำได้ผ่านการเพิ่มตาราง `fcm_tokens` ในฐานข้อมูล Supabase PostgreSQL โดยมีรายละเอียดโครงสร้างตารางและดัชนี (Indexes) ดังนี้:
+
+```sql
+CREATE TABLE IF NOT EXISTS fcm_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id INT NOT NULL,
+  role VARCHAR(20) NOT NULL CHECK (role IN ('student', 'admin')),
+  fcm_token VARCHAR(255) UNIQUE NOT NULL,
+  device_info VARCHAR(150),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- เพิ่ม Index ความเร็วสูงเพื่อรองรับการดึงข้อมูลโทเค็นแบบ Multi-device ตามรหัสและบทบาทของผู้ใช้งาน
+CREATE INDEX IF NOT EXISTS idx_fcm_tokens_user ON fcm_tokens (user_id, role);
+```
+
+**คำอธิบายการออกแบบ:**
+- `role` กำหนดค่าความถูกต้องเป็น `CHECK (role IN ('student', 'admin'))` เพื่อแยกสิทธิ์การรับแจ้งเตือนระหว่างผู้ดูแลระบบกับนักศึกษา เนื่องจากทั้งสองฝั่งมี ID ในตารางแยกของตนเอง (`admin_users` และ `students`)
+- `fcm_token` ถูกจำกัดให้เป็น `UNIQUE` เพื่อป้องกันการลงทะเบียนโทเค็นเดิมซ้ำเมื่อเกิดเหตุการณ์ติดตั้งใหม่ หรือเปลี่ยนเซสชันการเข้าสู่ระบบ
+- ดัชนี `idx_fcm_tokens_user` จะช่วยให้ความต้องการในการค้นหาโทเค็นของระบบเมื่อเกิดการเปลี่ยนสถานะหรือเกิดแจ้งเตือนความปลอดภัย ทำงานได้เสร็จสิ้นภายใต้เวลาระดับ O(log N)
+
+---
+
+#### 73.21.3 การกำหนดค่าระดับโครงสร้างพื้นฐานแอปพลิเคชัน (Next.js PWA Manifest & Service Workers)
+
+การทำให้เบราว์เซอร์บนมือถือตระหนักถึงขีดความสามารถของแอปพลิเคชัน และอนุญาตให้ผู้ใช้กด **"Add to Home Screen"** หรือแชร์หน้าจอหลักได้นั้น จำเป็นต้องมีชุดไฟล์ระบบในห้อง `public/` ดังนี้:
+
+##### 1. ไฟล์โครงสร้าง PWA Manifest (`public/manifest.json`)
+ไฟล์สำหรับระบุคุณลักษณะ ตัวตนของแอป และไอคอนที่ปรับขนาดอย่างสวยงาม:
+```json
+{
+  "name": "SmartAccess — ระบบควบคุมการเข้าออกห้องเรียนอัจฉริยะ",
+  "short_name": "SmartAccess",
+  "description": "ระบบจัดการสิทธิ์และควบคุมการเข้าออกห้องเรียนผ่านเครือข่ายไร้สาย",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0a1e",
+  "theme_color": "#7C3AED",
+  "categories": ["education", "security"],
+  "lang": "th",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+```
+
+##### 2. บริการเว็บแบ็กกราวด์ออฟไลน์ (`public/sw.js` — Vanilla Service Worker)
+Service Worker หลักทำหน้าที่คุมสองเสาหลัก:
+1. **Network-First Caching Strategy:** มุ่งเน้นการดึงข้อมูลจากเครือข่ายจริงก่อนเพื่อให้แผงแอดมินหรือหน้าจอนักศึกษาอัปเดตสถานะการเข้าออกล่าสุดแบบวินาทีต่อวินาที หากอินเทอร์เน็ตขาดหายหรือออฟไลน์ ระบบจึงจะดึงเอา Static App Shell และแคชล่าสุดที่เก็บไว้ใน `smartaccess-cache-v1` ออกมาส่งให้เบราว์เซอร์ เพื่อให้ระบบไม่ล่ม
+2. **Push Notification Native Trigger:** ฟังเหตุการณ์ `push` event จากเซิร์ฟเวอร์ และดึงข้อมูล payload มาเปิดใช้งานการสั่นและแสดงแบนเนอร์แจ้งเตือนแบบพรีเมียมบน iOS/Android:
+
+```javascript
+const CACHE_NAME = 'smartaccess-cache-v1';
+const PRECACHE_ASSETS = [
+  '/',
+  '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_ASSETS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      )
+    ).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/_next/') ||
+    url.protocol === 'chrome-extension:'
+  ) return;
+
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          });
+        }
+        return response;
+      })
+      .catch(() => caches.match(request))
+  );
+});
+
+// ฟังคำสั่ง Push Notification
+self.addEventListener('push', (event) => {
+  let data = {
+    title: '🔔 SmartAccess',
+    body: 'มีเหตุการณ์ใหม่ในระบบ',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png',
+    url: '/',
+  };
+
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      if (payload.notification) {
+        data.title = payload.notification.title || data.title;
+        data.body = payload.notification.body || data.body;
+        data.icon = payload.notification.icon || data.icon;
+      }
+      if (payload.data) {
+        data.url = payload.data.url || data.url;
+      }
+    } catch (_e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon,
+    badge: data.badge,
+    vibrate: [100, 50, 100],
+    data: { url: data.url },
+    actions: [
+      { action: 'open', title: 'เปิดดู' },
+      { action: 'close', title: 'ปิด' },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// จัดการเมื่อคลิกการแจ้งเตือน
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  if (event.action === 'close') return;
+
+  const targetUrl = event.notification.data?.url || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (new URL(client.url).pathname === targetUrl && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});
+```
+
+##### 3. ตัวจำลองความเข้ากันได้ SDK (`public/firebase-messaging-sw.js`)
+ทำหน้าที่เป็นสะพานเชื่อมเพื่อให้ Firebase Browser Client SDK ฝั่งเบราว์เซอร์สามารถดักและตอบรับโครงสร้าง FCM ในโหมดเบื้องหลัง (Background state) ได้โดยไม่เกิดขัดข้องด้านมาตรฐาน:
+```javascript
+importScripts('https://www.gstatic.com/firebasejs/11.8.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging-compat.js');
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'FIREBASE_CONFIG') {
+    const config = event.data.config;
+    if (!firebase.apps.length) {
+      firebase.initializeApp(config);
+    }
+    const messaging = firebase.messaging();
+    messaging.onBackgroundMessage((payload) => {
+      const notificationTitle = payload.notification?.title || '🔔 SmartAccess';
+      const notificationOptions = {
+        body: payload.notification?.body || 'มีเหตุการณ์ใหม่',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png',
+        data: payload.data || {},
+      };
+      self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+  }
+});
+```
+
+---
+
+#### 73.21.4 การลงทะเบียนและสถาปัตยกรรม Client-Side (Client-Side SW & FCM Registration)
+
+เพื่อให้ Next.js สามารถลงทะเบียน Service Worker ทั้งสองชุดบนหน้าต่างเบราว์เซอร์ได้อย่างเป็นลำดับขั้นตอน โดยที่ไม่รบกวนจังหวะการทำ Server-Side Rendering (SSR) หรือก่อให้เกิด Hydration Error จึงได้แยกการทำงานและแก้ไขดังนี้:
+
+##### 1. การดึงค่าพารามิเตอร์เบราว์เซอร์ (`lib/firebase.ts`)
+ดึงข้อมูลคีย์สาธารณะและรายละเอียดแอปพลิเคชันจากสภาพแวดล้อม Client-Side (พร้อมป้องกันการพังหากเรียกใช้จากเซิร์ฟเวอร์):
+```typescript
+export interface FirebaseConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket: string;
+  messagingSenderId: string;
+  appId: string;
+  measurementId?: string;
+}
+
+export function getFirebaseConfig(): FirebaseConfig | null {
+  const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const messagingSenderId = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID;
+  const appId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
+
+  if (!apiKey || !projectId || !messagingSenderId || !appId) return null;
+
+  return {
+    apiKey,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`,
+    projectId,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`,
+    messagingSenderId,
+    appId,
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  };
+}
+
+export function getVapidKey(): string {
+  return process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || '';
+}
+```
+
+##### 2. คอมโพเนนต์ลงทะเบียนอัตโนมัติ (`app/components/ServiceWorkerRegistration.tsx`)
+ใช้สถาปัตยกรรมแบบ `'use client'` เพื่อให้ทำงานเฉพาะในฝั่ง Browser เท่านั้น หลังจากที่การโหลดโครงสร้างพื้นฐาน HTML สำเร็จ:
+- ทำการรันคำสั่ง `navigator.serviceWorker.register('/sw.js')`
+- และรันการติดตั้ง `firebase-messaging-sw.js` ด้วยขอบเขต `/firebase-cloud-messaging-push-scope`
+- จากนั้นใช้วิธี `postMessage` เพื่อส่งโครงสร้างข้อมูลคอนฟิกของแอปพลิเคชันไปให้พนักงานเบื้องหลังรับทราบข้อมูล
+
+##### 3. การฝังระบบลงสู่ศูนย์กลางแอป (`app/layout.tsx`)
+ในตัวจัดการ Layout หลัก ได้เพิ่มแท็กหัวข้อสำคัญของ iOS PWA ลงใน Header:
+- Link manifest ของ PWA: `<link rel="manifest" href="/manifest.json" />`
+- แท็กบังคับเปิดขีดความสามารถการติดตั้งของ Apple: `<meta name="apple-mobile-web-app-capable" content="yes" />`
+- จัดแต่งความกว้างและสีสันแถบสเตตัสด้านบนของแอป:
+  `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />`
+  `<meta name="theme-color" content="#7C3AED" />`
+- พร้อมทั้งทำการเรียกใช้งานและเมานต์คอมโพเนนต์ `<ServiceWorkerRegistration />` ไว้ส่วนท้ายของไฟล์
+
+---
+
+#### 73.21.5 สถาปัตยกรรมการส่งแจ้งเตือนฝั่ง Server-Side (Dependency-Free REST-based Firebase Admin SDK)
+
+เนื่องจากการใช้งานบนเซิร์ฟเวอร์แบบ Serverless ของ Vercel มีการนับทรัพยากรการคำนวณและประเมินประสิทธิภาพความเร็วเป็นหัวใจหลัก เพื่อลด Bundle Size และป้องกันปัญหา Dependency เข้ากันไม่ได้กับ Next.js 15+ & React 19 จึงได้คิดค้นกลไกส่งแจ้งเตือนผ่าน **REST v1 APIs** ของ Google Cloud ด้วยการลงนามกุญแจด้วยมือ (Pure Web Crypto)
+
+##### 1. การตรวจสอบและลงนามสิทธิ์การเชื่อมต่อ (`lib/firebase-admin.ts`)
+โมดูลจะแยกกุญแจลับจาก Private Key ของ Service Account จากนั้นทำการลงนามโครงสร้างความปลอดภัย (RS256 JWT Claim) โดยอาศัยความสามารถระดับดั้งเดิมของ **Web Crypto API (V8 Engine)** เพื่อเข้าใช้มาตรฐาน Google OAuth2:
+- แลกเปลี่ยน Access Token จากสิทธิ์ `https://www.googleapis.com/auth/firebase.messaging`
+- ยิงข้อมูล HTTP POST ส่งตรงไปยัง FCM v1 URL: `https://fcm.googleapis.com/v1/projects/{PROJECT_ID}/messages:send`
+- จัดการดักรับและประมวลผล Error: หากตอบกลับด้วยรหัส 404 (Token Not Found) หรือ 400 (Bad Token Request) ซึ่งแสดงว่าโทเค็นของอุปกรณ์ชิ้นนั้นไม่มีผลหรือถอนแอปไปแล้ว ฟังก์ชันจะเข้าล้างและลบโทเค็นดังกล่าวออกจากตาราง `fcm_tokens` ในฐานข้อมูลทันที
+
+##### 2. ตัวกลางจัดการสิทธิ์ทางธุรกิจ (`lib/push-notify.ts`)
+เป็นชั้นการทำงานสำหรับห่อหุ้มคำสั่งทางธุรกิจเพื่อความคล่องตัวในการเรียกใช้ของนักพัฒนา:
+- `notifyStudentStatusChange(...)`: ส่งการแจ้งเตือนพุชแจ้งนักศึกษาทันทีเมื่อแอดมินเปลี่ยนสถานะคำขอ (อนุมัติ/ปฏิเสธ) ไปยังหน้าแรกของแอปพลิเคชัน
+- `notifyStudentDoorOpen(...)`: แจ้งเตือนความปลอดภัยเชิงรุกในรูป Push ไปบนจอมือถือนักศึกษาเมื่อมีการทริกเกอร์รหัสหรือ QR ของตนในการเปิดประตู เพื่อความปลอดภัยสูงสุดและป้องกันการจารกรรมรหัสผ่าน
+- `notifyAdminNewRegistration(...)`: เมื่อมีนักศึกษาทำการร้องขอลงทะเบียนใหม่ ระบบจะกระจาย Push ไปยังบอร์ดผู้ดูแลระบบทุกคนที่มีสถานะ Active ทันที
+- `notifyAdminSecurityAlert(...)`: เชื่อมต่อเข้ากับระบบการเฝ้าระวังภัยพิบัติความมั่นคงปลอดภัยสูง เมื่อมีการสแกน QR เกินจำกัด การตรวจพบอุณหภูมิผิดปกติ หรือ ESP32 หลุดจากการเชื่อมต่อ จะกระจาย Push เตือนภัยไปยังมือถือผู้ดูแลระบบทุกคนในทันที
+
+---
+
+#### 73.21.6 การกำหนดค่าความปลอดภัยและการตั้งค่า HTTP Headers (CSP & SW Header Optimizations)
+
+ความพยายามในการลงทะเบียน Service Worker บน Next.js มักจะถูกปิดกั้นโดยระบบรักษาความปลอดภัยดั้งเดิม (Content-Security-Policy - CSP) และมีปัญหาความล้มเหลวในการลงทะเบียนเนื่องจากแคชบราวเซอร์ค้าง เพื่อให้เป็นไปตามแนวทางความปลอดภัยสูงสุด ได้ดำเนินการตั้งค่าใน `next.config.ts` ดังนี้:
+
+##### 1. การเพิ่มคำสั่งเชื่อมต่อใน Content Security Policy (CSP)
+เพิ่มโดเมนบริการข้อมูลของ Firebase ไปยังคำสั่งโครงข่ายเพื่อให้เบราว์เซอร์อนุญาตการดึงข้อมูลและการสื่อสารข้อมูลเบื้องหลัง:
+- `script-src`: อนุญาต `https://www.gstatic.com` (สำหรับดึงไลบรารี FCM sw)
+- `connect-src`: เพิ่มโดเมน `https://fcm.googleapis.com` และ `https://oauth2.googleapis.com`
+
+##### 2. การกำหนด Headers และการควบคุมขอบเขตของ Service Worker
+โดยการใช้คุณสมบัติ `async headers()` ใน NextConfig เพื่อให้แน่ใจว่าไฟล์ Service Worker จะทำงานในระดับ Global Scope และไม่ค้างสะสมแคชเก่าในฝั่งไคลเอนต์:
+```typescript
+{
+  source: "/sw.js",
+  headers: [
+    { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+    { key: "Service-Worker-Allowed", value: "/" },
+  ],
+},
+{
+  source: "/firebase-messaging-sw.js",
+  headers: [
+    { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+    { key: "Service-Worker-Allowed", value: "/" },
+  ],
+}
+```
+
+---
+
+#### 73.21.7 การบูรณาการแจ้งเตือนพุชเข้ากับ Workflow ปัจจุบัน (System Workflow Integration)
+
+ได้ทำการบูรณาการการยิงการแจ้งเตือนแบบ Push เข้าไปในเหตุการณ์สำคัญทางธุรกิจ (Business Events) บน Serverless API Routes ดังนี้:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as ผู้ดูแลระบบ (Dashboard)
+    participant API as /api/students/[id]/approve
+    participant Notify as lib/push-notify
+    participant AdminSDK as lib/firebase-admin
+    participant DB as PostgreSQL (fcm_tokens)
+    participant FCM as Google FCM Server
+    actor Student as มือถือนักศึกษา (PWA)
+
+    Admin->>API: อนุมัติการขอเข้าใช้งานห้องเรียน
+    activate API
+    API->>Notify: notifyStudentStatusChange(studentId, 'approved', room)
+    activate Notify
+    Notify->>DB: ดึง fcm_token ทั้งหมดของ studentId
+    DB-->>Notify: รายชื่อ Token ของนักศึกษา (Multi-device)
+    
+    loop ส่งแจ้งเตือนทุกเครื่องปลายทาง
+        Notify->>AdminSDK: sendPushToTokens([tokens], title, body)
+        activate AdminSDK
+        AdminSDK->>AdminSDK: ลงนาม RS256 JWT
+        AdminSDK->>FCM: ยิงส่งผ่าน HTTP v1 API ด้วย Access Token
+        FCM-->>Student: แสดงแบนเนอร์แจ้งเตือนแบบพุชทันที!
+        AdminSDK-->>Notify: ผลการยิงส่งสำเร็จ
+        deactivate AdminSDK
+    end
+    
+    Notify-->>API: บันทึกประวัติและยืนยันเสร็จสิ้น
+    deactivate Notify
+    API-->>Admin: อนุมัติสำเร็จและอัปเดตหน้า Dashboard
+    deactivate API
+```
+
+##### 1. จุดทริกเกอร์ API และตัวจัดการเหตุการณ์
+- **การยืนยันและอนุมัตินักศึกษา:** ใน `app/api/students/[id]/approve/route.ts` เมื่อแอดมินยืนยันคำขอ ระบบจะเรียก `notifyStudentStatusChange` เพื่อพุชคำยืนยันสีเขียว "✅ คำขอเข้าห้องได้รับการอนุมัติแล้ว!" ทันที
+- **การปฏิเสธคำขอลงทะเบียน:** ใน `app/api/students/[id]/reject/route.ts` เมื่อเกิดการปฏิเสธ ระบบจะส่งข้อความสีแดง "❌ คำขอเข้าห้องถูกปฏิเสธ" พร้อมระบุเหตุผลเพื่อให้แจ้งเตือนบนจอมือถือของนักศึกษาเครื่องปลายทาง
+- **การยืนยันความถูกต้องเมื่อเปิดประตู:** ใน `app/api/students/[id]/door/route.ts` เพื่อป้องกันกรณีคนแปลกหน้าใช้สิทธิ์สแกนต่อคิว เมื่อ ESP32 สั่งเปิดประตูสำเร็จ ระบบจะพุชข้อความ "🚪 ประตูเปิดแล้ว: มีการเปิดประตูห้อง..." ไปยังเครื่องจริงของนักศึกษาเจ้าของสิทธิ์ทันที
+- **การสมัครขอใช้งานใหม่:** ใน `app/api/students/route.ts` เมื่อมีนักศึกษาทำการลงทะเบียนผ่านฟอร์มหน้าเว็บ ระบบจะกระจายข้อความเตือนแอดมิน "📝 มีนักศึกษาลงทะเบียนใหม่" เพื่อกดพุชนำทางไปที่หลังบ้าน
+- **ความเสถียรและความมั่นคงระดับระบบ:** ใน `lib/notify.ts` ตัวส่งแจ้งเตือนหลักถูกขยายเพื่อให้สามารถทำงานควบคู่กัน: ยิงคำสั่งแจ้งเตือน Discord Webhook และส่งข้อความพุช "🚨 ตรวจพบความพยายามเจาะระบบ" ไปหาผู้ดูแลทุกคนพร้อมกัน
+
+---
+
+#### 73.21.8 ขั้นตอนและแผนการตรวจสอบการทำงาน (Verification & Compliance Plan)
+
+##### 1. การทดสอบแบบอัตโนมัติ (Automated Build & Quality checks)
+- **TypeScript Static Verification:** มั่นใจในเรื่องชนิดข้อมูลของตัวแปรระบบที่พัฒนาขึ้นใหม่ โดยการรันคำสั่ง `npm run lint` และผ่านการวิเคราะห์ static check ไร้ข้อผิดพลาด
+- **Serverless Production Build Test:** ตรวจสอบความเข้ากันได้กับการทำงานแบบแยกเซิร์ฟเวอร์ โดยรันคำสั่ง `npm run build` ซึ่งผลลัพธ์ผ่านเกณฑ์ความเข้ากันได้ 100% โดยเส้นทางการใช้งาน API ถูกแยกออกเป็นแบบ Dynamic dynamic routes (`ƒ`) และ static content (`○`) อย่างเหมาะสม
+
+##### 2. การตรวจสอบการติดตั้งและส่งจริงบน Safari iOS
+- เข้าใช้งานผ่านหน้าเว็บโดยใช้เบราว์เซอร์ Safari บน iPhone หรือ iPad ภายใต้ระบบเครือข่าย WiFi เดียวกัน
+- ตรวจสอบความถูกต้องของการนำเสนอภาพหน้าจอ Standalone โดยทดลองคลิกปุ่ม **"Add to Home Screen"** บนมือถือ และเปิดไอคอน PWA ลายสีม่วง-ชมพูจากหน้าหลัก
+- อนุญาตการขอรับแจ้งเตือน (Push Permission Prompt) จากนั้นเข้าไปทริกเกอร์การสแกนผ่าน ESP32 Simulator หรือกดปุ่มอนุมัติบนหลังบ้านของผู้ดูแลระบบ
+- สังเกตผลการส่งแจ้งเตือน: แบนเนอร์การแจ้งเตือนพุชต้องเด้งปรากฏขึ้นบนจอมือถือจริงในทันที แม้ว่าตัวแอปพลิเคชันหลักจะถูกสไลด์ปิดอยู่ในเบื้องหลัง (Background/Suspended state) ก็ตาม
+
+---
+
+#### 73.21.9 ตารางสรุปไฟล์ที่พัฒนาและแก้ไข (Modified Files Summary Table)
+
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `public/manifest.json` | **[NEW]** | ไฟล์ระบุขีดความสามารถการติดตั้ง PWA ขนาด สี และไอคอนที่ iOS Safari รองรับ |
+| 2 | `public/sw.js` | **[NEW]** | Service Worker หลักเพื่อดักรับการทำงาน Network-First Caching และพุชแบนเนอร์แจ้งเตือนมือถือ |
+| 3 | `public/firebase-messaging-sw.js` | **[NEW]** | Service Worker จัดการกับโครงสร้างคำสั่ง SDK ของ Firebase แบบเบื้องหลัง |
+| 4 | `lib/firebase.ts` | **[NEW]** | ตัวดึงการตั้งค่าคีย์สาธารณะและรายละเอียดเชื่อมต่อ Firebase ฝั่ง Client-Side |
+| 5 | `lib/firebase-admin.ts` | **[NEW]** | โมดูลฝั่ง Server-Side สำหรับลงนามกุญแจความปลอดภัย RS256 และยิง REST HTTP v1 FCM โดยไม่พึ่งไลบรารีใหญ่ |
+| 6 | `lib/push-notify.ts` | **[NEW]** | ตัวจัดการแจ้งเตือนตามเงื่อนไขธุรกิจ (การเปิดประตู, การอนุมัติสิทธิ์, การเตือนภัยคุกคาม) |
+| 7 | `app/components/ServiceWorkerRegistration.tsx` | **[NEW]** | คอมโพเนนต์ลงทะเบียนระบบ Service Worker ป้องกันปัญหา Hydration |
+| 8 | `app/api/notifications/register/route.ts` | **[NEW]** | API Endpoint รับบันทึก และถอนการลงทะเบียน FCM Token |
+| 9 | `app/layout.tsx` | **[MODIFY]** | เพิ่มแท็กสีกระดุมหัวข้อ Apple meta, โหลด PWA manifest และเมานต์ตัวลงทะเบียน |
+| 10 | `app/api/students/[id]/approve/route.ts` | **[MODIFY]** | เรียกใช้คำสั่งแจ้งเตือนพุชหานักศึกษาเมื่อคำขอสมัครเข้าใช้ห้องได้รับการยืนยันอนุมัติ |
+| 11 | `app/api/students/[id]/reject/route.ts` | **[MODIFY]** | ส่งพุชหานักศึกษาพร้อมระบุเหตุผลเพื่อแสดงข้อมูลการถูกปฏิเสธคำขอ |
+| 12 | `app/api/students/[id]/door/route.ts` | **[MODIFY]** | ยิงพุชข้อความแจ้งเตือนความปลอดภัยยืนยันเมื่อมีการสั่งเปิดประตูจริงด้วยบัญชีของคนนั้นๆ |
+| 13 | `app/api/students/route.ts` | **[MODIFY]** | ยิงแจ้งเตือนพุชไปยังผู้ดูแลระบบทุกคนทันทีเมื่อมีรายการนักศึกษาส่งฟอร์มขอลงทะเบียนเข้ามา |
+| 14 | `lib/notify.ts` | **[MODIFY]** | ขยายคำสั่งแจ้งเตือนภัยคุกคามและการเชื่อมต่อหลุด ให้ส่ง Push Notification ร่วมกับ Discord Webhook |
+| 15 | `next.config.ts` | **[MODIFY]** | เพิ่มสิทธิ์ความปลอดภัย Content-Security-Policy และกำหนดค่า Header ป้องกันแคช Service Worker |
+| 16 | `.env.example` | **[MODIFY]** | เพิ่มคู่มือตัวแปรสภาพแวดล้อมสำหรับเชื่อมต่อ Firebase (กุญแจสาธารณะ กุญแจส่วนตัว และรายละเอียดโครงการ) |
 
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>

@@ -4,6 +4,7 @@ import { getPool, initDatabase } from "@/lib/db";
 import { getAdminFromCookie, canOperateRoom } from "@/lib/auth";
 import { openDoor } from "@/lib/esp32";
 import { sendDiscordNotification } from "@/lib/discord";
+import { notifyStudentStatusChange } from "@/lib/push-notify";
 import { sweepExpiredPending } from "@/lib/auto-reject";
 import { logEvent, getRequestContext } from "@/lib/access-log";
 
@@ -98,6 +99,12 @@ export async function POST(
       ip,
       userAgent,
     }).catch(() => {});
+
+    // PWA Push Notification → แจ้งเตือนนักศึกษาบนอุปกรณ์ที่ลงทะเบียน FCM token ไว้
+    runBackground(
+      notifyStudentStatusChange(studentId, esp32Result.success ? 'approved' : 'rejected', student.requested_room),
+      'push notification'
+    );
 
     return NextResponse.json({
       success: true,

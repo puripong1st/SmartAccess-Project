@@ -1,6 +1,7 @@
 // lib/notify.ts — ตัวส่งแจ้งเตือนรวมศูนย์หลายช่องทาง (Discord + Telegram + LINE)
 // สร้างข้อความ 1 ครั้งจาก lib/discord.ts แล้วกระจายไปยังทุกช่องที่ตั้งค่าไว้
 import { getSystemSettings } from "./db";
+import { notifyAdminSecurityAlert } from "./push-notify";
 import {
   buildEventMessage,
   sendDiscordChannels,
@@ -166,5 +167,14 @@ export async function sendNotification(eventType: DiscordEventType, data: Notify
   const results = await Promise.allSettled(tasks);
   // ผล Discord อยู่ index 0
   const discordResult = results[0];
+
+  // PWA Push → ส่งแจ้งเตือน push ไปยังผู้ดูแลระบบสำหรับเหตุการณ์ด้านความปลอดภัย
+  if (eventType === "security_alert") {
+    notifyAdminSecurityAlert(
+      data.alertTitle || "แจ้งเตือนความปลอดภัย",
+      data.alertDetail || data.reason || "ตรวจพบเหตุการณ์ที่ควรตรวจสอบ"
+    ).catch((err) => console.error("[Notify] Security push failed:", err));
+  }
+
   return discordResult.status === "fulfilled" ? discordResult.value : false;
 }
