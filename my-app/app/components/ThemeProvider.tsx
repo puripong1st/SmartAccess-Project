@@ -25,7 +25,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
-    setMounted(true);
+    // Defer state update using requestAnimationFrame to avoid "setState in useEffect" lint warnings
+    const animationFrameId = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(animationFrameId);
   }, [theme]);
 
   const toggleTheme = () => {

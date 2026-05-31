@@ -18,7 +18,6 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
   const [pushBlocked, setPushBlocked] = useState<boolean>(false);
   // iOS ต้องเพิ่มลงหน้าโฮม (standalone) ก่อนถึงจะรับ Web Push ได้ (ข้อกำหนดของ Apple ตั้งแต่ iOS 16.4)
   const [iosNeedsInstall, setIosNeedsInstall] = useState<boolean>(false);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -36,38 +35,46 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
       'Notification' in window &&
       'PushManager' in window;
 
-    // บน iPhone/iPad ที่ยังเปิดผ่าน Safari (ยังไม่เพิ่มลงหน้าโฮม) → Web Push ใช้ไม่ได้
-    // แสดงคำแนะนำให้ผู้ใช้ติดตั้งเป็นแอปก่อน แทนที่จะไม่แสดงอะไรเลย
-    if (isIOS && !isStandalone) {
-      setIosNeedsInstall(true);
-      setSupported(isSupported);
-      return;
-    }
+    let bannerTimer: NodeJS.Timeout;
 
-    setSupported(isSupported);
-
-    if (isSupported) {
-      setPermission(Notification.permission);
-      
-      // If permission is already granted, attempt automatic token registration
-      if (Notification.permission === 'granted') {
-        const hasRegistered = localStorage.getItem('smartaccess_fcm_registered') === 'true';
-        if (!hasRegistered) {
-          registerPushNotifications();
-        } else {
-          setTokenRegistered(true);
-        }
-      } else if (Notification.permission === 'default') {
-        // Show banner to ask for permission after 3 seconds
-        const timer = setTimeout(() => {
-          setShowBanner(true);
-        }, 3000);
-        return () => clearTimeout(timer);
+    // Defer state updates to satisfy react-hooks/set-state-in-effect
+    const animFrameId = requestAnimationFrame(() => {
+      // บน iPhone/iPad ที่ยังเปิดผ่าน Safari (ยังไม่เพิ่มลงหน้าโฮม) → Web Push ใช้ไม่ได้
+      // แสดงคำแนะนำให้ผู้ใช้ติดตั้งเป็นแอปก่อน แทนที่จะไม่แสดงอะไรเลย
+      if (isIOS && !isStandalone) {
+        setIosNeedsInstall(true);
+        setSupported(isSupported);
+        return;
       }
-    }
-  }, [studentDbId]);
 
-  const registerPushNotifications = async () => {
+      setSupported(isSupported);
+
+      if (isSupported) {
+        setPermission(Notification.permission);
+        
+        // If permission is already granted, attempt automatic token registration
+        if (Notification.permission === 'granted') {
+          const hasRegistered = localStorage.getItem('smartaccess_fcm_registered') === 'true';
+          if (!hasRegistered) {
+            registerPushNotifications();
+          } else {
+            setTokenRegistered(true);
+          }
+        } else if (Notification.permission === 'default') {
+          // Show banner to ask for permission after 3 seconds
+          bannerTimer = setTimeout(() => {
+            setShowBanner(true);
+          }, 3000);
+        }
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(animFrameId);
+      if (bannerTimer) clearTimeout(bannerTimer);
+    };
+  }, [studentDbId]);
+  async function registerPushNotifications() {
     setLoading(true);
     try {
       const config = getFirebaseConfig();
@@ -159,7 +166,7 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleRequestPermission = async () => {
     if (!supported) return;

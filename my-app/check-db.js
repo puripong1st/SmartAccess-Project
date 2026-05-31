@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // my-app/check-db.js
 const { Client } = require('pg');
 
