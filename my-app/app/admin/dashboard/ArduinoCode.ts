@@ -436,6 +436,7 @@ String cached_qr_key = "";
 const char* cache_students_file = "/student_cache.json";
 const char* cache_logs_file = "/offline_logs.json";
 const char* cache_key_file = "/qr_key.bin";
+String cached_offline_pin = "123456"; // Default PIN
 
 // Forward declarations
 bool validateOfflineQR(String grant);
@@ -894,6 +895,27 @@ void handleLocalValidation() {
         client.println("ACCESS DENIED");
       }
     }
+  } else if (req.indexOf("POST /unlock-pin") != -1) {
+    int pinIdx = req.indexOf("pin=");
+    if (pinIdx != -1) {
+      int endIdx = req.indexOf(" ", pinIdx);
+      if (endIdx == -1) endIdx = req.indexOf("\\r", pinIdx);
+      String enteredPin = req.substring(pinIdx + 4, endIdx);
+      if (enteredPin == cached_offline_pin) {
+        client.println("HTTP/1.1 200 OK");
+        client.println("Content-Type: text/html; charset=utf-8");
+        client.println("Connection: close");
+        client.println();
+        client.println("<h1>ACCESS GRANTED</h1><p>Door is open.</p>");
+        triggerDoorOpenOffline("PIN_OVERRIDE.dummy");
+      } else {
+        client.println("HTTP/1.1 403 Forbidden");
+        client.println("Content-Type: text/html; charset=utf-8");
+        client.println("Connection: close");
+        client.println();
+        client.println("<h1>ACCESS DENIED</h1><p>Invalid PIN.</p>");
+      }
+    }
   } else {
     client.println("HTTP/1.1 200 OK");
     client.println("Content-Type: text/html; charset=utf-8");
@@ -903,7 +925,11 @@ void handleLocalValidation() {
     client.println("<body style='font-family:sans-serif; text-align:center; padding:50px;'>");
     client.println("<h1 style='color:#F59E0B;'>⚠️ OFFLINE MODE ACTIVE</h1>");
     client.println("<p>ระบบอยู่ในโหมดออฟไลน์ (อินเทอร์เน็ตขัดข้อง)</p>");
-    client.println("<p>กรุณาสแกนคีย์ QR โค้ดปลดล็อกของท่านเพื่อยืนยันสิทธิ์กับบอร์ดโดยตรง</p>");
+    client.println("<p>กรุณาสแกนคีย์ QR โค้ดปลดล็อกของท่าน หรือกรอก Offline PIN</p>");
+    client.println("<form method='POST' action='/unlock-pin'>");
+    client.println("<input type='password' name='pin' placeholder='Enter PIN' style='padding:10px;font-size:16px;'><br><br>");
+    client.println("<button type='submit' style='padding:10px 20px;font-size:16px;background:#10B981;color:white;border:none;'>Unlock Door</button>");
+    client.println("</form>");
     client.println("</body></html>");
   }
   delay(1);
@@ -988,6 +1014,14 @@ void setup() {
         cached_qr_key = f.readString();
         f.close();
         DBG("Loaded cached QR signing key from SPIFFS.");
+      }
+    }
+    if (SPIFFS.exists("/offline_pin.txt")) {
+      File f = SPIFFS.open("/offline_pin.txt", "r");
+      if (f) {
+        cached_offline_pin = f.readString();
+        f.close();
+        DBG("Loaded cached offline PIN from SPIFFS.");
       }
     }
   }
@@ -1173,7 +1207,11 @@ void loop() {
           lastEtag = newEtag;
         }
         api_fail_count = 0;
-        is_offline_mode = false;
+        if (is_offline_mode) {
+          is_offline_mode = false;
+          WiFi.mode(WIFI_STA);
+          DBG("Restored online mode. AP stopped.");
+        }
         if (millis() - last_student_sync > SYNC_STUDENTS_INTERVAL) {
           last_student_sync = millis();
           syncStudentCache();
@@ -1195,6 +1233,15 @@ void loop() {
             performHTTPSOTA();
 #endif
             return;
+          }
+
+          if (doc.containsKey("offline_pin")) {
+            String new_pin = doc["offline_pin"].as<String>();
+            if (new_pin != cached_offline_pin) {
+              cached_offline_pin = new_pin;
+              File f = SPIFFS.open("/offline_pin.txt", "w");
+              if (f) { f.print(cached_offline_pin); f.close(); }
+            }
           }
 
           const char *door_trigger = doc["door_trigger"];
@@ -1303,7 +1350,10 @@ void loop() {
         if (api_fail_count >= 5) {
           if (!is_offline_mode) {
             is_offline_mode = true;
-            DBG("Entering offline fallback mode.");
+            DBG("Entering offline fallback mode. Starting AP.");
+            String ap_ssid = "SmartAccess_Offline_" + String(room_code);
+            WiFi.mode(WIFI_AP_STA);
+            WiFi.softAP(ap_ssid.c_str(), "");
           }
         }
       }

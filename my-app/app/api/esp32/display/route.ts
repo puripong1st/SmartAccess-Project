@@ -246,10 +246,11 @@ export async function GET(req: NextRequest) {
     const hbRecent = await cacheGet<number>(hbKey);
     if (!hbRecent) {
       await cacheSet(hbKey, Date.now(), 30);
-      sbUpsert("system_settings", {
-        setting_key: `room_last_seen_${room}`,
-        setting_value: new Date().toISOString(),
-      }, "setting_key");
+      sbUpsert("esp32_heartbeats", {
+        room_code: room,
+        last_seen: new Date().toISOString(),
+        status: 'online'
+      }, "room_code");
     }
 
     // ─── Server time (Bangkok UTC+7) ──────────────────────────────────────
@@ -282,6 +283,7 @@ export async function GET(req: NextRequest) {
       requested_room: room,
       update_available: updateAvailable,
       firmware_version: serverVer,
+      offline_pin: allSettings[`offline_pin_${room}`] || "123456",
       display: {
         width: 320, height: 240, orientation: "landscape",
         color_theme: { bg: "#000000", primary: "#4CAF50", secondary: "#FFD700", text: "#FFFFFF", error: "#F44336" },

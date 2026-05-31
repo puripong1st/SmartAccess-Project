@@ -150,8 +150,17 @@ async function applyIdempotentMigrations(pool: Pool): Promise<void> {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  // esp32_heartbeats: ตารางเก็บสถานะบอร์ดและการทำ Offline Fallback
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS esp32_heartbeats (
+      room_code VARCHAR(50) PRIMARY KEY,
+      last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status VARCHAR(20) DEFAULT 'online',
+      offline_pin VARCHAR(10)
+    )
+  `);
   migrationsApplied = true;
-  console.log("[DB] Idempotent migrations applied (access_logs columns + fcm_tokens ensured)");
+  console.log("[DB] Idempotent migrations applied (access_logs columns + fcm_tokens + esp32_heartbeats ensured)");
 }
 
 export async function initDatabase(): Promise<void> {
@@ -476,6 +485,16 @@ export async function initDatabase(): Promise<void> {
           CREATE INDEX idx_fcm_tokens_user ON fcm_tokens (user_id, role);
         END IF;
       END $$;
+    `);
+
+    // Hardware Heartbeat Table
+    await initPool.query(`
+      CREATE TABLE IF NOT EXISTS esp32_heartbeats (
+        room_code VARCHAR(50) PRIMARY KEY,
+        last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(20) DEFAULT 'online',
+        offline_pin VARCHAR(10)
+      )
     `);
 
     // Seed default settings if not exists

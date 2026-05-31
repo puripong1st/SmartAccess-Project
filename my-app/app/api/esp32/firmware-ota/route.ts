@@ -4,6 +4,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { getPool } from '@/lib/db';
 import { sendDiscordNotification } from '@/lib/discord';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(req: Request) {
   try {
@@ -100,11 +101,36 @@ export async function GET(req: Request) {
       });
     }
 
-    // 6. ส่ง Redirect (302 Found) ไปยัง Supabase Storage
+    // 6. สร้าง Supabase Signed URL อายุ 60 วินาที เพื่อป้องกันคนดาวน์โหลดจากลิงก์ตรง
+    let finalDownloadUrl = dbReleasePath;
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      
+      if (supabaseUrl && supabaseKey && dbReleasePath.includes('/storage/v1/object/public/')) {
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const parts = dbReleasePath.split('/storage/v1/object/public/');
+        if (parts.length === 2) {
+          const [bucket, ...pathParts] = parts[1].split('/');
+          const objectPath = pathParts.join('/');
+          const { data, error } = await supabase.storage.from(bucket).createSignedUrl(objectPath, 60);
+          if (data && !error) {
+            finalDownloadUrl = data.signedUrl;
+            console.log(`[OTA Dispatcher] Generated Signed URL for bucket: ${bucket}, path: ${objectPath}`);
+          } else {
+            console.error('[OTA Signed URL Error]:', error);
+          }
+        }
+      }
+    } catch (signErr) {
+      console.error('[OTA Signed URL Exception]:', signErr);
+    }
+
+    // 7. ส่ง Redirect (302 Found) ไปยัง Supabase Storage Signed URL
     return new NextResponse(null, {
       status: 302,
       headers: {
-        'Location': dbReleasePath,
+        'Location': finalDownloadUrl,
         'x-MD5-Checksum': fileHash,
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
       }
