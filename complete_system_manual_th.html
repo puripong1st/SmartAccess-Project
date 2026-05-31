@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 18:46:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 19:30:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -16030,7 +16030,43 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>เพิ่ม CSS Property <code>overscroll-behavior-x: none</code> ให้กับ <code>body</code> เพื่อบล็อกการสไลด์เพื่อย้อนกลับ (Native Swipe Back) ของ iOS/macOS บนหน้าจอ Dashboard ให้ทำงานแยกกับระบบ Custom Swipe Menu 100%</td>
 </tr>
 </tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<h2>ภาคผนวก: การแก้บั๊ก Touch Gesture บน iOS Safari / PWA (Sidebar Drawer)</h2>
+<p>อัปเดต <code>my-app/app/admin/dashboard/layout.tsx</code> เพื่อแก้ปัญหาเรื้อรัง 2 จุดบนเครื่อง iOS Safari / โหมด PWA โดยเปลี่ยนสถาปัตยกรรมการรับ touch event ของเมนูสไลด์ (Swipe Drawer) ใหม่ทั้งหมด</p>
+<h3>สาเหตุรากของปัญหา (Root Cause)</h3>
+<p>React ผูก <code>onTouchMove</code> ให้เป็น <strong>passive listener</strong> โดยอัตโนมัติ ทำให้ <code>e.preventDefault()</code> ที่เรียกข้างในเป็น no-op (ไม่มีผลใดๆ แบบเงียบๆ) ส่งผล 2 อย่าง:</p>
+<ol>
+<li>บล็อก Safari Swipe-to-Go-Back (ปัดขอบจอซ้ายเพื่อย้อนหน้า) ไม่ได้จริง → หน้า UI เก่าแฟลชติดมือ</li>
+<li>เมื่อแตะลิงก์แล้วนิ้วสั่นเล็กน้อย โค้ดเดิมไปแก้ไข DOM (<code>style.transition</code>, <code>pointerEvents</code>) ระหว่าง touch ทำให้ Safari ตัด synthetic <code>click</code> ทิ้ง → ต้องแตะ 3–5 ครั้ง</li>
+</ol>
+<h3>วิธีแก้ (Patched)</h3>
+<ul>
+<li>เปลี่ยนจาก React <code>onTouchStart/Move/End</code> props ไปผูก <strong>native <code>addEventListener</code> ด้วย <code>{ passive: false }</code></strong> ผ่าน <code>useEffect</code> ทำให้ <code>preventDefault()</code> ทำงานจริง และบล็อก native back-swipe ได้ 100% บน Edge Zone (กว้าง 28px ริมซ้าย)</li>
+<li>เพิ่มตรรกะแยก &quot;แตะ (tap)&quot; ออกจาก &quot;ปัด (swipe)&quot; ด้วยค่า <code>TAP_SLOP = 12px</code>: ตราบใดที่นิ้วขยับน้อยกว่า 12px จะ <strong>ไม่แตะ DOM และไม่ <code>preventDefault</code> เด็ดขาด</strong> ทำให้คลิกลิงก์/ปุ่มในเมนูได้ในครั้งเดียว</li>
+<li>ล็อกทิศทาง (horizontal vs vertical) ก่อนเริ่มแอนิเมชัน เพื่อไม่รบกวนการสกอลล์แนวตั้งของเมนู</li>
+<li>Edge Zone เปลี่ยน <code>touch-action</code> จาก <code>none</code> เป็น <code>pan-y</code> (ปล่อยให้ JS คุมแกนนอนเอง), ผูก/ถอด listener ใหม่ทุกครั้งที่ <code>mobileMenuOpen</code> เปลี่ยน เพราะ Edge Zone ถูก mount/unmount ตามสถานะเมนู</li>
+</ul>
+<h3>หมายเหตุเรื่อง PWA</h3>
+<p><code>public/manifest.json</code> ตั้ง <code>&quot;display&quot;: &quot;standalone&quot;</code> อยู่แล้ว — เมื่อผู้ใช้ &quot;เพิ่มไปยังหน้าจอโฮม&quot; และเปิดจากไอคอน iOS จะไม่มี gesture ย้อนกลับของเบราว์เซอร์เลย จึงตัดปัญหา Bug 2 ได้สมบูรณ์ ส่วนแพตช์ native listener ครอบคลุมกรณีเปิดผ่าน Safari ปกติ</p>
+<h3>ตารางไฟล์ที่แก้ไข</h3>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>ไฟล์</th>
+<th>ประเภท</th>
+<th>รายละเอียด</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เปลี่ยน gesture handler เป็น native non-passive listener, เพิ่ม <code>edgeRef</code> + ค่าคงที่ <code>TAP_SLOP</code>/<code>COMMIT_THRESHOLD</code>, แยก tap จาก swipe เพื่อกัน Safari ตัด click และบล็อก native back-swipe</td>
+</tr>
+</tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
       </article>
     </main>
   </div>

@@ -431,14 +431,20 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   // 📱 Native-App-Quality Swipe Drawer Gesture System
   // ใช้ Dedicated Edge Touch Zone + Direct DOM Touch Handlers แทน Global Event Listeners
   // เพื่อหลีกเลี่ยง overflowX:hidden และ z-index stacking ที่บล็อกการรับ touch events
+  const edgeRef = useRef<HTMLDivElement>(null);
   const menuOpenRef = useRef(mobileMenuOpen);
   useEffect(() => { menuOpenRef.current = mobileMenuOpen; }, [mobileMenuOpen]);
+
+  // ค่าคงที่ของระบบ gesture
+  const SIDEBAR_W = 260;       // ความกว้าง sidebar (ระยะ translateX)
+  const TAP_SLOP = 12;         // ขยับนิ้วน้อยกว่านี้ = ถือเป็น "แตะ" (tap) ห้ามแตะ DOM / preventDefault เด็ดขาด
+  const COMMIT_THRESHOLD = 70; // ลากเกินระยะนี้ = ยืนยันเปิด/ปิด
 
   // Gesture state ทั้งหมดเก็บเป็น ref เพื่อไม่ trigger re-render ระหว่างลากนิ้ว
   const gestureRef = useRef({
     startX: 0, startY: 0, currentX: 0, currentY: 0,
-    isSwiping: false, direction: null as "open" | "close" | null,
-    directionLocked: false,
+    active: false, mode: null as "open" | "close" | null,
+    locked: false, isTap: true,
   });
 
   const applyTransform = useCallback((deltaX: number, mode: "open" | "close") => {
@@ -476,163 +482,141 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     overlay.style.pointerEvents = "";
   }, []);
 
-  // ─── Touch Handlers สำหรับ Edge Zone (ปัดขวาเปิด) ───
-  const onEdgeTouchStart = useCallback((e: React.TouchEvent) => {
-    if (window.innerWidth > 1024) return;
-    const t = e.touches[0];
+  // ─── Native (non-passive) Touch Gesture System ───
+  // ⚠️ ทำไมต้องใช้ native addEventListener แทน React onTouch* props?
+  //    React ผูก onTouchMove เป็น "passive listener" → e.preventDefault() ข้างในเป็น no-op เงียบๆ
+  //    ทำให้ (1) บล็อก Safari Swipe-to-Go-Back ไม่ได้จริง และ (2) Safari งงว่า touch ถูก "ใช้ไปแล้ว"
+  //    เลยตัด synthetic click ทิ้ง (อาการต้องแตะ 3-5 ครั้ง)
+  //    การผูก native ด้วย { passive: false } ทำให้ preventDefault ทำงานจริง และเราคุมได้ว่าจะแตะ DOM เมื่อไหร่
+  useEffect(() => {
+    const sidebar = sidebarRef.current;
+    const overlay = overlayRef.current;
+    const edge = edgeRef.current;
     const g = gestureRef.current;
-    g.startX = t.clientX; g.startY = t.clientY;
-    g.currentX = t.clientX; g.currentY = t.clientY;
-    g.isSwiping = true; g.direction = "open"; g.directionLocked = false;
-  }, []);
 
-  const onEdgeTouchMove = useCallback((e: React.TouchEvent) => {
-    const g = gestureRef.current;
-    if (!g.isSwiping || g.direction !== "open") return;
+    const begin = (mode: "open" | "close", t: Touch) => {
+      g.startX = t.clientX; g.startY = t.clientY;
+      g.currentX = t.clientX; g.currentY = t.clientY;
+      g.active = true; g.mode = mode; g.locked = false; g.isTap = true;
+    };
 
-    const t = e.touches[0];
-    const dx = t.clientX - g.startX;
-    const dy = t.clientY - g.startY;
+    // ปิด gesture และเด้ง animation ไปยังปลายทาง
+    const finish = () => {
+      if (!g.active) return;
+      g.active = false;
 
-    // 🔥 Safari iOS Native Swipe-Back Blocker:
-    // ทันทีที่นิ้วขยับไปทางขวา (dx > 0) ให้ Block Native Event ของ Safari ทันที!
-    // ป้องกันไม่ให้ Safari ดึงหน้าเว็บเก่า (UI เก่า) ติดมือออกมา
-    if (e.cancelable && dx > 0 && Math.abs(dx) > Math.abs(dy)) {
-      e.preventDefault();
-    }
-
-    g.currentX = t.clientX; g.currentY = t.clientY;
-
-    // ล็อกทิศทางเมื่อเคลื่อนเกิน 10px
-    if (!g.directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
-      if (Math.abs(dy) > Math.abs(dx)) {
-        // ผู้ใช้ปัดแนวตั้ง → ยกเลิก swipe (ไม่ต้อง clearInlineStyles เพราะยังไม่ได้เซ็ตค่าอะไร)
-        g.isSwiping = false; g.direction = null;
-        return;
-      }
-      g.directionLocked = true;
-      // เริ่ม swipe จริงๆ ค่อยปิด transition เพื่อความลื่น และไม่รบกวนการ tap (click) ปกติ
-      const sidebar = sidebarRef.current;
-      const overlay = overlayRef.current;
-      if (sidebar) sidebar.style.transition = "none";
-      if (overlay) { overlay.style.transition = "none"; overlay.style.pointerEvents = "auto"; }
-    }
-
-    if (g.directionLocked && dx > 0) {
-      applyTransform(dx, "open");
-    }
-  }, [applyTransform, clearInlineStyles]);
-
-  const onEdgeTouchEnd = useCallback(() => {
-    const g = gestureRef.current;
-    if (!g.isSwiping || g.direction !== "open") return;
-    g.isSwiping = false;
-
-    if (g.directionLocked) {
-      const dx = g.currentX - g.startX;
-      const sidebar = sidebarRef.current;
-      const overlay = overlayRef.current;
-
-      if (sidebar && overlay) {
-        // ให้ transition ลื่นไหลไปยังจุดหมาย
+      // ถ้ายังเป็นแค่ "แตะ" (ไม่เคย lock) → ไม่ทำอะไรเลย ปล่อยให้ click วิ่งต่อปกติ
+      if (g.locked && sidebar && overlay) {
+        const dx = g.currentX - g.startX;
         sidebar.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
         overlay.style.transition = "opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.3s";
 
-        if (dx > 70) {
-          // ลากผ่านจุด threshold -> บังคับเปิด
-          sidebar.style.transform = `translateX(0px)`;
-          overlay.style.opacity = "1";
-          overlay.style.backdropFilter = "blur(12px)";
-          setMobileMenuOpen(true);
-        } else {
-          // ลากไม่ถึง -> เด้งกลับไปปิด
-          sidebar.style.transform = `translateX(-260px)`;
-          overlay.style.opacity = "0";
-          overlay.style.backdropFilter = "blur(0px)";
-        }
+        const commitOpen = () => { sidebar.style.transform = "translateX(0px)"; overlay.style.opacity = "1"; overlay.style.backdropFilter = "blur(12px)"; };
+        const commitClose = () => { sidebar.style.transform = `translateX(-${SIDEBAR_W}px)`; overlay.style.opacity = "0"; overlay.style.backdropFilter = "blur(0px)"; };
 
-        // ล้าง inline styles ออกหลังแอนิเมชันจบ เพื่อให้ CSS คลาสปกติทำงานต่อ
+        if (g.mode === "open") {
+          if (dx > COMMIT_THRESHOLD) { commitOpen(); setMobileMenuOpen(true); } else { commitClose(); }
+        } else {
+          if (dx < -COMMIT_THRESHOLD) { commitClose(); setMobileMenuOpen(false); } else { commitOpen(); }
+        }
         setTimeout(() => clearInlineStyles(), 300);
       }
-    }
-    g.direction = null;
-    g.directionLocked = false;
-  }, [clearInlineStyles, setMobileMenuOpen]);
+      g.mode = null; g.locked = false; g.isTap = true;
+    };
 
-  // ─── Touch Handlers สำหรับ Overlay + Sidebar (ปัดซ้ายปิด) ───
-  const onDrawerTouchStart = useCallback((e: React.TouchEvent) => {
-    if (window.innerWidth > 1024) return;
-    if (!menuOpenRef.current) return;
+    // ── Edge Zone: ปัดขวาเปิด ──
+    const edgeStart = (e: TouchEvent) => {
+      if (window.innerWidth > 1024) return;
+      begin("open", e.touches[0]);
+    };
+    const edgeMove = (e: TouchEvent) => {
+      if (!g.active || g.mode !== "open") return;
+      const t = e.touches[0];
+      const dx = t.clientX - g.startX;
+      const dy = t.clientY - g.startY;
+      g.currentX = t.clientX; g.currentY = t.clientY;
 
-    const t = e.touches[0];
-    const g = gestureRef.current;
-    g.startX = t.clientX; g.startY = t.clientY;
-    g.currentX = t.clientX; g.currentY = t.clientY;
-    g.isSwiping = true; g.direction = "close"; g.directionLocked = false;
-  }, []);
+      // 🔥 Bulletproof Safari back-swipe blocker:
+      // ทันทีที่ขยับแนวนอนไปทางขวาบนขอบจอ ให้ preventDefault จาก non-passive listener
+      // (อันนี้ "ทำงานจริง" เพราะไม่ใช่ passive แล้ว) → Safari ไม่ดึงหน้าเก่าออกมา
+      if (e.cancelable && dx > 0 && Math.abs(dx) >= Math.abs(dy)) e.preventDefault();
 
-  const onDrawerTouchMove = useCallback((e: React.TouchEvent) => {
-    const g = gestureRef.current;
-    if (!g.isSwiping || g.direction !== "close") return;
+      if (Math.abs(dx) > TAP_SLOP || Math.abs(dy) > TAP_SLOP) g.isTap = false;
+      if (g.isTap) return; // ยังถือเป็นแตะ → ห้ามแตะ DOM
 
-    const t = e.touches[0];
-    g.currentX = t.clientX; g.currentY = t.clientY;
-    const dx = g.currentX - g.startX;
-    const dy = g.currentY - g.startY;
-
-    if (!g.directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
-      if (Math.abs(dy) > Math.abs(dx)) {
-        // ยกเลิก swipe ปิด ถ้าปัดขึ้นลง (ไม่ต้อง clearInlineStyles เพราะยังไม่ได้ตั้งค่า)
-        g.isSwiping = false; g.direction = null;
-        return;
+      if (!g.locked) {
+        if (Math.abs(dy) > Math.abs(dx)) { g.active = false; g.mode = null; return; } // ปัดแนวตั้ง → ยกเลิก
+        g.locked = true;
+        sidebar && (sidebar.style.transition = "none");
+        if (overlay) { overlay.style.transition = "none"; overlay.style.pointerEvents = "auto"; }
       }
-      g.directionLocked = true;
-      // เริ่ม swipe ปิด ค่อยเอา transition ออก เพื่อให้ tap (click) บนเมนูทำงานได้ปกติ
-      const sidebar = sidebarRef.current;
-      const overlay = overlayRef.current;
-      if (sidebar) sidebar.style.transition = "none";
-      if (overlay) overlay.style.transition = "none";
-    }
+      if (g.locked && dx > 0) applyTransform(dx, "open");
+    };
 
-    if (g.directionLocked && dx < 0) {
-      if (e.cancelable) e.preventDefault();
-      applyTransform(dx, "close");
-    }
-  }, [applyTransform, clearInlineStyles]);
+    // ── Sidebar + Overlay: ปัดซ้ายปิด ──
+    const drawerStart = (e: TouchEvent) => {
+      if (window.innerWidth > 1024) return;
+      if (!menuOpenRef.current) return;
+      begin("close", e.touches[0]);
+    };
+    const drawerMove = (e: TouchEvent) => {
+      if (!g.active || g.mode !== "close") return;
+      const t = e.touches[0];
+      const dx = t.clientX - g.startX;
+      const dy = t.clientY - g.startY;
+      g.currentX = t.clientX; g.currentY = t.clientY;
 
-  const onDrawerTouchEnd = useCallback(() => {
-    const g = gestureRef.current;
-    if (!g.isSwiping || g.direction !== "close") return;
-    g.isSwiping = false;
+      if (Math.abs(dx) > TAP_SLOP || Math.abs(dy) > TAP_SLOP) g.isTap = false;
+      // 🔑 หัวใจของการแก้ Bug 1: ตราบใดที่ยังเป็นแตะ (< TAP_SLOP) ไม่แตะ DOM / ไม่ preventDefault
+      // นิ้วสั่นเล็กน้อยตอนแตะลิงก์จึงไม่ทำให้ Safari ตัด click ทิ้งอีกต่อไป
+      if (g.isTap) return;
 
-    if (g.directionLocked) {
-      const dx = g.currentX - g.startX;
-      const sidebar = sidebarRef.current;
-      const overlay = overlayRef.current;
-
-      if (sidebar && overlay) {
-        sidebar.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
-        overlay.style.transition = "opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.3s";
-
-        if (dx < -70) {
-          // ลากผ่านจุด threshold -> บังคับปิด
-          sidebar.style.transform = `translateX(-260px)`;
-          overlay.style.opacity = "0";
-          overlay.style.backdropFilter = "blur(0px)";
-          setMobileMenuOpen(false);
-        } else {
-          // ลากไม่ถึง -> เด้งกลับไปเปิด
-          sidebar.style.transform = `translateX(0px)`;
-          overlay.style.opacity = "1";
-          overlay.style.backdropFilter = "blur(12px)";
-        }
-
-        setTimeout(() => clearInlineStyles(), 300);
+      if (!g.locked) {
+        if (Math.abs(dy) > Math.abs(dx)) { g.active = false; g.mode = null; return; } // ปัดแนวตั้ง (สกอลล์เมนู) → ปล่อย
+        g.locked = true;
+        sidebar && (sidebar.style.transition = "none");
+        overlay && (overlay.style.transition = "none");
       }
+      if (g.locked && dx < 0) {
+        if (e.cancelable) e.preventDefault();
+        applyTransform(dx, "close");
+      }
+    };
+
+    const opts: AddEventListenerOptions = { passive: false };
+    const passiveOpts: AddEventListenerOptions = { passive: true };
+
+    if (edge) {
+      edge.addEventListener("touchstart", edgeStart, passiveOpts);
+      edge.addEventListener("touchmove", edgeMove, opts);       // ต้อง non-passive เพื่อให้ preventDefault ทำงาน
+      edge.addEventListener("touchend", finish, passiveOpts);
+      edge.addEventListener("touchcancel", finish, passiveOpts);
     }
-    g.direction = null;
-    g.directionLocked = false;
-  }, [clearInlineStyles, setMobileMenuOpen]);
+    for (const el of [sidebar, overlay]) {
+      if (!el) continue;
+      el.addEventListener("touchstart", drawerStart, passiveOpts);
+      el.addEventListener("touchmove", drawerMove, opts);
+      el.addEventListener("touchend", finish, passiveOpts);
+      el.addEventListener("touchcancel", finish, passiveOpts);
+    }
+
+    return () => {
+      if (edge) {
+        edge.removeEventListener("touchstart", edgeStart, passiveOpts);
+        edge.removeEventListener("touchmove", edgeMove, opts);
+        edge.removeEventListener("touchend", finish, passiveOpts);
+        edge.removeEventListener("touchcancel", finish, passiveOpts);
+      }
+      for (const el of [sidebar, overlay]) {
+        if (!el) continue;
+        el.removeEventListener("touchstart", drawerStart, passiveOpts);
+        el.removeEventListener("touchmove", drawerMove, opts);
+        el.removeEventListener("touchend", finish, passiveOpts);
+        el.removeEventListener("touchcancel", finish, passiveOpts);
+      }
+    };
+    // ผูกใหม่เมื่อเมนูเปิด/ปิด เพราะ edge zone ถูก mount/unmount ตาม mobileMenuOpen
+  }, [applyTransform, clearInlineStyles, setMobileMenuOpen, mobileMenuOpen]);
 
   const isOwner = user?.role === "owner";
 
@@ -1406,9 +1390,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         <aside
           ref={sidebarRef}
           className={`sidebar-responsive ${mobileMenuOpen ? 'open' : ''}`}
-          onTouchStart={onDrawerTouchStart}
-          onTouchMove={onDrawerTouchMove}
-          onTouchEnd={onDrawerTouchEnd}
         >
           <div style={{ padding: "24px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 12 }}>
             <BrandMark size={40} />
@@ -1526,9 +1507,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         {/* 📱 Invisible Edge Touch Zone — พื้นที่สัมผัสโปร่งใสริมขอบจอซ้ายสำหรับปัดเปิดเมนู */}
         {!mobileMenuOpen && (
           <div
-            onTouchStart={onEdgeTouchStart}
-            onTouchMove={onEdgeTouchMove}
-            onTouchEnd={onEdgeTouchEnd}
+            ref={edgeRef}
             style={{
               position: "fixed",
               top: 0,
@@ -1536,7 +1515,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
               width: 28,
               height: "100%",
               zIndex: 9998,
-              touchAction: "none", /* 🔥 เปลี่ยนเป็น none เพื่อบล็อก Safari Swipe-to-Go-Back ถาวร 100% บนขอบจอ */
+              touchAction: "pan-y", /* อนุญาตสกอลล์แนวตั้ง แต่ปล่อยให้ JS (non-passive) คุมแนวนอนเองเพื่อบล็อก back-swipe */
               background: "transparent",
             }}
             aria-hidden="true"
@@ -1547,9 +1526,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           ref={overlayRef}
           className={`sidebar-overlay-responsive ${mobileMenuOpen ? 'open' : ''}`}
           onClick={() => setMobileMenuOpen(false)}
-          onTouchStart={onDrawerTouchStart}
-          onTouchMove={onDrawerTouchMove}
-          onTouchEnd={onDrawerTouchEnd}
         />
 
         {/* Main Content Area */}

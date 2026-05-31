@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 18:46:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 19:30:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10914,3 +10914,30 @@ const DashboardCharts = dynamic(() => import("../../components/DashboardCharts")
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 
+
+---
+
+## ภาคผนวก: การแก้บั๊ก Touch Gesture บน iOS Safari / PWA (Sidebar Drawer)
+
+อัปเดต `my-app/app/admin/dashboard/layout.tsx` เพื่อแก้ปัญหาเรื้อรัง 2 จุดบนเครื่อง iOS Safari / โหมด PWA โดยเปลี่ยนสถาปัตยกรรมการรับ touch event ของเมนูสไลด์ (Swipe Drawer) ใหม่ทั้งหมด
+
+### สาเหตุรากของปัญหา (Root Cause)
+React ผูก `onTouchMove` ให้เป็น **passive listener** โดยอัตโนมัติ ทำให้ `e.preventDefault()` ที่เรียกข้างในเป็น no-op (ไม่มีผลใดๆ แบบเงียบๆ) ส่งผล 2 อย่าง:
+1. บล็อก Safari Swipe-to-Go-Back (ปัดขอบจอซ้ายเพื่อย้อนหน้า) ไม่ได้จริง → หน้า UI เก่าแฟลชติดมือ
+2. เมื่อแตะลิงก์แล้วนิ้วสั่นเล็กน้อย โค้ดเดิมไปแก้ไข DOM (`style.transition`, `pointerEvents`) ระหว่าง touch ทำให้ Safari ตัด synthetic `click` ทิ้ง → ต้องแตะ 3–5 ครั้ง
+
+### วิธีแก้ (Patched)
+- เปลี่ยนจาก React `onTouchStart/Move/End` props ไปผูก **native `addEventListener` ด้วย `{ passive: false }`** ผ่าน `useEffect` ทำให้ `preventDefault()` ทำงานจริง และบล็อก native back-swipe ได้ 100% บน Edge Zone (กว้าง 28px ริมซ้าย)
+- เพิ่มตรรกะแยก "แตะ (tap)" ออกจาก "ปัด (swipe)" ด้วยค่า `TAP_SLOP = 12px`: ตราบใดที่นิ้วขยับน้อยกว่า 12px จะ **ไม่แตะ DOM และไม่ `preventDefault` เด็ดขาด** ทำให้คลิกลิงก์/ปุ่มในเมนูได้ในครั้งเดียว
+- ล็อกทิศทาง (horizontal vs vertical) ก่อนเริ่มแอนิเมชัน เพื่อไม่รบกวนการสกอลล์แนวตั้งของเมนู
+- Edge Zone เปลี่ยน `touch-action` จาก `none` เป็น `pan-y` (ปล่อยให้ JS คุมแกนนอนเอง), ผูก/ถอด listener ใหม่ทุกครั้งที่ `mobileMenuOpen` เปลี่ยน เพราะ Edge Zone ถูก mount/unmount ตามสถานะเมนู
+
+### หมายเหตุเรื่อง PWA
+`public/manifest.json` ตั้ง `"display": "standalone"` อยู่แล้ว — เมื่อผู้ใช้ "เพิ่มไปยังหน้าจอโฮม" และเปิดจากไอคอน iOS จะไม่มี gesture ย้อนกลับของเบราว์เซอร์เลย จึงตัดปัญหา Bug 2 ได้สมบูรณ์ ส่วนแพตช์ native listener ครอบคลุมกรณีเปิดผ่าน Safari ปกติ
+
+### ตารางไฟล์ที่แก้ไข
+| # | ไฟล์ | ประเภท | รายละเอียด |
+|---|------|--------|-----------|
+| 1 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | เปลี่ยน gesture handler เป็น native non-passive listener, เพิ่ม `edgeRef` + ค่าคงที่ `TAP_SLOP`/`COMMIT_THRESHOLD`, แยก tap จาก swipe เพื่อกัน Safari ตัด click และบล็อก native back-swipe |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
