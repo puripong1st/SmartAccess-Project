@@ -75,6 +75,13 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      // ป้องกันการแคชคู่มือฉบับสมบูรณ์ เพื่อให้กด F5 ธรรมดาก็ได้รับการอัปเดตทันที
+      {
+        source: "/complete_system_manual_th.html",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
       // Service Worker ต้องส่งด้วย correct scope — ไม่ cache
       {
         source: "/sw.js",
