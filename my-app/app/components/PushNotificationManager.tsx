@@ -82,10 +82,10 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
       // Resolve user DB ID
       let resolvedUserId = studentDbId;
       
-      // If role is student and we don't have studentDbId, let's search sessionStorage or localStorage
+      // If role is student and we don't have studentDbId, search user session in localStorage
       if (role === 'student' && !resolvedUserId) {
         try {
-          const storedSuccess = localStorage.getItem('smartaccess_registration_success');
+          const storedSuccess = localStorage.getItem('smartaccess_user_session');
           if (storedSuccess) {
             resolvedUserId = JSON.parse(storedSuccess).id;
           }

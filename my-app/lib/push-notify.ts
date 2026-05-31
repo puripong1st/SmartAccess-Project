@@ -6,6 +6,21 @@ import { getUserTokens, getAllAdminTokens, sendPushToTokens } from './firebase-a
 import { getPool } from './db';
 
 /**
+ * ดึงค่าสถานะการเปิดใช้งานการแจ้งเตือนพุชตามตรรกะระบบ
+ */
+async function isSettingEnabled(key: string, defaultValue: boolean = true): Promise<boolean> {
+  try {
+    const pool = getPool();
+    const { rows } = await pool.query('SELECT val FROM system_settings WHERE key = $1', [key]);
+    if (rows.length === 0) return defaultValue;
+    return rows[0].val === '1';
+  } catch (error) {
+    console.error(`[Push] Failed to read setting ${key}:`, error);
+    return defaultValue;
+  }
+}
+
+/**
  * แจ้งเตือนนักศึกษาเมื่อสถานะการลงทะเบียนเปลี่ยน (อนุมัติ/ปฏิเสธ)
  */
 export async function notifyStudentStatusChange(
@@ -15,6 +30,12 @@ export async function notifyStudentStatusChange(
   reason?: string
 ): Promise<void> {
   try {
+    const enabled = await isSettingEnabled('fcm_notify_status_change', true);
+    if (!enabled) {
+      console.log('[Push] Notification disabled for student status change by system settings');
+      return;
+    }
+
     const tokens = await getUserTokens(studentDbId, 'student');
     if (tokens.length === 0) return;
 
@@ -40,6 +61,12 @@ export async function notifyStudentDoorOpen(
   room: string
 ): Promise<void> {
   try {
+    const enabled = await isSettingEnabled('fcm_notify_door_open', true);
+    if (!enabled) {
+      console.log('[Push] Notification disabled for door open by system settings');
+      return;
+    }
+
     const tokens = await getUserTokens(studentDbId, 'student');
     if (tokens.length === 0) return;
 
@@ -61,6 +88,12 @@ export async function notifyAdminNewRegistration(
   room: string
 ): Promise<void> {
   try {
+    const enabled = await isSettingEnabled('fcm_notify_register', true);
+    if (!enabled) {
+      console.log('[Push] Notification disabled for admin new registration by system settings');
+      return;
+    }
+
     const tokens = await getAllAdminTokens();
     if (tokens.length === 0) return;
 
@@ -81,6 +114,12 @@ export async function notifyAdminSecurityAlert(
   alertDetail: string
 ): Promise<void> {
   try {
+    const enabled = await isSettingEnabled('fcm_notify_security_alert', true);
+    if (!enabled) {
+      console.log('[Push] Notification disabled for admin security alert by system settings');
+      return;
+    }
+
     const tokens = await getAllAdminTokens();
     if (tokens.length === 0) return;
 

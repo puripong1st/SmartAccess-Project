@@ -723,5 +723,23 @@ body {
   }
 }
 
+/* 📱 Responsive view helpers to fix wide scrollable elements on mobile */
+.desktop-view {
+  display: block !important;
+}
+.mobile-view {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-view {
+    display: none !important;
+  }
+  .mobile-view {
+    display: block !important;
+  }
+}
+
+
 
 

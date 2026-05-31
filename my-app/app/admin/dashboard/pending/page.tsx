@@ -190,179 +190,254 @@ export default function PendingPage() {
             illustration="inbox"
           />
         ) : (
-          <div className="smartaccess-table-container">
-            <table className="smartaccess-table">
-              <thead>
-                <tr>
-                  {user?.role !== "log_viewer" && (
-                    <th style={{ width: 40 }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedPendingIds.length === filteredPending.length && filteredPending.length > 0}
-                        onChange={e => {
-                          if (e.target.checked) {
-                            setSelectedPendingIds(filteredPending.map(s => s.id));
-                          } else {
-                            setSelectedPendingIds([]);
-                          }
-                        }}
-                      />
-                    </th>
-                  )}
-                  <th>นักศึกษา</th>
-                  <th>ข้อมูลการศึกษา / อัตลักษณ์</th>
-                  <th>ห้องที่ขอ / สัญญาณ IP</th>
-                  <th>เวลาที่ขอ</th>
-                  <th style={{ textAlign: "right" }}>การดำเนินการ (Actions)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPending.map(student => {
-                  const isSelected = selectedPendingIds.includes(student.id);
-                  const offset = swipeOffset[student.id] || 0;
-                  const actionType = swipeAction[student.id];
-
-                  return (
-                    <tr
-                      key={student.id}
-                      style={{
-                        borderBottom: "1px solid var(--border)",
-                        fontSize: 13,
-                        background: isSelected ? "var(--smartaccess-purple-pale)" : "transparent",
-                        position: "relative"
-                      }}
-                    >
-                      {user?.role !== "log_viewer" && (
-                        <td style={{ padding: "16px 14px" }}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={e => {
-                              if (e.target.checked) {
-                                setSelectedPendingIds((prev: number[]) => [...prev, student.id]);
-                              } else {
-                                setSelectedPendingIds((prev: number[]) => prev.filter(x => x !== student.id));
-                              }
-                            }}
-                          />
-                        </td>
-                      )}
-
-                      {/* Mobile Swipe Container Wrap */}
-                      <td
-                        colSpan={user?.role === "log_viewer" ? 6 : 5}
-                        style={{ padding: 0 }}
-                      >
-                        <div
-                          onTouchStart={user?.role !== "log_viewer" ? e => handleTouchStart(student.id, e) : undefined}
-                          onTouchMove={user?.role !== "log_viewer" ? e => handleTouchMove(student.id, e) : undefined}
-                          onTouchEnd={user?.role !== "log_viewer" ? () => handleTouchEnd(student.id, student.first_name + " " + student.last_name) : undefined}
-                          style={{
-                            display: "flex",
-                            width: "100%",
-                            transform: `translateX(${offset}px)`,
-                            transition: offset === 0 ? "transform 0.2s ease-out" : "none",
-                            background: isSelected ? "var(--smartaccess-purple-pale)" : "var(--bg-secondary)",
-                            position: "relative"
+          <>
+            {/* 🖥️ Desktop View: Classic professional grid table */}
+            <div className="desktop-view smartaccess-table-container">
+              <table className="smartaccess-table">
+                <thead>
+                  <tr>
+                    {user?.role !== "log_viewer" && (
+                      <th style={{ width: 40 }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedPendingIds.length === filteredPending.length && filteredPending.length > 0}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setSelectedPendingIds(filteredPending.map(s => s.id));
+                            } else {
+                              setSelectedPendingIds([]);
+                            }
                           }}
+                        />
+                      </th>
+                    )}
+                    <th>นักศึกษา</th>
+                    <th>ข้อมูลการศึกษา / อัตลักษณ์</th>
+                    <th>ห้องที่ขอ / สัญญาณ IP</th>
+                    <th>เวลาที่ขอ</th>
+                    <th style={{ textAlign: "right" }}>การดำเนินการ (Actions)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPending.map(student => {
+                    const isSelected = selectedPendingIds.includes(student.id);
+                    const offset = swipeOffset[student.id] || 0;
+                    const actionType = swipeAction[student.id];
+
+                    return (
+                      <tr
+                        key={student.id}
+                        style={{
+                          borderBottom: "1px solid var(--border)",
+                          fontSize: 13,
+                          background: isSelected ? "var(--smartaccess-purple-pale)" : "transparent",
+                          position: "relative"
+                        }}
+                      >
+                        {user?.role !== "log_viewer" && (
+                          <td style={{ padding: "16px 14px" }}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setSelectedPendingIds((prev: number[]) => [...prev, student.id]);
+                                } else {
+                                  setSelectedPendingIds((prev: number[]) => prev.filter(x => x !== student.id));
+                                }
+                              }}
+                            />
+                          </td>
+                        )}
+
+                        {/* Mobile Swipe Container Wrap */}
+                        <td
+                          colSpan={user?.role === "log_viewer" ? 6 : 5}
+                          style={{ padding: 0 }}
                         >
-                          {/* Left Swipe indicator (Approve) */}
-                          {offset > 0 && (
-                            <div style={{
-                              position: "absolute", left: -offset, top: 0, bottom: 0, width: offset,
-                              background: actionType === "approve" ? "#10B981" : "#059669",
-                              color: "#fff", display: "flex", alignItems: "center", paddingLeft: 16,
-                              fontSize: 12, fontWeight: "bold"
-                            }}>
-                              อนุมัติ (Release)
-                            </div>
-                          )}
-
-                          {/* Right Swipe indicator (Reject) */}
-                          {offset < 0 && (
-                            <div style={{
-                              position: "absolute", right: offset, top: 0, bottom: 0, width: -offset,
-                              background: actionType === "reject" ? "#EF4444" : "#DC2626",
-                              color: "#fff", display: "flex", alignItems: "center", justifyContent: "flex-end",
-                              paddingRight: 16, fontSize: 12, fontWeight: "bold"
-                            }}>
-                              ปฏิเสธ (Reject)
-                            </div>
-                          )}
-
-                          {/* Verbatim cell data rendering inside layout flex */}
-                          <div style={{ display: "flex", width: "100%", alignItems: "center" }}>
-                            <div style={{ padding: "16px 14px", flex: "1.1 1 0", minWidth: 160 }}>
-                              <div style={{ fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
-                                <span>{student.title}{student.first_name} {student.last_name}</span>
-                              </div>
-                              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                                <IdCardIcon />
-                                <span>รหัสนักศึกษา: {student.student_id}</span>
-                              </div>
-                            </div>
-
-                            <div style={{ padding: "16px 14px", flex: "1.1 1 0", minWidth: 180 }}>
-                              <div style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
-                                <GraduationIcon />
-                                <span>ชั้นปีที่ {student.year}</span>
-                              </div>
-                              <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
-                                <span><FacultyIcon /> {student.faculty}</span>
-                                <span><BranchIcon /> สาขา {student.branch}</span>
-                              </div>
-                            </div>
-
-                            <div style={{ padding: "16px 14px", flex: "1 1 0", minWidth: 150 }}>
-                              <span style={{ background: "linear-gradient(135deg, var(--smartaccess-purple-pale) 0%, rgba(219,39,119,0.06) 100%)", border: "1px solid var(--border)", color: "var(--smartaccess-purple-dark)", borderRadius: "6px", padding: "4px 8px", fontSize: 11, fontWeight: 900 }}>
-                                ห้อง {student.requested_room}
-                              </span>
-                              <div style={{ fontSize: 10.5, color: "var(--text-secondary)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                                <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
-                                <span>IP: {student.ip_address || "ไม่ทราบแอดเดรส"}</span>
-                              </div>
-                            </div>
-
-                            <div style={{ padding: "16px 14px", flex: "1 1 0", minWidth: 150 }}>
-                              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)" }}>{formatDateTime(student.registered_at)}</div>
-                              <div style={{ marginTop: 6 }}>
-                                <PendingCountdown registeredAt={student.registered_at} />
-                              </div>
-                            </div>
-
-                            {user?.role !== "log_viewer" ? (
-                              <div style={{ padding: "16px 14px", flex: "0.8 1 0", minWidth: 150, display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                                <button
-                                  onClick={() => setRejectModal({ id: student.id, name: student.first_name + " " + student.last_name })}
-                                  disabled={loadingId === student.id}
-                                  className="btn-danger-light"
-                                  style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
-                                >
-                                  <XCircle size={13} /> ปฏิเสธ
-                                </button>
-                                <button
-                                  onClick={() => handleApprove(student.id)}
-                                  disabled={loadingId === student.id}
-                                  className="btn-success"
-                                  style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
-                                >
-                                  {loadingId === student.id ? "..." : <><CheckCircle2 size={13} /> อนุมัติ</>}
-                                </button>
-                              </div>
-                            ) : (
-                              <div style={{ padding: "16px 14px", flex: "0.8 1 0", minWidth: 150, display: "flex", justifyContent: "flex-end", color: "var(--text-muted)", fontSize: 12, fontWeight: 700 }}>
-                                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={14} /> ผู้เยี่ยมชม (ดูได้อย่างเดียว)</span>
+                          <div
+                            onTouchStart={user?.role !== "log_viewer" ? e => handleTouchStart(student.id, e) : undefined}
+                            onTouchMove={user?.role !== "log_viewer" ? e => handleTouchMove(student.id, e) : undefined}
+                            onTouchEnd={user?.role !== "log_viewer" ? () => handleTouchEnd(student.id, student.first_name + " " + student.last_name) : undefined}
+                            style={{
+                              display: "flex",
+                              width: "100%",
+                              transform: `translateX(${offset}px)`,
+                              transition: offset === 0 ? "transform 0.2s ease-out" : "none",
+                              background: isSelected ? "var(--smartaccess-purple-pale)" : "var(--bg-secondary)",
+                              position: "relative"
+                            }}
+                          >
+                            {/* Left Swipe indicator (Approve) */}
+                            {offset > 0 && (
+                              <div style={{
+                                position: "absolute", left: -offset, top: 0, bottom: 0, width: offset,
+                                background: actionType === "approve" ? "#10B981" : "#059669",
+                                color: "#fff", display: "flex", alignItems: "center", paddingLeft: 16,
+                                fontSize: 12, fontWeight: "bold"
+                              }}>
+                                อนุมัติ (Release)
                               </div>
                             )}
+
+                            {/* Right Swipe indicator (Reject) */}
+                            {offset < 0 && (
+                              <div style={{
+                                position: "absolute", right: offset, top: 0, bottom: 0, width: -offset,
+                                background: actionType === "reject" ? "#EF4444" : "#DC2626",
+                                color: "#fff", display: "flex", alignItems: "center", justifyContent: "flex-end",
+                                paddingRight: 16, fontSize: 12, fontWeight: "bold"
+                              }}>
+                                ปฏิเสธ (Reject)
+                              </div>
+                            )}
+
+                            {/* Verbatim cell data rendering inside layout flex */}
+                            <div style={{ display: "flex", width: "100%", alignItems: "center" }}>
+                              <div style={{ padding: "16px 14px", flex: "1.1 1 0", minWidth: 160 }}>
+                                <div style={{ fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+                                  <span>{student.title}{student.first_name} {student.last_name}</span>
+                                </div>
+                                <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                                  <IdCardIcon />
+                                  <span>รหัสนักศึกษา: {student.student_id}</span>
+                                </div>
+                              </div>
+
+                              <div style={{ padding: "16px 14px", flex: "1.1 1 0", minWidth: 180 }}>
+                                <div style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                                  <GraduationIcon />
+                                  <span>ชั้นปีที่ {student.year}</span>
+                                </div>
+                                <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
+                                  <span><FacultyIcon /> {student.faculty}</span>
+                                  <span><BranchIcon /> สาขา {student.branch}</span>
+                                </div>
+                              </div>
+
+                              <div style={{ padding: "16px 14px", flex: "1 1 0", minWidth: 150 }}>
+                                <span style={{ background: "linear-gradient(135deg, var(--smartaccess-purple-pale) 0%, rgba(219,39,119,0.06) 100%)", border: "1px solid var(--border)", color: "var(--smartaccess-purple-dark)", borderRadius: "6px", padding: "4px 8px", fontSize: 11, fontWeight: 900 }}>
+                                  ห้อง {student.requested_room}
+                                </span>
+                                <div style={{ fontSize: 10.5, color: "var(--text-secondary)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
+                                  <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+                                  <span>IP: {student.ip_address || "ไม่ทราบแอดเดรส"}</span>
+                                </div>
+                              </div>
+
+                              <div style={{ padding: "16px 14px", flex: "1 1 0", minWidth: 150 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)" }}>{formatDateTime(student.registered_at)}</div>
+                                <div style={{ marginTop: 6 }}>
+                                  <PendingCountdown registeredAt={student.registered_at} />
+                                </div>
+                              </div>
+
+                              {user?.role !== "log_viewer" ? (
+                                <div style={{ padding: "16px 14px", flex: "0.8 1 0", minWidth: 150, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                                  <button
+                                    onClick={() => setRejectModal({ id: student.id, name: student.first_name + " " + student.last_name })}
+                                    disabled={loadingId === student.id}
+                                    className="btn-danger-light"
+                                    style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
+                                  >
+                                    <XCircle size={13} /> ปฏิเสธ
+                                  </button>
+                                  <button
+                                    onClick={() => handleApprove(student.id)}
+                                    disabled={loadingId === student.id}
+                                    className="btn-success"
+                                    style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}
+                                  >
+                                    {loadingId === student.id ? "..." : <><CheckCircle2 size={13} /> อนุมัติ</>}
+                                  </button>
+                                </div>
+                              ) : (
+                                <div style={{ padding: "16px 14px", flex: "0.8 1 0", minWidth: 150, display: "flex", justifyContent: "flex-end", color: "var(--text-muted)", fontSize: 12, fontWeight: 700 }}>
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={14} /> ผู้เยี่ยมชม (ดูได้อย่างเดียว)</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 📱 Mobile View: Beautiful card items without sideways scrolls and swipe bugs */}
+            <div className="mobile-view" style={{ display: "none" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                {filteredPending.map(student => (
+                  <div
+                    key={student.id}
+                    className="premium-card animate-scale-in"
+                    style={{
+                      padding: "20px",
+                      background: "var(--bg-secondary)",
+                      border: "1px solid var(--border-medium)",
+                      boxShadow: "var(--shadow-sm)"
+                    }}
+                  >
+                    {/* Header: Name, ID, Requested Room */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
+                      <div>
+                        <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 15 }}>
+                          {student.title}{student.first_name} {student.last_name}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                          <IdCardIcon />
+                          <span>รหัส: {student.student_id}</span>
+                        </div>
+                      </div>
+                      <span style={{ background: "linear-gradient(135deg, var(--smartaccess-purple-pale) 0%, rgba(219,39,119,0.06) 100%)", border: "1px solid var(--border)", color: "var(--smartaccess-purple-dark)", borderRadius: "6px", padding: "4px 8px", fontSize: 11, fontWeight: 900, whiteSpace: "nowrap" }}>
+                        ห้อง {student.requested_room}
+                      </span>
+                    </div>
+
+                    {/* Body: Academic Information */}
+                    <div style={{ background: "rgba(124, 58, 237, 0.02)", borderRadius: 12, padding: 12, marginBottom: 16, border: "1px solid var(--border)", fontSize: 12.5, display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ display: "flex", gap: 6, color: "var(--text-primary)" }}>
+                        <GraduationIcon />
+                        <span>ชั้นปีที่ {student.year} ({student.faculty} - สาขา {student.branch})</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11.5, color: "var(--text-secondary)" }}>
+                        <span>IP: {student.ip_address || "ไม่ทราบ"}</span>
+                        <PendingCountdown registeredAt={student.registered_at} />
+                      </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    {user?.role !== "log_viewer" ? (
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: 10 }}>
+                        <button
+                          onClick={() => setRejectModal({ id: student.id, name: student.first_name + " " + student.last_name })}
+                          disabled={loadingId === student.id}
+                          className="btn-danger-light"
+                          style={{ padding: "10px 14px", borderRadius: 10, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "rgba(220, 38, 38, 0.1)", border: "1px solid rgba(220, 38, 38, 0.15)", color: "#EF4444", fontWeight: 700, cursor: "pointer" }}
+                        >
+                          <XCircle size={14} /> ปฏิเสธ (Reject)
+                        </button>
+                        <button
+                          onClick={() => handleApprove(student.id)}
+                          disabled={loadingId === student.id}
+                          className="btn-success"
+                          style={{ padding: "10px 14px", borderRadius: 10, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", border: "none", color: "#FFFFFF", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)" }}
+                        >
+                          {loadingId === student.id ? "..." : <><CheckCircle2 size={14} /> อนุมัติ (Approve)</>}
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: "center", color: "var(--text-muted)", fontSize: 12, fontWeight: 700, padding: "8px 0" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Eye size={14} /> ผู้เยี่ยมชม (ดูได้อย่างเดียว)</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { getFirebaseConfig } from '@/lib/firebase';
 
 /**
- * ServiceWorkerRegistration — ลงทะเบียน Service Worker + Firebase Messaging SW
- * ใช้เป็น Client Component แยกจาก layout.tsx ที่เป็น Server Component
+ * ServiceWorkerRegistration — ลงทะเบียน Service Worker เดี่ยวที่ชื่อ firebase-messaging-sw.js ที่ Scope '/'
+ * เพื่อให้สามารถควบคุมระบบแคชไฟล์ออฟไลน์และเชื่อมเข้ากับ FCM JS SDK ได้อย่างสมบูรณ์แบบไม่ขัดแย้งกัน
  */
 export default function ServiceWorkerRegistration() {
   useEffect(() => {
@@ -15,37 +15,22 @@ export default function ServiceWorkerRegistration() {
       return;
     }
 
-    // 1. ลงทะเบียน Service Worker หลัก
+    // ลงทะเบียน Service Worker แบบควบรวมที่ Scope '/' ของเว็บไซต์
     navigator.serviceWorker
-      .register('/sw.js', { scope: '/' })
+      .register('/firebase-messaging-sw.js', { scope: '/' })
       .then((registration) => {
-        console.log('[PWA] Service Worker registered successfully:', registration.scope);
+        console.log('[PWA] Unified Service Worker registered successfully at root scope:', registration.scope);
 
-        // 2. ส่ง Firebase config ไปยัง Firebase Messaging SW
-        const firebaseConfig = getFirebaseConfig();
-        if (firebaseConfig && registration.active) {
-          registration.active.postMessage({
-            type: 'FIREBASE_CONFIG',
-            config: firebaseConfig,
-          });
-        }
-      })
-      .catch((error) => {
-        console.error('[PWA] Service Worker registration failed:', error);
-      });
-
-    // 3. ลงทะเบียน Firebase Messaging Service Worker แยก
-    navigator.serviceWorker
-      .register('/firebase-messaging-sw.js', { scope: '/firebase-cloud-messaging-push-scope' })
-      .then((registration) => {
-        console.log('[FCM] Firebase Messaging SW registered:', registration.scope);
-
-        // ส่ง config เมื่อ SW พร้อม
+        // ส่งข้อมูลคอนฟิกของ Firebase ไปบันทึกในหน่วยความจำของ SW เพื่อเริ่มระบบ FCM
         const firebaseConfig = getFirebaseConfig();
         if (firebaseConfig) {
           const sendConfig = (sw: ServiceWorker) => {
-            sw.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
+            sw.postMessage({
+              type: 'FIREBASE_CONFIG',
+              config: firebaseConfig,
+            });
           };
+
           if (registration.active) {
             sendConfig(registration.active);
           } else if (registration.installing) {
@@ -54,11 +39,13 @@ export default function ServiceWorkerRegistration() {
                 sendConfig(e.target as ServiceWorker);
               }
             });
+          } else if (registration.waiting) {
+            sendConfig(registration.waiting);
           }
         }
       })
       .catch((error) => {
-        console.error('[FCM] Firebase Messaging SW registration failed:', error);
+        console.error('[PWA] Service Worker registration failed:', error);
       });
   }, []);
 
