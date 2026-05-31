@@ -49,7 +49,7 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
           getReq.onerror = () => resolve(null);
         };
         request.onerror = () => resolve(null);
-      } catch (err) {
+      } catch {
         resolve(null);
       }
     });
