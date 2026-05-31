@@ -57,12 +57,52 @@ export default function SettingsPage() {
   const [deviceToken, setDeviceToken] = useState<string | null>(null);
   const [pwaActive, setPwaActive] = useState(false);
 
+  // Helper สำหรับเขียนบันทึกค่าลง IndexedDB และ localStorage
+  const setLocalSetting = (key: string, value: string) => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(`smartaccess_local_${key}`, value);
+    try {
+      const request = indexedDB.open("smartaccess_db", 1);
+      request.onupgradeneeded = (e: any) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains("settings")) {
+          db.createObjectStore("settings");
+        }
+      };
+      request.onsuccess = (e: any) => {
+        const db = e.target.result;
+        const tx = db.transaction("settings", "readwrite");
+        const store = tx.objectStore("settings");
+        store.put(value, key);
+      };
+    } catch (err) {
+      console.error("IndexedDB write failed:", err);
+    }
+  };
+
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       setDeviceToken(localStorage.getItem("smartaccess_fcm_token"));
       setPwaActive(localStorage.getItem("smartaccess_fcm_registered") === "true");
+
+      // ดึงข้อมูลแจ้งเตือนพุช PWA จาก Local Storage ของอุปกรณ์ขึ้นมาแสดงผลใน UI
+      const pwaKeys = [
+        "fcm_notify_register",
+        "fcm_notify_door_open",
+        "fcm_notify_status_change",
+        "fcm_notify_security_alert"
+      ];
+      pwaKeys.forEach(k => {
+        const localVal = localStorage.getItem(`smartaccess_local_${k}`) || "1"; // Default to enabled
+        setRawSettings((s: Record<string, string>) => {
+          if (s[k] !== localVal) {
+            return { ...s, [k]: localVal };
+          }
+          return s;
+        });
+      });
     }
-  }, [provider]);
+  }, [provider, setRawSettings]);
 
   if (!user || !isOwner) return null;
 
@@ -136,6 +176,20 @@ export default function SettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // บันทึกเฉพาะหัวข้อ PWA แยกรายบราวเซอร์/อุปกรณ์แบบ Local ผ่าน IndexedDB + localStorage
+      if (provider === "pwa") {
+        const pwaKeys = [
+          "fcm_notify_register",
+          "fcm_notify_door_open",
+          "fcm_notify_status_change",
+          "fcm_notify_security_alert"
+        ];
+        pwaKeys.forEach(k => {
+          const val = rawSettings[k] === "0" ? "0" : "1";
+          setLocalSetting(k, val);
+        });
+      }
+
       await handleSaveSettings(e);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);

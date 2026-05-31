@@ -1271,12 +1271,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       custom_settings[`rcfg_${r.room}_auto_fill_mode`] = cfg.auto_fill_mode;
       custom_settings[`rcfg_${r.room}_student_id_display_mode`] = cfg.student_id_display_mode;
     });
-
-    // ช่องแจ้งเตือน Telegram + LINE ส่วนกลาง (เก็บใน rawSettings, ส่งผ่าน custom_settings)
+    // ช่องแจ้งเตือน Telegram + LINE ส่วนกลาง (เก็บใน rawSettings, ส่งผ่าน custom_settings) — แยก FCM ไปเก็บเครื่องคนละตัวแบบ Local
     const NOTIFY_CHANNEL_KEYS = [
       "telegram_bot_token", "telegram_chat_register", "telegram_chat_approve", "telegram_chat_logs", "telegram_chat_admin_audit",
       "line_channel_token", "line_target_register", "line_target_approve", "line_target_logs", "line_target_admin_audit",
-      "fcm_notify_register", "fcm_notify_door_open", "fcm_notify_status_change", "fcm_notify_security_alert",
     ];
     NOTIFY_CHANNEL_KEYS.forEach(k => {
       if (rawSettings[k] !== undefined) custom_settings[k] = (rawSettings[k] || "").trim();

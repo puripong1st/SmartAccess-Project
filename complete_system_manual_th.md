@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 13:06:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 15:06:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10364,6 +10364,44 @@ sequenceDiagram
 | 14 | `lib/notify.ts` | **[MODIFY]** | ขยายคำสั่งแจ้งเตือนภัยคุกคามและการเชื่อมต่อหลุด ให้ส่ง Push Notification ร่วมกับ Discord Webhook |
 | 15 | `next.config.ts` | **[MODIFY]** | เพิ่มสิทธิ์ความปลอดภัย Content-Security-Policy และกำหนดค่า Header ป้องกันแคช Service Worker |
 | 16 | `.env.example` | **[MODIFY]** | เพิ่มคู่มือตัวแปรสภาพแวดล้อมสำหรับเชื่อมต่อ Firebase (กุญแจสาธารณะ กุญแจส่วนตัว และรายละเอียดโครงการ) |
+
+
+#### 73.21.10 สถาปัตยกรรมการกรองแจ้งเตือน PWA รายอุปกรณ์แบบ Local (0 SQL & Device-Local Push Filter)
+
+เพื่อยกระดับความสามารถในการตั้งค่าความเป็นส่วนตัวและความยืดหยุ่นของระบบการแจ้งเตือนพุช (Push Notifications) โดยที่ยังคงรักษาเงื่อนไขด้านประสิทธิภาพและการใช้ทรัพยากรฐานข้อมูลอย่างมีประสิทธิภาพสูงสุด ได้มีการพัฒนาระบบตัวกรองฝั่ง Client ด้วยสถาปัตยกรรมแบบ **0 SQL Footprint** ที่แยกการทำงานเป็นอิสระรายอุปกรณ์ (Per-device personalization) 
+
+##### 1. ปัญหาการควบคุมสิทธิ์แจ้งเตือนแบบเดิม
+ในโครงสร้างระบบเดิม การตั้งค่าสวิตช์เปิด/ปิดประเภทการแจ้งเตือน (`fcm_notify_register`, `fcm_notify_door_open` ฯลฯ) ถูกจัดเก็บอยู่บนตาราง `system_settings` ในฐานข้อมูล SQL ส่วนกลาง ซึ่งส่งผลเสียหลัก 2 ประการ:
+1. **การทับซ้อนของสิทธิ์ (Overriding Conflicts):** เมื่อผู้ดูแลระบบคนหนึ่งสลับปิดการแจ้งเตือนพุช จะส่งผลให้ระบบปิดรับการส่งแจ้งเตือนนี้ไปยังผู้ดูแลระบบคนอื่นๆ ทั้งหมดในระบบด้วย
+2. **การทำงานหนักบนฐานข้อมูล (Database Overhead):** ทุกการส่งแจ้งเตือนและการเปิดเซสชันระบบต้องคิวรีเรียกสถานะการตั้งค่าจาก PostgreSQL ส่งผลให้เกิดการหน่วงเวลา (Latency) และการใช้หน่วยความจำฐานข้อมูลโดยไม่จำเป็น
+
+##### 2. สถาปัตยกรรมตัวกรองฝั่ง Client (Client-Side Push Filter Architecture)
+สถาปัตยกรรมใหม่ถูกนำมาใช้งานโดยการทำงานเป็นแบบ **Hybrid Local Storage** โดยเซิร์ฟเวอร์จะทำหน้าที่จัดส่ง Push Notification เสมอ พร้อมแนบประเภทการแจ้งเตือน (`type`) เข้าไปใน Data Payload ของ Firebase Cloud Messaging (FCM) จากนั้น ตัวเบราว์เซอร์และ Service Worker จะทำงานร่วมกับ **`IndexedDB`** และ **`localStorage`** ในการสกัดกั้นและประเมินผล:
+
+```mermaid
+flowchart TD
+    A[เซิร์ฟเวอร์หลังบ้าน Next.js API] -->|ส่ง REST HTTP v1 FCM| B(FCM Server)
+    B -->|ยิงพุชข้อความ + แนบ type| C[เบราว์เซอร์เครื่องผู้รับ]
+    subgraph Client Device (มือถือ/PC)
+        C --> D[Service Worker: firebase-messaging-sw.js]
+        D -->|อ่านการตั้งค่า Local| E[(IndexedDB: settings)]
+        E -->|ค่า = "0" (ปิด)| F[ยกเลิกแสดงข้อความแจ้งเตือน]
+        E -->|ค่า = "1" (เปิด) หรือว่าง| G[เรียก showNotification แสดงผลบนจอมือถือ]
+    end
+```
+
+- **IndexedDB Connection:** เนื่องจากพนักงานแบ็คกราวด์ (Service Worker) ไม่สามารถดึงค่าจาก synchronous `localStorage` ได้ ระบบจึงเลือกใช้ `IndexedDB` ภายใต้ชื่อฐานข้อมูล `smartaccess_db` และ Object Store `settings` เพื่อเก็บบันทึกการตั้งค่ารายอุปกรณ์อย่างเป็นอิสระต่อกัน
+- **Background Filtering Mechanism:** ภายในไฟล์ `firebase-messaging-sw.js` ในฟังก์ชัน `messaging.onBackgroundMessage` จะทำการแยกคีย์ `type` ที่เซิร์ฟเวอร์แนบมาใน Payload หากพบประเภทเหตุการณ์และพบว่าผู้ใช้เครื่องนี้ปิดใช้งานค่าดังกล่าว (มีค่าเท่ากับ `"0"` ใน `IndexedDB`) ตัวระบบสปริงจะยุติขั้นตอนการทำงานทันทีโดยไม่สร้างแบนเนอร์แจ้งเตือนรบกวนผู้ใช้
+
+##### 3. ตารางสรุปไฟล์ที่ได้รับการปรับปรุง
+
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงด้านสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `public/firebase-messaging-sw.js` | **[MODIFY]** | เพิ่มฟังก์ชัน `getLocalSetting` ดึงข้อมูลผ่าน IndexedDB และกรองพุชตามค่าความต้องการรายอุปกรณ์ |
+| 2 | `lib/firebase-admin.ts` | **[MODIFY]** | ขยายฟังก์ชัน `sendPushToTokens` ให้รองรับพารามิเตอร์ `type` เพื่อแนบประเภทการแจ้งเตือนลงฝั่ง Client |
+| 3 | `lib/push-notify.ts` | **[MODIFY]** | ข้ามการเช็ค SQL database (isSettingEnabled) สำหรับระบบ FCM ส่งแจ้งเตือนตรงทันทีเพื่อประหยัดพื้นที่คิวรีฐานข้อมูล |
+| 4 | `app/admin/dashboard/settings/page.tsx` | **[MODIFY]** | ปรับเปลี่ยนหน้าการตั้งค่า PWA โดยเมื่อกดบันทึกจะเขียนบันทึกค่าลง `IndexedDB` และ `localStorage` ทันที |
+| 5 | `app/admin/dashboard/DashboardContext.tsx` | **[MODIFY]** | คัดแยกกลุ่มคีย์ `fcm_notify_...` ออกจากลิสต์อัปโหลดไปยัง API ฐานข้อมูล SQL หลังบ้าน |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 

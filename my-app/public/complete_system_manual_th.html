@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 13:06:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:06:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -15238,6 +15238,71 @@ export function getVapidKey(): string {
 <td><code>.env.example</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>เพิ่มคู่มือตัวแปรสภาพแวดล้อมสำหรับเชื่อมต่อ Firebase (กุญแจสาธารณะ กุญแจส่วนตัว และรายละเอียดโครงการ)</td>
+</tr>
+</tbody></table>
+<h4>73.21.10 สถาปัตยกรรมการกรองแจ้งเตือน PWA รายอุปกรณ์แบบ Local (0 SQL &amp; Device-Local Push Filter)</h4>
+<p>เพื่อยกระดับความสามารถในการตั้งค่าความเป็นส่วนตัวและความยืดหยุ่นของระบบการแจ้งเตือนพุช (Push Notifications) โดยที่ยังคงรักษาเงื่อนไขด้านประสิทธิภาพและการใช้ทรัพยากรฐานข้อมูลอย่างมีประสิทธิภาพสูงสุด ได้มีการพัฒนาระบบตัวกรองฝั่ง Client ด้วยสถาปัตยกรรมแบบ <strong>0 SQL Footprint</strong> ที่แยกการทำงานเป็นอิสระรายอุปกรณ์ (Per-device personalization) </p>
+<h5>1. ปัญหาการควบคุมสิทธิ์แจ้งเตือนแบบเดิม</h5>
+<p>ในโครงสร้างระบบเดิม การตั้งค่าสวิตช์เปิด/ปิดประเภทการแจ้งเตือน (<code>fcm_notify_register</code>, <code>fcm_notify_door_open</code> ฯลฯ) ถูกจัดเก็บอยู่บนตาราง <code>system_settings</code> ในฐานข้อมูล SQL ส่วนกลาง ซึ่งส่งผลเสียหลัก 2 ประการ:</p>
+<ol>
+<li><strong>การทับซ้อนของสิทธิ์ (Overriding Conflicts):</strong> เมื่อผู้ดูแลระบบคนหนึ่งสลับปิดการแจ้งเตือนพุช จะส่งผลให้ระบบปิดรับการส่งแจ้งเตือนนี้ไปยังผู้ดูแลระบบคนอื่นๆ ทั้งหมดในระบบด้วย</li>
+<li><strong>การทำงานหนักบนฐานข้อมูล (Database Overhead):</strong> ทุกการส่งแจ้งเตือนและการเปิดเซสชันระบบต้องคิวรีเรียกสถานะการตั้งค่าจาก PostgreSQL ส่งผลให้เกิดการหน่วงเวลา (Latency) และการใช้หน่วยความจำฐานข้อมูลโดยไม่จำเป็น</li>
+</ol>
+<h5>2. สถาปัตยกรรมตัวกรองฝั่ง Client (Client-Side Push Filter Architecture)</h5>
+<p>สถาปัตยกรรมใหม่ถูกนำมาใช้งานโดยการทำงานเป็นแบบ <strong>Hybrid Local Storage</strong> โดยเซิร์ฟเวอร์จะทำหน้าที่จัดส่ง Push Notification เสมอ พร้อมแนบประเภทการแจ้งเตือน (<code>type</code>) เข้าไปใน Data Payload ของ Firebase Cloud Messaging (FCM) จากนั้น ตัวเบราว์เซอร์และ Service Worker จะทำงานร่วมกับ <strong><code>IndexedDB</code></strong> และ <strong><code>localStorage</code></strong> ในการสกัดกั้นและประเมินผล:</p>
+<div class="mermaid">flowchart TD
+    A[เซิร์ฟเวอร์หลังบ้าน Next.js API] -->|ส่ง REST HTTP v1 FCM| B(FCM Server)
+    B -->|ยิงพุชข้อความ + แนบ type| C[เบราว์เซอร์เครื่องผู้รับ]
+    subgraph Client Device (มือถือ/PC)
+        C --> D[Service Worker: firebase-messaging-sw.js]
+        D -->|อ่านการตั้งค่า Local| E[(IndexedDB: settings)]
+        E -->|ค่า = "0" (ปิด)| F[ยกเลิกแสดงข้อความแจ้งเตือน]
+        E -->|ค่า = "1" (เปิด) หรือว่าง| G[เรียก showNotification แสดงผลบนจอมือถือ]
+    end
+</div>
+<ul>
+<li><strong>IndexedDB Connection:</strong> เนื่องจากพนักงานแบ็คกราวด์ (Service Worker) ไม่สามารถดึงค่าจาก synchronous <code>localStorage</code> ได้ ระบบจึงเลือกใช้ <code>IndexedDB</code> ภายใต้ชื่อฐานข้อมูล <code>smartaccess_db</code> และ Object Store <code>settings</code> เพื่อเก็บบันทึกการตั้งค่ารายอุปกรณ์อย่างเป็นอิสระต่อกัน</li>
+<li><strong>Background Filtering Mechanism:</strong> ภายในไฟล์ <code>firebase-messaging-sw.js</code> ในฟังก์ชัน <code>messaging.onBackgroundMessage</code> จะทำการแยกคีย์ <code>type</code> ที่เซิร์ฟเวอร์แนบมาใน Payload หากพบประเภทเหตุการณ์และพบว่าผู้ใช้เครื่องนี้ปิดใช้งานค่าดังกล่าว (มีค่าเท่ากับ <code>&quot;0&quot;</code> ใน <code>IndexedDB</code>) ตัวระบบสปริงจะยุติขั้นตอนการทำงานทันทีโดยไม่สร้างแบนเนอร์แจ้งเตือนรบกวนผู้ใช้</li>
+</ul>
+<h5>3. ตารางสรุปไฟล์ที่ได้รับการปรับปรุง</h5>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงด้านสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>public/firebase-messaging-sw.js</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มฟังก์ชัน <code>getLocalSetting</code> ดึงข้อมูลผ่าน IndexedDB และกรองพุชตามค่าความต้องการรายอุปกรณ์</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>lib/firebase-admin.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ขยายฟังก์ชัน <code>sendPushToTokens</code> ให้รองรับพารามิเตอร์ <code>type</code> เพื่อแนบประเภทการแจ้งเตือนลงฝั่ง Client</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>lib/push-notify.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ข้ามการเช็ค SQL database (isSettingEnabled) สำหรับระบบ FCM ส่งแจ้งเตือนตรงทันทีเพื่อประหยัดพื้นที่คิวรีฐานข้อมูล</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>app/admin/dashboard/settings/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับเปลี่ยนหน้าการตั้งค่า PWA โดยเมื่อกดบันทึกจะเขียนบันทึกค่าลง <code>IndexedDB</code> และ <code>localStorage</code> ทันที</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>app/admin/dashboard/DashboardContext.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>คัดแยกกลุ่มคีย์ <code>fcm_notify_...</code> ออกจากลิสต์อัปโหลดไปยัง API ฐานข้อมูล SQL หลังบ้าน</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>

@@ -25,11 +25,52 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
   firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
 
+  // ฟังก์ชันอ่านการตั้งค่าจาก IndexedDB (เนื่องจาก Service Worker ใช้ localStorage ไม่ได้)
+  function getLocalSetting(key) {
+    return new Promise((resolve) => {
+      try {
+        const request = indexedDB.open("smartaccess_db", 1);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains("settings")) {
+            db.createObjectStore("settings");
+          }
+        };
+        request.onsuccess = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains("settings")) {
+            resolve(null);
+            return;
+          }
+          const tx = db.transaction("settings", "readonly");
+          const store = tx.objectStore("settings");
+          const getReq = store.get(key);
+          getReq.onsuccess = () => resolve(getReq.result);
+          getReq.onerror = () => resolve(null);
+        };
+        request.onerror = () => resolve(null);
+      } catch (err) {
+        resolve(null);
+      }
+    });
+  }
+
   // จัดการข้อความ Push แจ้งเตือนเมื่อแอปพลิเคชันอยู่ใน Background state
   // เราส่งแบบ data-only payload จากเซิร์ฟเวอร์ จึงต้องสร้าง notification เองที่นี่
-  // (กันปัญหา "แจ้งเตือนซ้ำ  2 ครั้ง" จากการที่เบราว์เซอร์แสดง notification payload ให้อัตโนมัติ)
-  messaging.onBackgroundMessage((payload) => {
+  // (กันปัญหา "แจ้งเตือนซ้ำ 2 ครั้ง" จากการที่เบราว์เซอร์แสดง notification payload ให้อัตโนมัติ)
+  messaging.onBackgroundMessage(async (payload) => {
     const d = payload.data || {};
+    const type = d.type;
+
+    // กรองประเภทแจ้งเตือนรายอุปกรณ์ (ถ้าถูกปิดไว้ใน IndexedDB ก็จะไม่แสดงแจ้งเตือน)
+    if (type) {
+      const isEnabled = await getLocalSetting(type);
+      if (isEnabled === "0") {
+        console.log(`[PWA SW] Notification of type '${type}' is disabled on this device. Blocked.`);
+        return;
+      }
+    }
+
     const title = d.title || '🔔 SmartAccess';
     const options = {
       body: d.body || 'มีข้อความแจ้งเตือนใหม่ในระบบ',

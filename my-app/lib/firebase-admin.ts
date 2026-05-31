@@ -216,7 +216,8 @@ export async function sendPushToTokens(
   tokens: string[],
   title: string,
   body: string,
-  url?: string
+  url?: string,
+  type?: string
 ): Promise<{ sent: number; failed: number }> {
   if (tokens.length === 0) return { sent: 0, failed: 0 };
 
@@ -236,6 +237,7 @@ export async function sendPushToTokens(
           body,
           url: url || '/',
           icon: '/icons/icon-192x192.png',
+          ...(type ? { type } : {}),
         },
       })
     )
