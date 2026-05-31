@@ -4,6 +4,7 @@ import "./globals.css";
 import CookieConsent from "./components/CookieConsent";
 import { ThemeProvider } from "./components/ThemeProvider";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
+import PushNotificationManager from "./components/PushNotificationManager";
 
 // Self-hosted via next/font — ตัด render-blocking @import จาก Google Fonts CDN
 // และ preload อัตโนมัติ (เร็วกว่า + ลด external request)
@@ -53,6 +54,7 @@ export default function RootLayout({
           {children}
           <CookieConsent />
           <ServiceWorkerRegistration />
+          <PushNotificationManager />
         </ThemeProvider>
       </body>
     </html>

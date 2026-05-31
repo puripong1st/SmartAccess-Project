@@ -944,7 +944,7 @@
       </div>
 
       <article class="content-card" id="compiledContent">
-        <p>﻿# คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</p>
+        <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
 <p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 10:47:11 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
@@ -15019,7 +15019,19 @@ export function getVapidKey(): string {
 <li>Link manifest ของ PWA: <code>&lt;link rel=&quot;manifest&quot; href=&quot;/manifest.json&quot; /&gt;</code></li>
 <li>แท็กบังคับเปิดขีดความสามารถการติดตั้งของ Apple: <code>&lt;meta name=&quot;apple-mobile-web-app-capable&quot; content=&quot;yes&quot; /&gt;</code></li>
 <li>จัดแต่งความกว้างและสีสันแถบสเตตัสด้านบนของแอป:<br><code>&lt;meta name=&quot;apple-mobile-web-app-status-bar-style&quot; content=&quot;black-translucent&quot; /&gt;</code><br><code>&lt;meta name=&quot;theme-color&quot; content=&quot;#7C3AED&quot; /&gt;</code></li>
-<li>พร้อมทั้งทำการเรียกใช้งานและเมานต์คอมโพเนนต์ <code>&lt;ServiceWorkerRegistration /&gt;</code> ไว้ส่วนท้ายของไฟล์</li>
+<li>พร้อมทั้งทำการเรียกใช้งานและเมานต์คอมโพเนนต์ <code>&lt;ServiceWorkerRegistration /&gt;</code> และ <code>&lt;PushNotificationManager /&gt;</code> ไว้ส่วนท้ายของไฟล์</li>
+</ul>
+<h5>4. คอมโพเนนต์ไคลเอนต์สำหรับจัดการและขอสิทธิ์การแจ้งเตือนพุช (<code>app/components/PushNotificationManager.tsx</code>)</h5>
+<p>เพื่อเปิดโอกาสให้หน้าเว็บสามารถขอสิทธิ์การแจ้งเตือน (Notification Permission Prompt) จากระบบปฏิบัติการ iOS/Android ได้อย่างชาญฉลาดและไม่รบกวนผู้ใช้งาน จึงได้พัฒนาคอมโพเนนต์พิเศษนี้ขึ้นมา:</p>
+<ul>
+<li><strong>ตรวจวัดคุณลักษณะเครื่องผู้ใช้:</strong> ตรวจเช็คว่าเบราว์เซอร์รองรับสิทธิ์ <code>serviceWorker</code>, <code>Notification</code>, และ <code>PushManager</code> หรือไม่ หากเป็นอุปกรณ์ดั้งเดิมที่ไม่สนับสนุน ระบบจะไม่แสดงปุ่มหรือแบนเนอร์รบกวนสายตาใดๆ</li>
+<li><strong>ระบบทริกเกอร์สองระดับ (Double-Trigger System):</strong><ol>
+<li><strong>Floating Prompt Banner:</strong> แสดงแผงแจ้งเตือนลอยตัวด้านล่างสุดของแผงเพื่อชักชวนให้ผู้ใช้งานกดยอมรับสิทธิ์แจ้งเตือนหากสถานะสิทธิ์เป็น <code>default</code> (ยังไม่เคยตัดสินใจ) โดยผู้ใช้สามารถกดยกเลิก &quot;ไว้ทีหลัง&quot; เพื่อซ่อนแผงได้</li>
+<li><strong>Dashboard Settings Widget:</strong> ปุ่มควบคุมลอยตัวขนาดเล็กบริเวณด้านขวาบนของหน้าเว็บ (แสดงข้อความ &quot;รับแจ้งเตือนพุช&quot; หรือ &quot;เปิดแจ้งเตือนแล้ว&quot;) ซึ่งทำงานสลับสถานะ (Toggle) เพื่อให้ผู้ใช้เปิดรับสิทธิ์หรือยกเลิกการแจ้งเตือนได้ทุกเมื่ออย่างยืดหยุ่น</li>
+</ol>
+</li>
+<li><strong>สถาปัตยกรรมแลกโทเค็น PWA ไร้รอยต่อ:</strong> เมื่อผู้ใช้งานกดยอมรับ คอมโพเนนต์จะเริ่มต้นการทำงานร่วมกับเบราว์เซอร์ไคลเอนต์ Firebase SDK โดยทำการติดต่อกับ FCM Endpoint ผ่าน VAPID Key เพื่อให้ได้รหัสเฉพาะของอุปกรณ์ชิ้นนั้นๆ (<code>fcm_token</code>) แล้วส่งค่า POST ลงทะเบียนไปยังระบบหลังบ้าน <code>/api/notifications/register</code> โดยอัตโนมัติ พร้อมประเมินบทบาทของผู้ใช้อัตโนมัติ (เป็น Admin หากเข้าใช้เส้นทาง <code>/admin/</code> หรือเป็น Student หากลงทะเบียนขอเปิดประตู)</li>
+<li><strong>ระบบคืนสิทธิ์และล้างโทเค็น (Unsubscribe Flow):</strong> เมื่อผู้ใช้สลับปิดการแจ้งเตือน คอมโพเนนต์จะทำการส่งคำสั่ง DELETE ไปยังหลังบ้านเพื่อลบโทเค็นดังกล่าวออก เพื่อไม่ให้เซิร์ฟเวอร์เกิด Overhead ในการส่งรอบถัดไป และล้างประวัติการจำใน <code>localStorage</code> ทันที</li>
 </ul>
 <hr>
 <h4>73.21.5 สถาปัตยกรรมการส่งแจ้งเตือนฝั่ง Server-Side (Dependency-Free REST-based Firebase Admin SDK)</h4>

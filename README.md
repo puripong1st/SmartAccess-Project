@@ -150,6 +150,20 @@ KV_URL=""
 KV_REST_API_URL=""
 KV_REST_API_TOKEN=""
 KV_REST_API_READ_ONLY_TOKEN=""
+
+# Firebase Cloud Messaging (PWA Push Notifications) — ได้จาก Firebase Console Web App
+NEXT_PUBLIC_FIREBASE_API_KEY="คีย์ API Key จาก Firebase Web App"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="smartaccess-xxxx.firebaseapp.com"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="smartaccess-xxxx"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="smartaccess-xxxx.firebasestorage.app"
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="เลขผู้ส่งสาร"
+NEXT_PUBLIC_FIREBASE_APP_ID="เลขไอดีแอป 1:xxxx:web:xxxx"
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="ไอดีวิเคราะห์ (มีหรือไม่มีก็ได้)"
+NEXT_PUBLIC_FIREBASE_VAPID_KEY="คีย์ Web Push Certificates Key Pair"
+
+# Firebase Admin (Server-side Push Dispatch) — ได้จาก Private Key JSON ของ Service Account
+FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@smartaccess.iam.gserviceaccount.com"
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nคีย์ลับยาวบรรทัดเดียวคั่นด้วย\n-----END PRIVATE KEY-----"
 ```
 
 > ดูตัวแปรครบทุกตัวพร้อมคำอธิบายได้ใน [`my-app/.env.example`](my-app/.env.example) — **ห้ามใส่ค่าจริงในไฟล์ตัวอย่าง ใส่เฉพาะใน `.env.local` (ถูก gitignore ไว้)**
@@ -193,4 +207,4 @@ npm run test:watch # โหมดเฝ้าดูไฟล์
 *(SmartAccess Faculty of Technical Education, RMUTP)*
 
 ---
-<sub>อัปเดตล่าสุด: 2026-05-30 (เปลี่ยนเป็นสถาปัตยกรรม Cloud-Only Polling — ถอด LAN direct push ออก, เพิ่มชุดทดสอบ Vitest)</sub>
+<sub>อัปเดตล่าสุด: 2026-05-31 (เปิดใช้งานการทำงานแบบ PWA สมบูรณ์แบบ รองรับ iOS/Android standalone, ระบบแจ้งเตือนพุชเรียลไทม์ FCM REST API, และเชื่อมต่อปุ่มเปิด/ปิดแจ้งเตือนหน้าบ้าน)</sub>
