@@ -484,11 +484,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     g.startX = t.clientX; g.startY = t.clientY;
     g.currentX = t.clientX; g.currentY = t.clientY;
     g.isSwiping = true; g.direction = "open"; g.directionLocked = false;
-
-    const sidebar = sidebarRef.current;
-    const overlay = overlayRef.current;
-    if (sidebar) sidebar.style.transition = "none";
-    if (overlay) { overlay.style.transition = "none"; overlay.style.pointerEvents = "auto"; }
   }, []);
 
   const onEdgeTouchMove = useCallback((e: React.TouchEvent) => {
@@ -509,6 +504,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         return;
       }
       g.directionLocked = true;
+      // เริ่ม swipe จริงๆ ค่อยปิด transition เพื่อความลื่น และไม่รบกวนการ tap (click) ปกติ
+      const sidebar = sidebarRef.current;
+      const overlay = overlayRef.current;
+      if (sidebar) sidebar.style.transition = "none";
+      if (overlay) { overlay.style.transition = "none"; overlay.style.pointerEvents = "auto"; }
     }
 
     if (g.directionLocked && dx > 0) {
@@ -539,11 +539,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     g.startX = t.clientX; g.startY = t.clientY;
     g.currentX = t.clientX; g.currentY = t.clientY;
     g.isSwiping = true; g.direction = "close"; g.directionLocked = false;
-
-    const sidebar = sidebarRef.current;
-    const overlay = overlayRef.current;
-    if (sidebar) sidebar.style.transition = "none";
-    if (overlay) overlay.style.transition = "none";
   }, []);
 
   const onDrawerTouchMove = useCallback((e: React.TouchEvent) => {
@@ -562,6 +557,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         return;
       }
       g.directionLocked = true;
+      // เริ่ม swipe ปิด ค่อยเอา transition ออก เพื่อให้ tap (click) บนเมนูทำงานได้ปกติ
+      const sidebar = sidebarRef.current;
+      const overlay = overlayRef.current;
+      if (sidebar) sidebar.style.transition = "none";
+      if (overlay) overlay.style.transition = "none";
     }
 
     if (g.directionLocked && dx < 0) {
@@ -1511,7 +1511,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
               <button
                 className="desktop-hide-trigger btn-secondary"
                 onClick={() => setMobileMenuOpen(true)}
-                style={{ padding: "8px 12px", borderRadius: 8, fontSize: 13, position: "relative", zIndex: 9950 }}
+                style={{ padding: "8px 12px", borderRadius: 8, fontSize: 13, position: "relative", zIndex: 9950, whiteSpace: "nowrap", flexShrink: 0 }}
               >
                 <MenuIcon /> เปิดเมนู
               </button>
