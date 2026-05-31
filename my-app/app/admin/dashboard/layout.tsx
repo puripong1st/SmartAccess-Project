@@ -429,6 +429,13 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   }, [pathname, setTab, setEditingAdmin, setActiveRoomDetails]);
 
   // 📱 High-Performance Swipe-to-Reveal mobile/tablet drawer gesture controls
+  // ใช้ Ref ในการเก็บสถานะล่าสุดเพื่อหลีกเลี่ยงการล้างและผูก Event Listener ใหม่ทุกครั้งที่เมนูสไลด์เปิด/ปิด
+  // ซึ่งส่งผลให้การรูดปัดนิ้วจากขอบจอด้านซ้ายทำงานได้ลื่นไหล 100% โดยไม่ต้องกดปุ่มเปิดเมนูก่อน
+  const menuOpenRef = useRef(mobileMenuOpen);
+  useEffect(() => {
+    menuOpenRef.current = mobileMenuOpen;
+  }, [mobileMenuOpen]);
+
   useEffect(() => {
     let touchStartX = 0;
     let touchStartY = 0;
@@ -442,24 +449,30 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     if (!sidebar || !overlay) return;
 
     const handleTouchStart = (e: TouchEvent) => {
+      // ดักจับเฉพาะบนอุปกรณ์หน้าจอเล็ก (max-width: 1024px)
+      if (window.innerWidth > 1024) return;
+
       const touch = e.touches[0];
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
       currentTouchX = touch.clientX;
       currentTouchY = touch.clientY;
       
-      // Determine if we are swiping to open (touch starts near left edge) or close (sidebar is open)
-      if (!mobileMenuOpen && touchStartX < 90) {
+      const isOpen = menuOpenRef.current;
+
+      // ตรวจจับจุดเริ่มต้นสัมผัส:
+      // 1. ถ้าเมนูปิดอยู่ (!isOpen) และเริ่มสัมผัสจากขอบด้านซ้ายสุด (touchStartX < 100px)
+      // 2. ถ้าเมนูเปิดอยู่ (isOpen) สัมผัสตรงจุดใดก็ได้บนหน้าจอเพื่อปัดปิด
+      if (!isOpen && touchStartX < 100) {
         isSwiping = true;
         swipeDirection = "open";
-        // Disable transitions for instant response during drag
+        // ปิด transition ชั่วคราวเพื่อให้เลื่อนตามนิ้วแบบ Real-time (60fps/120fps)
         sidebar.style.transition = "none";
         overlay.style.transition = "none";
         overlay.style.pointerEvents = "auto";
-      } else if (mobileMenuOpen) {
+      } else if (isOpen) {
         isSwiping = true;
         swipeDirection = "close";
-        // Disable transitions
         sidebar.style.transition = "none";
         overlay.style.transition = "none";
       }
@@ -475,28 +488,27 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
       const deltaX = currentTouchX - touchStartX;
       const deltaY = currentTouchY - touchStartY;
 
-      // Lock swipe to horizontal if user moves primarily horizontally
+      // ล็อกการเลื่อนเฉพาะในแนวตั้ง/แนวนอน: ถ้าปัดไปแนวนอนมากกว่าแนวตั้งและเลื่อนเกิน 10px
       if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
-        // Prevent default browser behavior (e.g. pull-to-refresh or back gestures if possible)
+        // ปิดกั้นการเลื่อนหน้าจอเบราว์เซอร์ปกติระว่างปัดเมนู
         if (e.cancelable) {
           e.preventDefault();
         }
 
         if (swipeDirection === "open") {
-          // Closed is -260px. Swipe right increases translateX up to 0px
+          // ซ่อนอยู่ทางซ้ายคือ -260px การลากไปขวา (deltaX > 0) จะดึง translateX เข้าใกล้ 0px
           const translateX = Math.max(-260, Math.min(0, -260 + deltaX));
           sidebar.style.transform = `translateX(${translateX}px)`;
           
-          // Calculate opacity from 0 to 1
+          // คำนวณความโปร่งใสของ Overlay ตามระยะลาก (0.0 ถึง 1.0)
           const progress = (260 + translateX) / 260;
           overlay.style.opacity = `${progress}`;
           overlay.style.backdropFilter = `blur(${progress * 2}px)`;
         } else if (swipeDirection === "close") {
-          // Open is 0px. Swipe left decreases translateX down to -260px
+          // เมนูเปิดอยู่คือ 0px การลากไปซ้าย (deltaX < 0) จะดึง translateX เข้าหา -260px
           const translateX = Math.max(-260, Math.min(0, deltaX));
           sidebar.style.transform = `translateX(${translateX}px)`;
           
-          // Calculate opacity
           const progress = (260 + translateX) / 260;
           overlay.style.opacity = `${progress}`;
           overlay.style.backdropFilter = `blur(${progress * 2}px)`;
@@ -510,7 +522,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
       const deltaX = currentTouchX - touchStartX;
       
-      // Re-enable transitions
+      // คืนค่า transition ปกติ
       sidebar.style.transition = "";
       overlay.style.transition = "";
       sidebar.style.transform = "";
@@ -519,14 +531,14 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
       overlay.style.pointerEvents = "";
 
       if (swipeDirection === "open") {
-        // Open if dragged more than 80px
+        // ถ้าลากขวาเกิน 80px ให้เปิดเมนูสำเร็จ
         if (deltaX > 80) {
           setMobileMenuOpen(true);
         } else {
           setMobileMenuOpen(false);
         }
       } else if (swipeDirection === "close") {
-        // Close if dragged left more than 80px
+        // ถ้าลากซ้ายเกิน -80px ให้ปิดเมนูสำเร็จ
         if (deltaX < -80) {
           setMobileMenuOpen(false);
         } else {
@@ -545,7 +557,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [mobileMenuOpen, setMobileMenuOpen]);
+  }, [setMobileMenuOpen]);
 
   const isOwner = user?.role === "owner";
 

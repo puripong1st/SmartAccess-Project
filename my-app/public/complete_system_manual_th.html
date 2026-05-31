@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:58:30 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 16:08:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1253,7 +1253,8 @@ npm install
 <p>หน้าจำลอง ESP32</p>
 <pre><code class="language-text">https://project-sigma-ivory-21.vercel.app/esp32-preview
 </code></pre>
-<div class="alert-box alert-note"><strong>NOTE:</strong> ลิงก์ด้านบนเป็นเว็บไซต์จำลองบนโปรดักชันหลัก (Production URL) สำหรับรันใช้งานจริง ส่วนกรณีที่รันระบบทดสอบภายในเครื่องนักพัฒนา (Local Development) สามารถเข้าใช้งานผ่าน `http://localhost:3000`, `http://localhost:3000/admin/login` และ `http://localhost:3000/esp32-preview` ตามลำดับ</div><h3>3.2 ตัวแปรสภาพแวดล้อมที่ควรตั้งค่า</h3>
+<div class="alert-box alert-note"><strong>NOTE:</strong> ลิงก์ด้านบนเป็นเว็บไซต์จำลองบนโปรดักชันหลัก (Production URL) สำหรับรันใช้งานจริง ส่วนกรณีที่รันระบบทดสอบภายในเครื่องนักพัฒนา (Local Development) สามารถเข้าใช้งานผ่าน `http://localhost:3000`, `http://localhost:3000/admin/login` และ `http://localhost:3000/esp32-preview` ตามลำดับ
+</div><h3>3.2 ตัวแปรสภาพแวดล้อมที่ควรตั้งค่า</h3>
 <p>สร้างไฟล์ <code>my-app/.env.local</code></p>
 <pre><code class="language-env"># ── ฐานข้อมูล (PostgreSQL / Supabase Connection) ──
 # ใช้ Connection String หลัก (PgBouncer pooler พอร์ต 6543)
@@ -8144,7 +8145,8 @@ voltage    ────┐                     ┌───┐
 <td><strong>381ms (ติดการยืนยันสิทธิ์)</strong></td>
 </tr>
 </tbody></table>
-<div class="alert-box alert-tip"><strong>TIP:</strong> **วิเคราะห์ผลทดสอบ:**</div>
+<div class="alert-box alert-tip"><strong>TIP:</strong> **วิเคราะห์ผลทดสอบ:**
+</div>
 > ค่าเฉลี่ยการดึงสถานะสำหรับ ESP32 (Hot Path Polling) อยู่ที่เพียง **97ms (P95)** ซึ่งถือว่ารวดเร็วกว่าข้อกำหนดการพัฒนาทั่วไปอย่างมาก ส่งผลให้วงรอบในการดึงข้อมูลของบอร์ด ESP32 ที่ทำงานทุก ๆ 2 วินาที ใช้ขีดความสามารถการรับส่งข้อมูลของเน็ตเวิร์กเพียง 5% เท่านั้น และป้องกันปัญหากลอนประตูตอบสนองล่าช้าเมื่อผู้ใช้งานได้รับอนุมัติได้อย่างเด็ดขาด<p><a id="sec-71-3"></a></p>
 <h3>71.3 สถาปัตยกรรมการสื่อสารแบบ &quot;Push-via-Poll&quot; ในระบบเครือข่ายองค์กร</h3>
 <p>การเชื่อมต่อและสื่อสารอุปกรณ์ IoT (ESP32) เข้ากับคลาวด์เซิร์ฟเวอร์ในสภาพแวดล้อมเครือข่ายของมหาวิทยาลัยหรือองค์กรขนาดใหญ่ เผชิญความท้าทายหลัก 3 ประการ:</p>
@@ -8172,7 +8174,8 @@ voltage    ────┐                     ┌───┐
 <li>บอร์ดรับค่าไปประมวลผลสั่งเปิดประตู</li>
 <li><code>UPDATE</code> ค่า <code>room_cmd</code> ให้กลายเป็น <code>&#39;consumed&#39;</code></li>
 </ol>
-<div class="alert-box alert-warning"><strong>WARNING:</strong> **ช่องโหว่ความมั่นคง:** ในระบบ Serverless หรือมีผู้ใช้ปริมาณมาก (High Concurrency) ระหว่างขั้นตอนที่ 1 และ 3 อาจมีอีก Request หนึ่งร้องขอเข้ามาสำเร็จและเห็นสถานะเป็น `'unlock'` เช่นเดียวกัน ส่งผลให้คำสั่งเปิดประตูทำงานสองรอบซ้อน หรือเปิดค้างโดยไม่มีผู้รับผิดชอบ</div><p><strong>แนวทางแก้ไขเชิงทฤษฎีในโครงงานวิจัย:</strong><br>ระบบได้ออกแบบให้ใช้ <strong>Single-step Atomic Update</strong> ในระดับ SQL Engine บนเครื่องยนต์ฐานข้อมูล Supabase PostgreSQL ผ่านประโยคคำสั่งเดียวที่เป็นอะตอมิก (ไม่สามารถแยกการประมวลผลย่อยได้):</p>
+<div class="alert-box alert-warning"><strong>WARNING:</strong> **ช่องโหว่ความมั่นคง:** ในระบบ Serverless หรือมีผู้ใช้ปริมาณมาก (High Concurrency) ระหว่างขั้นตอนที่ 1 และ 3 อาจมีอีก Request หนึ่งร้องขอเข้ามาสำเร็จและเห็นสถานะเป็น `'unlock'` เช่นเดียวกัน ส่งผลให้คำสั่งเปิดประตูทำงานสองรอบซ้อน หรือเปิดค้างโดยไม่มีผู้รับผิดชอบ
+</div><p><strong>แนวทางแก้ไขเชิงทฤษฎีในโครงงานวิจัย:</strong><br>ระบบได้ออกแบบให้ใช้ <strong>Single-step Atomic Update</strong> ในระดับ SQL Engine บนเครื่องยนต์ฐานข้อมูล Supabase PostgreSQL ผ่านประโยคคำสั่งเดียวที่เป็นอะตอมิก (ไม่สามารถแยกการประมวลผลย่อยได้):</p>
 <pre><code class="language-sql">UPDATE system_settings 
 SET setting_value = &#39;consumed&#39; 
 WHERE setting_key = &#39;room_cmd_CE-401&#39; AND setting_value = &#39;unlock&#39; 
@@ -14130,10 +14133,14 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 <li>ช่วยให้ระบบปรับเปลี่ยนสีไอคอนให้เข้ากับระบบธีมโหมดสว่างและโหมดมืดพรีเมียม (Harmony Palette) ได้โดยอัตโนมัติอย่างไร้รอยต่อ และสามารถสร้างเอฟเฟกต์การโฮเวอร์ (Hover Effects) และการเปล่งแสงนีออน (Glow Effect) ร่วมกับการใช้ CSS Transition ได้อย่างมีชีวิตชีวา โดยไม่ต้องเก็บไฟล์รูปภาพแยกกันสำหรับแต่ละธีม</li>
 </ul>
 </li>
-<li><strong>ตัวอย่างเวกเตอร์ไอคอนสำคัญที่จัดวางในแดชบอร์ด:</strong><ul>
+<li><strong>ตัวอย่างเวกเตอร์ไอคอนเฉพาะและการทำแบรนดิ้งระบบ (Custom Branding Icons):</strong><ul>
+<li>เพื่อให้สอดรับกับเอกลักษณ์ขององค์กรและหน้าตาเว็บที่มีความพรีเมียมเฉพาะตัว ระบบได้ทำการใช้ไฟล์เวกเตอร์ SVG ที่สร้างขึ้นมาเป็นพิเศษและไอคอนเฉพาะตัว (Custom Branding &amp; Identity Icons):<ul>
 <li><strong>ไอคอนรูปกุญแจ (<code>Key</code>):</strong> ใช้สำหรับหน้าจอจัดการโทเคนและสิทธิ์การอนุมัติประตู สะท้อนถึงการควบคุมความปลอดภัยเชิงฟิสิคัล</li>
 <li><strong>ไอคอนรูปมงกุฎ (<code>Crown</code> / <code>ShieldCheck</code>):</strong> ใช้บ่งชี้ระดับสิทธิ์ผู้ดูแลระบบสูงสุด (Super Admin Status Badge) แสดงความโดดเด่นและปลอดภัยระดับสูงสุด</li>
+<li><strong>ตราสัญลักษณ์มหาวิทยาลัย (University Logo / Core Branding SVGs):</strong> บูรณาการตราสัญลักษณ์แบรนด์ในรูปแบบเวกเตอร์ SVG ดิบ (Raw inline SVG tags) บนแถบ Sidebar และหน้ากะโหลกฟอร์ม ช่วยให้ตัวอักษรและลายเส้นแบรนด์สถาบันมีความคมชัดสูงที่สุดในทุกระดับหน้าจอสัมผัส (Retina Display) และช่วยลดขนาดโหลดแอปพลิเคชันลงได้อย่างเด่นชัดเมื่อเทียบกับการโหลดรูปภาพทั่วไป (PNG, JPEG) ที่ต้องส่งคำขอดึงไฟล์ผ่านเครือข่ายเพิ่มเติม</li>
 <li><strong>ไอคอนรูปนาฬิกา (<code>Clock</code>):</strong> ใช้แทนประวัติการเข้าถึงและการนับถอยหลังของตารางข้อมูล ช่วยเตือนให้ผู้ดูแลระบบมองเห็นจังหวะเวลาของเหตุการณ์ล็อกอย่างสัญชาตญาณ</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>
@@ -14617,6 +14624,11 @@ RETURNING count, reset_time;
 <li>ตัวคอมโพเนนต์ปุ่มสลับธีมได้รับการออกแบบโดยใช้ CSS Micro-animations และไอคอนเวกเตอร์ SVG (รูปพระอาทิตย์และพระจันทร์เรืองแสง) เมื่อมีการกดคลิกสลับธีม ตัวแอนิเมชันจะทำการหมุนไอคอน 360 องศาขนานไปกับการจางเข้าออกของความสว่างอย่างนุ่มนวล ช่วยยกระดับความรู้สึกพรีเมียมให้แก่ส่วนต่อประสานผู้ใช้ได้อย่างดีเยี่ยม</li>
 </ul>
 </li>
+<li><strong>การจัดสไตล์รวมศูนย์และยูทิลิตี้คลาสระบบธีม (Global Styles &amp; Utilities Architecture):</strong><ul>
+<li><strong>รหัสสีประจำมหาวิทยาลัยและคณะ (Academic Brand Colors):</strong> ระบบสลับธีม Harmony Palette พึ่งพาชุดตัวแปรโกลบอลและยูทิลิตี้คลาสของ Tailwind v4 ในการควบคุมสีหลักอย่างเป็นเอกภาพ ได้แก่ สีม่วง RMUTP (<code>#7C3AED</code>) และสีชมพูคณะครุศาสตร์อุตสาหกรรม (<code>#DB2777</code>)</li>
+<li><strong>เอฟเฟกต์แก้วโปร่งแสงโหมดมืด (Glassmorphism Tokens):</strong> การ์ดและคอมโพเนนต์ต่าง ๆ มีการใช้ CSS Utility <code>.glass-card</code> เพื่อห่อหุ้มคุณสมบัติ <code>backdrop-filter: blur(12px)</code> ผสมผสานสีพื้นหลังกึ่งโปร่งแสง และเส้นขอบม่วงบางเบา (<code>rgba(124, 58, 237, 0.15)</code>) ช่วยคงความโมเดิร์นหรูหรา และสามารถสลับเฉดสีไปเป็นสีโปร่งแสงโทนสว่างหรือโทนมืดตามโหมดที่เลือกโดยทันทีโดยปราศจากการเขียน CSS แยกสไตล์ชีตหลายไฟล์ ทำให้ซอร์สโค้ดสะอาดและลดอัตราการซ้ำซ้อนของโค้ดสไตล์ (Reuse CSS Components) ได้อย่างสมบูรณ์แบบทั้งระบบ</li>
+</ul>
+</li>
 </ol>
 <hr>
 <h3>73.16 การออกแบบระบบรายงานและสถิติวินิจฉัยเชิงลึกด้วยกราฟวิเคราะห์ Recharts (Recharts Interactive Analytics Engine)</h3>
@@ -14691,11 +14703,20 @@ RETURNING count, reset_time;
 <li><strong>การออกแบบกลไกป้องกันขยะแจ้งเตือน (Notification Spam Guard):</strong> เพื่อป้องกันไม่ให้ช่องแจ้งเตือนแอดมินเกิดสภาวะขยะแจ้งเตือน (Notification Spamming) จากกระบวนการทำงานอัตโนมัติของเซิร์ฟเวอร์ (Vercel Cron) ทุก 12 ชั่วโมง ระบบจึงถูกออกแบบให้ทำการประมวลผลลบอย่างนุ่มนวลและตอบกลับสถานะเสร็จสิ้นแบบปกติโดยไม่ต้องสั่งยิงแจ้งเตือนและประทับล็อกบันทึกเหตุการณ์ลงระบบ <strong>ในกรณีที่ไม่มีข้อมูล Log หมดอายุเลย (ลบออก 0 รายการ)</strong> ระบบจะจัดส่งข้อความแจ้งเตือนความปลอดภัยและความก้าวหน้าไปทุกกลุ่มช่องทางและประทับล็อก Audit log <strong>เฉพาะเมื่อมีผลลัพธ์การลบจริงที่มากกว่า 0 รายการเท่านั้น (<code>affectedRows &gt; 0</code>)</strong></li>
 </ul>
 </li>
-<li><p><strong>สัมฤทธิผลของการแสดงผล UI Themes ในหน้าจอใช้งานจริง (Premium Visual Outcomes &amp; Dashboard Harmony):</strong></p>
+<li><p><strong>สัมฤทธิผลของการแสดงผล UI Themes และโครงสร้างเลย์เอาต์การตอบสนองในหน้าจอใช้งานจริง (Premium Responsive Visual Outcomes &amp; Theme Stability):</strong></p>
 <ul>
-<li><strong>การเรนเดอร์ในโหมดมืดที่สมบูรณ์แบบ (Absolute Dark Mode Aesthetics):</strong> ผลลัพธ์จากการทดสอบใช้งานและตรวจสอบสไตล์บนหน้าจอขนาดต่าง ๆ พบว่าระบบสามารถสลัดคราบรอยรั่วสีขาว (Color Leaks) ออกได้อย่างหมดจด 100% หน้าจอแผงแดชบอร์ดหลัก ห้องเรียน การจัดการสิทธิ์ผู้ใช้งาน และหน้าจอควบคุม IoT บอร์ดแสดงผลเป็นสีม่วงเข้มระดับพรีเมียม (Deep Violet/Space Black) อย่างกลมกลืน ช่วยลดอาการล้าของดวงตาแอดมินขณะเฝ้าระวังระบบเป็นเวลานาน</li>
-<li><strong>ความนุ่มนวลและการเรนเดอร์แผนภูมิ (Dynamic Recharts Fluidity):</strong> การสลับแท็บเมนูและการเปิดหน้าแดชบอร์ดครั้งแรกสามารถดึงประวัติสถิติและเรนเดอร์กราฟ Recharts ขึ้นมาแสดงผลอย่างนิ่มนวลและรวดเร็ว โดยเฉดสีของเส้นกราฟ แท่งสถิติ และ Tooltip จะปรับเปลี่ยนตามสถานะโหมดธีมแบบ Real-time โดยไม่ก่อให้เกิดสภาวะกราฟค้างหรือหน้าจอโย้ตัว (CLS - Cumulative Layout Shift) แต่อย่างใด</li>
-<li><strong>ความสวยงามสะดุดตาของเอฟเฟกต์โกลว์ (Premium Glassmorphism Glow):</strong> ขอบของการ์ดข้อมูล ลิงก์สถานะออนไลน์ของอุปกรณ์ และปุ่มสวิตช์เปิด/ปิดการทำงานมีเอฟเฟกต์แสงเงากึ่งโปร่งใส (Backdrop Blur with Neon Glow) โทนสีม่วง-ชมพู (Purple/Pink Harmony Palette) สอดรับตามอัตลักษณ์องค์กรอย่างโดดเด่นและสร้างความตื่นตาตื่นใจให้แก่ผู้ใช้งานตั้งแต่แรกเห็น</li>
+<li><strong>ความสมบูรณ์แบบของเลย์เอาต์แบบตอบสนอง (Complete Responsive Layout Consistency):</strong><ul>
+<li><strong>หน้าจอคอมพิวเตอร์ (Desktop Web View):</strong> แสดงผลได้อย่างหรูหราเต็มประสิทธิภาพด้วยเลย์เอาต์ 3 ส่วนประสานกัน (Sidebar, Header, Content Area) แถบ Sidebar ด้านซ้ายถูกจัดวางอย่างเป็นสัดส่วนมั่นคง ตัวชี้วัดระบบที่จัดเรียงตัวแบบ Grid และกราฟแสดงผล Recharts สองชุดขนาดใหญ่เรนเดอร์ในสัดส่วน 16:9 สวยงาม คมชัดไม่มีมุมแตกใด ๆ</li>
+<li><strong>หน้าจอแท็บเล็ตและไอแพด (iPad/Tablet View):</strong> หลังจากขยับ Breakpoint จุดตัดเป็น 1024px ทำให้เลย์เอาต์ปรับตัวเข้าสู่ Fluid Grid Mode อัตโนมัติ โดยแถบ Sidebar สไลด์หดตัวไปซ่อนด้านซ้าย (Drawer) คืนพื้นที่ในการตรวจสอบคิวและประวัติให้แสดงผลได้อย่างสมบูรณ์แบบ การ์ดอนุมัติเรียงตัวสวยงามแบบ 2 คอลัมน์ขนานกันโดยไม่ต้องเลื่อนหน้าจอแนวนอน ปุ่มสัมผัสมีความสูง 44px ตามเกณฑ์ WCAG 2.2 ช่วยให้อาจารย์ผู้ควบคุมประตูสามารถใช้ปลายนิ้วแตะสั่งการได้อย่างแม่นยำ 100%</li>
+<li><strong>หน้าจอมือถือ (Smartphone Mobile View):</strong> บนสมาร์ทโฟนทั่วไป อินเทอร์เฟซสลับเข้าสู่โหมดแนวดิ่งแบบ 1 คอลัมน์ลื่นไหล (Liquid Vertical Stack) เมนู Sidebar ยุบซ่อนเต็มตัวและเปิดใช้งาน Gesture การปัดนิ้ว (Horizontal Swipe) ปัดขวาเพื่อดึงแถบนำทางออกมา และปัดซ้ายเพื่อหดกลับได้อย่างเป็นธรรมชาติ ตอบโจทย์การใช้งานนอกสถานที่ของผู้ควบคุมได้อย่างดีเยี่ยม</li>
+</ul>
+</li>
+<li><strong>ความเสถียรของธีมและปราศจากปัญหาสีเพี้ยน (Absolute Theme Stability &amp; Zero Color Deviation):</strong><ul>
+<li><strong>การกำจัดปัญหาแสงจ้ารั่วไหล (Zero Color Leaks):</strong> จากการทดสอบใช้งานจริงภายหลังการปรับเปลี่ยนระบบ CSS Variables ไปใช้ Dynamic System Tokens พบว่าการ์ดความก้าวหน้าและการตั้งค่าห้องเรียนทั้งหมด สลัดคราบพื้นหลังสีขาวกระด้างออกได้อย่างหมดจด 100% </li>
+<li><strong>การเรนเดอร์บนรอบการเข้าถึงครั้งแรก (First-Visit Render Integrity):</strong> แดชบอร์ดและกราฟ Recharts ดึงค่าสีและเรนเดอร์ขึ้นมาแสดงผลอย่างถูกต้องในสปิริตโหมดมืด (Space Black/Deep Violet) ตั้งแต่วินาทีแรกเริ่มเข้าสู่ระบบ โดยไม่มีอาการสีวูบวาบเพี้ยน (Flicker) หรือเกิดการเรนเดอร์สีสว่างปนสีมืด (Theme Mismatch) ขึ้นอีกเลย แม้จะทำการเข้าใช้อินเทอร์เน็ตผ่านหน้าต่างไม่ระบุตัวตน (Incognito Mode) หรือในระหว่างการคลิกสลับปุ่ม Solar/Lunar ธีมซ้ำ ๆ ก็ตาม</li>
+<li><strong>ความสะดุดตาของกราเดียนต์อัตลักษณ์สถาบัน:</strong> องค์ประกอบตกแต่งหลักมีการจัดวางเอฟเฟกต์สีรุ้งนีออนแบบกึ่งโปร่งแสง (Backdrop Blur Glassmorphism) และใช้คู่สีไล่ระดับจากสีม่วง RMUTP ไปยังสีชมพูคณะครุศาสตร์อุตสาหกรรมได้อย่างโดดเด่น สวยงามลุ่มลึก ดูเป็นเว็บสถาบันระดับพรีเมียมอย่างแท้จริง</li>
+</ul>
+</li>
 </ul>
 </li>
 </ol>
@@ -15512,7 +15533,8 @@ if (firebaseConfig.apiKey &amp;&amp; firebaseConfig.projectId &amp;&amp; !fireba
 <p><strong>4. ตรวจจับและสื่อสารกรณีเบราว์เซอร์บล็อกพุช (<code>my-app/app/components/PushNotificationManager.tsx</code>):</strong><br>เพิ่มสถานะ <code>pushBlocked</code> พร้อมตรรกะตรวจจับ <code>AbortError</code> / <code>push service error</code> หากพบจะแสดงป้ายสถานะ &quot;🚫 เบราว์เซอร์บล็อกพุช&quot; บนวิดเจ็ต และบันทึก log แนะนำวิธีแก้ (สำหรับ Brave: เปิด <code>brave://settings/privacy</code> → เปิด &quot;Use Google services for push messaging&quot; และต้องเปิดผ่าน HTTPS หรือ localhost เท่านั้น)</p>
 <h4>73.23.3 การปรับเป้าหมายการติดตั้ง PWA ให้เป็นแอปแอดมินโดยเฉพาะ (Admin-Centric Install Target)</h4>
 <p>ปรับไฟล์ <code>my-app/public/manifest.json</code> โดยกำหนด <code>id</code> และ <code>start_url</code> เป็น <code>/admin/login</code> (เดิมคือ <code>/</code>) เพื่อให้เมื่อผู้ใช้ติดตั้ง PWA ลงเครื่อง (Add to Home Screen) แอปจะเปิดเข้าหน้าเข้าสู่ระบบแอดมินทันที เหมาะกับการใช้งานเป็นแอปสำหรับผู้ดูแลระบบโดยเฉพาะ พร้อมเพิ่ม <code>/admin/login</code> เข้าไปในรายการ Pre-cache ของ Service Worker เพื่อให้เปิดใช้งานหน้านี้ได้แม้ขณะออฟไลน์ (ค่า <code>scope</code> ยังคงเป็น <code>/</code> เพื่อให้ครอบคลุมทุกเส้นทาง)</p>
-<div class="alert-box alert-note"><strong>NOTE:</strong> เนื่องจากเว็บใช้ Manifest ไฟล์เดียวร่วมกันทั้งระบบ การติดตั้ง PWA จากทุกหน้าจะเปิดเข้า `/admin/login` เหมือนกัน ซึ่งเป็นพฤติกรรมที่ตั้งใจให้เป็นแอปฝั่งแอดมิน</div><h4>73.23.4 พฤติกรรมการแจ้งเตือนเมื่อ Session ถูกตัดออก (Notification Behavior on Forced Logout)</h4>
+<div class="alert-box alert-note"><strong>NOTE:</strong> เนื่องจากเว็บใช้ Manifest ไฟล์เดียวร่วมกันทั้งระบบ การติดตั้ง PWA จากทุกหน้าจะเปิดเข้า `/admin/login` เหมือนกัน ซึ่งเป็นพฤติกรรมที่ตั้งใจให้เป็นแอปฝั่งแอดมิน
+</div><h4>73.23.4 พฤติกรรมการแจ้งเตือนเมื่อ Session ถูกตัดออก (Notification Behavior on Forced Logout)</h4>
 <p>โทเคน FCM ถูกจัดเก็บแยกอิสระในตาราง <code>fcm_tokens</code> และ <code>localStorage</code> โดย<strong>ไม่ผูกกับ Session การเข้าสู่ระบบ</strong> (JWT Cookie) ดังนั้นพฤติกรรมเมื่อระบบตัดผู้ใช้ออกจึงเป็นดังนี้:</p>
 <table>
 <thead>
@@ -15641,7 +15663,8 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <li><strong>สาเหตุ:</strong> <code>connect-src</code> ใน <code>my-app/next.config.ts</code> อนุญาตเฉพาะ <code>fcm.googleapis.com</code> และ <code>oauth2.googleapis.com</code> แต่ FCM Web SDK ต้องเรียกอีกหลายโดเมนที่ไม่ได้อยู่ในรายการ จึงถูก CSP บล็อก</li>
 <li><strong>การแก้ไข (Patched):</strong> เพิ่มโดเมนที่จำเป็นทั้งหมดเข้าใน <code>connect-src</code> ได้แก่ <code>https://firebaseinstallations.googleapis.com</code> (FID), <code>https://fcmregistrations.googleapis.com</code> (ออกโทเคน), <code>https://www.googleapis.com</code>, และ <code>wss://*.supabase.co</code> (รองรับ Realtime) — ตรวจสอบแล้วว่า HTTP Header ที่เซิร์ฟเวอร์ส่งออกมามีโดเมนครบถ้วน</li>
 </ul>
-<div class="alert-box alert-note"><strong>NOTE:</strong> สำหรับเบราว์เซอร์ Brave ยังคงต้องเปิด `brave://settings/privacy` → "Use Google services for push messaging" เพิ่มเติม เพราะ Brave บล็อกบริการพุชของ Google แยกต่างหากจาก CSP</div><h4>73.25.2 บั๊กที่ 2 — Fast Path ข้าม Migration ทำให้บันทึก Log ล้มทั้งระบบ (Skipped Migrations on Fast Path)</h4>
+<div class="alert-box alert-note"><strong>NOTE:</strong> สำหรับเบราว์เซอร์ Brave ยังคงต้องเปิด `brave://settings/privacy` → "Use Google services for push messaging" เพิ่มเติม เพราะ Brave บล็อกบริการพุชของ Google แยกต่างหากจาก CSP
+</div><h4>73.25.2 บั๊กที่ 2 — Fast Path ข้าม Migration ทำให้บันทึก Log ล้มทั้งระบบ (Skipped Migrations on Fast Path)</h4>
 <ul>
 <li><strong>อาการ:</strong> ทุกการเขียน access_logs ล้มเหลวด้วย <code>column &quot;user_agent&quot; of relation &quot;access_logs&quot; does not exist</code> (รหัส 42703) ทำให้ระบบบันทึกเหตุการณ์ใช้งานไม่ได้เลย</li>
 <li><strong>สาเหตุ:</strong> <code>initDatabase()</code> ใน <code>my-app/lib/db.ts</code> มีโหมด Fast Path (<code>SKIP_DB_INIT=true</code>) ที่ข้ามคำสั่งสร้าง/ปรับโครงสร้างตารางทั้งหมดเพื่อลด Latency คอลัมน์ <code>user_agent</code> ถูกเพิ่มในโค้ด <em>หลัง</em> ฐานข้อมูลถูก seed ไปแล้ว จึงไม่เคยถูกสร้างจริงในโปรดักชัน</li>
@@ -15706,7 +15729,8 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <li><p><strong>สาเหตุราก (Root Cause):</strong> การตั้งค่า Tailwind v4 ของโปรเจกต์ไม่สมบูรณ์ — ทั้งที่ติดตั้ง <code>@tailwindcss/postcss@4.3.0</code> และ <code>tailwindcss@4.3.0</code> แล้ว แต่ (1) <code>my-app/postcss.config.mjs</code> มี <code>plugins: {}</code> ว่างเปล่า ไม่ได้ลงทะเบียนปลั๊กอิน และ (2) <code>app/globals.css</code> ไม่มีบรรทัด <code>@import &quot;tailwindcss&quot;</code> ผลคือ <strong>Tailwind ไม่เคยสร้าง utility class ใดๆ เลย</strong> ทั้งระบบรันด้วย inline styles + custom class ใน <code>globals.css</code> ส่วนคลาส Tailwind ที่กระจายอยู่ในโค้ดเป็น no-op ทั้งหมด (ปุ่ม <code>&lt;button&gt;</code> ที่ค่าเริ่มต้นเป็น <code>inline-block</code> จึงไหลต่อกันเป็นแถวดูเหมือนเบียด)</p>
 </li>
 </ul>
-<div class="alert-box alert-warning"><strong>WARNING:</strong> ไม่เปิด Tailwind ย้อนหลังในจุดนี้ เพราะ `@import "tailwindcss"` จะดึง Preflight (CSS reset ระดับ global) เข้ามารีเซ็ตสไตล์ทั้งเว็บ และเปิดใช้คลาส Tailwind ที่ค้างอยู่นับร้อยพร้อมกัน เสี่ยงทำให้ทุกหน้าเพี้ยนรุนแรง จึงเลือกแก้แบบสอดคล้องกับสถาปัตยกรรมจริงของโปรเจกต์แทน</div><h4>73.26.2 การแก้ไข — ใช้ inline styles + CSS responsive ที่ทำงานจริง</h4>
+<div class="alert-box alert-warning"><strong>WARNING:</strong> ไม่เปิด Tailwind ย้อนหลังในจุดนี้ เพราะ `@import "tailwindcss"` จะดึง Preflight (CSS reset ระดับ global) เข้ามารีเซ็ตสไตล์ทั้งเว็บ และเปิดใช้คลาส Tailwind ที่ค้างอยู่นับร้อยพร้อมกัน เสี่ยงทำให้ทุกหน้าเพี้ยนรุนแรง จึงเลือกแก้แบบสอดคล้องกับสถาปัตยกรรมจริงของโปรเจกต์แทน
+</div><h4>73.26.2 การแก้ไข — ใช้ inline styles + CSS responsive ที่ทำงานจริง</h4>
 <ul>
 <li>แปลงแถบเลือกช่องทาง, แถวกรอก Webhook + ปุ่มทดสอบ, ปุ่มบันทึก และ padding ของการ์ดในหน้าตั้งค่า ให้ใช้ <strong>inline styles</strong> (จัด layout) ร่วมกับ <strong>คลาส responsive ใหม่ใน <code>globals.css</code></strong> ที่ใช้ media query จริง ได้แก่ <code>.notif-provider-grid</code> (กริด 2/4 คอลัมน์), <code>.notif-row</code> (stack→row ที่ 640px), <code>.notif-save-btn</code>, <code>.notif-pad-lg</code>, <code>.notif-pad-body</code></li>
 <li>ตรวจสอบบน dev server แล้ว: กริดแสดง <code>display: grid</code> 4 คอลัมน์บนจอกว้าง, ป้ายช่องทางทั้ง 4 ไม่ถูกตัด (Discord/Telegram/LINE/PWA Push), โลโก้ Sidebar เป็น SVG คมชัด</li>
@@ -15777,7 +15801,8 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <li>เพิ่มการตรวจจับ <strong>iOS + ยังไม่อยู่ในโหมด standalone</strong> ใน <code>PushNotificationManager.tsx</code> (ใช้ <code>display-mode: standalone</code> และ <code>navigator.standalone</code>, รองรับ iPadOS ที่รายงานตัวเป็น Mac ผ่าน <code>maxTouchPoints</code>)</li>
 <li>หากพบกรณีนี้ จะแสดง <strong>การ์ดคำแนะนำ</strong> มุมขวาล่างแทนการซ่อนทั้งหมด: บอกผู้ใช้ให้แตะปุ่มแชร์ → &quot;เพิ่มลงในหน้าจอโฮม&quot; → เปิดแอปจากไอคอน แล้วจึงเปิดการแจ้งเตือนได้</li>
 </ul>
-<div class="alert-box alert-important"><strong>IMPORTANT:</strong> บน iPhone/iPad ต้องติดตั้ง PWA ลงหน้าโฮมก่อนเสมอ การแจ้งเตือนพุชจะใช้งานไม่ได้หากเปิดผ่านแท็บ Safari ปกติ — เป็นข้อกำหนดของ iOS เอง</div><h4>73.27.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
+<div class="alert-box alert-important"><strong>IMPORTANT:</strong> บน iPhone/iPad ต้องติดตั้ง PWA ลงหน้าโฮมก่อนเสมอ การแจ้งเตือนพุชจะใช้งานไม่ได้หากเปิดผ่านแท็บ Safari ปกติ — เป็นข้อกำหนดของ iOS เอง
+</div><h4>73.27.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
 <table>
 <thead>
 <tr>
@@ -15818,7 +15843,8 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <li><strong>เด้งเข้าแดชบอร์ดอัตโนมัติถ้าล็อกอินอยู่</strong> ใน <code>app/admin/login/page.tsx</code> ตรวจ <code>/api/auth/me</code> ตอนเปิดหน้า ถ้า session ยังใช้ได้จะ <code>router.replace(&quot;/admin/dashboard&quot;)</code> ทันที (มีตัวโหลดกันฟอร์มกระพริบ) — แก้อาการเปิดจากไอคอนแล้วเจอหน้าล็อกอินทั้งที่ยังล็อกอินอยู่</li>
 <li><strong>ปิด idle auto-logout 15 นาที</strong> ใน <code>app/admin/dashboard/layout.tsx</code> (handlers เป็น no-op)</li>
 </ol>
-<div class="alert-box alert-warning"><strong>WARNING:</strong> นี่เป็นการแลกความสะดวกกับความปลอดภัย — เครื่องที่ล็อกอินค้างไว้จะเข้าระบบแอดมินได้จนกว่าจะกด Logout หรือครบ 30 วัน ควรใช้กับอุปกรณ์ส่วนตัวเท่านั้น และยังคงมีการตรวจ `is_active` ของบัญชี + 401 interceptor เตะออกอัตโนมัติเมื่อบัญชีถูกปิดใช้งาน</div><p>ตรวจสอบบน dev server แล้ว: <code>POST /api/auth/refresh</code> คืน 200 พร้อม user, และเปิด <code>/admin/login</code> ขณะมี session ถูกเด้งไป <code>/admin/dashboard</code> อัตโนมัติ ไม่ต้องล็อกอินซ้ำ</p>
+<div class="alert-box alert-warning"><strong>WARNING:</strong> นี่เป็นการแลกความสะดวกกับความปลอดภัย — เครื่องที่ล็อกอินค้างไว้จะเข้าระบบแอดมินได้จนกว่าจะกด Logout หรือครบ 30 วัน ควรใช้กับอุปกรณ์ส่วนตัวเท่านั้น และยังคงมีการตรวจ `is_active` ของบัญชี + 401 interceptor เตะออกอัตโนมัติเมื่อบัญชีถูกปิดใช้งาน
+</div><p>ตรวจสอบบน dev server แล้ว: <code>POST /api/auth/refresh</code> คืน 200 พร้อม user, และเปิด <code>/admin/login</code> ขณะมี session ถูกเด้งไป <code>/admin/dashboard</code> อัตโนมัติ ไม่ต้องล็อกอินซ้ำ</p>
 <h4>73.28.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
 <table>
 <thead>
