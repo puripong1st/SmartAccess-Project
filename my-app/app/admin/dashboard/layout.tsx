@@ -1378,8 +1378,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          {/* Inner Content Area */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
+          {/* Inner Content Area — Bulletproof layout lock for mobile screens */}
+          <div className="p-4 md:p-6" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
 
             {/* ── Premium Metric Summary Cards Grid ── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 20 }} className="animate-fade-in">

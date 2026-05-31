@@ -145,8 +145,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="animate-fade-in w-full" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, maxWidth: 780, width: "100%" }}>
-      <div className="premium-card w-full" style={{ padding: 0, overflow: "hidden" }}>
+    <div className="animate-fade-in w-full" style={{ display: "block", maxWidth: 780, width: "100%", overflowX: "hidden" }}>
+      <div className="premium-card w-full" style={{ padding: 0, overflow: "hidden", maxWidth: "100%" }}>
         {/* Header แถบสีแบรนด์ */}
         <div className="p-4 sm:p-5 md:p-[22px_28px]" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(219,39,119,0.05))", borderBottom: "1px solid var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
@@ -165,19 +165,12 @@ export default function SettingsPage() {
         </div>
 
         <div className="p-3 sm:p-5 md:p-[22px_28px_28px]">
-          {/* Provider segmented selector + สถานะ (รองรับการเลื่อนแนวตั้ง/นอนบนมือถือได้อย่างสวยงามไม่เบียดบดขยี้กัน) */}
+          {/* Provider segmented selector + สถานะ (รองรับการหดขยายตัวแบบสมมาตร ไม่เบียดตกขอบ ไม่ต้องการการเลื่อนบนหน้าจอมือถือมาตรฐาน) */}
           <div 
-            className="scrollbar-none"
+            className="flex gap-1 sm:gap-2 p-1.5 rounded-xl border border-[var(--border)] overflow-x-auto md:overflow-x-visible w-full"
             style={{ 
-              display: "flex", 
-              gap: 8, 
               background: "var(--bg-primary)", 
-              padding: 6, 
-              borderRadius: 12, 
-              border: "1px solid var(--border)", 
               marginBottom: 22,
-              overflowX: "auto",
-              WebkitOverflowScrolling: "touch",
               scrollbarWidth: "none"
             }}
           >
@@ -189,28 +182,17 @@ export default function SettingsPage() {
                   key={p}
                   type="button"
                   onClick={() => setProvider(p)}
+                  className="flex-1 shrink-0 min-w-0 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 sm:px-2 rounded-lg text-[11px] sm:text-xs md:text-[13px] font-extrabold transition-all cursor-pointer select-none"
                   style={{
-                    flex: "1 0 auto", 
-                    padding: "9px 12px", 
-                    borderRadius: 9, 
-                    fontSize: 13, 
-                    fontWeight: 800, 
-                    cursor: "pointer",
-                    display: "inline-flex", 
-                    alignItems: "center", 
-                    justifyContent: "center", 
-                    gap: 7,
                     background: sel ? PROVIDERS[p].color : "transparent",
                     color: sel ? "#fff" : "var(--text-secondary)",
                     border: sel ? `1.5px solid ${PROVIDERS[p].color}` : "1.5px solid transparent",
                     boxShadow: sel ? `0 6px 16px ${PROVIDERS[p].tint}` : "none",
-                    transition: "all 0.15s",
-                    minWidth: "max-content",
-                    flexShrink: 0
                   }}
                 >
-                  {PROVIDERS[p].icon} {PROVIDERS[p].name}
-                  <span title={on ? "ตั้งค่าแล้ว" : "ยังไม่ตั้งค่า"} style={{ width: 8, height: 8, borderRadius: 999, background: on ? "#22C55E" : (sel ? "rgba(255,255,255,0.5)" : "var(--border-medium)"), flexShrink: 0 }} />
+                  {PROVIDERS[p].icon}
+                  <span>{PROVIDERS[p].name}</span>
+                  <span title={on ? "ตั้งค่าแล้ว" : "ยังไม่ตั้งค่า"} style={{ width: 6, height: 6, borderRadius: 999, background: on ? "#22C55E" : (sel ? "rgba(255,255,255,0.5)" : "var(--border-medium)"), flexShrink: 0 }} />
                 </button>
               );
             })}
@@ -226,7 +208,7 @@ export default function SettingsPage() {
               </span>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16, padding: 18 }}>
+            <form onSubmit={handleSubmit} className="p-3 sm:p-4.5 md:p-[18px]" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* PWA Settings view */}
               {provider === "pwa" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
