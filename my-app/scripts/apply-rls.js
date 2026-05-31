@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // scripts/apply-rls.js
 const { Pool } = require('pg');
 const { parse } = require('pg-connection-string');
