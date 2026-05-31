@@ -43,7 +43,7 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
   });
 }
 
-const CACHE_NAME = 'smartaccess-cache-v3';
+const CACHE_NAME = 'smartaccess-cache-v4';
 
 // คลังรายการ Static Assets ที่จะ pre-cache ตอนติดตั้ง
 const PRECACHE_ASSETS = [
@@ -86,10 +86,11 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // ข้ามเส้นทางที่เป็น API, หน้าเว็บ Next.js ภายใน, หรือ Chrome-extension
+  // ข้ามเส้นทางที่เป็น API, หน้าเว็บ Next.js ภายใน, คู่มือระบบเล่มหนา, หรือ Chrome-extension
   if (
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/_next/') ||
+    url.pathname.startsWith('/complete_system_manual_th') ||
     url.protocol === 'chrome-extension:'
   ) return;
 
