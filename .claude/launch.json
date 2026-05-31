@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "my-app", "run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "next-start",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "my-app", "run", "start"],
+      "port": 3000
     }
   ]
 }

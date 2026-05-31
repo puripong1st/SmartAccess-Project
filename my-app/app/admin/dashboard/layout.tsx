@@ -428,6 +428,20 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, setTab, setEditingAdmin, setActiveRoomDetails]);
 
+  // 🚀 Prefetch ทุกหน้า tab ล่วงหน้าหลัง dashboard พร้อม
+  // ปัญหา "แตะ tab แรกแล้วต้องกดย้ำ" เกิดจากการที่ router.push ไปหน้าที่ยังไม่ถูกโหลด/คอมไพล์
+  //   - dev: Next.js คอมไพล์ route แบบ on-demand (วัดได้ ~1.4–1.9s ครั้งแรก, ~150ms ครั้งถัดไป)
+  //   - prod: ต้องโหลด JS chunk ของ route ครั้งแรก
+  // การ prefetch ตอน mount ทำให้คอมไพล์/โหลด chunk เสร็จล่วงหน้า → แตะครั้งเดียวเปลี่ยนหน้าทันที
+  useEffect(() => {
+    if (!user) return;
+    const ids = ["pending", "rooms", "all", "admins", "settings", "health", "guide"];
+    const t = setTimeout(() => {
+      ids.forEach(id => { try { router.prefetch(`/admin/dashboard/${id}`); } catch {} });
+    }, 300); // หน่วงเล็กน้อยเพื่อไม่แย่งทรัพยากรกับการ render หน้าแรก
+    return () => clearTimeout(t);
+  }, [user, router]);
+
   // 📱 Native-App-Quality Swipe Drawer Gesture System
   // ใช้ Dedicated Edge Touch Zone + Direct DOM Touch Handlers แทน Global Event Listeners
   // เพื่อหลีกเลี่ยง overflowX:hidden และ z-index stacking ที่บล็อกการรับ touch events
