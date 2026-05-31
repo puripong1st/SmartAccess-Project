@@ -15837,8 +15837,9 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
     }
 
     // Lazy load and progressively render Mermaid diagrams using IntersectionObserver
-    window.addEventListener("DOMContentLoaded", function() {
+    function initMermaidDiagrams() {
       const mermaidDivs = document.querySelectorAll(".mermaid");
+      if (mermaidDivs.length === 0) return;
 
       // ─── CRITICAL: รอให้ฟอนต์ Sarabun (ไทย) โหลดครบทุกน้ำหนักก่อน render ───
       // มิฉะนั้น Mermaid จะวัดความกว้างข้อความด้วยฟอนต์ fallback แล้วสร้างกล่องเล็กเกินไป
@@ -15851,7 +15852,10 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
           document.fonts.load("600 14px Sarabun"),
           document.fonts.load("700 14px Sarabun")
         ];
-        return Promise.all([document.fonts.ready, Promise.all(loads).catch(function(){})]);
+        // add a safety timeout of 800ms to never hang the render
+        const timeoutPromise = new Promise(resolve => setTimeout(resolve, 800));
+        const fontsPromise = Promise.all([document.fonts.ready, Promise.all(loads).catch(function(){})]);
+        return Promise.race([fontsPromise, timeoutPromise]);
       })();
 
       // 1. Initialize beautiful loading skeletons and backup raw code
@@ -15923,7 +15927,13 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
       mermaidDivs.forEach(div => {
         observer.observe(div);
       });
-    });
+    }
+
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", initMermaidDiagrams);
+    } else {
+      initMermaidDiagrams();
+    }
 
     // 100% Bulletproof Direct SVG Vector Download with stylesheet inlining
     function saveSvgAsSvg(svgElement, fileName) {
