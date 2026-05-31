@@ -449,17 +449,17 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     if (mode === "open") {
       const tx = Math.max(-260, Math.min(0, -260 + deltaX));
       sidebar.style.transform = `translateX(${tx}px)`;
-      sidebar.style.pointerEvents = "auto"; // เปิด pointer-events ระหว่างลากนิ้ว
+      sidebar.style.pointerEvents = "auto";
       const p = (260 + tx) / 260;
       overlay.style.opacity = `${p}`;
-      overlay.style.backdropFilter = `blur(${p * 2}px)`;
+      overlay.style.backdropFilter = `blur(${p * 12}px)`;
       overlay.style.pointerEvents = p > 0.05 ? "auto" : "none";
     } else {
       const tx = Math.max(-260, Math.min(0, deltaX));
       sidebar.style.transform = `translateX(${tx}px)`;
       const p = (260 + tx) / 260;
       overlay.style.opacity = `${p}`;
-      overlay.style.backdropFilter = `blur(${p * 2}px)`;
+      overlay.style.backdropFilter = `blur(${p * 12}px)`;
     }
   }, []);
 

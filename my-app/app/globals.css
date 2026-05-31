@@ -815,7 +815,7 @@ body {
 .sidebar-overlay-responsive {
   position: fixed;
   inset: 0;
-  background: rgba(30, 27, 75, 0.2);
+  background: rgba(15, 10, 40, 0.55);
   backdrop-filter: blur(0px);
   -webkit-backdrop-filter: blur(0px);
   z-index: 9990;
@@ -827,7 +827,16 @@ body {
 .sidebar-overlay-responsive.open {
   opacity: 1;
   pointer-events: auto;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .sidebar-overlay-responsive {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="dark"] .sidebar-overlay-responsive.open {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
