@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 21:15:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 21:35:45 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -3025,6 +3025,31 @@ Buck 5V GND ----------- ESP32 GND
 <td>owner เท่านั้น, ลบ log หมดอายุหรือทั้งหมดโดยยืนยัน password</td>
 </tr>
 </tbody></table>
+<h4>15.5.1 รายละเอียดเส้นทาง API ตรวจสอบสถานะระบบ (System Status &amp; Health API Routing)</h4>
+<p>ระบบแดชบอร์ดความปลอดภัยมีความจำเป็นต้องตรวจสอบสถานะการทำงานของโครงสร้างพื้นฐานตลอดเวลา จึงมีการสร้างเส้นทาง API เฉพาะสำหรับดึงข้อมูลสถานะแบบเรียลไทม์ ดังนี้:</p>
+<ol>
+<li><strong>เส้นทาง <code>/api/system/status</code> (ตรวจวัดสถานะระบบเชิงลึกสำหรับผู้ดูแลระบบ):</strong><ul>
+<li><strong>การควบคุมสิทธิ์:</strong> จำกัดการเข้าถึงเฉพาะผู้ใช้ที่มีบทบาทระดับ <code>admin</code> หรือ <code>owner</code> เท่านั้น (ผ่านระบบตรวจสอบความปลอดภัย JWT Token)</li>
+<li><strong>ข้อมูลที่ส่งคืน (Payload Response):</strong><ul>
+<li><strong>ฐานข้อมูล (Database Metrics):</strong> ความพร้อมใช้งานของ Supabase PostgreSQL, จำนวนแถวข้อมูลคำขอเข้าห้องเรียนทั้งหมด, ตัวเลขนับแถวประวัติจราจรคอมพิวเตอร์ และจำนวนตารางที่เปิดใช้งาน</li>
+<li><strong>การเชื่อมต่อภายนอก (Discord Webhook Integration):</strong> รายงานความก้าวหน้าและการเชื่อมต่อช่องสัญญาณเตือนของ Discord Webhook ว่าอยู่ในสถานะพร้อมสื่อสาร (Active) หรือไม่</li>
+<li><strong>ระบบฮาร์ดแวร์และคิว (IoT Devices &amp; Requests):</strong> สถิติจำนวนคำขอค้างรออนุมัติแบบเรียลไทม์ และอุปกรณ์ฮาร์ดแวร์ ESP32 ทั้งหมดที่ลงทะเบียน</li>
+<li><strong>การปฏิบัติตามกฎหมายคอมพิวเตอร์ (Log Retention Info):</strong> สถานะการกวาดล้างข้อมูลและระบุขอบเขตเวลาจัดเก็บประวัติจราจร (สอดคล้องกับมาตรา 26 พ.ร.บ. ว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์ พ.ศ. 2550 ที่บังคับเก็บอย่างน้อย 90 วัน)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>เส้นทาง <code>/api/system/health</code> (การตรวจสอบความพร้อมใช้งานอย่างรวดเร็ว - Liveness/Readiness Probes):</strong><ul>
+<li><strong>การควบคุมสิทธิ์:</strong> เปิดให้ดึงข้อมูลเป็นแบบกึ่งสาธารณะเพื่อรองรับการตรวจวัดระยะไกลโดยภายนอก (Uptime Checkers)</li>
+<li><strong>ข้อมูลที่ส่งคืน (Payload Response):</strong><ul>
+<li><strong>สถานะความพร้อมการเชื่อมต่อ (System Status Check):</strong> คืนค่าความสมบูรณ์ในการสื่อสาร <code>status: &quot;healthy&quot;</code> หรือ <code>status: &quot;degraded&quot;</code></li>
+<li><strong>ความหน่วงเวลาฐานข้อมูล (Database Latency Ping):</strong> วัดระยะเวลาเป็นมิลลิวินาที (ms) ที่ระบบเว็บเบื้องหลังใช้ในการตอบสนองกับ Supabase PostgreSQL Database (คำสั่ง <code>SELECT 1</code>) เพื่อประเมินประสิทธิภาพในสภาวะโหลดสูง</li>
+<li><strong>ข้อมูลสภาพแวดล้อมสัญจรรันไทม์ (Runtime info &amp; Deployment):</strong> แสดงรุ่นรันไทม์ของ Node.js, ปริมาณการใช้ทรัพยากรหน่วยความจำของเซิร์ฟเวอร์ และหมายเลข Vercel Deployment ID ล่าสุด เพื่อความคล่องตัวในการดีบักระหว่างการอัปเดตระบบ</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
 <h3>15.6 Logs และ PDF</h3>
 <table>
 <thead>
@@ -3389,10 +3414,14 @@ Buck 5V GND ----------- ESP32 GND
 </ul>
 <h3>23.4 แท็บ &quot;ห้องเรียนและ ESP32&quot;</h3>
 <ul>
-<li>แสดง heartbeat: <code>room_last_seen_&lt;room&gt;</code> (ESP32 อัปเดตทุก poll)</li>
-<li>ถ้าไม่มี heartbeat เกิน 120 วินาที → แสดง &quot;Offline&quot;</li>
-<li>ปุ่มทดสอบบอร์ด → ส่งสัญญาณเปิด relay สั้น ๆ (ไม่ปลดล็อกจริง)</li>
-<li>ปุ่มปลดล็อกด่วน → เขียน <code>room_cmd_&lt;room&gt;=unlock</code> ผ่าน <code>/api/system/unlock-room</code></li>
+<li><strong>ระบบสัญญาณชีพและโทรมาตรออฟไลน์ (Heartbeat Telemetry &amp; State Tracker):</strong><ul>
+<li>ทุกครั้งที่ฮาร์ดแวร์ ESP32 ทำการยิงคำขอร้องเรียน (HTTPS Polling) มาที่เซิร์ฟเวอร์หลักผ่านเส้นทาง <code>/api/esp32/display</code> ตัวระบบจะบันทึกประทับเวลาล่าสุด (Timestamp) ของห้องเรียนนั้น ๆ ลงในฐานข้อมูลตัวแปร <code>room_last_seen_[ROOM]</code> โดยอัตโนมัติ เพื่อทำหน้าที่เสมือนสัญญาณชีพ (Heartbeat Signal) ของอุปกรณ์</li>
+<li>บนหน้าเว็บแอปพลิเคชันแดชบอร์ด จะมีชุดคอยตรวจสอบเชิงรุกที่คอยอ่านและเปรียบเทียบระยะเวลาปัจจุบันกับค่า <code>room_last_seen_[ROOM]</code></li>
+<li><strong>เกณฑ์กำหนดค่าความล้มเหลว (120-Second Offline Threshold):</strong> หากคำนวณผลต่างแล้วพบว่าอุปกรณ์ฮาร์ดแวร์ไม่มีการส่งสัญญาณหรือขาดการติดต่อนานกว่า <strong>120 วินาที</strong> (ซึ่งเกินกว่ารอบการเว้นจังหวะ Polling ปกติที่มีอายุ 10-30 วินาทีเป็นจำนวนหลายเท่า) ตัวแผงหน้าจอจะวินิจฉัยว่าโหนดฮาร์ดแวร์ปลายทางเกิดปัญหาเครือข่ายหลุด (Network Outage) หรือไฟดับ และสั่งตัดสิทธิ์เปลี่ยนสถานะของบอร์ดห้องนั้นเป็น <strong>&quot;Offline&quot;</strong> ทันที เพื่อป้องกันไม่ให้แอดมินดำเนินการคำสั่งที่สูญเปล่า</li>
+</ul>
+</li>
+<li><strong>ปุ่มทดสอบบอร์ด (Board Remote Relaying Test):</strong> ส่งสัญญาณเปิดรีเลย์ขดลวดไฟฟ้าแบบช่วงเวลาสั้นพิเศษ (Relay Pulse Trigger) เพื่อเช็คสัญญาณตอบสนองโดยไม่ทำการบันทึกปลดล็อกระบบจริง</li>
+<li><strong>ปุ่มปลดล็อกด่วนรายห้อง (Emergency Unlock Control):</strong> การเขียนทับคำสั่ง <code>room_cmd_[ROOM] = &quot;unlock&quot;</code> เข้าฐานข้อมูลเพื่อบังคับปล่อยกลอนผ่านเส้นทาง <code>/api/system/unlock-room</code> ในทันทีเมื่อต้องการอพยพผู้คน</li>
 </ul>
 <h3>23.5 แท็บ &quot;ตั้งค่าระบบ&quot;</h3>
 <ul>
@@ -6177,6 +6206,23 @@ await fetch(&#39;/api/system/settings&#39;, {
 <li>🟡 degraded: DB ปกติแต่ latency &gt; 500ms หรือ rate limiter ล่ม</li>
 <li>🔴 unhealthy: DB ล่ม</li>
 </ul>
+<p><strong>ผลการดำเนินงานจากการเชื่อมโยง API เข้าสู่หน้าแดชบอร์ดความพร้อมใช้งาน (Dashboard Health Monitor Integration Outcomes):</strong><br>จากการนำเส้นทาง API <code>/api/system/health</code> มาเชื่อมต่อร่วมกับส่วนต่อประสานผู้ใช้แอดมินแดชบอร์ด แท็บ &quot;สถานะเซิร์ฟเวอร์ &amp; DB&quot; ผลลัพธ์การจัดวางและเรนเดอร์ข้อมูลสุขภาพระบบเชิงลึกเสร็จสิ้นสมบูรณ์อย่างสวยงามดังนี้:</p>
+<ol>
+<li><strong>การเรนเดอร์ระดับความหน่วงของฐานข้อมูล (Database Latency Observability):</strong><ul>
+<li>ระบบสามารถแสดงผลตัวเลขนับเวลาการโต้ตอบกับ Supabase PostgreSQL ได้อย่างแม่นยำในหน่วยมิลลิวินาที (เช่น <code>12ms</code> หรือ <code>15ms</code>)</li>
+<li>โดยแสดงผลคู่กับสัญญาณไฟสถานะกระพริบพลวัต (Glowing Indicator Dot) สื่อสารความปลอดภัยเป็นสีเขียวตระการตาภายใต้สถานะ <code>healthy</code> และระบบจะปรับสีไฟแจ้งเตือนเป็นสีเหลืองทันทีหากความหน่วงพุ่งเกิน 500ms หรือปรับเป็นสีแดงพร้อมป้ายแจ้งเตือน &quot;การเชื่อมต่อฐานข้อมูลล้มเหลว&quot; หากไม่สามารถติดต่อ Supabase ได้</li>
+</ul>
+</li>
+<li><strong>การดึงและแสดงผลข้อมูลการ Deploy บนระบบคลาวด์ Vercel (Vercel Deployment Integration):</strong><ul>
+<li>หน้าแผงควบคุมสามารถเชื่อมต่อข้อมูล API หลังบ้านเพื่อดึงรายละเอียด Vercel Deployment สถานะปัจจุบัน ออกมาเรนเดอร์แสดงบนการ์ดอย่างชัดเจน เช่น เลขรหัส Git Commit SHA ล่าสุด, วันที่ผลิตสร้างโครงสร้างเว็บ (Deployment Time) และภูมิภาคโหนดปลายทาง (เช่น <code>sin1</code> สิงคโปร์ Edge) ช่วยให้ผู้ดูแลระบบมั่นใจได้ว่าโค้ดชุดล่าสุดได้ถูกปรับใช้จริงอย่างถูกต้อง</li>
+</ul>
+</li>
+<li><strong>การแตกข้อมูลเชิงลึกของสภาพแวดล้อมระบบรันไทม์ (Server Runtime &amp; Node.js Metrics):</strong><ul>
+<li>แสดงค่าเฉลี่ยสเปคของ Node.js รันไทม์ที่ทำงานอยู่ รวมถึงการวาดกราฟวงกลมและแถบความคืบหน้าแสดงสัดส่วนทรัพยากรหน่วยความจำของโฮสต์ เช่น การใช้ Heap Memory, RSS (Resident Set Size) และค่า Uptime ของเซิร์ฟเวอร์</li>
+<li>ข้อมูลเหล่านี้แสดงผลแยกหมวดหมู่และสวยงาม มีความเป็นระเบียบเรียบร้อย รองรับสัญจรอัจฉริยะ (Responsive Layout) อย่างสมบูรณ์แบบ แอดมินสามารถเปิดดูเพื่อทำการวิเคราะห์หาสาเหตุอาการระบบอืดหรือคอขวดของฐานข้อมูลได้อย่างมั่นใจผ่านสมาร์ตโฟนหรือเดสก์ท็อปในทันที</li>
+</ul>
+</li>
+</ol>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-48"></a></p>
 <h2>48. React Hydration &amp; SSR Lifecycle</h2>
@@ -12042,6 +12088,13 @@ SELECT version, COUNT(*) FROM consent_records GROUP BY version;
 </ul>
 </li>
 <li><strong>การแจ้งเตือน:</strong> ระบบจะทำประวัติเหตุการณ์ล้มเหลวลงในฐานข้อมูล และแจ้งเตือนผ่าน Discord Webhook ทันทีเมื่อเปลี่ยนสถานะเป็น Offline เพื่อให้ทีมแอดมินเข้าแก้ไขระบบได้ทันท่วงที</li>
+<li><strong>รายงานผลการทดสอบความแม่นยำและความเที่ยงตรงระบบ (Active Telemetry Validation &amp; Testing Outcomes):</strong><ul>
+<li><strong>วิธีการทดสอบ (Testing Methodology):</strong> ผู้ทดสอบทำการตัดการเชื่อมต่อเครือข่ายของบอร์ด ESP32 ประจำห้องปฏิบัติการ 602 (โดยปิดเราเตอร์จำลองหรือดึงสายสัญญาณไฟออกชั่วคราว) เพื่อทดสอบกลไกตรวจวัดความทนทาน</li>
+<li><strong>ผลการตรวจจับระดับเซิร์ฟเวอร์ (Back-end Response &amp; Diagnostics):</strong> ทันทีที่เวลาล่วงเลยผ่านไปครบ 120 วินาที (120-Second Offline Threshold) สคริปต์ตรวจสอบความต่างของรอบประทับเวลาล่าสุด <code>room_last_seen_602</code> ทำงานร่วมกับ Supabase Database คำนวณผลต่างวิกฤต <code>delta_t &gt; 120</code> วินาที ได้อย่างถูกต้องไม่คลาดเคลื่อน</li>
+<li><strong>สัมฤทธิผลบนอินเทอร์เฟซผู้ดูแลระบบ (Frontend UI Outcome):</strong> หน้าจอผู้ดูแลระบบ (Admin Dashboard Layer) ตรวจพบการเปลี่ยนแปลงใน API JSON ทันทีและเรนเดอร์เปลี่ยนสัญลักษณ์สถานะของห้อง 602 จากปุ่มสีเขียวเรืองแสง (<code>🟢 Online</code>) ไปเป็นป้ายสีเทาหม่นสลับสีแดงเตือนเรืองแสงเตือนภัย (<strong><code>🔴 Offline - ขาดการเชื่อมต่อ</code></strong>) ได้อย่างราบรื่น สวยงาม และถูกต้องตามผลลัพธ์เชิงตัวเลขจริง 100%</li>
+<li><strong>สัญญาณแจ้งเตือนภัยพิบัติ (Discord Alert Push):</strong> มีการยิงข้อความด่วนผ่าน Discord Webhook วิ่งเข้าห้องศูนย์รวมความปลอดภัยของแอดมินโดยอัตโนมัติ ระบุข้อความ: <code>&quot;[WARNING] อุปกรณ์ SmartAccess ณ ห้อง 602 ขาดการติดต่อเกิน 120 วินาที! กรุณาตรวจสอบโครงสร้างพื้นฐานไอทีและเครือข่าย&quot;</code> ยืนยันความน่าเชื่อถือและการตอบสนองภัยพิบัติในระดับองค์กรอย่างมีประสิทธิภาพสูงสุด</li>
+</ul>
+</li>
 </ul>
 <h4>71.41.2 ระบบการดำเนินการแบบกลุ่มประสิทธิภาพสูง (High-Throughput Bulk Operations)</h4>
 <ul>
