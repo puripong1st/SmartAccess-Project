@@ -165,15 +165,8 @@ export default function SettingsPage() {
         </div>
 
         <div className="p-3 sm:p-5 md:p-[22px_28px_28px]">
-          {/* Provider segmented selector + สถานะ (รองรับการหดขยายตัวแบบสมมาตร ไม่เบียดตกขอบ ไม่ต้องการการเลื่อนบนหน้าจอมือถือมาตรฐาน) */}
-          <div 
-            className="flex gap-1 sm:gap-2 p-1.5 rounded-xl border border-[var(--border)] overflow-x-auto md:overflow-x-visible w-full"
-            style={{ 
-              background: "var(--bg-primary)", 
-              marginBottom: 22,
-              scrollbarWidth: "none"
-            }}
-          >
+          {/* Provider selector — กริดที่รองรับทุกหน้าจอ: 2 คอลัมน์บนมือถือ, 4 คอลัมน์บนจอใหญ่ (ไม่เบียด ไม่ต้องเลื่อน) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5 sm:mb-6">
             {(Object.keys(PROVIDERS) as Provider[]).map(p => {
               const on = isConfigured(p);
               const sel = provider === p;
@@ -182,17 +175,25 @@ export default function SettingsPage() {
                   key={p}
                   type="button"
                   onClick={() => setProvider(p)}
-                  className="flex-1 shrink-0 min-w-0 flex items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 sm:px-2 rounded-lg text-[11px] sm:text-xs md:text-[13px] font-extrabold transition-all cursor-pointer select-none"
+                  aria-pressed={sel}
+                  className="relative flex items-center justify-center gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-[13px] font-extrabold transition-all cursor-pointer select-none"
                   style={{
-                    background: sel ? PROVIDERS[p].color : "transparent",
+                    background: sel ? PROVIDERS[p].color : "var(--bg-primary)",
                     color: sel ? "#fff" : "var(--text-secondary)",
-                    border: sel ? `1.5px solid ${PROVIDERS[p].color}` : "1.5px solid transparent",
+                    border: `1.5px solid ${sel ? PROVIDERS[p].color : "var(--border)"}`,
                     boxShadow: sel ? `0 6px 16px ${PROVIDERS[p].tint}` : "none",
                   }}
                 >
-                  {PROVIDERS[p].icon}
-                  <span>{PROVIDERS[p].name}</span>
-                  <span title={on ? "ตั้งค่าแล้ว" : "ยังไม่ตั้งค่า"} style={{ width: 6, height: 6, borderRadius: 999, background: on ? "#22C55E" : (sel ? "rgba(255,255,255,0.5)" : "var(--border-medium)"), flexShrink: 0 }} />
+                  <span style={{ display: "inline-flex", flexShrink: 0 }}>{PROVIDERS[p].icon}</span>
+                  <span className="truncate">{PROVIDERS[p].name}</span>
+                  <span
+                    title={on ? "ตั้งค่าแล้ว" : "ยังไม่ตั้งค่า"}
+                    style={{
+                      position: "absolute", top: 7, right: 7,
+                      width: 7, height: 7, borderRadius: 999,
+                      background: on ? "#22C55E" : (sel ? "rgba(255,255,255,0.55)" : "var(--border-medium)"),
+                    }}
+                  />
                 </button>
               );
             })}
@@ -353,9 +354,9 @@ export default function SettingsPage() {
                             {row.icon} {row.label}
                           </span>
                         </label>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                          <input className="smartaccess-input" type="text" placeholder={f.ph} value={f.value} onChange={e => f.onChange(e.target.value)} style={{ flex: 1, padding: "10px 14px", fontSize: 12.5 }} />
-                          <button type="button" onClick={f.test} className="btn-ghost" style={{ padding: "10px 14px", fontSize: 11.5, borderRadius: 10, flexShrink: 0, fontWeight: 700, borderColor: `${active.color}66`, color: active.color, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                          <input className="smartaccess-input min-w-0" type="text" placeholder={f.ph} value={f.value} onChange={e => f.onChange(e.target.value)} style={{ flex: 1, padding: "10px 14px", fontSize: 12.5 }} />
+                          <button type="button" onClick={f.test} className="btn-ghost justify-center" style={{ padding: "10px 14px", fontSize: 11.5, borderRadius: 10, flexShrink: 0, fontWeight: 700, borderColor: `${active.color}66`, color: active.color, display: "inline-flex", alignItems: "center", gap: 6 }}>
                             <FlaskConical size={13} /> ทดสอบ
                           </button>
                         </div>
@@ -368,13 +369,12 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={settingsLoading}
-                className="btn-success"
+                className="btn-success w-full sm:w-auto justify-center sm:self-start"
                 style={{
                   padding: "12px 22px",
                   borderRadius: 10,
                   fontSize: 13,
                   fontWeight: 800,
-                  alignSelf: "flex-start",
                   background: "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)",
                   color: "#fff",
                   border: "none",

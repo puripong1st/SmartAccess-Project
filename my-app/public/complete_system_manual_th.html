@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 12:05:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 12:35:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -15435,6 +15435,44 @@ if (firebaseConfig.apiKey &amp;&amp; firebaseConfig.projectId &amp;&amp; !fireba
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>เพิ่มประวัติการบันทึก §73.23 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับสารบัญ</a></p><hr>
+<h3>73.24 การปรับปรุง UI ศูนย์ตั้งค่าการแจ้งเตือนให้ใช้งานง่ายและรองรับทุกหน้าจอ (Notification Settings UI Overhaul &amp; Full Responsiveness)</h3>
+<h4>73.24.1 บริบทและปัญหาด้านการใช้งาน (UX Context &amp; Issues)</h4>
+<p>หน้าศูนย์ตั้งค่าการแจ้งเตือน (<code>my-app/app/admin/dashboard/settings/page.tsx</code>) มีปัญหาด้านการแสดงผลและประสบการณ์ใช้งานหลายจุด โดยเฉพาะบนหน้าจอขนาดเล็ก:</p>
+<ol>
+<li><strong>แถบเลือกช่องทาง (Provider Selector) เบียดกันจนอ่านยาก</strong> — เดิมใช้ Flexbox แบบ <code>flex-1</code> วางปุ่ม 4 ช่องทาง (Discord, Telegram, LINE, PWA Push) ในแถวเดียว ทำให้ไอคอนและข้อความถูกบีบอัดจนชิดติดกัน และต้องเลื่อนแนวนอน (horizontal scroll) บนมือถือ</li>
+<li><strong>แถวกรอก Webhook/Target ไม่ยืดหยุ่นบนจอแคบ</strong> — ช่องกรอก URL กับปุ่ม &quot;ทดสอบ&quot; ถูกบังคับให้อยู่บรรทัดเดียวกันเสมอ ทำให้ช่องกรอกแคบเกินไปและปุ่มเบียดตกขอบบนมือถือ</li>
+<li><strong>ปุ่มบันทึกชิดซ้ายเป็นก้อนเล็ก</strong> — กดยากบนทัชสกรีน</li>
+</ol>
+<h4>73.24.2 แนวทางการปรับปรุง (Responsive UI Resolution)</h4>
+<ol>
+<li><strong>เปลี่ยน Provider Selector เป็น CSS Grid แบบ Responsive</strong> — ใช้ <code>grid grid-cols-2 md:grid-cols-4</code> ทำให้แสดงผล <strong>2 คอลัมน์บนมือถือ</strong> และ <strong>4 คอลัมน์บนจอใหญ่</strong> ปุ่มแต่ละช่องทางมีขนาดสม่ำเสมอ ไม่เบียด ไม่ต้องเลื่อนแนวนอน พร้อมย้ายจุดสถานะ (status dot) ไปไว้มุมขวาบนของปุ่มแบบ absolute และเพิ่ม <code>aria-pressed</code> เพื่อการเข้าถึง (Accessibility)</li>
+<li><strong>แถวกรอกข้อมูลปรับเป็น Flex แบบ Stack</strong> — ใช้ <code>flex flex-col sm:flex-row</code> ให้ช่องกรอกและปุ่มทดสอบ <strong>เรียงต่อกันในแนวตั้งบนมือถือ</strong> (ปุ่มเต็มความกว้าง กดง่าย) และ <strong>เรียงแนวนอนบนจอใหญ่</strong> พร้อมเพิ่ม <code>min-w-0</code> กันข้อความ URL ยาวดันให้ layout ล้น</li>
+<li><strong>ปุ่มบันทึกแบบ Responsive</strong> — ใช้ <code>w-full sm:w-auto</code> ให้ปุ่มเต็มความกว้างบนมือถือ (เป้าการกดใหญ่) และกลับเป็นขนาดพอดีเนื้อหาบนจอใหญ่</li>
+</ol>
+<h4>73.24.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>รายชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายรายละเอียด</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/admin/dashboard/settings/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับ Provider Selector เป็นกริด 2/4 คอลัมน์, ทำให้แถวกรอก + ปุ่มทดสอบ stack บนมือถือ, ปุ่มบันทึกเต็มความกว้างบนจอเล็ก รองรับทุกขนาดหน้าจอ</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มประวัติการบันทึก §73.24 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>

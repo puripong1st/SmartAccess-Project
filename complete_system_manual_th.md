@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 12:05:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 12:35:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10492,5 +10492,32 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
 | 5 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | เพิ่มสถานะ `pushBlocked` ตรวจจับ AbortError/push service error พร้อมป้ายแจ้งเตือนและคำแนะนำการแก้ไข |
 | 6 | `my-app/public/manifest.json` | **[MODIFY]** | กำหนด `id` และ `start_url` เป็น `/admin/login` ให้ติดตั้งเป็นแอปฝั่งแอดมินโดยเฉพาะ |
 | 7 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.23 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
+
+<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+
+---
+
+### 73.24 การปรับปรุง UI ศูนย์ตั้งค่าการแจ้งเตือนให้ใช้งานง่ายและรองรับทุกหน้าจอ (Notification Settings UI Overhaul & Full Responsiveness)
+
+#### 73.24.1 บริบทและปัญหาด้านการใช้งาน (UX Context & Issues)
+
+หน้าศูนย์ตั้งค่าการแจ้งเตือน (`my-app/app/admin/dashboard/settings/page.tsx`) มีปัญหาด้านการแสดงผลและประสบการณ์ใช้งานหลายจุด โดยเฉพาะบนหน้าจอขนาดเล็ก:
+
+1. **แถบเลือกช่องทาง (Provider Selector) เบียดกันจนอ่านยาก** — เดิมใช้ Flexbox แบบ `flex-1` วางปุ่ม 4 ช่องทาง (Discord, Telegram, LINE, PWA Push) ในแถวเดียว ทำให้ไอคอนและข้อความถูกบีบอัดจนชิดติดกัน และต้องเลื่อนแนวนอน (horizontal scroll) บนมือถือ
+2. **แถวกรอก Webhook/Target ไม่ยืดหยุ่นบนจอแคบ** — ช่องกรอก URL กับปุ่ม "ทดสอบ" ถูกบังคับให้อยู่บรรทัดเดียวกันเสมอ ทำให้ช่องกรอกแคบเกินไปและปุ่มเบียดตกขอบบนมือถือ
+3. **ปุ่มบันทึกชิดซ้ายเป็นก้อนเล็ก** — กดยากบนทัชสกรีน
+
+#### 73.24.2 แนวทางการปรับปรุง (Responsive UI Resolution)
+
+1. **เปลี่ยน Provider Selector เป็น CSS Grid แบบ Responsive** — ใช้ `grid grid-cols-2 md:grid-cols-4` ทำให้แสดงผล **2 คอลัมน์บนมือถือ** และ **4 คอลัมน์บนจอใหญ่** ปุ่มแต่ละช่องทางมีขนาดสม่ำเสมอ ไม่เบียด ไม่ต้องเลื่อนแนวนอน พร้อมย้ายจุดสถานะ (status dot) ไปไว้มุมขวาบนของปุ่มแบบ absolute และเพิ่ม `aria-pressed` เพื่อการเข้าถึง (Accessibility)
+2. **แถวกรอกข้อมูลปรับเป็น Flex แบบ Stack** — ใช้ `flex flex-col sm:flex-row` ให้ช่องกรอกและปุ่มทดสอบ **เรียงต่อกันในแนวตั้งบนมือถือ** (ปุ่มเต็มความกว้าง กดง่าย) และ **เรียงแนวนอนบนจอใหญ่** พร้อมเพิ่ม `min-w-0` กันข้อความ URL ยาวดันให้ layout ล้น
+3. **ปุ่มบันทึกแบบ Responsive** — ใช้ `w-full sm:w-auto` ให้ปุ่มเต็มความกว้างบนมือถือ (เป้าการกดใหญ่) และกลับเป็นขนาดพอดีเนื้อหาบนจอใหญ่
+
+#### 73.24.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)
+
+| ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
+|---|---|---|---|
+| 1 | `my-app/app/admin/dashboard/settings/page.tsx` | **[MODIFY]** | ปรับ Provider Selector เป็นกริด 2/4 คอลัมน์, ทำให้แถวกรอก + ปุ่มทดสอบ stack บนมือถือ, ปุ่มบันทึกเต็มความกว้างบนจอเล็ก รองรับทุกขนาดหน้าจอ |
+| 2 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.24 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>
