@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:39:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 15:47:30 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -5976,6 +5976,20 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 <li>แต่ละ action (approve/reject/delete) ต้อง re-fetch แค่บางส่วน</li>
 <li>แยก state ทำให้ optimistic UI ได้ง่าย</li>
 </ul>
+<h3>47.1.2 การออกแบบโครงสร้าง UI Layout ด้วยเวกเตอร์ไอคอน (Premium UI Vector Layout Design)</h3>
+<p>เพื่อความคมชัด สวยงาม และแสดงผลได้รวดเร็ว แดชบอร์ดแอดมินของ <strong>SmartAccess</strong> ได้รับการออกแบบโครงสร้าง Layout และ UI Elements แบบประสานร่วมกับเวกเตอร์ไอคอน SVG คุณภาพสูง ดังนี้:</p>
+<ol>
+<li><strong>โครงสร้างสปิริตเลย์เอาท์แถบข้าง (Dynamic Sidebar Navigation Layout):</strong><ul>
+<li>แถบนำทางด้านซ้าย (Left Sidebar) ถูกจัดวางในรูปแบบ Sticky Panel ที่โค้งมนกึ่งโปร่งแสงสไตล์ Glassmorphism</li>
+<li>ไอคอนรายการนำทางเมนูทั้งหมด (เช่น ทำเนียบ, คิวรออนุมัติ, ตั้งค่า, ตรวจสุขภาพระบบ) บูรณาการเวกเตอร์ SVG (<code>lucide-react</code>) ที่แสดงเฉดสีสว่างคมชัดในทุกความละเอียดหน้าจอ และเปลี่ยนโทนตามโหมดมืดแบรนด์สีม่วงเข้ม-ชมพูได้อย่างอัตโนมัติ</li>
+</ul>
+</li>
+<li><strong>กล่องตัวชี้วัดความปลอดภัย (Security KPI Metrics Cards Layout):</strong><ul>
+<li>บริเวณส่วนบนของแท็บจัดการคำขอและห้องเรียน ได้รับการออกแบบเลย์เอาท์เป็นตารางการ์ดตัวชี้วัด (KPI Metrics Grid)</li>
+<li>แต่ละการ์ดจะมีเฉดสีกราเดียนต์โปร่งแสงขอบมน และด้านในมีการวางเวกเตอร์ไอคอนสำคัญขนาบข้าง เช่น ไอคอนรูปกุญแจ (<code>Key</code>) สำหรับสิทธิ์เข้าถึง หรือไอคอนมงกุฎ (<code>Crown</code>/<code>ShieldCheck</code>) สำหรับระบุสิทธิ์แอดมินระดับสูง ช่วยให้แอดมินประเมินภาพรวมระบบและความก้าวหน้าของคิวผ่านสายตาได้ในเสี้ยววินาที</li>
+</ul>
+</li>
+</ol>
 <h3>47.2 useEffect Lifecycle</h3>
 <div class="mermaid">flowchart TD
     A["Component mount"] --> B["useEffect[]: ตรวจ /api/auth/me"]
@@ -7387,11 +7401,15 @@ RETURNING *;  -- รอ lock → หลังคน 1 commit → is_consumed=TRU
 <li><input disabled="" type="checkbox"> Polling: pending_count เปลี่ยน → redraw</li>
 <li><input disabled="" type="checkbox"> Polling: ทุกอย่างเหมือนเดิม → update เฉพาะ clock</li>
 </ul>
-<h4>Export PDF</h4>
+<h4>Auto-expiring UI &amp; Server Sweep Flow (การทดสอบระบบล้างคำขอหมดอายุ)</h4>
 <ul>
-<li><input disabled="" type="checkbox"> PDF รวม ช่วง 7 วัน → render OK, ฟอนต์ไทยถูก</li>
-<li><input disabled="" type="checkbox"> PDF รายบุคคล → 1 หน้า</li>
-<li><input disabled="" type="checkbox"> PDF ช่วง 1 ปี (1000+ rows) → multi-page footer ถูกต้อง</li>
+<li><input disabled="" type="checkbox"> นักศึกษายื่นคำขอเข้าใช้ห้อง → แผงป้ายนับถอยหลังเริ่มจาก 05:00 เดินเวลาแบบเสถียร</li>
+<li><input disabled="" type="checkbox"> เมื่อเวลาเหลือน้อยกว่า 60 วินาที → ป้ายเปลี่ยนสีจากสีม่วงแบรนด์เป็นสีแดงเข้มแจ้งเตือนภัยอย่างสวยงาม</li>
+<li><input disabled="" type="checkbox"> ปล่อยให้เวลาเดินผ่านพ้น 5 นาทีจนแตะ 00:00 → บราวเซอร์ส่งคำขอ Polling ถัดไป</li>
+<li><input disabled="" type="checkbox"> ฟังก์ชัน <code>sweepExpiredPending()</code> ทำงานอัตโนมัติบนเซิร์ฟเวอร์ → คำขอถูกเปลี่ยนสถานะเป็น <code>rejected</code> บนระบบ Supabase</li>
+<li><input disabled="" type="checkbox"> ตรวจสอบประวัติระบบ (<code>access_logs</code>) → บันทึกการปฏิเสธระบุผู้ดำเนินการเป็น &quot;ระบบอัตโนมัติ&quot; และบันทึกเหตุผล</li>
+<li><input disabled="" type="checkbox"> ตรวจสอบผลลัพธ์แจ้งเตือน Discord → บัญชีบอทยิงข้อความแจ้งเตือนสีแดงระบุสถานะคิวล้างประวัติถูกต้อง</li>
+<li><input disabled="" type="checkbox"> หน้าจอฝั่งผู้ใช้นักศึกษาตรวจพบสถานะล่าสุด → สลับการ์ดข้อความแสดงผลการปฏิเสธภาษาไทยและแจ้งเตือน &quot;ปฏิเสธอัตโนมัติโดยระบบ&quot; อย่างถูกต้องแม่นยำ 100%</li>
 </ul>
 <h3>61.2 ทำไมไม่มี Automated Test</h3>
 <ul>
@@ -13024,6 +13042,21 @@ SELECT id, first_name, last_name, student_id, requested_room FROM expired
 <li><p><strong>Multi-Channel Notification Trigger</strong>:<br>หลังจากบันทึกข้อมูลสำเร็จ ระบบจะประมวลผลดึงผู้ถูกปฏิเสธรอบดังกล่าวขึ้นมาเป็น Array แล้วทำการส่งออกข้อความแจ้งเตือนความล้มเหลวในการผ่านเข้าห้องปฏิบัติการทางช่องทางการสื่อสารต่าง ๆ ขนานกันผ่านคำสั่ง <code>Promise.allSettled()</code></p>
 </li>
 </ol>
+<h4>71.46.4 การเชื่อมโยง UI นับถอยหลังฝั่งไคลเอนต์กับกลไกกวาดล้างคิวหลังบ้าน (Connecting Client UI Timer to Server-Side Lazy Sweep)</h4>
+<p>ระบบได้รับการออกแบบให้หน้าจอผู้ใช้งาน (Client UI) และระบบจัดเก็บข้อมูลหลักหลังบ้าน (Backend Database) ทำงานประสานจังหวะเวลากันอย่างสมบูรณ์ผ่านสถาปัตยกรรม <strong>State Synchronized Countdown</strong>:</p>
+<ol>
+<li><strong>การซิงโครไนซ์สถานะคิว (Queue State Synchronization):</strong><ul>
+<li>เมื่อนักศึกษายื่นคำขอ สถานะแรกเริ่มในระบบจะถูกกำหนดให้เป็น <code>pending</code> ทันที โดยมีเวลาบันทึกอ้างอิงจากนาฬิกากลางของเซิร์ฟเวอร์ (<code>registered_at</code>) </li>
+<li>ตัวช่วยนับเวลาหน้าบ้าน (Client-Side Countdown Timer) จะดึงค่าเวลาลงทะเบียนจริงของเซิร์ฟเวอร์มาตั้งต้นคำนวณถอยหลัง (300 วินาที) ทำให้มั่นใจได้ว่าเวลาที่ผู้ใช้มองเห็นจะไม่มีทางเบี่ยงเบนจากนาฬิกาหลังบ้าน (Clock Drift Prevention)</li>
+</ul>
+</li>
+<li><strong>การกระตุ้นและกวาดล้างคิวแบบขี้เกียจ (Lazy Trigger Sweep):</strong><ul>
+<li>ทันทีที่ตัวเลขบนหน้าจอผู้ใช้นับถอยหลังจนแตะ <code>00:00</code> (เวลาผ่านไปครบ 5 นาที) และสัญญะสีแจ้งเตือนเปลี่ยนจากสีม่วงเป็นสีแดงเข้มเสร็จสิ้น</li>
+<li>คำขอ Polling ในรอบวินาทีถัดไปจากบราวเซอร์ของนักศึกษาคนนั้น (<code>/api/students/[id]</code>) หรือคำขอจากหน้าแดชบอร์ดแอดมินที่กำลัง Poll ตรวจเช็คข้อมูลคิวอยู่ จะเข้าสกัดและทำการเรียกใช้ฟังก์ชัน <code>sweepExpiredPending()</code> ของหลังบ้านทันที</li>
+<li>ส่งผลให้แถวข้อมูลที่หมดอายุนั้นถูกกวาดล้างและเปลี่ยนสถานะเป็น <code>rejected</code> บนฐานข้อมูล พร้อมกับยิงแจ้งเตือน Discord ทันที และในการตอบกลับ (Response) ของ Poll รอบถัดไปนั้น หน้าจอฝั่งนักศึกษาจะตรวจพบสถานะที่ถูกเปลี่ยนแล้ว จึงสลับมาเรนเดอร์หน้าจอแสดงความล้มเหลวและแจ้งเตือนเหตุผลการปฏิเสธอัตโนมัติในทันที</li>
+</ul>
+</li>
+</ol>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-47"></a></p>
 <h2>71.47 ระบบรักษาความปลอดภัย API ของบอร์ด IoT แบบ Zero-Trust (ESP32 Zero-Trust API Security Engine)</h2>
@@ -14079,6 +14112,30 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 <li>all/page.tsx: log severity (AlertOctagon/AlertTriangle), IP/device (Globe/Laptop), compliance (ShieldCheck/Scale), ออกการ์ด PDF (FileSpreadsheet), เปิดประตู (Unlock)</li>
 </ul>
 <p>สรุป: ไฟล์แดชบอร์ดทั้ง 5 (settings, all, pending, rooms, health) + หน้า page.tsx ปลอดอิโมจิในส่วน UI ที่ผู้ใช้เห็น เปลี่ยนเป็นเวกเตอร์ lucide-react ครบถ้วน</p>
+<h3>72.4 เหตุผลทางวิศวกรรมในการยกระดับไอคอนด้วยเวกเตอร์ SVG (Engineering Justification for Vector Icons)</h3>
+<p>การบูรณาการไอคอนเวกเตอร์ SVG (ผ่านไลบรารี <code>lucide-react</code>) เพื่อยกระดับและจัดโครงหน้าต่างผู้ดูแลระบบ (Admin Dashboard Layout) แทนการใช้ไฟล์รูปภาพทั่วไป (เช่น PNG, JPEG) มีเป้าหมายและเหตุผลสำคัญทางวิศวกรรมซอฟต์แวร์ 4 ประการ ดังนี้:</p>
+<ol>
+<li><strong>ประสิทธิภาพความเร็วและการลดภาระเครือข่าย (Network Performance &amp; Loading Latency):</strong><ul>
+<li>ไอคอนเวกเตอร์ SVG เป็นคำสั่งในรูปแบบรหัส XML ที่มีน้ำหนักเบามาก (น้ำหนักเฉลี่ยเพียง ~200B ถึง 1KB ต่อไอคอน) ระบบสามารถทำการคอมไพล์และแนบไอคอนเหล่านี้เข้าไปเป็นส่วนหนึ่งของ React Virtual DOM (ผ่าน Webpack/Turbopack Bundle) ได้โดยตรง </li>
+<li>การทำเช่นนี้ทำให้เบราว์เซอร์ <strong>ไม่ต้องยิงคำขอ HTTP Request เพิ่มเติมแยกต่างหาก</strong> เพื่อดาวน์โหลดไฟล์รูปภาพจากเซิร์ฟเวอร์แบบแต่ก่อน ส่งผลให้ความเร็วในการดาวน์โหลดไฟล์แรกเริ่ม (TTFB) และเวลาในการแสดงผลโต้ตอบได้ (TTI - Time to Interactive) รวดเร็วขึ้นอย่างมีนัยสำคัญ</li>
+</ul>
+</li>
+<li><strong>ความคมชัดระดับพิกเซลในทุกระดับความละเอียด (Resolution Independence):</strong><ul>
+<li>ต่างจากภาพแบบบิตแมป (Raster Images) ที่จะเกิดการแตกเป็นพิกเซลเมื่อทำการย่อขยายขนาดไอคอน SVG ทำการวาดเส้นโค้งและจุดต่าง ๆ ด้วยสูตรคณิตศาสตร์ทางเวกเตอร์ (Vector Math) ทำให้ไอคอนแสดงผลได้อย่างคมชัดสูงที่สุด (Retina Sharpness) บนทุกหน้าจอความละเอียดสูง ไม่ว่าจะเป็นจอภาพ Retina Display ของ iPad จอระดับ 4K บนเครื่องคอมพิวเตอร์ หรือจอภาพชนิด OLED บนสมาร์ทโฟน</li>
+</ul>
+</li>
+<li><strong>การเข้าคู่กับระบบธีมและความสอดคล้องกับโหมดมืดแบบพลวัต (Seamless Theme &amp; CSS Variables Harmony):</strong><ul>
+<li>ไอคอนที่เป็น SVG สามารถเขียนจัดสไตล์ CSS ควบคุมได้โดยตรงผ่านแอตทริบิวต์ เช่น <code>stroke=&quot;currentColor&quot;</code> หรือ <code>fill=&quot;var(--text-secondary)&quot;</code></li>
+<li>ช่วยให้ระบบปรับเปลี่ยนสีไอคอนให้เข้ากับระบบธีมโหมดสว่างและโหมดมืดพรีเมียม (Harmony Palette) ได้โดยอัตโนมัติอย่างไร้รอยต่อ และสามารถสร้างเอฟเฟกต์การโฮเวอร์ (Hover Effects) และการเปล่งแสงนีออน (Glow Effect) ร่วมกับการใช้ CSS Transition ได้อย่างมีชีวิตชีวา โดยไม่ต้องเก็บไฟล์รูปภาพแยกกันสำหรับแต่ละธีม</li>
+</ul>
+</li>
+<li><strong>ตัวอย่างเวกเตอร์ไอคอนสำคัญที่จัดวางในแดชบอร์ด:</strong><ul>
+<li><strong>ไอคอนรูปกุญแจ (<code>Key</code>):</strong> ใช้สำหรับหน้าจอจัดการโทเคนและสิทธิ์การอนุมัติประตู สะท้อนถึงการควบคุมความปลอดภัยเชิงฟิสิคัล</li>
+<li><strong>ไอคอนรูปมงกุฎ (<code>Crown</code> / <code>ShieldCheck</code>):</strong> ใช้บ่งชี้ระดับสิทธิ์ผู้ดูแลระบบสูงสุด (Super Admin Status Badge) แสดงความโดดเด่นและปลอดภัยระดับสูงสุด</li>
+<li><strong>ไอคอนรูปนาฬิกา (<code>Clock</code>):</strong> ใช้แทนประวัติการเข้าถึงและการนับถอยหลังของตารางข้อมูล ช่วยเตือนให้ผู้ดูแลระบบมองเห็นจังหวะเวลาของเหตุการณ์ล็อกอย่างสัญชาตญาณ</li>
+</ul>
+</li>
+</ol>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-73"></a></p>
 <h2>73. ภาคผนวกวิศวกรรมเชิงลึกฉบับปรับปรุงจากซอร์สโค้ดจริง (Source-Verified Deep Dive — ฉบับวิทยานิพนธ์)</h2>
 <blockquote>
