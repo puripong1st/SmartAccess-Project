@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 11:15:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 12:05:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10418,5 +10418,79 @@ sequenceDiagram
 | 4 | `app/admin/login/page.tsx` | **[MODIFY]** | ปรับเปลี่ยนไอคอน KeyholeShieldIcon เป็นโลโก้แม่กุญแจเรืองแสงล่าสุดพร้อมกรอบชีพจร |
 | 5 | `app/admin/dashboard/layout.tsx` | **[MODIFY]** | พัฒนา Sidebar Logo ในแผงแอดมินโดยนำโลโก้ล่าสุดมาประยุกต์พร้อมเงาสะท้อนระดับสูง |
 | 6 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.22 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
+
+<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+
+---
+
+### 73.23 การแก้ไขข้อบกพร่องระบบแจ้งเตือนพุช PWA และปรับเป้าหมายการติดตั้งแอป (PWA Push Notification Bug-Fix & Admin Install Target)
+
+#### 73.23.1 บริบทและอาการของปัญหา (Problem Context & Symptoms)
+
+ภายหลังเปิดใช้งานระบบแจ้งเตือนพุชผ่าน Firebase Cloud Messaging (FCM) ตาม §73.21 พบอาการผิดปกติบน Console ของเบราว์เซอร์และพฤติกรรมการทำงานที่ไม่สมบูรณ์ 3 ประการหลัก ซึ่งทำให้ระบบยังไม่สามารถลงทะเบียนรับโทเคนและส่งแจ้งเตือนได้อย่างเสถียร:
+
+1. **คำเตือน (Warning) เรื่องการผูก Event Handler ล่าช้า** — ปรากฏข้อความ `Event handler of 'push'/'pushsubscriptionchange'/'notificationclick' event must be added on the initial evaluation of worker script` (อ้างอิง `register.ts`) สาเหตุเกิดจาก Service Worker เดิมเรียกใช้ `firebase.messaging()` แบบ Lazy คือรอรับค่าคอนฟิกผ่าน `postMessage` ก่อนจึงค่อย initialize ซึ่งช้ากว่าจังหวะ "Initial Evaluation" ที่สเปกของ Service Worker บังคับไว้สำหรับการผูก Push Event
+2. **ข้อผิดพลาดการลงทะเบียนโทเคน** — `[FCM] Token registration failed: AbortError: Registration failed - push service error` เกิดจากสองสาเหตุประกอบกัน คือ (ก) SW ยังไม่พร้อมรับงาน FCM ในจังหวะที่เรียก `getToken` และ (ข) เบราว์เซอร์ตระกูล Brave ปิดกั้นบริการพุชของ Google (Google Push Messaging) เป็นค่าเริ่มต้น
+3. **การแจ้งเตือนซ้ำซ้อน (Double Notification)** — ฝั่งเซิร์ฟเวอร์ส่ง payload ที่มีฟิลด์ `notification` ทำให้เบราว์เซอร์สร้างการแจ้งเตือนให้อัตโนมัติ ขณะที่ตัว Service Worker (`onBackgroundMessage`) ก็สร้างซ้ำอีกหนึ่งครั้ง รวมเป็นเด้งซ้ำ 2 หน้าจอ
+
+#### 73.23.2 แนวทางการแก้ไขเชิงสถาปัตยกรรม (Architectural Resolution)
+
+**1. ย้ายการ Initialize Firebase ไปไว้ที่ระดับบนสุดของ Service Worker (`my-app/public/firebase-messaging-sw.js`):**
+ยกเลิกการรับคอนฟิกแบบ `postMessage` ทั้งหมด เปลี่ยนมารับค่าคอนฟิก (publishable keys ซึ่งปลอดภัยที่จะเปิดเผยฝั่ง Client) ผ่าน **Query String** ของ URL ไฟล์ Service Worker แทน ทำให้ SW สามารถอ่านค่าและเรียก `firebase.initializeApp()` พร้อม `firebase.messaging()` ได้ทันทีตั้งแต่จังหวะ Initial Evaluation ส่งผลให้ Event `push` และ `notificationclick` ถูกผูกได้ถูกต้องตามสเปก และคำเตือนทั้งหมดหายไป
+
+```javascript
+const swParams = new URL(self.location).searchParams;
+const firebaseConfig = {
+  apiKey: swParams.get('apiKey') || '',
+  authDomain: swParams.get('authDomain') || '',
+  projectId: swParams.get('projectId') || '',
+  storageBucket: swParams.get('storageBucket') || '',
+  messagingSenderId: swParams.get('messagingSenderId') || '',
+  appId: swParams.get('appId') || '',
+};
+if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+  messaging.onBackgroundMessage((payload) => { /* สร้าง notification จาก payload.data */ });
+}
+```
+
+**2. ปรับฝั่ง Client ให้ส่งคอนฟิกผ่าน Query String (`my-app/app/components/ServiceWorkerRegistration.tsx`):**
+ขณะลงทะเบียน Service Worker จะประกอบ URL พร้อมแนบพารามิเตอร์คอนฟิก แล้วเรียก `navigator.serviceWorker.register('/firebase-messaging-sw.js?<config>', { scope: '/' })` แทนการ `postMessage` แบบเดิมที่มีจังหวะไม่แน่นอน
+
+**3. เปลี่ยน Payload เป็นแบบ Data-Only ฝั่งเซิร์ฟเวอร์ (`my-app/lib/firebase-admin.ts` และ `my-app/app/api/notifications/test/route.ts`):**
+ตัดฟิลด์ `notification` ออกจากข้อความ FCM ทั้งหมด แล้วย้ายเนื้อหา (title, body, url, icon) ไปไว้ในฟิลด์ `data` เพียงที่เดียว ปล่อยให้ Service Worker เป็นผู้สร้างการแจ้งเตือนผ่าน `onBackgroundMessage` รายเดียวเท่านั้น แก้ปัญหาการแจ้งเตือนเด้งซ้ำได้อย่างสมบูรณ์
+
+**4. ตรวจจับและสื่อสารกรณีเบราว์เซอร์บล็อกพุช (`my-app/app/components/PushNotificationManager.tsx`):**
+เพิ่มสถานะ `pushBlocked` พร้อมตรรกะตรวจจับ `AbortError` / `push service error` หากพบจะแสดงป้ายสถานะ "🚫 เบราว์เซอร์บล็อกพุช" บนวิดเจ็ต และบันทึก log แนะนำวิธีแก้ (สำหรับ Brave: เปิด `brave://settings/privacy` → เปิด "Use Google services for push messaging" และต้องเปิดผ่าน HTTPS หรือ localhost เท่านั้น)
+
+#### 73.23.3 การปรับเป้าหมายการติดตั้ง PWA ให้เป็นแอปแอดมินโดยเฉพาะ (Admin-Centric Install Target)
+
+ปรับไฟล์ `my-app/public/manifest.json` โดยกำหนด `id` และ `start_url` เป็น `/admin/login` (เดิมคือ `/`) เพื่อให้เมื่อผู้ใช้ติดตั้ง PWA ลงเครื่อง (Add to Home Screen) แอปจะเปิดเข้าหน้าเข้าสู่ระบบแอดมินทันที เหมาะกับการใช้งานเป็นแอปสำหรับผู้ดูแลระบบโดยเฉพาะ พร้อมเพิ่ม `/admin/login` เข้าไปในรายการ Pre-cache ของ Service Worker เพื่อให้เปิดใช้งานหน้านี้ได้แม้ขณะออฟไลน์ (ค่า `scope` ยังคงเป็น `/` เพื่อให้ครอบคลุมทุกเส้นทาง)
+
+> [!NOTE]
+> เนื่องจากเว็บใช้ Manifest ไฟล์เดียวร่วมกันทั้งระบบ การติดตั้ง PWA จากทุกหน้าจะเปิดเข้า `/admin/login` เหมือนกัน ซึ่งเป็นพฤติกรรมที่ตั้งใจให้เป็นแอปฝั่งแอดมิน
+
+#### 73.23.4 พฤติกรรมการแจ้งเตือนเมื่อ Session ถูกตัดออก (Notification Behavior on Forced Logout)
+
+โทเคน FCM ถูกจัดเก็บแยกอิสระในตาราง `fcm_tokens` และ `localStorage` โดย**ไม่ผูกกับ Session การเข้าสู่ระบบ** (JWT Cookie) ดังนั้นพฤติกรรมเมื่อระบบตัดผู้ใช้ออกจึงเป็นดังนี้:
+
+| สถานการณ์ | ยังได้รับแจ้งเตือนพุชหรือไม่ | เหตุผล |
+|---|---|---|
+| JWT หมดอายุ 8 ชั่วโมง / ถูกดีดออก แต่บัญชียัง Active | **ได้รับตามปกติ** | โทเคนยังคงอยู่ในฐานข้อมูล |
+| Owner ปิดการใช้งานบัญชี (`is_active = false`) | **ไม่ได้รับแจ้งเตือนกลุ่มแอดมิน** | `getAllAdminTokens()` กรองด้วย `WHERE au.is_active = TRUE` |
+| ผู้ใช้กด Logout เอง | **ยังได้รับอยู่** | การ Logout ไม่ลบโทเคน ต้องกดปุ่ม "ปิดการแจ้งเตือน" ในวิดเจ็ตจึงจะหยุดรับ |
+
+#### 73.23.5 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)
+
+| ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
+|---|---|---|---|
+| 1 | `my-app/public/firebase-messaging-sw.js` | **[MODIFY]** | ย้ายการ initialize Firebase ไปที่ระดับบนสุดผ่าน Query String, ตัด listener `push` ที่ซ้ำซ้อน, รับ payload แบบ data-only, ปรับ Pre-cache เป็น `/admin/login` (CACHE v3) |
+| 2 | `my-app/app/components/ServiceWorkerRegistration.tsx` | **[MODIFY]** | ส่งคอนฟิก Firebase ผ่าน Query String ขณะลงทะเบียน SW แทนการ `postMessage` แบบ lazy เดิม |
+| 3 | `my-app/lib/firebase-admin.ts` | **[MODIFY]** | เปลี่ยน `FCMMessage` และ `sendPushToTokens` ให้ส่งแบบ data-only (ตัดฟิลด์ `notification`) แก้ปัญหาแจ้งเตือนซ้ำ |
+| 4 | `my-app/app/api/notifications/test/route.ts` | **[MODIFY]** | ปรับข้อความทดสอบให้เป็น data-only สอดคล้องกับ Service Worker ใหม่ |
+| 5 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | เพิ่มสถานะ `pushBlocked` ตรวจจับ AbortError/push service error พร้อมป้ายแจ้งเตือนและคำแนะนำการแก้ไข |
+| 6 | `my-app/public/manifest.json` | **[MODIFY]** | กำหนด `id` และ `start_url` เป็น `/admin/login` ให้ติดตั้งเป็นแอปฝั่งแอดมินโดยเฉพาะ |
+| 7 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.23 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>

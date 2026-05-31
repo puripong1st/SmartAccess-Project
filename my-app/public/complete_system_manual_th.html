@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 11:15:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-05-31 12:05:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1252,8 +1252,7 @@ npm install
 <p>หน้าจำลอง ESP32</p>
 <pre><code class="language-text">https://project-sigma-ivory-21.vercel.app/esp32-preview
 </code></pre>
-<div class="alert-box alert-note"><strong>NOTE:</strong> ลิงก์ด้านบนเป็นเว็บไซต์จำลองบนโปรดักชันหลัก (Production URL) สำหรับรันใช้งานจริง ส่วนกรณีที่รันระบบทดสอบภายในเครื่องนักพัฒนา (Local Development) สามารถเข้าใช้งานผ่าน `http://localhost:3000`, `http://localhost:3000/admin/login` และ `http://localhost:3000/esp32-preview` ตามลำดับ
-</div><h3>3.2 ตัวแปรสภาพแวดล้อมที่ควรตั้งค่า</h3>
+<div class="alert-box alert-note"><strong>NOTE:</strong> ลิงก์ด้านบนเป็นเว็บไซต์จำลองบนโปรดักชันหลัก (Production URL) สำหรับรันใช้งานจริง ส่วนกรณีที่รันระบบทดสอบภายในเครื่องนักพัฒนา (Local Development) สามารถเข้าใช้งานผ่าน `http://localhost:3000`, `http://localhost:3000/admin/login` และ `http://localhost:3000/esp32-preview` ตามลำดับ</div><h3>3.2 ตัวแปรสภาพแวดล้อมที่ควรตั้งค่า</h3>
 <p>สร้างไฟล์ <code>my-app/.env.local</code></p>
 <pre><code class="language-env"># ── ฐานข้อมูล (PostgreSQL / Supabase Connection) ──
 # ใช้ Connection String หลัก (PgBouncer pooler พอร์ต 6543)
@@ -8120,8 +8119,7 @@ voltage    ────┐                     ┌───┐
 <td><strong>381ms (ติดการยืนยันสิทธิ์)</strong></td>
 </tr>
 </tbody></table>
-<div class="alert-box alert-tip"><strong>TIP:</strong> **วิเคราะห์ผลทดสอบ:**
-</div>
+<div class="alert-box alert-tip"><strong>TIP:</strong> **วิเคราะห์ผลทดสอบ:**</div>
 > ค่าเฉลี่ยการดึงสถานะสำหรับ ESP32 (Hot Path Polling) อยู่ที่เพียง **97ms (P95)** ซึ่งถือว่ารวดเร็วกว่าข้อกำหนดการพัฒนาทั่วไปอย่างมาก ส่งผลให้วงรอบในการดึงข้อมูลของบอร์ด ESP32 ที่ทำงานทุก ๆ 2 วินาที ใช้ขีดความสามารถการรับส่งข้อมูลของเน็ตเวิร์กเพียง 5% เท่านั้น และป้องกันปัญหากลอนประตูตอบสนองล่าช้าเมื่อผู้ใช้งานได้รับอนุมัติได้อย่างเด็ดขาด<p><a id="sec-71-3"></a></p>
 <h3>71.3 สถาปัตยกรรมการสื่อสารแบบ &quot;Push-via-Poll&quot; ในระบบเครือข่ายองค์กร</h3>
 <p>การเชื่อมต่อและสื่อสารอุปกรณ์ IoT (ESP32) เข้ากับคลาวด์เซิร์ฟเวอร์ในสภาพแวดล้อมเครือข่ายของมหาวิทยาลัยหรือองค์กรขนาดใหญ่ เผชิญความท้าทายหลัก 3 ประการ:</p>
@@ -8149,8 +8147,7 @@ voltage    ────┐                     ┌───┐
 <li>บอร์ดรับค่าไปประมวลผลสั่งเปิดประตู</li>
 <li><code>UPDATE</code> ค่า <code>room_cmd</code> ให้กลายเป็น <code>&#39;consumed&#39;</code></li>
 </ol>
-<div class="alert-box alert-warning"><strong>WARNING:</strong> **ช่องโหว่ความมั่นคง:** ในระบบ Serverless หรือมีผู้ใช้ปริมาณมาก (High Concurrency) ระหว่างขั้นตอนที่ 1 และ 3 อาจมีอีก Request หนึ่งร้องขอเข้ามาสำเร็จและเห็นสถานะเป็น `'unlock'` เช่นเดียวกัน ส่งผลให้คำสั่งเปิดประตูทำงานสองรอบซ้อน หรือเปิดค้างโดยไม่มีผู้รับผิดชอบ
-</div><p><strong>แนวทางแก้ไขเชิงทฤษฎีในโครงงานวิจัย:</strong><br>ระบบได้ออกแบบให้ใช้ <strong>Single-step Atomic Update</strong> ในระดับ SQL Engine บนเครื่องยนต์ฐานข้อมูล Supabase PostgreSQL ผ่านประโยคคำสั่งเดียวที่เป็นอะตอมิก (ไม่สามารถแยกการประมวลผลย่อยได้):</p>
+<div class="alert-box alert-warning"><strong>WARNING:</strong> **ช่องโหว่ความมั่นคง:** ในระบบ Serverless หรือมีผู้ใช้ปริมาณมาก (High Concurrency) ระหว่างขั้นตอนที่ 1 และ 3 อาจมีอีก Request หนึ่งร้องขอเข้ามาสำเร็จและเห็นสถานะเป็น `'unlock'` เช่นเดียวกัน ส่งผลให้คำสั่งเปิดประตูทำงานสองรอบซ้อน หรือเปิดค้างโดยไม่มีผู้รับผิดชอบ</div><p><strong>แนวทางแก้ไขเชิงทฤษฎีในโครงงานวิจัย:</strong><br>ระบบได้ออกแบบให้ใช้ <strong>Single-step Atomic Update</strong> ในระดับ SQL Engine บนเครื่องยนต์ฐานข้อมูล Supabase PostgreSQL ผ่านประโยคคำสั่งเดียวที่เป็นอะตอมิก (ไม่สามารถแยกการประมวลผลย่อยได้):</p>
 <pre><code class="language-sql">UPDATE system_settings 
 SET setting_value = &#39;consumed&#39; 
 WHERE setting_key = &#39;room_cmd_CE-401&#39; AND setting_value = &#39;unlock&#39; 
@@ -15328,6 +15325,116 @@ export function getVapidKey(): string {
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>เพิ่มประวัติการบันทึก §73.22 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับสารบัญ</a></p><hr>
+<h3>73.23 การแก้ไขข้อบกพร่องระบบแจ้งเตือนพุช PWA และปรับเป้าหมายการติดตั้งแอป (PWA Push Notification Bug-Fix &amp; Admin Install Target)</h3>
+<h4>73.23.1 บริบทและอาการของปัญหา (Problem Context &amp; Symptoms)</h4>
+<p>ภายหลังเปิดใช้งานระบบแจ้งเตือนพุชผ่าน Firebase Cloud Messaging (FCM) ตาม §73.21 พบอาการผิดปกติบน Console ของเบราว์เซอร์และพฤติกรรมการทำงานที่ไม่สมบูรณ์ 3 ประการหลัก ซึ่งทำให้ระบบยังไม่สามารถลงทะเบียนรับโทเคนและส่งแจ้งเตือนได้อย่างเสถียร:</p>
+<ol>
+<li><strong>คำเตือน (Warning) เรื่องการผูก Event Handler ล่าช้า</strong> — ปรากฏข้อความ <code>Event handler of &#39;push&#39;/&#39;pushsubscriptionchange&#39;/&#39;notificationclick&#39; event must be added on the initial evaluation of worker script</code> (อ้างอิง <code>register.ts</code>) สาเหตุเกิดจาก Service Worker เดิมเรียกใช้ <code>firebase.messaging()</code> แบบ Lazy คือรอรับค่าคอนฟิกผ่าน <code>postMessage</code> ก่อนจึงค่อย initialize ซึ่งช้ากว่าจังหวะ &quot;Initial Evaluation&quot; ที่สเปกของ Service Worker บังคับไว้สำหรับการผูก Push Event</li>
+<li><strong>ข้อผิดพลาดการลงทะเบียนโทเคน</strong> — <code>[FCM] Token registration failed: AbortError: Registration failed - push service error</code> เกิดจากสองสาเหตุประกอบกัน คือ (ก) SW ยังไม่พร้อมรับงาน FCM ในจังหวะที่เรียก <code>getToken</code> และ (ข) เบราว์เซอร์ตระกูล Brave ปิดกั้นบริการพุชของ Google (Google Push Messaging) เป็นค่าเริ่มต้น</li>
+<li><strong>การแจ้งเตือนซ้ำซ้อน (Double Notification)</strong> — ฝั่งเซิร์ฟเวอร์ส่ง payload ที่มีฟิลด์ <code>notification</code> ทำให้เบราว์เซอร์สร้างการแจ้งเตือนให้อัตโนมัติ ขณะที่ตัว Service Worker (<code>onBackgroundMessage</code>) ก็สร้างซ้ำอีกหนึ่งครั้ง รวมเป็นเด้งซ้ำ 2 หน้าจอ</li>
+</ol>
+<h4>73.23.2 แนวทางการแก้ไขเชิงสถาปัตยกรรม (Architectural Resolution)</h4>
+<p><strong>1. ย้ายการ Initialize Firebase ไปไว้ที่ระดับบนสุดของ Service Worker (<code>my-app/public/firebase-messaging-sw.js</code>):</strong><br>ยกเลิกการรับคอนฟิกแบบ <code>postMessage</code> ทั้งหมด เปลี่ยนมารับค่าคอนฟิก (publishable keys ซึ่งปลอดภัยที่จะเปิดเผยฝั่ง Client) ผ่าน <strong>Query String</strong> ของ URL ไฟล์ Service Worker แทน ทำให้ SW สามารถอ่านค่าและเรียก <code>firebase.initializeApp()</code> พร้อม <code>firebase.messaging()</code> ได้ทันทีตั้งแต่จังหวะ Initial Evaluation ส่งผลให้ Event <code>push</code> และ <code>notificationclick</code> ถูกผูกได้ถูกต้องตามสเปก และคำเตือนทั้งหมดหายไป</p>
+<pre><code class="language-javascript">const swParams = new URL(self.location).searchParams;
+const firebaseConfig = {
+  apiKey: swParams.get(&#39;apiKey&#39;) || &#39;&#39;,
+  authDomain: swParams.get(&#39;authDomain&#39;) || &#39;&#39;,
+  projectId: swParams.get(&#39;projectId&#39;) || &#39;&#39;,
+  storageBucket: swParams.get(&#39;storageBucket&#39;) || &#39;&#39;,
+  messagingSenderId: swParams.get(&#39;messagingSenderId&#39;) || &#39;&#39;,
+  appId: swParams.get(&#39;appId&#39;) || &#39;&#39;,
+};
+if (firebaseConfig.apiKey &amp;&amp; firebaseConfig.projectId &amp;&amp; !firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+  messaging.onBackgroundMessage((payload) =&gt; { /* สร้าง notification จาก payload.data */ });
+}
+</code></pre>
+<p><strong>2. ปรับฝั่ง Client ให้ส่งคอนฟิกผ่าน Query String (<code>my-app/app/components/ServiceWorkerRegistration.tsx</code>):</strong><br>ขณะลงทะเบียน Service Worker จะประกอบ URL พร้อมแนบพารามิเตอร์คอนฟิก แล้วเรียก <code>navigator.serviceWorker.register(&#39;/firebase-messaging-sw.js?&lt;config&gt;&#39;, { scope: &#39;/&#39; })</code> แทนการ <code>postMessage</code> แบบเดิมที่มีจังหวะไม่แน่นอน</p>
+<p><strong>3. เปลี่ยน Payload เป็นแบบ Data-Only ฝั่งเซิร์ฟเวอร์ (<code>my-app/lib/firebase-admin.ts</code> และ <code>my-app/app/api/notifications/test/route.ts</code>):</strong><br>ตัดฟิลด์ <code>notification</code> ออกจากข้อความ FCM ทั้งหมด แล้วย้ายเนื้อหา (title, body, url, icon) ไปไว้ในฟิลด์ <code>data</code> เพียงที่เดียว ปล่อยให้ Service Worker เป็นผู้สร้างการแจ้งเตือนผ่าน <code>onBackgroundMessage</code> รายเดียวเท่านั้น แก้ปัญหาการแจ้งเตือนเด้งซ้ำได้อย่างสมบูรณ์</p>
+<p><strong>4. ตรวจจับและสื่อสารกรณีเบราว์เซอร์บล็อกพุช (<code>my-app/app/components/PushNotificationManager.tsx</code>):</strong><br>เพิ่มสถานะ <code>pushBlocked</code> พร้อมตรรกะตรวจจับ <code>AbortError</code> / <code>push service error</code> หากพบจะแสดงป้ายสถานะ &quot;🚫 เบราว์เซอร์บล็อกพุช&quot; บนวิดเจ็ต และบันทึก log แนะนำวิธีแก้ (สำหรับ Brave: เปิด <code>brave://settings/privacy</code> → เปิด &quot;Use Google services for push messaging&quot; และต้องเปิดผ่าน HTTPS หรือ localhost เท่านั้น)</p>
+<h4>73.23.3 การปรับเป้าหมายการติดตั้ง PWA ให้เป็นแอปแอดมินโดยเฉพาะ (Admin-Centric Install Target)</h4>
+<p>ปรับไฟล์ <code>my-app/public/manifest.json</code> โดยกำหนด <code>id</code> และ <code>start_url</code> เป็น <code>/admin/login</code> (เดิมคือ <code>/</code>) เพื่อให้เมื่อผู้ใช้ติดตั้ง PWA ลงเครื่อง (Add to Home Screen) แอปจะเปิดเข้าหน้าเข้าสู่ระบบแอดมินทันที เหมาะกับการใช้งานเป็นแอปสำหรับผู้ดูแลระบบโดยเฉพาะ พร้อมเพิ่ม <code>/admin/login</code> เข้าไปในรายการ Pre-cache ของ Service Worker เพื่อให้เปิดใช้งานหน้านี้ได้แม้ขณะออฟไลน์ (ค่า <code>scope</code> ยังคงเป็น <code>/</code> เพื่อให้ครอบคลุมทุกเส้นทาง)</p>
+<div class="alert-box alert-note"><strong>NOTE:</strong> เนื่องจากเว็บใช้ Manifest ไฟล์เดียวร่วมกันทั้งระบบ การติดตั้ง PWA จากทุกหน้าจะเปิดเข้า `/admin/login` เหมือนกัน ซึ่งเป็นพฤติกรรมที่ตั้งใจให้เป็นแอปฝั่งแอดมิน</div><h4>73.23.4 พฤติกรรมการแจ้งเตือนเมื่อ Session ถูกตัดออก (Notification Behavior on Forced Logout)</h4>
+<p>โทเคน FCM ถูกจัดเก็บแยกอิสระในตาราง <code>fcm_tokens</code> และ <code>localStorage</code> โดย<strong>ไม่ผูกกับ Session การเข้าสู่ระบบ</strong> (JWT Cookie) ดังนั้นพฤติกรรมเมื่อระบบตัดผู้ใช้ออกจึงเป็นดังนี้:</p>
+<table>
+<thead>
+<tr>
+<th>สถานการณ์</th>
+<th>ยังได้รับแจ้งเตือนพุชหรือไม่</th>
+<th>เหตุผล</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>JWT หมดอายุ 8 ชั่วโมง / ถูกดีดออก แต่บัญชียัง Active</td>
+<td><strong>ได้รับตามปกติ</strong></td>
+<td>โทเคนยังคงอยู่ในฐานข้อมูล</td>
+</tr>
+<tr>
+<td>Owner ปิดการใช้งานบัญชี (<code>is_active = false</code>)</td>
+<td><strong>ไม่ได้รับแจ้งเตือนกลุ่มแอดมิน</strong></td>
+<td><code>getAllAdminTokens()</code> กรองด้วย <code>WHERE au.is_active = TRUE</code></td>
+</tr>
+<tr>
+<td>ผู้ใช้กด Logout เอง</td>
+<td><strong>ยังได้รับอยู่</strong></td>
+<td>การ Logout ไม่ลบโทเคน ต้องกดปุ่ม &quot;ปิดการแจ้งเตือน&quot; ในวิดเจ็ตจึงจะหยุดรับ</td>
+</tr>
+</tbody></table>
+<h4>73.23.5 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>รายชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายรายละเอียด</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/public/firebase-messaging-sw.js</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ย้ายการ initialize Firebase ไปที่ระดับบนสุดผ่าน Query String, ตัด listener <code>push</code> ที่ซ้ำซ้อน, รับ payload แบบ data-only, ปรับ Pre-cache เป็น <code>/admin/login</code> (CACHE v3)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/components/ServiceWorkerRegistration.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ส่งคอนฟิก Firebase ผ่าน Query String ขณะลงทะเบียน SW แทนการ <code>postMessage</code> แบบ lazy เดิม</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>my-app/lib/firebase-admin.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เปลี่ยน <code>FCMMessage</code> และ <code>sendPushToTokens</code> ให้ส่งแบบ data-only (ตัดฟิลด์ <code>notification</code>) แก้ปัญหาแจ้งเตือนซ้ำ</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>my-app/app/api/notifications/test/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับข้อความทดสอบให้เป็น data-only สอดคล้องกับ Service Worker ใหม่</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>my-app/app/components/PushNotificationManager.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มสถานะ <code>pushBlocked</code> ตรวจจับ AbortError/push service error พร้อมป้ายแจ้งเตือนและคำแนะนำการแก้ไข</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>my-app/public/manifest.json</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>กำหนด <code>id</code> และ <code>start_url</code> เป็น <code>/admin/login</code> ให้ติดตั้งเป็นแอปฝั่งแอดมินโดยเฉพาะ</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มประวัติการบันทึก §73.23 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>
