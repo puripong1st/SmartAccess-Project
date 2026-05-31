@@ -740,6 +740,52 @@ body {
   }
 }
 
+/* ──────────────────────────────────────────────────────────────
+   ศูนย์ตั้งค่าการแจ้งเตือน (Notification Settings) — Responsive helpers
+   NOTE: โปรเจกต์นี้ใช้ inline styles + custom CSS เป็นหลัก (ไม่ได้เปิด Tailwind utilities)
+   จึงกำหนด responsive ผ่าน media query ในไฟล์นี้แทนคลาส sm:/md: ของ Tailwind
+   ────────────────────────────────────────────────────────────── */
+
+/* Padding ของหัวการ์ดและตัวการ์ด */
+.notif-pad-lg { padding: 16px; }
+.notif-pad-body { padding: 12px; }
+@media (min-width: 640px) {
+  .notif-pad-lg { padding: 20px; }
+  .notif-pad-body { padding: 20px; }
+}
+@media (min-width: 768px) {
+  .notif-pad-lg { padding: 22px 28px; }
+  .notif-pad-body { padding: 22px 28px 28px; }
+}
+
+/* ตัวเลือกช่องทาง: 2 คอลัมน์บนมือถือ → 4 คอลัมน์บนจอใหญ่ */
+.notif-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 20px;
+}
+@media (min-width: 768px) {
+  .notif-provider-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 24px; }
+}
+
+/* แถวกรอก Webhook/Target + ปุ่มทดสอบ: ซ้อนแนวตั้งบนมือถือ → แนวนอนบนจอใหญ่ */
+.notif-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+@media (min-width: 640px) {
+  .notif-row { flex-direction: row; align-items: center; }
+}
+
+/* ปุ่มบันทึก: เต็มความกว้างบนมือถือ → พอดีเนื้อหาบนจอใหญ่ */
+.notif-save-btn { width: 100%; }
+@media (min-width: 640px) {
+  .notif-save-btn { width: auto; align-self: flex-start; }
+}
+
 
 
 

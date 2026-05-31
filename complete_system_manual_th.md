@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 12:35:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 14:05:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10519,5 +10519,86 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
 |---|---|---|---|
 | 1 | `my-app/app/admin/dashboard/settings/page.tsx` | **[MODIFY]** | ปรับ Provider Selector เป็นกริด 2/4 คอลัมน์, ทำให้แถวกรอก + ปุ่มทดสอบ stack บนมือถือ, ปุ่มบันทึกเต็มความกว้างบนจอเล็ก รองรับทุกขนาดหน้าจอ |
 | 2 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.24 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
+
+<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+
+---
+
+### 73.25 การแก้ไขบั๊กระดับระบบแบบเบ็ดเสร็จ: CSP บล็อก FCM, Migration ตกหล่น, และโลโก้/UI (Full-System Bug-Fix: CSP, Skipped Migrations, Logo & UI)
+
+#### 73.25.1 บั๊กที่ 1 — Content Security Policy บล็อกการลงทะเบียนพุช (CSP Blocking FCM Registration)
+
+จากการทดสอบบนระบบจริง (Production) พบ Error บน Console ที่เป็นต้นตอแท้จริงของการลงทะเบียนพุชไม่สำเร็จ (ต่างจากอาการ AbortError ของ Brave ใน §73.23):
+
+```
+[FCM] Token registration failed: TypeError: Failed to fetch.
+Refused to connect to 'https://firebaseinstallations.googleapis.com/...'
+because it violates the Content Security Policy directive: "connect-src ..."
+```
+
+* **สาเหตุ:** `connect-src` ใน `my-app/next.config.ts` อนุญาตเฉพาะ `fcm.googleapis.com` และ `oauth2.googleapis.com` แต่ FCM Web SDK ต้องเรียกอีกหลายโดเมนที่ไม่ได้อยู่ในรายการ จึงถูก CSP บล็อก
+* **การแก้ไข (Patched):** เพิ่มโดเมนที่จำเป็นทั้งหมดเข้าใน `connect-src` ได้แก่ `https://firebaseinstallations.googleapis.com` (FID), `https://fcmregistrations.googleapis.com` (ออกโทเคน), `https://www.googleapis.com`, และ `wss://*.supabase.co` (รองรับ Realtime) — ตรวจสอบแล้วว่า HTTP Header ที่เซิร์ฟเวอร์ส่งออกมามีโดเมนครบถ้วน
+
+> [!NOTE]
+> สำหรับเบราว์เซอร์ Brave ยังคงต้องเปิด `brave://settings/privacy` → "Use Google services for push messaging" เพิ่มเติม เพราะ Brave บล็อกบริการพุชของ Google แยกต่างหากจาก CSP
+
+#### 73.25.2 บั๊กที่ 2 — Fast Path ข้าม Migration ทำให้บันทึก Log ล้มทั้งระบบ (Skipped Migrations on Fast Path)
+
+* **อาการ:** ทุกการเขียน access_logs ล้มเหลวด้วย `column "user_agent" of relation "access_logs" does not exist` (รหัส 42703) ทำให้ระบบบันทึกเหตุการณ์ใช้งานไม่ได้เลย
+* **สาเหตุ:** `initDatabase()` ใน `my-app/lib/db.ts` มีโหมด Fast Path (`SKIP_DB_INIT=true`) ที่ข้ามคำสั่งสร้าง/ปรับโครงสร้างตารางทั้งหมดเพื่อลด Latency คอลัมน์ `user_agent` ถูกเพิ่มในโค้ด *หลัง* ฐานข้อมูลถูก seed ไปแล้ว จึงไม่เคยถูกสร้างจริงในโปรดักชัน
+* **การแก้ไข (Patched):** แยกชุด Migration น้ำหนักเบาแบบ idempotent (`applyIdempotentMigrations`) ที่รัน **ครั้งเดียวต่ออายุอินสแตนซ์เสมอ แม้ในโหมด Fast Path** ครอบคลุมการเติมคอลัมน์ที่ขาดของ `access_logs` (room, method, ip_address, details, severity, user_agent) และการสร้างตาราง `fcm_tokens` — ใช้ `IF NOT EXISTS` ทั้งหมดจึงปลอดภัยและเร็ว ไม่เพิ่ม Latency รายคำขอ ตรวจสอบแล้วว่ารันสำเร็จและการบันทึก log กลับมาทำงานปกติ
+
+#### 73.25.3 บั๊กที่ 3 — โลโก้ Sidebar และการปรับ UI ให้ประณีต (Sidebar Logo & UI Polish)
+
+* **ปัญหา:** โลโก้ในแถบ Sidebar ของแดชบอร์ดใช้ภาพ raster (`/icons/icon-128x128.png`) แสดงที่ขนาด 40px ด้วย `objectFit: cover` ทำให้พื้นที่ขอบมืดของไอคอนกินพื้นที่จนดูเหมือนก้อนทึบ ไม่คมชัด และดูไม่ประณีตบนหลายขนาดหน้าจอ
+* **การแก้ไข:** แทนที่ด้วย **โลโก้ inline SVG (`BrandMark`)** รูปแม่กุญแจพร้อมคลื่นสัญญาณไร้สายบนพื้นไล่เฉดสีแบรนด์ (ม่วง #7C3AED → ชมพู #DB2777) ซึ่งคมชัดทุกความละเอียดหน้าจอ (Retina/4K) ไม่มีปัญหาขอบมืด และมี `aria-label` รองรับการเข้าถึง
+* ประกอบกับการปรับ UI หน้าตั้งค่าการแจ้งเตือนใน §73.24 (Provider Selector แบบกริด 2/4 คอลัมน์, แถวกรอก stack บนมือถือ) ทำให้ทั้งหน้าใช้งานง่ายและรองรับทุกขนาดหน้าจอ
+
+#### 73.25.4 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)
+
+| ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
+|---|---|---|---|
+| 1 | `my-app/next.config.ts` | **[MODIFY]** | เพิ่มโดเมน FCM (firebaseinstallations, fcmregistrations, www.googleapis) และ wss supabase เข้าใน CSP `connect-src` |
+| 2 | `my-app/lib/db.ts` | **[MODIFY]** | เพิ่ม `applyIdempotentMigrations()` ที่รันแม้ในโหมด Fast Path เพื่อเติมคอลัมน์ access_logs และสร้าง fcm_tokens ที่ตกหล่น |
+| 3 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | แทนโลโก้ภาพ raster ด้วยคอมโพเนนต์ `BrandMark` (inline SVG) คมชัดทุกหน้าจอ |
+| 4 | `.claude/launch.json` | **[MODIFY]** | เพิ่มคอนฟิก `next-dev` สำหรับรัน Next.js dev server เพื่อทดสอบ |
+| 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.25 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
+
+<p align="right"><a href="#toc">กลับสารบัญ</a></p>
+
+---
+
+### 73.26 ต้นตอที่แท้จริงของ UI เพี้ยน: Tailwind ไม่ถูกตั้งค่า + แก้ Dev CSP eval (Root Cause of Broken UI: Tailwind Not Wired Up + Dev CSP eval Fix)
+
+#### 73.26.1 การค้นพบ — คลาส Tailwind ทุกตัวเป็น No-op
+
+ระหว่างทดสอบบน dev server จริง พบว่าแถบเลือกช่องทางในหน้าตั้งค่ายังเบียดเป็นแถวเดียวแม้แก้เป็นกริดแล้ว เมื่อตรวจ DOM ด้วยเครื่องมือ inspect พบว่า:
+* `<div class="grid grid-cols-2 md:grid-cols-4">` มี `display: block` (ไม่ใช่ `grid`)
+* แม้แต่คลาสพื้นฐานอย่าง `flex` ก็ให้ `display: block`
+
+* **สาเหตุราก (Root Cause):** การตั้งค่า Tailwind v4 ของโปรเจกต์ไม่สมบูรณ์ — ทั้งที่ติดตั้ง `@tailwindcss/postcss@4.3.0` และ `tailwindcss@4.3.0` แล้ว แต่ (1) `my-app/postcss.config.mjs` มี `plugins: {}` ว่างเปล่า ไม่ได้ลงทะเบียนปลั๊กอิน และ (2) `app/globals.css` ไม่มีบรรทัด `@import "tailwindcss"` ผลคือ **Tailwind ไม่เคยสร้าง utility class ใดๆ เลย** ทั้งระบบรันด้วย inline styles + custom class ใน `globals.css` ส่วนคลาส Tailwind ที่กระจายอยู่ในโค้ดเป็น no-op ทั้งหมด (ปุ่ม `<button>` ที่ค่าเริ่มต้นเป็น `inline-block` จึงไหลต่อกันเป็นแถวดูเหมือนเบียด)
+
+> [!WARNING]
+> ไม่เปิด Tailwind ย้อนหลังในจุดนี้ เพราะ `@import "tailwindcss"` จะดึง Preflight (CSS reset ระดับ global) เข้ามารีเซ็ตสไตล์ทั้งเว็บ และเปิดใช้คลาส Tailwind ที่ค้างอยู่นับร้อยพร้อมกัน เสี่ยงทำให้ทุกหน้าเพี้ยนรุนแรง จึงเลือกแก้แบบสอดคล้องกับสถาปัตยกรรมจริงของโปรเจกต์แทน
+
+#### 73.26.2 การแก้ไข — ใช้ inline styles + CSS responsive ที่ทำงานจริง
+
+* แปลงแถบเลือกช่องทาง, แถวกรอก Webhook + ปุ่มทดสอบ, ปุ่มบันทึก และ padding ของการ์ดในหน้าตั้งค่า ให้ใช้ **inline styles** (จัด layout) ร่วมกับ **คลาส responsive ใหม่ใน `globals.css`** ที่ใช้ media query จริง ได้แก่ `.notif-provider-grid` (กริด 2/4 คอลัมน์), `.notif-row` (stack→row ที่ 640px), `.notif-save-btn`, `.notif-pad-lg`, `.notif-pad-body`
+* ตรวจสอบบน dev server แล้ว: กริดแสดง `display: grid` 4 คอลัมน์บนจอกว้าง, ป้ายช่องทางทั้ง 4 ไม่ถูกตัด (Discord/Telegram/LINE/PWA Push), โลโก้ Sidebar เป็น SVG คมชัด
+
+#### 73.26.3 แก้ Next.js แจ้ง Error "eval is not supported" บนโหมด Dev
+
+* **อาการ:** Next.js dev ขึ้น Issue และ Console เต็มไปด้วย `eval() is not supported ... make sure 'unsafe-eval' is included`
+* **สาเหตุ:** React/Next ในโหมด dev ใช้ `eval()` สำหรับ error overlay/source map แต่ CSP `script-src` ไม่อนุญาต `'unsafe-eval'`
+* **การแก้ไข:** เพิ่ม `'unsafe-eval'` เข้า `script-src` **เฉพาะตอน development เท่านั้น** (`isProduction ? "" : " 'unsafe-eval'"`) — โปรดักชันไม่ได้รับผลกระทบด้านความปลอดภัยเพราะ React ไม่ใช้ eval ในโหมด production ตรวจสอบ HTTP Header แล้วว่า dev มี unsafe-eval และ Console สะอาดไม่มี error
+
+#### 73.26.4 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)
+
+| ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
+|---|---|---|---|
+| 1 | `my-app/app/admin/dashboard/settings/page.tsx` | **[MODIFY]** | แปลง layout จากคลาส Tailwind (no-op) เป็น inline styles + คลาส responsive ของ globals.css |
+| 2 | `my-app/app/globals.css` | **[MODIFY]** | เพิ่มคลาส responsive `.notif-*` (กริดช่องทาง, แถวกรอก, ปุ่มบันทึก, padding) ด้วย media query จริง |
+| 3 | `my-app/next.config.ts` | **[MODIFY]** | เพิ่ม `'unsafe-eval'` ใน CSP `script-src` เฉพาะโหมด development แก้ Next.js dev error |
+| 4 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.26 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>

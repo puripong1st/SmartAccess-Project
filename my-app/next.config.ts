@@ -16,11 +16,15 @@ const cspDirectives = [
   // Next.js App Router ships inline bootstrap/hydration scripts without nonces by default.
   // 'strict-dynamic' would cause modern browsers to ignore 'self' and 'unsafe-inline',
   // blocking those inline scripts and leaving the app stuck on a loading spinner.
-  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.gstatic.com",
+  // 'unsafe-eval' เปิดเฉพาะตอน dev เท่านั้น — Next.js/React ใช้ eval() สำหรับ error overlay/source map
+  // ในโหมด dev (production ไม่ใช้ eval) จึงไม่กระทบความปลอดภัยของระบบจริง
+  `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"} https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.gstatic.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
-  `connect-src 'self' ${supabaseHost} https://*.supabase.co https://fcm.googleapis.com https://oauth2.googleapis.com`,
+  // FCM Web SDK ต้องต่อหลาย endpoint: firebaseinstallations (FID), fcmregistrations (ออกโทเคน),
+  // fcm/googleapis (ส่งข้อความ), oauth2 (token), และ wss สำหรับ Realtime/SSE บางกรณี
+  `connect-src 'self' ${supabaseHost} https://*.supabase.co wss://*.supabase.co https://fcm.googleapis.com https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://oauth2.googleapis.com`,
   "manifest-src 'self'",
   "media-src 'self'",
   "worker-src 'self' blob:",

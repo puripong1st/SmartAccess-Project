@@ -148,7 +148,7 @@ export default function SettingsPage() {
     <div className="animate-fade-in w-full" style={{ display: "block", maxWidth: 780, width: "100%", overflowX: "hidden" }}>
       <div className="premium-card w-full" style={{ padding: 0, overflow: "hidden", maxWidth: "100%" }}>
         {/* Header แถบสีแบรนด์ */}
-        <div className="p-4 sm:p-5 md:p-[22px_28px]" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(219,39,119,0.05))", borderBottom: "1px solid var(--border)" }}>
+        <div className="notif-pad-lg" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(219,39,119,0.05))", borderBottom: "1px solid var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
               <h3 style={{ fontSize: 18, fontWeight: 900, color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -164,9 +164,9 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="p-3 sm:p-5 md:p-[22px_28px_28px]">
-          {/* Provider selector — กริดที่รองรับทุกหน้าจอ: 2 คอลัมน์บนมือถือ, 4 คอลัมน์บนจอใหญ่ (ไม่เบียด ไม่ต้องเลื่อน) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5 sm:mb-6">
+        <div className="notif-pad-body">
+          {/* Provider selector — กริด responsive (2 คอลัมน์มือถือ / 4 คอลัมน์จอใหญ่) ผ่าน globals.css */}
+          <div className="notif-provider-grid">
             {(Object.keys(PROVIDERS) as Provider[]).map(p => {
               const on = isConfigured(p);
               const sel = provider === p;
@@ -176,8 +176,18 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setProvider(p)}
                   aria-pressed={sel}
-                  className="relative flex items-center justify-center gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-[13px] font-extrabold transition-all cursor-pointer select-none"
                   style={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 5,
+                    padding: "10px 6px",
+                    borderRadius: 12,
+                    fontSize: 12.5,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    transition: "all 0.18s",
                     background: sel ? PROVIDERS[p].color : "var(--bg-primary)",
                     color: sel ? "#fff" : "var(--text-secondary)",
                     border: `1.5px solid ${sel ? PROVIDERS[p].color : "var(--border)"}`,
@@ -185,7 +195,7 @@ export default function SettingsPage() {
                   }}
                 >
                   <span style={{ display: "inline-flex", flexShrink: 0 }}>{PROVIDERS[p].icon}</span>
-                  <span className="truncate">{PROVIDERS[p].name}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{PROVIDERS[p].name}</span>
                   <span
                     title={on ? "ตั้งค่าแล้ว" : "ยังไม่ตั้งค่า"}
                     style={{
@@ -209,7 +219,7 @@ export default function SettingsPage() {
               </span>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-3 sm:p-4.5 md:p-[18px]" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16, padding: 18 }}>
               {/* PWA Settings view */}
               {provider === "pwa" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -354,9 +364,9 @@ export default function SettingsPage() {
                             {row.icon} {row.label}
                           </span>
                         </label>
-                        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-                          <input className="smartaccess-input min-w-0" type="text" placeholder={f.ph} value={f.value} onChange={e => f.onChange(e.target.value)} style={{ flex: 1, padding: "10px 14px", fontSize: 12.5 }} />
-                          <button type="button" onClick={f.test} className="btn-ghost justify-center" style={{ padding: "10px 14px", fontSize: 11.5, borderRadius: 10, flexShrink: 0, fontWeight: 700, borderColor: `${active.color}66`, color: active.color, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <div className="notif-row">
+                          <input className="smartaccess-input" type="text" placeholder={f.ph} value={f.value} onChange={e => f.onChange(e.target.value)} style={{ flex: 1, minWidth: 0, padding: "10px 14px", fontSize: 12.5 }} />
+                          <button type="button" onClick={f.test} className="btn-ghost" style={{ padding: "10px 14px", fontSize: 11.5, borderRadius: 10, flexShrink: 0, fontWeight: 700, borderColor: `${active.color}66`, color: active.color, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                             <FlaskConical size={13} /> ทดสอบ
                           </button>
                         </div>
@@ -369,7 +379,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={settingsLoading}
-                className="btn-success w-full sm:w-auto justify-center sm:self-start"
+                className="btn-success notif-save-btn"
                 style={{
                   padding: "12px 22px",
                   borderRadius: 10,

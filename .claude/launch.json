@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["--yes", "http-server", ".", "-p", "8099", "-c-1"],
       "port": 8099
+    },
+    {
+      "name": "next-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "my-app", "run", "dev"],
+      "port": 3000
     }
   ]
 }

@@ -104,14 +104,70 @@ export function getPool(): Pool {
 }
 
 let dbInitialized = false;
+let migrationsApplied = false;
+
+/**
+ * Idempotent lightweight migrations — รันได้ปลอดภัยซ้ำๆ และเร็ว (ใช้ IF NOT EXISTS ทั้งหมด)
+ * ต้องรันแม้ในโหมด Fast Path (SKIP_DB_INIT) ด้วย เพราะคอลัมน์/ตารางที่เพิ่มหลัง seed ครั้งแรก
+ * จะไม่ถูกสร้างเลยหากข้ามขั้นตอนนี้ (เคยทำให้ access_logs ขาดคอลัมน์ user_agent จนบันทึก log ล้มทั้งระบบ)
+ * รันครั้งเดียวต่ออายุของอินสแตนซ์ (ไม่เพิ่ม latency รายคำขอ)
+ */
+async function applyIdempotentMigrations(pool: Pool): Promise<void> {
+  if (migrationsApplied) return;
+  // access_logs: เติมคอลัมน์ที่เพิ่มภายหลังให้ครบ
+  await pool.query(`
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='room') THEN
+            ALTER TABLE access_logs ADD COLUMN room VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='method') THEN
+            ALTER TABLE access_logs ADD COLUMN method VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='ip_address') THEN
+            ALTER TABLE access_logs ADD COLUMN ip_address VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='details') THEN
+            ALTER TABLE access_logs ADD COLUMN details TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='severity') THEN
+            ALTER TABLE access_logs ADD COLUMN severity VARCHAR(10) NOT NULL DEFAULT 'info';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='user_agent') THEN
+            ALTER TABLE access_logs ADD COLUMN user_agent VARCHAR(300);
+        END IF;
+    END
+    $$;
+  `);
+  // fcm_tokens: ตารางสำหรับ PWA Push (อาจถูกเพิ่มหลัง seed ครั้งแรก)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS fcm_tokens (
+      id SERIAL PRIMARY KEY,
+      user_id INT NOT NULL,
+      role VARCHAR(20) NOT NULL CHECK (role IN ('student', 'admin')),
+      fcm_token VARCHAR(255) UNIQUE NOT NULL,
+      device_info VARCHAR(150),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  migrationsApplied = true;
+  console.log("[DB] Idempotent migrations applied (access_logs columns + fcm_tokens ensured)");
+}
 
 export async function initDatabase(): Promise<void> {
   if (dbInitialized) return;
-  
+
   // Fast Path Optimization: If database is already initialized, skip all 15 CREATE TABLE queries to prevent high latency!
   if (process.env.SKIP_DB_INIT === "true") {
+    // ยังต้องรัน migrations น้ำหนักเบาแบบ idempotent (ครั้งเดียวต่ออินสแตนซ์)
+    // มิฉะนั้นคอลัมน์/ตารางที่เพิ่มหลัง seed จะหายไปในโปรดักชัน
+    try {
+      await applyIdempotentMigrations(getPool());
+    } catch (e) {
+      console.error("[DB] Idempotent migration failed (continuing):", e);
+    }
     dbInitialized = true;
-    console.log("[DB] Fast Path: Skipping schema table checks (Database already seeded & active)");
+    console.log("[DB] Fast Path: Skipping heavy schema checks (lightweight migrations applied)");
     return;
   }
 
