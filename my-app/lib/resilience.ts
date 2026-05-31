@@ -41,3 +41,42 @@ export function getDependencyState(states: boolean[]): DependencyState {
   if (onlineCount === 0) return "offline";
   return "degraded";
 }
+
+/**
+ * Lazy Heartbeat Check:
+ * Replaces the 5-minute Vercel Cron Job. Called asynchronously by active API routes
+ * to detect offline ESP32s and send Discord alerts without needing a scheduled task.
+ */
+export async function checkOfflineHeartbeatsAndAlert(): Promise<void> {
+  try {
+    const { getPool } = await import("./db");
+    const { sendDiscordNotification } = await import("./discord");
+    const pool = getPool();
+    
+    // Find all boards that haven't pinged in 5 minutes but are still marked 'online'
+    const { rows } = await pool.query(
+      `SELECT room_code, status 
+       FROM esp32_heartbeats 
+       WHERE last_seen < CURRENT_TIMESTAMP - INTERVAL '5 minutes'
+       AND status = 'online'`
+    );
+
+    for (const row of rows) {
+      // Mark as offline
+      await pool.query(
+        "UPDATE esp32_heartbeats SET status = 'offline' WHERE room_code = $1",
+        [row.room_code]
+      );
+      
+      // Send Discord alert
+      await sendDiscordNotification("esp32_offline", {
+        room: row.room_code,
+        ip: "ไม่ทราบ (Offline)",
+        reason: "ขาดการติดต่อนานเกิน 5 นาที (Lazy Heartbeat Timeout)",
+      });
+    }
+  } catch (error) {
+    console.error("[Lazy Heartbeat Check Error]", error);
+  }
+}
+

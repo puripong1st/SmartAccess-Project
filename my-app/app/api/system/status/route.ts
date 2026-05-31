@@ -6,10 +6,13 @@ import { getPool, getSystemSettings } from "@/lib/db";
 import { getESP32Status } from "@/lib/esp32";
 import { getAdminFromCookie } from "@/lib/auth";
 import { getOrCreateActiveQRToken } from "@/lib/qr";
-import { getDependencyState, getFallbackSettings, parseConfiguredRooms } from "@/lib/resilience";
+import { getDependencyState, getFallbackSettings, parseConfiguredRooms, checkOfflineHeartbeatsAndAlert } from "@/lib/resilience";
 import { cacheGet, cacheSet } from "@/lib/kv-cache";
 
 export async function GET() {
+  // Trigger Lazy Heartbeat Check non-blockingly
+  checkOfflineHeartbeatsAndAlert().catch(console.error);
+
   try {
     // 1. Authenticate the operator
     const admin = await getAdminFromCookie();
