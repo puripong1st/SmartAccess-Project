@@ -506,9 +506,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     // ล็อกทิศทางเมื่อเคลื่อนเกิน 10px
     if (!g.directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
       if (Math.abs(dy) > Math.abs(dx)) {
-        // ผู้ใช้ปัดแนวตั้ง → ยกเลิก swipe
+        // ผู้ใช้ปัดแนวตั้ง → ยกเลิก swipe (ไม่ต้อง clearInlineStyles เพราะยังไม่ได้เซ็ตค่าอะไร)
         g.isSwiping = false; g.direction = null;
-        clearInlineStyles();
         return;
       }
       g.directionLocked = true;
@@ -583,8 +582,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
     if (!g.directionLocked && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
       if (Math.abs(dy) > Math.abs(dx)) {
+        // ยกเลิก swipe ปิด ถ้าปัดขึ้นลง (ไม่ต้อง clearInlineStyles เพราะยังไม่ได้ตั้งค่า)
         g.isSwiping = false; g.direction = null;
-        clearInlineStyles();
         return;
       }
       g.directionLocked = true;
