@@ -1590,93 +1590,95 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           {/* Inner Content Area — Bulletproof layout lock for mobile screens */}
           <div className="p-4 md:p-6" style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
 
-            {/* ── Premium Metric Summary Cards Grid ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 20 }} className="animate-fade-in">
-              {!systemStatus ? (
-                <>
-                  <MetricCardSkeleton />
-                  <MetricCardSkeleton />
-                  <MetricCardSkeleton />
-                  <MetricCardSkeleton />
-                </>
-              ) : (
-                <>
-                  {/* Card 1: Pending Queue */}
-                  <div className="premium-card hover-card hover-spin" style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(245, 158, 11, 0.1)", border: "1.5px solid rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#F59E0B" }}>
-                      <ClockIcon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
-                        <AnimatedCounter value={pendingCount} suffix=" คน" />
+            {/* ── Premium Metric Summary Cards Grid (Shown only on the main pending tab) ── */}
+            {tab === "pending" && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 20 }} className="animate-fade-in">
+                {!systemStatus ? (
+                  <>
+                    <MetricCardSkeleton />
+                    <MetricCardSkeleton />
+                    <MetricCardSkeleton />
+                    <MetricCardSkeleton />
+                  </>
+                ) : (
+                  <>
+                    {/* Card 1: Pending Queue */}
+                    <div className="premium-card hover-card hover-spin" style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16 }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(245, 158, 11, 0.1)", border: "1.5px solid rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#F59E0B" }}>
+                        <ClockIcon className="w-6 h-6" />
                       </div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 700, marginTop: 2 }}>กำลังรออนุมัติสิทธิ์</div>
+                      <div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
+                          <AnimatedCounter value={pendingCount} suffix=" คน" />
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 700, marginTop: 2 }}>กำลังรออนุมัติสิทธิ์</div>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Card 2: Door Opens Today */}
-                  <div className="premium-card hover-card hover-spin" style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(16, 185, 129, 0.1)", border: "1.5px solid rgba(16, 185, 129, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10B981" }}>
-                      <UnlockIcon />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
-                        <AnimatedCounter value={stats.doorOpensToday} suffix=" ครั้ง" />
+                    {/* Card 2: Door Opens Today */}
+                    <div className="premium-card hover-card hover-spin" style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16 }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(16, 185, 129, 0.1)", border: "1.5px solid rgba(16, 185, 129, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#10B981" }}>
+                        <UnlockIcon />
                       </div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 700, marginTop: 2 }}>
-                        ผ่านประตูวันนี้ (Bypass: <AnimatedCounter value={stats.bypassToday} />)
+                      <div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
+                          <AnimatedCounter value={stats.doorOpensToday} suffix=" ครั้ง" />
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 700, marginTop: 2 }}>
+                          ผ่านประตูวันนี้ (Bypass: <AnimatedCounter value={stats.bypassToday} />)
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Card 3: ESP32 Hardware Status */}
-                  <div
-                    className="premium-card hover-card hover-spin"
-                    onClick={() => {
-                      setTab("rooms");
-                      router.push("/admin/dashboard/rooms");
-                    }}
-                    style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16, cursor: "pointer" }}
-                  >
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(124, 58, 237, 0.1)", border: "1.5px solid rgba(124, 58, 237, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--smartaccess-purple)" }}>
-                      <TVIcon />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
-                        <AnimatedCounter value={stats.onlineBoards} /> / <AnimatedCounter value={stats.totalBoards} suffix=" บอร์ด" />
+                    {/* Card 3: ESP32 Hardware Status */}
+                    <div
+                      className="premium-card hover-card hover-spin"
+                      onClick={() => {
+                        setTab("rooms");
+                        router.push("/admin/dashboard/rooms");
+                      }}
+                      style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16, cursor: "pointer" }}
+                    >
+                      <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(124, 58, 237, 0.1)", border: "1.5px solid rgba(124, 58, 237, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--smartaccess-purple)" }}>
+                        <TVIcon />
                       </div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 700, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: stats.onlineBoards > 0 ? "#10B981" : "#EF4444" }} />
-                        <span>บอร์ดเชื่อมต่อออนไลน์อยู่</span>
+                      <div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)", fontVariantNumeric: "tabular-nums" }}>
+                          <AnimatedCounter value={stats.onlineBoards} /> / <AnimatedCounter value={stats.totalBoards} suffix=" บอร์ด" />
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 700, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: stats.onlineBoards > 0 ? "#10B981" : "#EF4444" }} />
+                          <span>บอร์ดเชื่อมต่อออนไลน์อยู่</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Card 4: Discord Webhook Status */}
-                  <div
-                    className="premium-card hover-card hover-spin"
-                    onClick={() => {
-                      setTab("settings");
-                      router.push("/admin/dashboard/settings");
-                    }}
-                    style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16, cursor: "pointer" }}
-                  >
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(219, 39, 119, 0.1)", border: "1.5px solid rgba(219, 39, 119, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--edu-pink)" }}>
-                      <SettingsIcon />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)" }}>
-                        {systemStatus?.discord?.configured ? "เชื่อมต่อ" : "ไม่ได้ใส่"}
+                    {/* Card 4: Discord Webhook Status */}
+                    <div
+                      className="premium-card hover-card hover-spin"
+                      onClick={() => {
+                        setTab("settings");
+                        router.push("/admin/dashboard/settings");
+                      }}
+                      style={{ padding: 20, background: "var(--bg-secondary)", display: "flex", alignItems: "center", gap: 16, cursor: "pointer" }}
+                    >
+                      <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(219, 39, 119, 0.1)", border: "1.5px solid rgba(219, 39, 119, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--edu-pink)" }}>
+                        <SettingsIcon />
                       </div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 700, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: systemStatus?.discord?.configured ? "#10B981" : "#F59E0B" }} />
-                        <span>ช่องทางแจ้งเตือน</span>
+                      <div>
+                        <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text-primary)" }}>
+                          {systemStatus?.discord?.configured ? "เชื่อมต่อ" : "ไม่ได้ใส่"}
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 700, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: systemStatus?.discord?.configured ? "#10B981" : "#F59E0B" }} />
+                          <span>ช่องทางแจ้งเตือน</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* ── Recharts Analytics Section (Shown only in the landing pending requests view) ── */}
             {tab === "pending" && (
