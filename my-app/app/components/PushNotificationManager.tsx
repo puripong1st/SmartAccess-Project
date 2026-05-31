@@ -211,8 +211,8 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
         </div>
       )}
 
-      {/* 2. Floating Dashboard Settings Trigger widget */}
-      <div style={styles.widgetContainer}>
+      {/* 2. Floating Dashboard Settings Trigger widget — Responsive positioning to avoid header overlapping on mobile */}
+      <div className="fixed bottom-4 right-4 md:bottom-auto md:top-[18px] md:right-20 z-[999] transition-all">
         <button 
           onClick={tokenRegistered ? handleDisableNotifications : handleRequestPermission}
           style={{

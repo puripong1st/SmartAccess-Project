@@ -145,10 +145,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, maxWidth: 780 }}>
-      <div className="premium-card" style={{ padding: 0, overflow: "hidden" }}>
+    <div className="animate-fade-in w-full" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20, maxWidth: 780, width: "100%" }}>
+      <div className="premium-card w-full" style={{ padding: 0, overflow: "hidden" }}>
         {/* Header แถบสีแบรนด์ */}
-        <div style={{ padding: "22px 28px", background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(219,39,119,0.05))", borderBottom: "1px solid var(--border)" }}>
+        <div className="p-4 sm:p-5 md:p-[22px_28px]" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(219,39,119,0.05))", borderBottom: "1px solid var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
               <h3 style={{ fontSize: 18, fontWeight: 900, color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -164,9 +164,23 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div style={{ padding: "22px 28px 28px" }}>
-          {/* Provider segmented selector + สถานะ */}
-          <div style={{ display: "flex", gap: 8, background: "var(--bg-primary)", padding: 6, borderRadius: 12, border: "1px solid var(--border)", marginBottom: 22 }}>
+        <div className="p-3 sm:p-5 md:p-[22px_28px_28px]">
+          {/* Provider segmented selector + สถานะ (รองรับการเลื่อนแนวตั้ง/นอนบนมือถือได้อย่างสวยงามไม่เบียดบดขยี้กัน) */}
+          <div 
+            className="scrollbar-none"
+            style={{ 
+              display: "flex", 
+              gap: 8, 
+              background: "var(--bg-primary)", 
+              padding: 6, 
+              borderRadius: 12, 
+              border: "1px solid var(--border)", 
+              marginBottom: 22,
+              overflowX: "auto",
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none"
+            }}
+          >
             {(Object.keys(PROVIDERS) as Provider[]).map(p => {
               const on = isConfigured(p);
               const sel = provider === p;
@@ -176,13 +190,23 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setProvider(p)}
                   style={{
-                    flex: 1, padding: "11px 12px", borderRadius: 9, fontSize: 13, fontWeight: 800, cursor: "pointer",
-                    display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7,
+                    flex: "1 0 auto", 
+                    padding: "9px 12px", 
+                    borderRadius: 9, 
+                    fontSize: 13, 
+                    fontWeight: 800, 
+                    cursor: "pointer",
+                    display: "inline-flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    gap: 7,
                     background: sel ? PROVIDERS[p].color : "transparent",
                     color: sel ? "#fff" : "var(--text-secondary)",
                     border: sel ? `1.5px solid ${PROVIDERS[p].color}` : "1.5px solid transparent",
                     boxShadow: sel ? `0 6px 16px ${PROVIDERS[p].tint}` : "none",
                     transition: "all 0.15s",
+                    minWidth: "max-content",
+                    flexShrink: 0
                   }}
                 >
                   {PROVIDERS[p].icon} {PROVIDERS[p].name}
@@ -216,7 +240,7 @@ export default function SettingsPage() {
                       <div>
                         <strong style={{ fontSize: 13.5, color: "var(--text-primary)", display: "block" }}>เครื่องปลายทาง (Current Device)</strong>
                         <span style={{ fontSize: 11, color: "var(--text-secondary)", wordBreak: "break-all" }}>
-                          {deviceToken ? `Token: ${deviceToken.substring(0, 20)}...` : "คลิกกระดิ่งมุมบนขวาเพื่อเปิดใช้"}
+                          {deviceToken ? `Token: ${deviceToken.substring(0, 20)}...` : "คลิกปุ่มกระดิ่งบริเวณมุมขวาของหน้าต่างเพื่อเปิดสิทธิ์รับแจ้งเตือนพุช"}
                         </span>
                       </div>
                       <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 8, background: pwaActive ? "rgba(16, 185, 129, 0.1)" : "rgba(220, 38, 38, 0.1)", border: `1px solid ${pwaActive ? "#10B981" : "#EF4444"}`, color: pwaActive ? "#059669" : "#DC2626", fontSize: 11.5, fontWeight: 700 }}>
