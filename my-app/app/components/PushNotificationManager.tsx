@@ -225,8 +225,8 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
         </div>
       )}
 
-      {/* 2. Floating Dashboard Settings Trigger widget — Responsive positioning to avoid header overlapping on mobile */}
-      <div className="fixed bottom-4 right-4 md:bottom-auto md:top-[18px] md:right-20 z-[999] transition-all">
+      {/* 2. Floating Dashboard Settings Trigger widget — มุมขวาล่าง (inline style เพราะโปรเจกต์ไม่ได้เปิด Tailwind utilities) */}
+      <div style={{ position: "fixed", bottom: 20, right: 20, zIndex: 999, transition: "all 0.2s" }}>
         <button 
           onClick={tokenRegistered ? handleDisableNotifications : handleRequestPermission}
           style={{

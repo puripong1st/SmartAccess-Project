@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-05-31 14:05:00 (+07:00)
+อัปเดตล่าสุด: 2026-05-31 14:30:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -10599,6 +10599,7 @@ because it violates the Content Security Policy directive: "connect-src ..."
 | 1 | `my-app/app/admin/dashboard/settings/page.tsx` | **[MODIFY]** | แปลง layout จากคลาส Tailwind (no-op) เป็น inline styles + คลาส responsive ของ globals.css |
 | 2 | `my-app/app/globals.css` | **[MODIFY]** | เพิ่มคลาส responsive `.notif-*` (กริดช่องทาง, แถวกรอก, ปุ่มบันทึก, padding) ด้วย media query จริง |
 | 3 | `my-app/next.config.ts` | **[MODIFY]** | เพิ่ม `'unsafe-eval'` ใน CSP `script-src` เฉพาะโหมด development แก้ Next.js dev error |
-| 4 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.26 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
+| 4 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | แก้ปุ่มลอย "รับแจ้งเตือนพุช" ที่ใช้คลาส Tailwind no-op (ตกไปมุมซ้ายล่าง) เป็น inline style `position:fixed` มุมขวาล่าง |
+| 5 | `complete_system_manual_th.md` | **[MODIFY]** | เพิ่มประวัติการบันทึก §73.26 และปรับปรุงวันที่อัปเดตคู่มือล่าสุด |
 
 <p align="right"><a href="#toc">กลับสารบัญ</a></p>
