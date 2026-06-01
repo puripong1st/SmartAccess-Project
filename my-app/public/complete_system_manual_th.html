@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:25:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:31:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -13761,6 +13761,55 @@ if (decoded.role === &quot;door_operator&quot;) {
 </ul>
 </li>
 </ol>
+<h3>71.53.8 ระบบ Slim Polling Mode สำหรับลดหน่วยความจำและรักษาระดับเสถียรภาพบอร์ด IoT</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2569 (10:23 น. ICT)</p>
+<p>ตรวจพบและดำเนินการเพิ่มขีดความสามารถการสื่อสารในโหมดประหยัดทรัพยากร เพื่อรักษาระดับเสถียรภาพการประมวลผล JSON บนหน่วยความจำ SRAM ของบอร์ด ESP32:</p>
+<ol>
+<li><strong>ปัญหา Heap Fragmentation และ Stack Overflow บน ESP32:</strong><ul>
+<li><strong>สาเหตุ:</strong> การสื่อสารที่ Polling ถี่ๆ ทุก 2 วินาที คืนข้อมูล Payload ขนาดใหญ่กว่า 700 ไบต์ที่มี Nested Objects (display.color_theme, URLs, server_time, status) ทำให้เกิด Heap Fragmentation บนบอร์ด และส่งผลให้บอร์ดเกิด Stack Overflow หรือ Reboot ตัวเองโดยไม่มีสาเหตุเมื่อทำงานไประยะหนึ่ง</li>
+</ul>
+</li>
+<li><strong>การพัฒนาตรรกะการคัดย่อในฝั่ง API Backend (Slim Polling):</strong><ul>
+<li><strong>แนวทางแก้ไข:</strong> ปรับปรุง <code>/api/esp32/display</code> ให้รองรับ Param <code>slim=true</code> โดยระบบจะสับเปลี่ยนไปเรนเดอร์ Lightweight JSON Payload หดขนาดข้อมูลลงถึง 70% คงเหลือเฉพาะฟิลด์แกนหลักในการควบคุมกลอนและโทเคนแสดงผลหน้าจอ (<code>active_token</code>, <code>door_trigger</code>, <code>pending_count</code>, <code>last_approved.name</code>, <code>last_approved.student_id</code>, <code>server_time_text</code>, <code>update_available</code>, <code>firmware_version</code>, <code>offline_pin</code>) และปิดกั้น Object ความสวยงามทั้งหมด ทำให้ขนาด Payload ลดลงต่ำกว่า 200 ไบต์</li>
+</ul>
+</li>
+<li><strong>การประยุกต์ใช้และคำนวณ Buffer ใหม่ในฝั่งเฟิร์มแวร์ ESP32:</strong><ul>
+<li><strong>แนวทางแก้ไข:</strong> อัปเดต <code>esp32.ino</code> ให้ยิง Polling โดยพ่วงพารามิเตอร์ <code>&amp;slim=true</code> และทำการลดขนาดของ StaticJsonDocument จาก <code>768</code> ไบต์ลงเหลือ <code>384</code> ไบต์ เพื่อช่วยประหยัด Dynamic Buffer บน SRAM</li>
+</ul>
+</li>
+</ol>
+<h3>71.53.9 ระบบสำรองการซิงโครไนซ์เวลาผ่าน HTTP (NTP Sync Failure Fallback Engine)</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2569 (10:25 น. ICT)</p>
+<p>ตรวจพบและดำเนินการเพิ่มกลไกสถาปัตยกรรมกู้ชีพระบบเครือข่ายระดับฮาร์ดแวร์เพื่อรับมือกับภัยคุกคามและการบล็อกสัญญาณเครือข่าย UDP พอร์ต 123 (พอร์ตมาตรฐานของ NTP):</p>
+<ol>
+<li><strong>ผลกระทบจากการบล็อก UDP พอร์ต 123:</strong><ul>
+<li><strong>กลไกปัญหา:</strong> เครือข่ายองค์กรหรือมหาวิทยาลัยขนาดใหญ่มักปิดพอร์ต UDP 123 เพื่อป้องกัน DDoS หรือแบนเครือข่ายภายนอก ส่งผลให้บอร์ด ESP32 ไม่สามารถซิงค์เวลากับ NTP Server ได้ ค่าเวลา <code>time(nullptr)</code> จะค้างเป็นปี 1970 ส่งผลให้การยิง API ด้วย <code>x-timestamp</code> และลายเซ็น HMAC ล้มเหลวและถูกบล็อก 401 Unauthorized อย่างถาวร</li>
+</ul>
+</li>
+<li><strong>การพัฒนา API สำหรับบริการเวลา (Edge Time API):</strong><ul>
+<li><strong>แนวทางแก้ไข:</strong> พัฒนา Edge API <code>/api/esp32/time</code> ให้ทำหน้าที่คืนค่าเวลา UNIX Timestamp ล่าสุดของเซิร์ฟเวอร์ในเสี้ยววินาทีแบบสาธารณะ ไม่ผ่านเกณฑ์ตรวจ HMAC แต่มี Rate Limiter ในตัวเพื่อลดโอกาสการโจมตี</li>
+</ul>
+</li>
+<li><strong>การทำงานสำรองในฝั่งเฟิร์มแวร์ ESP32 (HTTP Time Sync Fallback):</strong><ul>
+<li><strong>แนวทางแก้ไข:</strong> อัปเดต <code>esp32.ino</code> ให้ตั้งเวลาทำ NTP Sync รอคอย 5 วินาที หากล้มเหลว (ค่าเวลายังต่ำกว่าปี 2000 หรือ <code>&lt; 1000000000UL</code>) บอร์ดจะสลับไปยิง HTTP GET เพื่อขอค่าเวลาจาก <code>/api/esp32/time</code> และนำตัวเลขที่ได้มาตั้งนาฬิกาภายในบอร์ด RTC ทันทีผ่านฟังก์ชันระบบ <code>settimeofday()</code> ทำให้บอร์ดทำงานได้แม้พอร์ต UDP 123 จะโดนบล็อกอย่างถาวร</li>
+</ul>
+</li>
+</ol>
+<h3>71.53.10 ระบบบังคับติดตามการเปลี่ยนทิศทางดาวน์โหลดเฟิร์มแวร์ (OTA HTTP Redirection Support)</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2569 (10:28 น. ICT)</p>
+<p>พัฒนาความเสถียรและความน่าเชื่อถือให้กับการดาวน์โหลดเฟิร์มแวร์แบบไร้สาย (HTTPS Over-The-Air) บนบอร์ดจริงเพื่อรองรับระบบสับเปลี่ยนและเปลี่ยนโดเมนไฟล์ของ Supabase Storage (Signed URLs):</p>
+<ol>
+<li><strong>ข้อจำกัดในการย้ายโดเมนข้ามแหล่งข้อมูล (Cross-Domain Redirect):</strong><ul>
+<li><strong>กลไกปัญหา:</strong> โค้ดของ Next.js API <code>/api/esp32/firmware-ota</code> ส่งสถานะ <code>302 Found</code> เพื่อชี้ทางและเปลี่ยนโดเมนไปยัง Supabase Storage ลิงก์ตรง ซึ่งเป็นการข้ามโดเมน หากบอร์ด ESP32 ไม่ได้ตั้งค่าเปิดการติดตามการเปลี่ยนทิศทาง จะทำให้ตัวอัปเดตยกเลิกกระบวนการทันที ส่งผลให้เกิดบั๊ก <code>HTTP_UPDATE_FAILED</code></li>
+</ul>
+</li>
+<li><strong>การปรับแต่งในฝั่งฮาร์ดแวร์ ESP32 และ Generator:</strong><ul>
+<li><strong>แนวทางแก้ไข:</strong> เพิ่มการระบุค่าพารามิเตอร์ให้กับไลบรารี <code>httpUpdate</code> ใน <code>esp32.ino</code> และเทมเพลตโค้ด <code>ArduinoCode.ts</code> เพื่อบังคับให้ติดตามทิศทางการโยกย้ายไฟล์เฟิร์มแวร์ทุกกรณี:<pre><code class="language-cpp">httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+</code></pre>
+การกำหนดค่า <code>HTTPC_FORCE_FOLLOW_REDIRECTS</code> ช่วยให้ ESP32 บอร์ดจริงสามารถกระโดดเชื่อมต่อและดึงไฟล์ <code>.bin</code> ปลายทางจาก Supabase Storage ได้อย่างอัตโนมัติและไร้รอยต่อ</li>
+</ul>
+</li>
+</ol>
 <h3>71.53.6 สรุปไฟล์ที่เปลี่ยน (อ้างอิงเร็ว)</h3>
 <table>
 <thead>
@@ -13775,15 +13824,19 @@ if (decoded.role === &quot;door_operator&quot;) {
 </tr>
 <tr>
 <td><code>esp32/esp32.ino</code></td>
-<td>ตัด ElegantOTA, <code>WOKWI_SIM</code>, แก้ <code>&#39;\0&#39;</code>, edge-trigger door</td>
+<td>ตัด ElegantOTA, <code>WOKWI_SIM</code>, แก้ <code>&#39;\0&#39;</code>, edge-trigger door, อัปเดต Poll URL พ่วง <code>&amp;slim=true</code> และลดขนาด StaticJsonDocument เป็น 384 ไบต์, เพิ่มระบบกู้ชีพ NTP Sync Timeout ผ่าน HTTP Fallback, และเพิ่มคำสั่งบังคับติดตาม Redirect (302) สำหรับเฟิร์มแวร์ OTA</td>
 </tr>
 <tr>
 <td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
-<td>sync เฟิร์มแวร์ + ปลด escape <code>\${...}</code></td>
+<td>sync เฟิร์มแวร์ (Slim Polling + NTP HTTP Fallback + OTA Redirect 302) + ปลด escape <code>\\${...}</code></td>
 </tr>
 <tr>
 <td><code>my-app/app/api/esp32/display/route.ts</code></td>
-<td><code>await</code> consume คำสั่งเปิดประตู</td>
+<td><code>await</code> consume คำสั่งเปิดประตู และเพิ่มสับเปลี่ยน Slim Polling Mode เมื่อส่ง query parameter <code>slim=true</code></td>
+</tr>
+<tr>
+<td><code>my-app/app/api/esp32/time/route.ts</code></td>
+<td><strong>ไฟล์ใหม่</strong> — บริการซิงค์เวลาผ่าน Edge API สำหรับบอร์ด IoT ที่โดนบล็อกพอร์ต UDP 123</td>
 </tr>
 <tr>
 <td><code>my-app/app/page.tsx</code></td>
@@ -13814,8 +13867,7 @@ if (decoded.role === &quot;door_operator&quot;) {
 <td>ใช้ <code>logEvent</code> เก็บ IP/อุปกรณ์/severity</td>
 </tr>
 </tbody></table>
-<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-71-54"></a></p>
-<h2>71.54 ชุดทดสอบความปลอดภัยและการทำงานแบบอัตโนมัติ (Automated Safety &amp; Security Test Suite)</h2>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><h2>71.54 ชุดทดสอบความปลอดภัยและการทำงานแบบอัตโนมัติ (Automated Safety &amp; Security Test Suite)</h2>
 <p>เพิ่มชุดทดสอบหน่วย (unit test) ด้วย <strong>Vitest</strong> เพื่อป้องกันการถดถอย (regression) ของตรรกะความปลอดภัยที่สำคัญที่สุด โดยเลือกทดสอบเฉพาะฟังก์ชันบริสุทธิ์ (pure functions) ที่ไม่ต้องพึ่งฐานข้อมูล ทำให้รันได้เร็ว (~1.6 วินาที) และไม่ต้องเชื่อมต่อ Supabase</p>
 <h3>71.54.1 วิธีรันชุดทดสอบ (Execution Commands)</h3>
 <pre><code class="language-bash">cd my-app

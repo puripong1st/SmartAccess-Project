@@ -442,6 +442,7 @@ void performHTTPSOTA() {
   tft.println("Please wait, do not power off.");
 
   httpUpdate.rebootOnUpdate(true);
+  httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
   httpUpdate.addHeader("x-esp32-version", CURRENT_VERSION);
   httpUpdate.addHeader("Authorization", "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
   // แนบ callback แสดง progress bar
