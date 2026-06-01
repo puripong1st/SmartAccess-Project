@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 13:42:07 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 13:54:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -5987,6 +5987,30 @@ RETURNING count;
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-47"></a></p>
 <h2>47. Admin Dashboard ทีละ Tab แบบเจาะลึก</h2>
+<h3>47.0 สถาปัตยกรรมชิ้นส่วนหน้าจอระดับพรีเมียม (Premium UI Components Architecture)</h3>
+<p>หน้าแดชบอร์ดของผู้ดูแลระบบ (Admin Dashboard) มีการออกแบบโครงสร้างโดยใช้หลักการคิดแบบแยกส่วน (Component-Based Architecture) เพื่อสร้างส่วนประกอบอินเทอร์เฟซผู้ใช้ที่สามารถนำมาใช้ซ้ำได้ (Reusable UI Components) และสร้างประสบการณ์ผู้ใช้ระดับพรีเมียม (Premium UX/UI Experience) โดยแบ่งองค์ประกอบสำคัญออกเป็น 3 เลเยอร์หลักดังนี้:</p>
+<ol>
+<li><p><strong>คอมโพเนนต์ปุ่มกดและส่วนตอบสนองแบบลื่นไหล (Fluid Interactive Buttons):</strong></p>
+<ul>
+<li>ปุ่มสำหรับการอนุมัติ (Approve), ปฏิเสธ (Reject), และการจัดการการตั้งค่า มีการผสาน CSS Micro-animations และ Transitions เชิงฟิสิกส์ (<code>transition-all duration-300 ease-out</code>) </li>
+<li>เมื่อผู้ใช้ชี้เมาส์ (Hover Effect) ปุ่มจะมีการขยายตัวเล็กน้อย ส่องประกายเงา (Drop Shadow Glow) และสลับระดับเฉดสีอย่างนุ่มนวล</li>
+<li>เมื่อมีการกดคลิก (Active State) ปุ่มจะมีเอฟเฟกต์การย่อตัวลง 2-3% (<code>active:scale-95</code>) เพื่อให้ความรู้สึกตอบสนองเชิงสัมผัสเสมือนจริง (Tactile Feedback) ลดอัตราการกดซ้ำซ้อนในสภาวะอินเทอร์เน็ตหน่วง</li>
+</ul>
+</li>
+<li><p><strong>คอนเทนเนอร์แก้วโปร่งแสงระดับพรีเมียม (Glassmorphism Containers &amp; Cards):</strong></p>
+<ul>
+<li>โครงสร้างพื้นหลังการ์ดสถิติ แผงตัวกรองค้นหา และโมดอลป๊อปอัป มีการใช้คลาสยูทิลิตี้ <code>.glass-card</code> ในการออกแบบสุนทรียศาสตร์</li>
+<li>การสกัดองค์ประกอบใช้ <code>backdrop-filter: blur(12px) saturate(180%)</code> ร่วมกับการผสมสีพื้นผิวกึ่งโปร่งแสงเฉดม่วง/ดำ (<code>rgba(26, 22, 37, 0.7)</code>) และมีเส้นขอบที่มีความหนาเพียง 1px ที่เคลือบสารเรืองแสงม่วงจาง ๆ (<code>border: 1px solid rgba(124, 58, 237, 0.15)</code>) </li>
+<li>เทคนิคนี้ทำให้ UI ดูมีมิติลึก ตื้น หนัก เบา และลอยตัวเหนือพื้นหลัง (Spatial Depth) สะท้อนความล้ำสมัยระดับองค์กร</li>
+</ul>
+</li>
+<li><p><strong>ป้ายและตราแสดงสถานะอัจฉริยะ (Dynamic Status Badges &amp; Signals):</strong></p>
+<ul>
+<li>ตราสถานะการร้องขอการเข้าถึง สถานะความปลอดภัย และสิทธิ์ผู้ใช้งาน ถูกขับเคลื่อนด้วยข้อมูลจริงแบบไดนามิก เช่น สถานะอนุมัติ (<code>🟢 Approved</code>), รอตรวจสอบ (<code>🟡 Pending</code>), และปฏิเสธ (<code>🔴 Rejected</code>)</li>
+<li>มีการติดตั้งเอฟเฟกต์แอนิเมชันชีพจรเรืองแสง (Glowing Pulse Animation) บนตราสถานะของอุปกรณ์ควบคุมประตู เพื่อแสดงระดับการเต้นชีพจรของฮาร์ดแวร์เชิงกายภาพ (IoT Heartbeat) ช่วยให้ผู้ดูแลระบบมองเห็นสถานะปัจจุบันของบอร์ด ESP32 ได้ทันทีโดยไม่ต้องอ่านข้อความตัวอักษร</li>
+</ul>
+</li>
+</ol>
 <h3>47.1 State Tree ของ Dashboard</h3>
 <pre><code class="language-ts">// ภายใน AdminDashboard component
 const [activeTab, setActiveTab] = useState&lt;TabKey&gt;(&#39;pending&#39;);
@@ -7773,6 +7797,29 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
 &lt;Card variant=&quot;primary&quot;&gt;...&lt;/Card&gt;
 </code></pre>
 <p>โปรเจกต์นี้ใช้ inline เป็นหลักเพราะ component ไม่ reuse บ่อย</p>
+<h3>64.4 โครงสร้างระบบการออกแบบร่วมระดับสากลและระบบธีม SmartAccess (Global Design System &amp; SmartAccess Theme)</h3>
+<p>เพื่อสร้างมาตรฐานด้านสุนทรียศาสตร์และการใช้งาน (Usability) ที่แข็งแกร่งเป็นเอกภาพทั่วทั้งแพลตฟอร์ม โครงสร้างสไตล์ชีตของระบบได้ผสานการทำงานร่วมกับระบบการออกแบบร่วมระดับสากล (Global Design System) ภายใต้ขุมพลังของ Tailwind CSS v4 ซึ่งมีรายละเอียดจำเพาะดังนี้:</p>
+<ol>
+<li><p><strong>จานสีแห่งความกลมกลืน (Harmony Palette Design System):</strong><br>ระบบกำหนดสีแบรนด์ระดับองค์กรอย่างตายตัวในเลเยอร์ <code>@theme</code> เพื่อให้หน้าเว็บนำทาง ประตูทางเข้า และแดชบอร์ดแอดมินใช้สีมาตรฐานชุดเดียวกันทั้งหมด:</p>
+<ul>
+<li><strong>สีม่วง RMUTP (<code>#7C3AED</code>):</strong> ใช้เป็นสีหลักประจำระบบ (<code>--color-smartaccess-purple</code> หรือ <code>var(--primary)</code>) แทนความน่าเชื่อถือ ความปลอดภัยในระดับองค์กร และอัตลักษณ์ดั้งเดิมของสถาบัน</li>
+<li><strong>สีชมพูคณะครุศาสตร์อุตสาหกรรม (<code>#DB2777</code>):</strong> ใช้เป็นสีจุดสนใจและการเน้นย้ำเชิงโครงสร้าง (<code>--color-faculty-pink</code> หรือ <code>var(--accent)</code>) สะท้อนถึงความเป็นวิชาชีพและความสร้างสรรค์ทางเทคโนโลยีทางการศึกษา</li>
+<li><strong>สีพื้นหลังโหมดมืดลุ่มลึก (<code>#0F0D1A</code> และ <code>#1A1625</code>):</strong> ออกแบบมาเป็นพิเศษเพื่อความกลมกลืนกับสีหลักประจำแบรนด์ ช่วยผ่อนคลายสายตาผู้ใช้เมื่อตรวจเช็คข้อมูลในสภาวะแสงน้อย</li>
+</ul>
+</li>
+<li><p><strong>ระบบการพิมพ์และการจัดวางลำดับความสำคัญ (Typography &amp; Scale):</strong></p>
+<ul>
+<li>การกำหนดฟอนต์สำหรับคู่มือและหน้าจอบอร์ดแผงควบคุมใช้ฟอนต์ตระกูลไร้หัวสมัยใหม่ (Modern Sans-Serif) ได้แก่ &quot;Inter&quot; หรือ &quot;Outfit&quot; (สำหรับส่วนภาษาอังกฤษ) ร่วมกับฟอนต์ภาษาไทย &quot;Sarabun&quot; หรือ &quot;Noto Sans Thai&quot;</li>
+<li>ขนาดและน้ำหนักของข้อความถูกจัดเป็นคลาสมาตรฐาน ตั้งแต่ <code>text-xs</code> (คำอธิบายย่อย), <code>text-sm</code> (ข้อมูลทั่วไป), <code>text-base</code> (เนื้อหาหลัก), ไปจนถึง <code>text-2xl</code> และ <code>text-4xl</code> (หัวข้อสถิติระดับบน) พร้อมสลับความหนาบาง (Font Weight <code>font-medium</code> และ <code>font-semibold</code>) เพื่อชี้นำสายตาของแอดมินไปยังข้อมูลสำคัญก่อนโดยอัตโนมัติ</li>
+</ul>
+</li>
+<li><p><strong>ระบบระยะห่างที่เป็นสากลและประสิทธิภาพการตอบสนองทุกขนาดหน้าจอ (Spacing &amp; Responsive Layouts):</strong></p>
+<ul>
+<li>ระยะห่างรอบข้าง (Padding &amp; Margin) ถูกควบคุมผ่านตัวคูณแบบเรขาคณิต (เช่น <code>p-4</code>, <code>p-6</code> หรือ <code>gap-4</code>) ที่สร้างมิติสัมผัสเว้นวรรค (White Space) ได้อย่างลงตัว ลดความแออัดของข้อมูล (Cognitive Load)</li>
+<li>สถาปัตยกรรม UI รองรับหน้าจอทุกขนาด (Fully Responsive Design) อย่างสมบูรณ์แบบ ผ่านการใช้ยูทิลิตี้คลาสตอบสนอง of Tailwind v4 (<code>sm:</code>, <code>md:</code>, <code>lg:</code>, <code>xl:</code>) ทำให้ระบบสามารถปรับเปลี่ยนเลย์เอาต์จากแนวตั้งบนสมาร์ทโฟน ไปเป็นตารางข้อมูลหลายคอลัมน์บนแท็บเล็ต iPad และแสดงผล Dashboard กราฟิกขนาดใหญ่อลังการบนหน้าจอเดสก์ท็อปได้อย่างลื่นไหลไร้การตัดคำตกขอบ</li>
+</ul>
+</li>
+</ol>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-65"></a></p>
 <h2>65. Color Theory &amp; Accessibility (WCAG)</h2>
@@ -14307,8 +14354,8 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 </ul>
 </li>
 <li><strong>การเข้าคู่กับระบบธีมและความสอดคล้องกับโหมดมืดแบบพลวัต (Seamless Theme &amp; CSS Variables Harmony):</strong><ul>
-<li>ไอคอนที่เป็น SVG สามารถเขียนจัดสไตล์ CSS ควบคุมได้โดยตรงผ่านแอตทริบิวต์ เช่น <code>stroke=&quot;currentColor&quot;</code> หรือ <code>fill=&quot;var(--text-secondary)&quot;</code></li>
-<li>ช่วยให้ระบบปรับเปลี่ยนสีไอคอนให้เข้ากับระบบธีมโหมดสว่างและโหมดมืดพรีเมียม (Harmony Palette) ได้โดยอัตโนมัติอย่างไร้รอยต่อ และสามารถสร้างเอฟเฟกต์การโฮเวอร์ (Hover Effects) และการเปล่งแสงนีออน (Glow Effect) ร่วมกับการใช้ CSS Transition ได้อย่างมีชีวิตชีวา โดยไม่ต้องเก็บไฟล์รูปภาพแยกกันสำหรับแต่ละธีม</li>
+<li>ไอคอนที่เป็น SVG (โดยเฉพาะ Lucide Vector Icons) สามารถผสานรวมการทำงานเข้ากับคอมโพเนนต์ระดับพรีเมียมได้อย่างสมบูรณ์แบบ โดยเขียนจัดสไตล์ CSS ควบคุมได้โดยตรงผ่านแอตทริบิวต์ เช่น <code>stroke=&quot;currentColor&quot;</code> หรือ <code>fill=&quot;var(--text-secondary)&quot;</code></li>
+<li>การผสานการทำงานในรูปแบบนี้ส่งผลให้ไอคอนมีความคมชัดในระดับ Ultra HD ไร้ความเบลอในทุกระดับหน้าจออุปกรณ์ และสามารถ<strong>เปลี่ยนเฉดสีและระดับการสะท้อนแสงตามธีมสว่าง/มืด (Light/Dark Mode) ได้โดยอัตโนมัติ</strong>อย่างไร้รอยต่อ นอกจากนี้ยังสามารถสร้างเอฟเฟกต์การโฮเวอร์ (Hover Effects) และการเปล่งแสงนีออน (Glow Effect) ร่วมกับการใช้ CSS Transition ได้อย่างมีชีวิตชีวา ช่วยลดภาระการเขียนสคริปต์สลับรูปภาพและไม่ต้องการไฟล์ไอคอนซ้ำซ้อนในฐานข้อมูลระบบอย่างสิ้นเชิง</li>
 </ul>
 </li>
 <li><strong>ตัวอย่างเวกเตอร์ไอคอนเฉพาะและการทำแบรนดิ้งระบบ (Custom Branding Icons):</strong><ul>
