@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 13:25:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 13:35:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -17208,6 +17208,63 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดการแก้ไขระบบวิชวลเชิงลึกและการตอบสนองบนมือถือ §73.41</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>73.42 การแก้ปัญหาหน้าจอถ่างออกขวาและการ์ด EmptyState เบี้ยวบนมือถือ (CSS Grid minmax Track Spacing Bug Fix: Layout Shrink and Filter Fade Threshold Refinement)</h2>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2026 (13:35 น. ICT)</p>
+<p>ตรวจพบและดำเนินการแก้ไขข้อบกพร่อง UI เชิงลึกเกี่ยวกับการขยายตัวของกริดในหน้าแผงควบคุมรอยืนยันสิทธิ์ เพื่อไม่ให้เกิดการถ่างออกขวาและทำให้องค์ประกอบกึ่งกลางจัดวางได้อย่างถูกต้อง:</p>
+<h4>73.42.1 การแก้ไขหน้าจอขยายออกขวาและ EmptyState เบี้ยวบนมือถือ (CSS Grid min-width auto track stretch fix ใน <code>pending/page.tsx</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ในหน้าแผงควบคุมรอยืนยันสิทธิ์ (<code>pending/page.tsx</code>) เมื่อไม่มีรายการลงทะเบียนจากนักศึกษา ระบบจะแสดงการ์ดแสดงสถานะว่างเปล่า (<code>EmptyState</code>) แต่กล่องดังกล่าวกลับถูกเลื่อนดันเบี้ยวไปทางขวาอย่างหนักและถูกตัดขอบขวา โดยมีระยะห่างทางด้านซ้ายกว้างผิดปกติ ทำให้ประสบการณ์ใช้งานบนหน้าจอมือถือ (ทรศ) ดูชำรุดเสียหายและไม่เป็นระเบียบ</li>
+<li><strong>สาเหตุเชิงลึก:</strong><ul>
+<li>ตัวคอนเทนเนอร์ระดับพ่อของหน้า <code>pending/page.tsx</code> มีการระบุสไตล์ Grid แบบ <code>gridTemplateColumns: &quot;1fr&quot;</code></li>
+<li>ตามข้อกำหนดสากลของ CSS Grid Layout คอลัมน์ที่ถูกระบุขนาดเป็น <code>1fr</code> จะมีค่าความกว้างจำกัดขั้นต่ำเริ่มต้นที่ระดับ <code>auto</code> (เทียบเท่า <code>min-content</code>) ซึ่งหากมีองค์ประกอบลูกที่มีขนาดกว้างมากและระบุคุณสมบัติไม่ตัดคำ เช่น แถบเลือกห้องเรียนแบบเลื่อนได้ (<code>.mobile-filter-container</code> ซึ่งตั้ง <code>white-space: nowrap</code>) ตัวระบบเบราว์เซอร์จะสั่งขยาย (Stretch) ความกว้างของทั้งหน้าเว็บ Grid ออกไปตามความกว้างปุ่มสะสมทั้งหมด (ประมาณ 500px+) ส่งผลให้การ์ดในแถวอื่นๆ ทั้งหมด (เช่น การ์ดแสดง EmptyState) ขยายขอบเขตล้นหลุดออกขอบจอมือถือที่มีขนาด 430px และดันตัวแสดงผลกึ่งกลางให้ย้ายตำแหน่งไปอยู่ขวาสุดริมจอ</li>
+</ul>
+</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>เปลี่ยนการประกาศ CSS Grid Track ของคอนเทนเนอร์หลักในหน้า <code>pending/page.tsx</code> จาก <code>gridTemplateColumns: &quot;1fr&quot;</code> ไปเป็น <strong><code>gridTemplateColumns: &quot;minmax(0, 1fr)&quot;</code></strong></li>
+<li>กฎ <code>minmax(0, 1fr)</code> บังคับให้เบราว์เซอร์ทำการย่อขนาด (Shrink) พื้นที่คอลัมน์ของแผงควบคุมทั้งหมดลงมาให้ฟิตพอดีกับขนาดความกว้างหน้าจอมือถือ (430px) ตลอดเวลา โดยไม่มีการปล่อยให้วัตถุลูกด้านในขยายหน้าต่างถ่างออกขวา ผลลัพธ์คือกล่อง EmptyState และองค์ประกอบการ์ดทั้งหมดหดขอบเขตมาอยู่ในจอพอดี 100% ตัวอักษรและไอคอนแสดงผลกึ่งกลาง (Center Aligned) ได้อย่างสมบูรณ์แบบ ลบล้างปัญหาจอเบี้ยวล้นได้อย่างเด็ดขาด</li>
+</ul>
+</li>
+</ul>
+<h4>73.42.2 การขยายและปรับปรุง Fading Mask ในการเลื่อนปุ่มห้องเรียนเพื่อไม่ให้ปุ่มสุดท้ายแหว่ง (Classroom Selector Filter Scroll Fade Threshold Refinement ใน <code>globals.css</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> แถบเลือกฟิลเตอร์ห้องเรียนบนมือถือที่ถูกติดตั้งการหรี่แสงขอบขวา (Fading Mask) เพื่อบอกทิศทางการเลื่อนสไลด์ มีระยะการจางเร็วกกว่าปกติคือตั้งแต่ความกว้างระดับ <code>85%</code> ส่งผลให้ปุ่มขวาสุดของระบบ เช่น <code>ห้อง CE-402 (0)</code> โดนความโปร่งแสงกลืนหายไปบางส่วน แม้จะไม่มีการล้นของข้อมูลก็ตาม ทำให้อ่านยากและเข้าใจผิดว่าระบบแสดงห้องเรียนไม่ครบถ้วน</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>ทำการปรับปรุงขีดเริ่มจาง (Threshold) ของแถบ CSS <code>mask-image</code> และ <code>-webkit-mask-image</code> ในคลาส <code>.mobile-filter-container</code> ใน <code>globals.css</code> จากเดิมที่ระดับ <code>85%</code> ขยับขยายให้ออกไปจางที่ริมขอบหน้าจอระดับ <strong><code>94%</code></strong></li>
+<li>ส่งผลให้ระยะหรี่แสงกระชับตัวแคบลง ปุ่มห้องเรียนสุดท้ายถูกแสดงผลได้อย่างคมชัด ครบถ้วนตัวอักษร 100% ปราศจากการบดบังหรือสูญหายของข้อความ โดยยังคงมีวิชวลเฉดสีจางจางริมหน้าต่างขวาสุดเพื่อบอกทิศทางการใช้นิ้วเลื่อนสไลด์อย่างหรูหราพรีเมียมเช่นเดิม</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>สรุปรายการไฟล์แก้ไขในสเต็ปนี้</h3>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายการแก้ไข</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/admin/dashboard/pending/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับปรุง Grid คอลัมน์ระดับพ่อไปใช้ minmax(0, 1fr) เพื่อบล็อกการถ่างขนาดหน้าจอและแก้อาการ EmptyState เบี้ยวบนมือถือ</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับค่า Scroll Fading Mask Threshold จาก 85% ขยับออกไปที่ 94% เพื่อป้องกันการบดบังอักษรปุ่มสุดท้ายและแสดงห้องเรียนชัดเจน</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกการแก้ไขวิญญาณสไตล์ชีทเชิงลึกและการแก้ปัญหาคอลัมน์กึ่งกลางเบี้ยว §73.42</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

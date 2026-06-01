@@ -81,7 +81,7 @@ export default function PendingPage() {
   }, []);
 
   return (
-    <div ref={pendingSectionRef} className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20 }}>
+    <div ref={pendingSectionRef} className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 20 }}>
       
       {/* Beautiful Classroom Filter Tabs & Audio Controls */}
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

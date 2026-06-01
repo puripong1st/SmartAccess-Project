@@ -939,8 +939,8 @@ button, a, [role="button"], input, select, textarea, label {
   touch-action: pan-x; /* Hint to browser: horizontal scroll only */
 
   /* 📱 Premium Scroll Fade Mask — indicators that more items are available horizontally */
-  mask-image: linear-gradient(to right, black 85%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  mask-image: linear-gradient(to right, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 94%, transparent 100%);
 }
 
 /* Spacer to preserve right padding when scrolled fully to the end of flex list */
