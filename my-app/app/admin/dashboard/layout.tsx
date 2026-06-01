@@ -378,6 +378,22 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   } = useDashboard();
 
   const [showWarning, setShowWarning] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // Monitor network status
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setIsOnline(navigator.onLine);
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
   // ช่องทางแจ้งเตือนที่กำลังตั้งค่าใน room modal (segmented selector)
   const [roomNotifyChannel, setRoomNotifyChannel] = useState<"discord" | "telegram" | "line">("discord");
 
@@ -405,6 +421,19 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
       setActiveRoomDetails(null);
     }
   }, [pathname, setTab, setEditingAdmin, setActiveRoomDetails]);
+
+  // 🎹 Bind keyboard listener for Escape key to dismiss drawer and active modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+        setActiveRoomDetails(null);
+        setEditingAdmin(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [setMobileMenuOpen, setActiveRoomDetails, setEditingAdmin]);
 
   // 🚀 Prefetch ทุกหน้า tab ล่วงหน้าหลัง dashboard พร้อม
   // ปัญหา "แตะ tab แรกแล้วต้องกดย้ำ" เกิดจากการที่ router.push ไปหน้าที่ยังไม่ถูกโหลด/คอมไพล์
@@ -1608,7 +1637,37 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* 🟢/🔴 Persistent Connection Status Indicator */}
+              <div
+                title={isOnline ? "ระบบเชื่อมต่อคลาวด์ออนไลน์ปกติ" : "บราวเซอร์ขาดการเชื่อมต่อเน็ตเวิร์ก (กำลังทำงานในโหมด Offline)"}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 14px",
+                  borderRadius: 12,
+                  fontSize: 12,
+                  fontWeight: 800,
+                  background: isOnline ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
+                  border: isOnline ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(239,68,68,0.2)",
+                  color: isOnline ? "#10B981" : "#EF4444",
+                  transition: "all 0.3s ease"
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: isOnline ? "#10B981" : "#EF4444",
+                    animation: isOnline ? "pulse-green 1.8s infinite" : "pulse-red 1.5s infinite"
+                  }}
+                />
+                <span style={{ fontSize: 11 }}>{isOnline ? "ONLINE" : "OFFLINE"}</span>
+              </div>
+
               <div style={{ textAlign: "center", padding: "8px 16px", background: "var(--edu-pink-pale)", borderRadius: 12, border: "1px solid rgba(219,39,119,0.15)" }}>
                 <div style={{ fontSize: 18, fontWeight: 800, color: "var(--edu-pink)" }}>{pendingCount}</div>
                 <div style={{ fontSize: 10, color: "var(--text-secondary)", fontWeight: 700 }}>รออนุมัติสะสม</div>

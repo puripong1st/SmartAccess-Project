@@ -478,7 +478,19 @@ export default function RoomsPage() {
                       <div className="animate-fade-in" style={{ marginTop: 8, padding: 16, background: "rgba(124,58,237,0.03)", border: "1px solid var(--border)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 14 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                           <div>
-                            <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)" }}>เข้าห้องอัตโนมัติไม่ต้องรออนุมัติ</div>
+                            <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
+                              <span>เข้าห้องอัตโนมัติไม่ต้องรออนุมัติ</span>
+                              <span
+                                title="ระบบจะข้ามขั้นตอนให้ผู้ดูแลกดยืนยัน และทริกเกอร์บอร์ดเปิดประตูให้ทันที หากผู้ใช้สแกนเข้ามาในช่วงเวลาให้บริการที่กำหนด"
+                                style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                              </span>
+                            </div>
                             <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.4 }}>นักศึกษาใหม่ยื่นในเวลาบริการ อนุมัติผ่านเข้าห้องทันที</div>
                           </div>
                           <Toggle on={cfg.auto_approve_enabled} onToggle={() => setRoomConfig(roomItem.room, { auto_approve_enabled: !cfg.auto_approve_enabled })} />
@@ -487,7 +499,19 @@ export default function RoomsPage() {
                         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, background: "rgba(0,0,0,0.12)", borderRadius: 8, border: "1px solid var(--border)" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                             <div>
-                              <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)" }}>ช่วยกรอกข้อมูลอัตโนมัติ (Auto-fill)</div>
+                              <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
+                                <span>ช่วยกรอกข้อมูลอัตโนมัติ (Auto-fill)</span>
+                                <span
+                                  title="อำนวยความสะดวกให้นักศึกษาที่เคยสแกนแล้ว เมื่อใส่ชื่อ-รหัสนักศึกษาเดิม ระบบจะดึง คณะ/สาขา เดิมมาเติมให้ในฟอร์มทันที"
+                                  style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                  </svg>
+                                </span>
+                              </div>
                               <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>ดึงชั้นปี คณะ สาขาจากนักศึกษาเดิมกรอกให้อัตโนมัติ</div>
                             </div>
                             <Toggle on={cfg.auto_fill_enabled} onToggle={() => setRoomConfig(roomItem.room, { auto_fill_enabled: !cfg.auto_fill_enabled })} />
@@ -506,7 +530,20 @@ export default function RoomsPage() {
 
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           <label style={{ fontSize: 12, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 5 }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Lock size={13} /> ความปลอดภัยหน้าจอ ESP32 (รหัสนักศึกษาล่าสุด)</span>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                              <Lock size={13} />
+                              <span>ความปลอดภัยหน้าจอ ESP32 (รหัสนักศึกษาล่าสุด)</span>
+                              <span
+                                title="ตั้งค่าความเป็นส่วนตัวของนักศึกษาที่แสดงบนจอ TFT LCD ของบอร์ด ESP32 เพื่อให้เป็นไปตามนโยบาย PDPA"
+                                style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                              </span>
+                            </span>
                           </label>
                           <select value={cfg.student_id_display_mode} onChange={e => setRoomConfig(roomItem.room, { student_id_display_mode: e.target.value })} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 12.5, outline: "none" }}>
                             <option value="full">โชว์รหัสแบบเต็ม (Full ID)</option>
@@ -589,13 +626,48 @@ export default function RoomsPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, alignItems: "end" }}>
           <div>
             <label className="field-label">รหัสห้อง</label>
-            <input className="smartaccess-input" placeholder="เช่น CE-403" value={newRoomCode} onChange={e => setNewRoomCode(e.target.value)} />
+            <input
+              className="smartaccess-input"
+              placeholder="เช่น CE-403"
+              value={newRoomCode}
+              onChange={e => setNewRoomCode(e.target.value)}
+              style={{
+                borderColor: newRoomCode && !/^[A-Z0-9_-]{2,20}$/.test(newRoomCode.trim().toUpperCase()) ? "#EF4444" : undefined
+              }}
+            />
+            {newRoomCode && !/^[A-Z0-9_-]{2,20}$/.test(newRoomCode.trim().toUpperCase()) && (
+              <span style={{ color: "#EF4444", fontSize: 11, fontWeight: 700, marginTop: 4, display: "block" }}>
+                ⚠️ ตัวอักษร A-Z, 0-9, - หรือ _ เท่านั้น (ความยาว 2-20)
+              </span>
+            )}
           </div>
           <div>
             <label className="field-label">IP Address / Domain</label>
-            <input className="smartaccess-input" placeholder="เช่น 192.168.1.102" value={newRoomIp} onChange={e => setNewRoomIp(e.target.value)} />
+            <input
+              className="smartaccess-input"
+              placeholder="เช่น 192.168.1.102"
+              value={newRoomIp}
+              onChange={e => setNewRoomIp(e.target.value)}
+              style={{
+                borderColor: newRoomIp && !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(newRoomIp.trim()) ? "#EF4444" : undefined
+              }}
+            />
+            {newRoomIp && !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(newRoomIp.trim()) && (
+              <span style={{ color: "#EF4444", fontSize: 11, fontWeight: 700, marginTop: 4, display: "block" }}>
+                ⚠️ ที่อยู่ IP หรือ Domain ไม่ถูกต้องตามรูปแบบสากล
+              </span>
+            )}
           </div>
-          <button type="button" onClick={() => handleAddRoom()} className="btn-primary" style={{ borderRadius: 8, minHeight: 46 }}>
+          <button
+            type="button"
+            onClick={() => handleAddRoom()}
+            className="btn-primary"
+            disabled={
+              (!newRoomCode || !/^[A-Z0-9_-]{2,20}$/.test(newRoomCode.trim().toUpperCase())) ||
+              (!newRoomIp || !/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$|^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(newRoomIp.trim()))
+            }
+            style={{ borderRadius: 8, minHeight: 46 }}
+          >
             เพิ่มห้องลงรายการ
           </button>
         </div>

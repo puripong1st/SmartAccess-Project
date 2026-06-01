@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { initializeApp, getApps } from 'firebase/app';
 import { getMessaging, getToken } from 'firebase/messaging';
 import { getFirebaseConfig, getVapidKey } from '@/lib/firebase';
@@ -10,6 +11,12 @@ interface PushNotificationManagerProps {
 }
 
 export default function PushNotificationManager({ studentDbId }: PushNotificationManagerProps) {
+  const pathname = usePathname();
+
+  // ปิดการทำงานระบบแจ้งเตือนพุชทั้งหมดในฝั่งผู้ใช้ทั่วไป (ทำงานเฉพาะฝั่ง /admin แอดมินเท่านั้น)
+  if (!pathname || !pathname.startsWith('/admin')) {
+    return null;
+  }
   const [supported, setSupported] = useState<boolean | null>(null);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [loading, setLoading] = useState<boolean>(false);
