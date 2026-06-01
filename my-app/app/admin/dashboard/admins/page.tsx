@@ -182,77 +182,158 @@ export default function AdminsPage() {
             <h4 style={{ fontSize: 14, fontWeight: 900, color: "var(--text-primary)", margin: 0 }}>ไม่พบรายชื่อผู้ดูแลระบบในประวัติ</h4>
           </div>
         ) : (
-          <div className="smartaccess-table-container">
-            <table className="smartaccess-table">
-              <thead>
-                <tr>
-                  <th>ชื่อผู้ดูแล (Full Name / Username)</th>
-                  <th>สิทธิ์การทำงาน (System Role)</th>
-                  <th>ขอบเขตความรับผิดชอบ (Classroom Scope)</th>
-                  <th>วันเวลาลงทะเบียนแอดมิน</th>
-                  <th style={{ textAlign: "right" }}>การจัดการ (Actions)</th>
-                </tr>
-              </thead>
-              <tbody>
+          <>
+            {/* 🖥️ Desktop View: Classic professional grid table */}
+            <div className="desktop-view smartaccess-table-container">
+              <table className="smartaccess-table">
+                <thead>
+                  <tr>
+                    <th>ชื่อผู้ดูแล (Full Name / Username)</th>
+                    <th>สิทธิ์การทำงาน (System Role)</th>
+                    <th>ขอบเขตความรับผิดชอบ (Classroom Scope)</th>
+                    <th>วันเวลาลงทะเบียนแอดมิน</th>
+                    <th style={{ textAlign: "right" }}>การจัดการ (Actions)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {admins.map(admin => (
+                    <tr key={admin.id} style={{ borderBottom: "1px solid var(--border)", fontSize: 12.5 }}>
+                      <td style={{ padding: "14px" }}>
+                        <div style={{ fontWeight: 800, color: "var(--text-primary)" }}>{admin.full_name}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>ID: {admin.username}</div>
+                      </td>
+                      <td style={{ padding: "14px" }}>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
+                          background: admin.role === "owner" ? "#FDF2F8" : "var(--smartaccess-purple-pale)",
+                          color: admin.role === "owner" ? "var(--edu-pink)" : "var(--smartaccess-purple-dark)"
+                        }}>
+                          {admin.role === "owner" ? <CrownIcon /> : <KeyIcon />}
+                          {admin.role === "owner" ? "Owner (เจ้าของ)" : admin.role === "log_viewer" ? "Viewer (ผู้เยี่ยมชม)" : "Door Operator"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px" }}>
+                        <code style={{ fontSize: 11.5, color: "var(--smartaccess-purple-dark)", fontWeight: 800, background: "rgba(255,255,255,0.01)", padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)" }}>
+                          {admin.role === "owner" ? "ทุกห้องเรียน (*)" : admin.allowed_rooms || "ยังไม่ได้ระบุห้องเรียน"}
+                        </code>
+                      </td>
+                      <td style={{ padding: "14px" }}>
+                        {formatDateTime(admin.created_at)}
+                      </td>
+                      <td style={{ padding: "14px", textAlign: "right" }}>
+                        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                          {/* Prevent owner delete */}
+                          {admin.role !== "owner" && (
+                            <button
+                              onClick={() => handleDeleteAdmin(admin.id)}
+                              className="btn-danger-light"
+                              style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12 }}
+                            >
+                              ถอนสิทธิ์
+                            </button>
+                          )}
+
+                          {admin.role !== "owner" && (
+                            <button
+                              onClick={() => {
+                                setEditingAdmin(admin);
+                                setEditAdminForm({ full_name: admin.full_name, role: admin.role });
+                                setEditAdminAllowedRooms(
+                                  admin.allowed_rooms ? admin.allowed_rooms.split(",") : []
+                                );
+                              }}
+                              className="btn-ghost"
+                              style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700 }}
+                            >
+                              ✏️ แก้ไขข้อมูล
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 📱 Mobile View: Beautiful card items without sideways scrolls */}
+            <div className="mobile-view">
+              <div className="mobile-card-grid-container">
                 {admins.map(admin => (
-                  <tr key={admin.id} style={{ borderBottom: "1px solid var(--border)", fontSize: 12.5 }}>
-                    <td style={{ padding: "14px" }}>
-                      <div style={{ fontWeight: 800, color: "var(--text-primary)" }}>{admin.full_name}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>ID: {admin.username}</div>
-                    </td>
-                    <td style={{ padding: "14px" }}>
+                  <div
+                    key={admin.id}
+                    className="premium-card animate-scale-in"
+                    style={{
+                      padding: "20px",
+                      background: "var(--bg-secondary)",
+                      border: "1px solid var(--border-medium)",
+                      boxShadow: "var(--shadow-sm)"
+                    }}
+                  >
+                    {/* Header: Name, Username, Role badge */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
+                      <div>
+                        <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 15 }}>
+                          {admin.full_name}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 2 }}>
+                          Username: {admin.username}
+                        </div>
+                      </div>
                       <span style={{
                         display: "inline-flex", alignItems: "center", gap: 4, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
                         background: admin.role === "owner" ? "#FDF2F8" : "var(--smartaccess-purple-pale)",
-                        color: admin.role === "owner" ? "var(--edu-pink)" : "var(--smartaccess-purple-dark)"
+                        color: admin.role === "owner" ? "var(--edu-pink)" : "var(--smartaccess-purple-dark)",
+                        whiteSpace: "nowrap"
                       }}>
                         {admin.role === "owner" ? <CrownIcon /> : <KeyIcon />}
-                        {admin.role === "owner" ? "Owner (เจ้าของ)" : admin.role === "log_viewer" ? "Viewer (ผู้เยี่ยมชม)" : "Door Operator"}
+                        {admin.role === "owner" ? "Owner" : admin.role === "log_viewer" ? "Viewer" : "Operator"}
                       </span>
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                      <code style={{ fontSize: 11.5, color: "var(--smartaccess-purple-dark)", fontWeight: 800, background: "rgba(255,255,255,0.01)", padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)" }}>
-                        {admin.role === "owner" ? "ทุกห้องเรียน (*)" : admin.allowed_rooms || "ยังไม่ได้ระบุห้องเรียน"}
-                      </code>
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                      {formatDateTime(admin.created_at)}
-                    </td>
-                    <td style={{ padding: "14px", textAlign: "right" }}>
-                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                        {/* Prevent owner delete */}
-                        {admin.role !== "owner" && (
-                          <button
-                            onClick={() => handleDeleteAdmin(admin.id)}
-                            className="btn-danger-light"
-                            style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12 }}
-                          >
-                            ถอนสิทธิ์
-                          </button>
-                        )}
+                    </div>
 
-                        {admin.role !== "owner" && (
-                          <button
-                            onClick={() => {
-                              setEditingAdmin(admin);
-                              setEditAdminForm({ full_name: admin.full_name, role: admin.role });
-                              setEditAdminAllowedRooms(
-                                admin.allowed_rooms ? admin.allowed_rooms.split(",") : []
-                              );
-                            }}
-                            className="btn-ghost"
-                            style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700 }}
-                          >
-                            ✏️ แก้ไขข้อมูล
-                          </button>
-                        )}
+                    {/* Scope & Date */}
+                    <div style={{ background: "rgba(124, 58, 237, 0.02)", borderRadius: 12, padding: 12, marginBottom: 16, border: "1px solid var(--border)", fontSize: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div>
+                        <span style={{ fontSize: 10.5, color: "var(--text-secondary)", display: "block" }}>ขอบเขตความรับผิดชอบ:</span>
+                        <code style={{ display: "inline-block", fontSize: 11.5, color: "var(--smartaccess-purple-dark)", fontWeight: 800, background: "rgba(255,255,255,0.01)", padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)", marginTop: 4 }}>
+                          {admin.role === "owner" ? "ทุกห้องเรียน (*)" : admin.allowed_rooms || "ยังไม่ได้ระบุห้องเรียน"}
+                        </code>
                       </div>
-                    </td>
-                  </tr>
+                      <div style={{ borderTop: "1px dashed var(--border)", paddingTop: 8, marginTop: 4, fontSize: 11, color: "var(--text-secondary)" }}>
+                        ลงทะเบียนเมื่อ: {formatDateTime(admin.created_at)}
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    {admin.role !== "owner" && (
+                      <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                        <button
+                          onClick={() => handleDeleteAdmin(admin.id)}
+                          className="btn-danger-light"
+                          style={{ flex: 1, padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700 }}
+                        >
+                          ถอนสิทธิ์
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingAdmin(admin);
+                            setEditAdminForm({ full_name: admin.full_name, role: admin.role });
+                            setEditAdminAllowedRooms(
+                              admin.allowed_rooms ? admin.allowed_rooms.split(",") : []
+                            );
+                          }}
+                          className="btn-ghost"
+                          style={{ flex: 1.2, padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700 }}
+                        >
+                          ✏️ แก้ไขข้อมูล
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
 

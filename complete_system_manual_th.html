@@ -16993,6 +16993,35 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 </ul>
 </li>
 </ul>
+<h4>73.39.4 การย้ายและควบรวมระบบเปิด-ปิดแจ้งเตือนพุช PWA เข้าสู่แถบนำทางด้านข้าง (Unified Sidebar PWA Push Notification Toggle Integration)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ปุ่มสมัครและตั้งค่าการแจ้งเตือนพุช (Push Notifications Widget Button) ถูกกำหนดให้แสดงผลในรูปแบบวิดเจ็ตลอยตัว (Floating Widget) ที่ระบุตำแหน่งแบบ <code>position: &quot;fixed&quot;</code> บริเวณมุมขวาล่างของบราวเซอร์ตลอดเวลา ซึ่งบุกรุกพื้นที่ทางวิชวลและลอยบดบังข้อมูลสำคัญ เช่น บังรูปภาพและข้อความของกล่องสถานะว่าง (Empty States) หรือบดบังแถวประวัติล่างสุดของตารางในหน้าจอมือถือ (ทรศ)</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>เพิ่มการรองรับพร็อพ <code>inline?: boolean</code> ในคอมโพเนนต์ <code>&lt;PushNotificationManager /&gt;</code> เพื่อยกเลิกการแสดงผลแบบ Floating Widget เมื่อเปิดใช้งานโหมด inline</li>
+<li>ทำการนำเข้าและเรนเดอร์คอมโพเนนต์ <code>&lt;PushNotificationManager inline={true} /&gt;</code> เข้าสู่แถบเมนูข้างโดยตรง (Sidebar Layout) ในไฟล์ <code>my-app/app/admin/dashboard/layout.tsx</code> โดยจัดกลุ่มไว้รวมกับกลุ่มปุ่มควบคุมระบบด้านล่างสุด (ปุ่มสวิตช์ Light/Dark Mode และปุ่มเปิดเครื่องจำลอง LCD)</li>
+<li>ส่งผลให้ระบบบนหน้าจอมือถือดูสะอาดตา ปราศจากองค์ประกอบลอยรกสายตา โดยปุ่มตั้งค่าพุชจะไปสถิตอยู่อย่างประณีตในแถบเลื่อน Drawer เมนูข้าง ซึ่งเรียกเปิดใช้งานได้อย่างราบรื่นและมีระเบียบตามหลัก HCI</li>
+</ul>
+</li>
+</ul>
+<h4>73.39.5 การอิมพลิเมนต์และแก้ไขดีไซน์ปุ่ม Actions ที่ขาดหายไป (Table Actions Redesign &amp; CSS Bug Fix ใน <code>globals.css</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ปุ่มการจัดการที่ใช้งานในตารางทำเนียบสิทธิ์และประวัติจราจร ได้แก่ ปุ่ม &quot;ลบ&quot; (<code>btn-danger-light</code>) และปุ่ม &quot;เปิดประตู&quot; (<code>btn-success</code>) ขาดหายไปจากตัวระบุคลาสการตกแต่งในสไตล์ชีท <code>globals.css</code> ส่งผลให้เบราว์เซอร์ป้อนดีไซน์มาตรฐานเริ่มต้น (Browser Default Raw Style) แสดงผลเป็นปุ่มขอบดำทึบ-พื้นหลังสีขาวกระด้าง ขัดแย้งกับโทนสีหลักของมหาวิทยาลัยและธีมพรีเมียมอย่างสิ้นเชิง</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>พัฒนาและบรรจุคลาส <code>.btn-success</code> ลงใน <code>globals.css</code> โดยใช้ไล่เฉดสีไล่ระดับเขียวมรกตพรีเมียม (<code>linear-gradient(135deg, #10B981 0%, #059669 100%)</code>) พร้อมเงาเรืองแสงอ่อนละมุนและเอฟเฟกต์ยุบตัวเมื่อกดคลิก</li>
+<li>พัฒนาคลาส <code>.btn-danger-light</code> โดยระบุพื้นหลังสีแดงบางเบาอ่อนโยนร่วมกับขอบโปร่งแสงบางเบา (<code>background: rgba(239, 68, 68, 0.08)</code>, <code>border: 1px solid rgba(239, 68, 68, 0.2)</code>) และตัวอักษรสีแดงคมชัด สะท้อนอารมณ์ของการทำลายล้างที่นุ่มนวลและไม่เกะกะสายตา</li>
+</ul>
+</li>
+</ul>
+<h4>73.39.6 การประยุกต์ใช้ระบบจัดระเบียบตารางแบบตอบสนองบนมือถือสำหรับการจัดการผู้ดูแลระบบ (Responsive Mobile Card Layout Adaptation ใน <code>admins/page.tsx</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ตารางทำเนียบผู้ดูแลระบบและเจ้าหน้าที่ดำเนินงาน (<code>admins/page.tsx</code>) มีขอบเขตความกว้างค่อนข้างมาก เมื่อแสดงผลบนหน้าจอโทรศัพท์ (ทรศ) ตัวตารางจะถูกบีบอัดสัดส่วนจนคอลัมน์ชื่อเต็มสิทธิ์ระบบและขอบเขตห้องซ้อนทับกันอย่างหนาแน่นและขอบตารางขาดลอยหายไป</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>ทำการจัดแบ่งวิวโดยการคลุมโครงสร้างตารางข้อมูลในคลาส <code>.desktop-view</code> (ซ่อนตัวอัตโนมัติบนขนาดหน้าจอ &lt;= 1024px)</li>
+<li>เพิ่มคอมโพเนนต์การ์ดแสดงผลบนมือถือที่สวยงามตอบรับรูปแบบ PWA Touch-First ภายใต้บล็อก <code>.mobile-view</code> (แสดงผลเมื่อหน้าจอ &lt;= 1024px) ซึ่งจะจัดเรียงข้อมูลผู้ดูแลระบบ ขอบเขตรับผิดชอบ และสิทธิ์ควบคุมอย่างเป็นสัดส่วน มีระเบียบคอลัมน์ลอยตัวแบบ Premium Glassmorphism</li>
+<li>ขยายขอบเขตการทำงานของปุ่ม Action (ถอนสิทธิ์, แก้ไขข้อมูล) ให้ตอบรับการสัมผัส (Touch Target) ขนาด min-height: 44px มอบความมั่นคงและปราศจากข้อผิดพลาดในการแตะใช้งาน</li>
+</ul>
+</li>
+</ul>
 <hr>
 <h3>สรุปรายการไฟล์แก้ไขในสเต็ปนี้</h3>
 <table>
@@ -17020,19 +17049,31 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>3</td>
 <td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>ขยายขนาดแสดงพรีวิวโค้ด C++ ของบอร์ดให้สูงสุด 480px เพื่อลดภาระทางสายตา พร้อมปรับสไตล์ปุ่ม Copy พรีเมียม</td>
+<td>นำคอมโพเนนต์ PushNotificationManager เข้ามาติดตั้งแบบ Inline ไว้ในเมนูด้านล่างของ Sidebar เพื่อความสะอาดตา</td>
 </tr>
 <tr>
 <td>4</td>
-<td><code>my-app/app/globals.css</code></td>
+<td><code>my-app/app/components/PushNotificationManager.tsx</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>อิมพลิเมนต์ Focus Outline สีม่วงโกลว์ความหนา 3px สำหรับปุ่ม Toggle, Weekday buttons และ Copy buttons ของบอร์ด</td>
+<td>เพิ่มการรองรับพร็อพ <code>inline</code> และการจัดวางโครงสร้างแบบฝังตัวในสถาปัตยกรรมแถบเมนูแทน Floating Widget</td>
 </tr>
 <tr>
 <td>5</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มการกำหนดสไตล์ของปุ่ม <code>.btn-success</code> (ปุ่มเฉดสีเขียวมรกต) และ <code>.btn-danger-light</code> (ปุ่มแดงโปร่งแสง) เติมเต็มการแสดงผล Action</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>my-app/app/admin/dashboard/admins/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อิมพลิเมนต์การแบ่งวิวด้วย <code>.desktop-view</code> และพัฒนาระบบกริดการ์ดแสดงผลบนมือถือ <code>.mobile-view</code> สำหรับตารางแอดมิน</td>
+</tr>
+<tr>
+<td>7</td>
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบ UI/UX, มาตรฐาน ARIA Accessibility, และการปรับโครงสร้างตารางสู่ Mobile Card Grid</td>
+<td>บันทึกรายละเอียดแผนการแก้ไขทางสถาปัตยกรรมและรายละเอียด UI/UX สำหรับเล่มวิทยานิพนธ์ §73.39</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

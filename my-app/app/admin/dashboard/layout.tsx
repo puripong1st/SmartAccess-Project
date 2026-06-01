@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "../../components/ThemeProvider";
 import { AnimatedCounter } from "../../components/AnimatedCounter";
 import dynamic from "next/dynamic";
+import PushNotificationManager from "../../components/PushNotificationManager";
 
 
 // formatDateTime function copy
@@ -1514,6 +1515,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div style={{ padding: "16px", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 10 }}>
+            <PushNotificationManager inline={true} />
             <button
               type="button"
               onClick={toggleTheme}

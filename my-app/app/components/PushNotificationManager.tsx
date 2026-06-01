@@ -8,9 +8,10 @@ import { getFirebaseConfig, getVapidKey } from '@/lib/firebase';
 
 interface PushNotificationManagerProps {
   studentDbId?: number; // Optional student database ID, if logged in as student
+  inline?: boolean;     // If true, render inline styling suited for sidebar/menus instead of floating widget
 }
 
-export default function PushNotificationManager({ studentDbId }: PushNotificationManagerProps) {
+export default function PushNotificationManager({ studentDbId, inline = false }: PushNotificationManagerProps) {
   const pathname = usePathname();
 
   // ปิดการทำงานระบบแจ้งเตือนพุชทั้งหมดในฝั่งผู้ใช้ทั่วไป (ทำงานเฉพาะฝั่ง /admin แอดมินเท่านั้น)
@@ -256,6 +257,48 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
   // If not supported, do not show anything
   if (!supported) return null;
 
+  if (inline) {
+    return (
+      <button 
+        onClick={tokenRegistered ? handleDisableNotifications : handleRequestPermission}
+        className="btn-secondary"
+        style={{
+          width: '100%',
+          padding: '10px',
+          borderRadius: '12px',
+          fontSize: '12.5px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px',
+          cursor: 'pointer',
+          background: tokenRegistered 
+            ? 'rgba(16, 185, 129, 0.12)' 
+            : 'rgba(255, 255, 255, 0.04)',
+          borderColor: tokenRegistered 
+            ? 'rgba(16, 185, 129, 0.25)' 
+            : 'var(--border)',
+          color: tokenRegistered ? '#10B981' : 'var(--text-secondary)',
+          fontWeight: 700,
+          transition: 'all 0.2s',
+        }}
+        title={tokenRegistered ? "ปิดการแจ้งเตือน" : "เปิดการแจ้งเตือนพุช"}
+        disabled={loading}
+      >
+        <span style={{ fontSize: '14px' }}>{pushBlocked ? '🚫' : tokenRegistered ? '🔔' : '🔕'}</span>
+        <span>
+          {loading
+            ? 'กำลังทำรายการ...'
+            : pushBlocked
+              ? 'เบราว์เซอร์บล็อกพุช'
+              : tokenRegistered
+                ? 'เปิดแจ้งเตือนแล้ว'
+                : 'รับแจ้งเตือนพุช'}
+        </span>
+      </button>
+    );
+  }
+
   return (
     <>
       {/* 1. Floating Banner Prompt (Displays if permission is 'default' and showBanner is true) */}
@@ -290,36 +333,6 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
           </div>
         </div>
       )}
-
-      {/* 2. Floating Dashboard Settings Trigger widget — มุมขวาล่าง (inline style เพราะโปรเจกต์ไม่ได้เปิด Tailwind utilities) */}
-      <div style={{ position: "fixed", bottom: 20, right: 20, zIndex: 999, transition: "all 0.2s" }}>
-        <button 
-          onClick={tokenRegistered ? handleDisableNotifications : handleRequestPermission}
-          style={{
-            ...styles.widgetButton,
-            background: tokenRegistered 
-              ? 'rgba(16, 185, 129, 0.15)' 
-              : 'rgba(124, 58, 237, 0.15)',
-            borderColor: tokenRegistered 
-              ? 'rgba(16, 185, 129, 0.3)' 
-              : 'rgba(124, 58, 237, 0.3)',
-            color: tokenRegistered ? '#10B981' : '#A78BFA',
-          }}
-          title={tokenRegistered ? "ปิดการแจ้งเตือน" : "เปิดการแจ้งเตือนพุช"}
-          disabled={loading}
-        >
-          <span style={styles.widgetIcon}>{pushBlocked ? '🚫' : tokenRegistered ? '🔔' : '🔕'}</span>
-          <span style={styles.widgetText}>
-            {loading
-              ? 'กำลังทำรายการ...'
-              : pushBlocked
-                ? 'เบราว์เซอร์บล็อกพุช'
-                : tokenRegistered
-                  ? 'เปิดแจ้งเตือนแล้ว'
-                  : 'รับแจ้งเตือนพุช'}
-          </span>
-        </button>
-      </div>
     </>
   );
 }
