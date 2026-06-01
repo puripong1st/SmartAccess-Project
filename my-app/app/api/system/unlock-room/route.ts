@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPool, initDatabase } from "@/lib/db";
 import { getAdminFromCookie, canOperateRoom } from "@/lib/auth";
 import { withRateLimit } from "@/lib/rate-limit-middleware";
+import { rateLimit } from "@/lib/rate-limit";
 import { openDoor } from "@/lib/esp32";
 import { sendDiscordNotification } from "@/lib/discord";
 
@@ -34,6 +35,19 @@ export async function POST(req: NextRequest) {
 
     if (!canOperateRoom(admin, room)) {
       return NextResponse.json({ error: "ไม่มีสิทธิ์ควบคุมห้องนี้" }, { status: 403 });
+    }
+
+    // Acquire a 5-second concurrency lock to prevent double-triggering or relay chattering
+    const lockResult = await rateLimit({
+      key: `lock:door:${room}`,
+      limit: 1,
+      windowMs: 5000,
+    });
+    if (!lockResult.success) {
+      return NextResponse.json(
+        { error: "ระบบเปิดประตูกำลังประมวลผลคำขอก่อนหน้า โปรดรอ 5 วินาทีก่อนสั่งใหม่อีกครั้ง" },
+        { status: 429 }
+      );
     }
 
     // Call openDoor for the specific room (with SYSTEM indicator to signal manual bypass)

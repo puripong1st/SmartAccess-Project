@@ -907,7 +907,7 @@ void handleLocalValidation() {
       int endIdx = req.indexOf(" ", pinIdx);
       if (endIdx == -1) endIdx = req.indexOf("\\r", pinIdx);
       String enteredPin = req.substring(pinIdx + 4, endIdx);
-      if (enteredPin == cached_offline_pin) {
+      if (secureCompare(enteredPin.c_str(), cached_offline_pin.c_str())) {
         client.println("HTTP/1.1 200 OK");
         client.println("Content-Type: text/html; charset=utf-8");
         client.println("Connection: close");

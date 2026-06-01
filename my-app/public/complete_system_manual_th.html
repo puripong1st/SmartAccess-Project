@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:36:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:59:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -16477,6 +16477,252 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบ UI/UX Mobile Usability §73.31</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-32"></a></p>
+<h3>73.32 การพัฒนาระบบป้องกันสิทธิ์ระดับโกลบอลและการควบคุมความปลอดภัยเครือข่าย API (Next.js Global Middleware Rate Limiting &amp; Anti-IP Spoofing)</h3>
+<p>วันที่บันทึก: 1 มิถุนายน 2026</p>
+<h4>73.32.1 บริบทและเป้าหมาย (Context &amp; Goals)</h4>
+<p>จากการสแกนความปลอดภัยเชิงรับ (Defensive Security Audit) ตามมาตรฐานกลุ่ม <strong>OWASP API Top 10</strong> พบช่องโหว่ความเสี่ยงในตรรกะระบบควบคุมการจำกัดจำนวนครั้ง (Rate Limiting) ที่แฮกเกอร์อาจทำการข้ามผ่าน (Bypass) ระบบบล็อกไอพีด้วยการส่ง HTTP Headers ปลอมแปลง เช่น <code>X-Forwarded-For</code> หรือการยิงถล่มโควตา (Credential Stuffing / Brute-force) เข้าหน้าล็อกอินแอดมินหรือระบบลงทะเบียน ซึ่ง Next.js 15 ทำงานบนสภาพแวดล้อม Serverless/Edge หากไม่มีตัวคัดกรองตั้งแต่ระดับทางเข้าหลัก (Global Entrance) อาจส่งผลให้ทรัพยากรฐานข้อมูลเกิดการโอเวอร์โหลด (Database Connection Exhaustion)</p>
+<p>เพื่ออุดช่องโหว่นี้อย่างสมบูรณ์แบบ ได้มีการพัฒนาสถาปัตยกรรมตัวกลาง <strong>Next.js Global Middleware (<code>middleware.ts</code>)</strong> ร่วมกับโมดูล <strong>Edge-Compatible Rate Limiter (<code>lib/rate-limit-edge.ts</code>)</strong> เพื่อทำหน้าที่กลั่นกรองทราฟฟิกและบล็อกคำขอที่น่าสงสัยในระดับเสี้ยววินาที</p>
+<h4>73.32.2 การป้องกันการสวมสิทธิ์ไอพี (Anti-IP Spoofing Security Engine)</h4>
+<p>โมดูลการหาไอพี <code>lib/client-ip.ts</code> ได้รับการตรวจสอบและทดสอบการทำงานบน Edge Runtime โดยตัวตรวจจับมีตรรกะจัดลำดับความน่าเชื่อถือดังนี้:</p>
+<ol>
+<li><strong>Local Host Check:</strong> หากมีคำขอมาจากเครือข่ายภายใน (localhost/127.0.0.1) จะผูกไอพีไว้ที่ <code>127.0.0.1</code> เสมอ เพื่อตัดปัญหาวนรอบแบบสปูฟ</li>
+<li><strong>Platform Native IP:</strong> บนแพลตฟอร์ม Vercel ระบบจะให้สิทธิ์ความน่าเชื่อถือสูงสุดแก่ฟิลด์ <code>request.ip</code> ซึ่งถูกแนบมาจากระดับ Socket Connection ของ Cloud Infrastructure โดยตรง ไม่สามารถปลอมแปลงได้</li>
+<li><strong>Verified Fallback (Rightmost X-Forwarded-For):</strong> ในกรณีที่ผ่าน Reverse Proxy ระบบจะหยิบเฉพาะค่าฝั่งขวาสุด (Rightmost) ของฟิลด์ <code>X-Forwarded-For</code> ซึ่งมีเพียง Proxy Server ตัวหน้าสุดของโครงข่ายปลายทางเท่านั้นที่มีสิทธิ์แนบค่านี้มา ป้องกันแฮกเกอร์เขียน Header ตัวแรกๆ มาหลอกระบบ</li>
+</ol>
+<h4>73.32.3 การทำงานของ Edge-Compatible Rate Limiting (Supabase PostgREST Connection)</h4>
+<p>เนื่องจาก Next.js Middleware บังคับทำงานบนสภาพแวดล้อมจำกัด (Edge Runtime) ซึ่งไม่สนับสนุนตัวเชื่อมต่อ TCP ปกติ (<code>pg</code> pool) ทีมพัฒนาจึงได้สร้างสถาปัตยกรรมแบบเบา (Lightweight Client) ขึ้นมาใหม่ใน <code>lib/rate-limit-edge.ts</code> โดย:</p>
+<ul>
+<li>ใช้ฟังก์ชัน <code>fetch</code> บนระดับ HTTP/REST (Supabase PostgREST) ในการเรียกใช้ข้อมูลตาราง <code>rate_limits</code></li>
+<li>มีกลไกตรวจสอบเวลาหมดอายุในหน่วยมิลลิวินาที (Epoch reset_time) ป้องกันสภาวะการแย่งชิงข้อมูล (Race Conditions)</li>
+<li>หากเกิดข้อผิดพลาดในการเชื่อมต่อเครือข่ายฐานข้อมูล ระบบจะเปิดโหมด <strong>Fail-Open</strong> ทันที เพื่อไม่ให้เกิดภาวะระบบล่ม (Service Outage) โดยนักศึกษายังคงทำรายการเข้าห้องเรียนต่อได้</li>
+</ul>
+<h4>73.32.4 การแบ่งระดับขอบเขตการป้องกัน (Sensitive API Rate Limit Matrix)</h4>
+<p>เพื่อความสมดุลระหว่างความปลอดภัยสูงสุดและขีดจำกัดความเร็วของ Supabase Database Pool ระบบเลือกรองรับเฉพาะเส้นทาง API ที่มีความละเอียดอ่อนสูง (Sensitive API Routes) แทนการรันประมวลผลคำขอสาธารณะทั้งหมด โดยจำกัดสิทธิ์ดังตาราง:</p>
+<table>
+<thead>
+<tr>
+<th>เส้นทาง API (Prefix)</th>
+<th>วัตถุประสงค์</th>
+<th>ขีดจำกัดความเร็ว (Rate Limit)</th>
+<th>หน้าที่ในการป้องกัน</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/api/auth/*</code></td>
+<td>จัดการการยืนยันตัวตนแอดมินและการเข้าสู่ระบบ</td>
+<td><strong>10 Requests / 60 Seconds</strong></td>
+<td>ป้องกันการโจมตีแบบเดารหัสผ่าน (Brute-Force &amp; Credential Stuffing)</td>
+</tr>
+<tr>
+<td><code>/api/esp32/*</code></td>
+<td>การร้องขอปลดล็อกและส่งค่าสถานะจากบอร์ดควบคุม</td>
+<td><strong>60 Requests / 60 Seconds</strong></td>
+<td>ป้องกันการยิงสแปมสัญญาณเปิดประตู (API Flooding)</td>
+</tr>
+<tr>
+<td><code>/api/students/*</code></td>
+<td>การลงทะเบียนของนักศึกษาและการสแกน QR Code</td>
+<td><strong>20 Requests / 60 Seconds</strong></td>
+<td>ป้องกันการสุ่มสร้างบัญชีและการกวาดข้อมูลบัตรผ่าน (Token Harvesting)</td>
+</tr>
+</tbody></table>
+<h4>73.32.5 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>lib/rate-limit-edge.ts</code></td>
+<td><strong>[NEW]</strong></td>
+<td>ตัวเช็กและบันทึก Rate Limit แบบรองรับ Edge Runtime โดยประมวลผลข้อมูลผ่าน PostgREST HTTP fetch</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>middleware.ts</code></td>
+<td><strong>[NEW]</strong></td>
+<td>ตัวกรอง Global Middleware คัดแยกเฉพาะเส้นทาง API ที่อ่อนไหว บล็อกการสปูฟ IP และตอบกลับด้วย 429 Too Many Requests</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบความปลอดภัยเครือข่ายและระบบคัดกรอง API §73.32</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-33"></a></p>
+<h3>73.33 การอุดช่องโหว่การข้ามสิทธิ์เชิงตรรกะระดับวัตถุ (BOLA/IDOR Mitigation in Student Approval and Rejection Routes)</h3>
+<p>วันที่บันทึก: 1 มิถุนายน 2026</p>
+<h4>73.33.1 บริบทและปัญหา (Context &amp; Security Vulnerability)</h4>
+<p>จากการสแกนความปลอดภัยเชิงรับ (Defensive Security Audit) ในหัวข้อ <strong>Broken Object Level Authorization (BOLA/IDOR)</strong> ค้นพบช่องโหว่ร้ายแรงระดับ Critical ในลำดับการประมวลผลข้อมูล (Validation Sequence Flaw) ของเส้นทาง API การอนุมัตินักศึกษาเข้าห้องเรียน (<code>/api/students/[id]/approve</code>):</p>
+<ul>
+<li><strong>ลำดับสคริปต์เดิม:</strong> โค้ดหลังบ้านทำการรันคำสั่งฐานข้อมูล <code>UPDATE students SET status = &#39;approved&#39; ...</code> ไปทันทีก่อนที่จะเริ่มเช็กสิทธิ์ว่าผู้ดูแลที่ล็อกอินคนนั้นมีสิทธิ์ในห้องปฏิบัติการดังกล่าวหรือไม่ผ่าน <code>canOperateRoom(admin, student.requested_room)</code></li>
+<li><strong>ผลลัพธ์ที่เป็นช่องโหว่:</strong> หากแอดมินที่มีบทบาทเป็นผู้ควบคุมห้อง A (มีข้อจำกัดสิทธิ์ในคอลัมน์ <code>allowed_rooms</code> ของตน) ยิงคำขอ POST มุ่งเป้าหมายเพื่ออนุมัตินักศึกษาในห้อง B ระบบจะคืนค่าสถานะตอบกลับหน้าเว็บเป็น <code>403 Forbidden</code> แจ้งว่าสิทธิ์ไม่เพียงพอ แต่ในความเป็นจริงข้อมูลในตาราง <code>students</code> ได้ถูกแก้ไขเป็น <code>&#39;approved&#39;</code> และเขียนทับผู้จัดทำคำขอสำเร็จไปเรียบร้อยแล้ว ส่งผลให้นักศึกษาได้รับสิทธิ์เข้าห้องปฏิบัติการโดยมิชอบจากการบายพาสสิทธิ์</li>
+</ul>
+<h4>73.33.2 ตรรกะการตรวจสอบล่วงหน้าแบบปลอดภัย (Secure Validation-First Refactoring)</h4>
+<p>ทีมพัฒนาได้ทำการปรับปรุงสถาปัตยกรรมตัวจัดลำดับ (Sequence Restructuring) ในไฟล์ API ทั้งสองระบบเพื่อป้องกันช่องโหว่นี้อย่างถาวร:</p>
+<ol>
+<li><p><strong>การปรับปรุง API การอนุมัติ (<code>/api/students/[id]/approve/route.ts</code>):</strong></p>
+<ul>
+<li>ทำการยกเลิกคำสั่ง UPDATE ที่ทำงานเป็นคำสั่งแรก</li>
+<li>รันคำสั่งดึงข้อมูลแถวนักศึกษารายดังกล่าวเพื่อตรวจสอบ (Read Check) เป็นลำดับที่ 1</li>
+<li>ตรวจจับความถูกต้องว่าผู้ใช้มีตัวตนจริงและมีสถานะรอการอนุมัติอยู่ (<code>status = &#39;pending&#39;</code>)</li>
+<li>นำข้อมูลห้องเรียนเป้าหมายที่ดึงได้มาประเมินผ่าน <code>canOperateRoom</code> เพื่อตรวจสอบสิทธิ์เป็นลำดับที่ 2</li>
+<li>บล็อกและตัดจบเซสชันส่งกลับสถานะ <code>403</code> ทันทีหากไม่มีความยินยอมในห้องเรียนดังกล่าว โดยไม่มีคำสั่งแก้ไขใดๆ หลุดไปถึงขั้นตอนเขียนข้อมูล (Write Operations)</li>
+<li>ดำเนินการยิงคำสั่ง UPDATE สิทธิ์เข้าสู่ฐานข้อมูลเป็นขั้นตอนสุดท้าย เมื่อผ่านเงื่อนไขความปลอดภัย 100%</li>
+</ul>
+</li>
+<li><p><strong>การปรับปรุง API การปฏิเสธ (<code>/api/students/[id]/reject/route.ts</code>):</strong></p>
+<ul>
+<li>นำเข้าโมดูล <code>canOperateRoom</code> เพื่ออัปเกรดระดับการควบคุมจากเดิมที่ตรวจสอบเพียงบทบาทแอดมินระดับ <code>owner</code></li>
+<li>เพิ่มกระบวนการเช็กสิทธิ์แอดมินกับห้องของนักศึกษาที่ยื่นขอเข้ามาก่อนการเปลี่ยนสถานะเป็น <code>&#39;rejected&#39;</code> ในแบบตรรกะเดียวกัน ช่วยส่งเสริมความสม่ำเสมอในสถาปัตยกรรม (Architectural Symmetry) และป้องกันกรณีแอดมินข้ามแผนกสปูฟไอดีเข้ามาแอบกดปฏิเสธคิวห้องอื่น</li>
+</ul>
+</li>
+</ol>
+<h4>73.33.3 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>app/api/students/[id]/approve/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>สลับลำดับขั้นตอนฐานข้อมูล ดึงข้อมูลและตรวจสอบสิทธิ์ <code>canOperateRoom</code> ให้เสร็จสิ้นก่อนยิงคำสั่งเซฟลงตาราง <code>students</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>app/api/students/[id]/reject/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>นำเข้า <code>canOperateRoom</code> และเพิ่มการบล็อกแอดมินที่สิทธิ์เข้าไม่ถึงห้องเรียนเป้าหมายก่อนทำการเขียนทับสถานะคิวคำขอ</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบความปลอดภัยเชิงป้องกันเพื่อป้องกัน IDOR/BOLA §73.33</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-34"></a></p>
+<h3>73.34 การควบคุมความสอดคล้องและระบบป้องกันสภาวะการแย่งชิงในการสั่งเปิดประตู (Race Conditions &amp; Concurrency Controls for Door Unlocks)</h3>
+<p>วันที่บันทึก: 1 มิถุนายน 2026</p>
+<h4>73.34.1 บริบทและปัญหา (Context &amp; Race Condition Vulnerability)</h4>
+<p>ในการใช้งานจริงผ่านเครือข่ายอินเทอร์เน็ต แฮกเกอร์สามารถใช้บอทสคริปต์หรือเครื่องมือจำพวกการยิงแบบ Concurrent (เช่น OWASP ZAP หรือเครื่องมือทดสอบประสิทธิภาพเน็ตเวิร์ก) เพื่อยิงคำสั่งเปิดประตูหรือยืนยันอนุมัติซ้ำๆ เข้ามาพร้อมกันมากกว่า 50-100 Requests ภายในเสี้ยววินาทีเดียว:</p>
+<ul>
+<li><strong>ความล้มเหลวเชิงตรรกะเดิม:</strong> หากไม่มีการเช็กประวัติความถี่ของการทริกเกอร์ บอร์ด ESP32 จะต้องเปิดรับ Socket จำนวนมหาศาล และส่งสัญญาณทริกเกอร์รีเลย์ไฟฟ้าซ้ำๆ</li>
+<li><strong>ผลเสียต่อระบบกายภาพ:</strong> สัญญาณที่รัวเกินไปทำให้หน้าสัมผัสของรีเลย์ตัวควบคุม (Relay Contact) เกิดความร้อนสะสม สปาร์กไฟ และอาจส่งผลให้รีเลย์เกิดการค้างในสถานะสลับสาย (Relay Chatter / Contacts Welded) ประตูค้างหรือเปิดตลอดเวลา เป็นภัยคุกคามทางกายภาพต่อนักศึกษาในอาคาร นอกจากนี้ยังทำให้ระบบสร้าง Log ในตาราง <code>access_logs</code> ขยะซ้ำซ้อนกันจนระบบฐานข้อมูลประมวลผลล่าช้า</li>
+</ul>
+<h4>73.34.2 สถาปัตยกรรมตัวล็อกสัญญาณความร้อน (5-Second Database-Backed Mutex Lock)</h4>
+<p>เพื่อแก้ช่องโหว่นี้โดยรักษาสมดุลความเร็วสูงสุดของ Serverless ได้มีการเลือกใช้ระบบล็อกความสอดคล้องแบบกระจายผ่านระดับฐานข้อมูล (Database-Backed Distributed Mutex Lock):</p>
+<ul>
+<li>ระบบดึงตรรกะ <code>rateLimit</code> ที่ใช้อยู่เดิมในระบบ ซึ่งเขียน SQL ในรูปแบบ Atomic Query: <code>INSERT INTO rate_limits ... ON CONFLICT (key) DO UPDATE</code> ซึ่งการันตีความปลอดภัยต่อปัญหา Concurrency ในระดับคอร์ฐานข้อมูล PostgreSQL 100%</li>
+<li>สร้างคีย์ตัวล็อกขึ้นเฉพาะตัวสำหรับบานประตูแต่ละห้องเรียน: <code>lock:door:${room}</code></li>
+<li>กำหนดเวลาการครองล็อกคงที่ที่ <strong>5,000 มิลลิวินาที (5 วินาที)</strong></li>
+</ul>
+<h4>73.34.3 การบูรณาการและคัดกรองใน 3 เส้นทางหลัก</h4>
+<p>ตรรกะตัวล็อกนี้ถูกประยุกต์เข้าสู่ API ทั้ง 3 เส้นทางที่มีสิทธิ์ควบคุมคำสั่งเปิดประตูรีเลย์หน้างาน:</p>
+<ol>
+<li><strong>API ปลดล็อกด่วนของแอดมิน (<code>/api/system/unlock-room</code>):</strong> เช็กตัวล็อกก่อนควบคุมบอร์ดบาสเก็ต หากคีย์ล็อกถูกจองไว้แล้วในระยะ 5 วินาที จะคืนค่าตอบกลับ <code>429 Too Many Requests</code> พร้อมข้อความแจ้งเตือน &quot;ระบบเปิดประตูกำลังประมวลผลคำขอก่อนหน้า...&quot;</li>
+<li><strong>API กดอนุมัติคิวนักศึกษาหน้าประตู (<code>/api/students/[id]/approve</code>):</strong> รวบตัวล็อก 5 วินาทีก่อนเริ่มคำสั่ง <code>UPDATE</code> สถานะนักเรียนและสั่งบอร์ด ป้องกันแอดมินหรือบอทกดย้ำซ้ำซ้อนในจังหวะอนุมัติคำขอ</li>
+<li><strong>API สั่งเปิดประตูทั่วไปด้วยคีย์ลัด PWA (<code>/api/students/[id]/door</code>):</strong> คุ้มกันเส้นทางการส่งคำสั่งหลักของนักศึกษาและผู้ดูแลระบบจากการทริกเกอร์ถี่เกินเกณฑ์กำหนด</li>
+</ol>
+<h4>73.34.4 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>app/api/system/unlock-room/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ติดตั้ง <code>rateLimit</code> คีย์ <code>lock:door:${room}</code> 5 วินาที ก่อนสั่งเปิดทางไกล</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>app/api/students/[id]/door/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ติดตั้ง <code>rateLimit</code> คีย์ <code>lock:door:${room}</code> 5 วินาที ก่อนคำสั่ง manual open</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>app/api/students/[id]/approve/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ติดตั้ง <code>rateLimit</code> คีย์ <code>lock:door:${room}</code> 5 วินาที ก่อนเริ่ม UPDATE อนุมัติ</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบควบคุม Concurrency §73.34</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-35"></a></p>
+<h3>73.35 การป้องกันการเดาผ่านช่องทางข้างเคียงในการยืนยันรหัส PIN ปลดล็อกออฟไลน์ (Timing Side-Channel Protection on ESP32 Offline PIN Override)</h3>
+<p>วันที่บันทึก: 1 มิถุนายน 2026</p>
+<h4>73.35.1 บริบทและจุดอ่อนช่องทางข้างเคียง (Context &amp; Timing Side-Channel Flaw)</h4>
+<p>ในกระบวนการทำงานโหมดออฟไลน์ของบอร์ด ESP32 (<code>esp32.ino</code>) แอดมินสามารถป้อนรหัส <strong>Offline PIN 6 หลัก</strong> ผ่านบริการเว็บเพจภายในของบอร์ดเพื่อสั่งปลดล็อกประตูฉุกเฉินได้:</p>
+<ul>
+<li><strong>กลไกตรวจสอบแบบเดิม:</strong> บอร์ด C++ ทำการเช็กความถูกต้องผ่านตัวดำเนินการเปรียบเทียบมาตรฐาน:<pre><code class="language-cpp">if (enteredPin == cached_offline_pin)
+</code></pre>
+</li>
+<li><strong>ช่องโหว่ทางความปลอดภัย:</strong> ตัวเปรียบเทียบ <code>==</code> ของคลาส <code>String</code> ใน C++ ทำงานแบบ <strong>Early Termination</strong> (หยุดทำงานทันทีที่พบตัวอักษรตัวแรกที่ไม่แมตช์) ทำให้ความเร็วในการประมวลผลเปลี่ยนไปตามความถูกต้องของอักขระที่ป้อนเข้ามา แฮกเกอร์สามารถใช้บอทยิงคำสั่งในเครือข่ายภายในเพื่อวิเคราะห์ระยะเวลาหน่วงในการตอบสนอง (Network Latency / Round-Trip Time) ในระดับมิลลิวินาทีเพื่อทำการเดารหัส PIN ทีละตัวอักษรจากซ้ายไปขวา (Timing Attack) สำเร็จในเวลาอันสั้น</li>
+</ul>
+<h4>73.35.2 การบูรณาการตัวเช็กเวลาคงที่ (Constant-Time Verification Architecture)</h4>
+<p>เพื่อปิดช่องโหว่ Side-channel ตัวนี้อย่างเด็ดขาด ทีมพัฒนาได้ทำการแก้ไขโค้ดการประเมินรหัสผ่านในบอร์ดให้รันผ่านฟังก์ชันควบคุมเวลาคงที่:</p>
+<ul>
+<li>ยกเลิกการเรียกตัวดำเนินการ <code>==</code> ดั้งเดิม</li>
+<li>เปลี่ยนไปเรียกใช้ฟังก์ชัน <strong><code>secureCompare(const char* a, const char* b)</code></strong> ที่รวบรวมตรรกะระดับบิต XOR ทุกคู่ตัวอักษรไว้</li>
+<li>ตรรกะ <code>secureCompare</code> บังคับให้วนลูปตรวจสอบจนสิ้นสุดความยาวสูงสุดเสมอ ไม่มีการหยุดระหว่างลูป แม้ตัวอักษรแรกจะผิดพลาด ทำให้บอร์ดใช้เวลาในการคำนวณและส่ง Response กลับเน็ตเวิร์กยาวเท่ากันเป๊ะ 100% ในทุกกรณี (Constant Response Delay) สลายช่องโหว่ Timing Side-channel โดยสมบูรณ์</li>
+</ul>
+<h4>73.35.3 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>esp32/esp32.ino</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับปรุงจุดเปรียบเทียบเงื่อนไข <code>/unlock-pin</code> ให้เรียกผ่าน <code>secureCompare</code> ป้องกัน Side-channel Timing Attack</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับปรุงสตริงต้นฉบับจำลองโค้ดบอร์ด C++ บน Dashboard ให้ใช้ <code>secureCompare</code> สำหรับ PIN ให้สอดคล้องกัน</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบความปลอดภัยฝั่งบอร์ดควบคุม IoT §73.35</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

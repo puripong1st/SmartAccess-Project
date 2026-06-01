@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool, initDatabase } from "@/lib/db";
 import { getAdminFromCookie, canOperateRoom } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 import { openDoor } from "@/lib/esp32";
 import { sendDiscordNotification } from "@/lib/discord";
 import { notifyStudentStatusChange } from "@/lib/push-notify";
@@ -38,32 +39,53 @@ export async function POST(
 
     await sweepExpiredPending();
 
-    const { rows } = await pool.query(
-      `UPDATE students
-       SET status = 'approved', approved_by = $1, approved_at = CURRENT_TIMESTAMP
-       WHERE id = $2 AND status = 'pending'
-       RETURNING id, first_name, last_name, student_id, requested_room`,
-      [admin.id, studentId]
+    // 1. Fetch the student record first to verify room authorization and status
+    const { rows: studentCheckRows } = await pool.query(
+      "SELECT id, first_name, last_name, student_id, requested_room, status FROM students WHERE id = $1",
+      [studentId]
     );
-    const students = rows as {
+    if (studentCheckRows.length === 0) {
+      return NextResponse.json({ error: "ไม่พบข้อมูลนักศึกษา" }, { status: 404 });
+    }
+
+    const student = studentCheckRows[0] as {
       id: number;
       first_name: string;
       last_name: string;
       student_id: string;
       requested_room: string;
-    }[];
-    if (students.length === 0) {
-      const existing = await pool.query("SELECT status FROM students WHERE id = $1", [studentId]);
-      if (existing.rows.length === 0) {
-        return NextResponse.json({ error: "ไม่พบข้อมูลนักศึกษา" }, { status: 404 });
-      }
+      status: string;
+    };
+
+    if (student.status !== "pending") {
       return NextResponse.json({ error: "นักศึกษานี้ไม่ได้อยู่ในสถานะรอการอนุมัติ" }, { status: 400 });
     }
-    const student = students[0];
 
+    // 2. Perform the BOLA/IDOR room permission check BEFORE any status updates are made
     if (!canOperateRoom(admin, student.requested_room)) {
       return NextResponse.json({ error: "ไม่มีสิทธิ์ควบคุมห้องนี้" }, { status: 403 });
     }
+
+    // Acquire a 5-second concurrency lock to prevent double-triggering or relay chattering
+    const lockResult = await rateLimit({
+      key: `lock:door:${student.requested_room}`,
+      limit: 1,
+      windowMs: 5000,
+    });
+    if (!lockResult.success) {
+      return NextResponse.json(
+        { error: "ระบบเปิดประตูกำลังประมวลผลคำขอก่อนหน้า โปรดรอ 5 วินาทีก่อนสั่งใหม่อีกครั้ง" },
+        { status: 429 }
+      );
+    }
+
+    // 3. Execute the status update now that the admin is fully authorized
+    await pool.query(
+      `UPDATE students
+       SET status = 'approved', approved_by = $1, approved_at = CURRENT_TIMESTAMP
+       WHERE id = $2`,
+      [admin.id, studentId]
+    );
 
     // Open door via ESP32
     const esp32Result = await openDoor(student.student_id, student.requested_room);

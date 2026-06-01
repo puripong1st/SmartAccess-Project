@@ -1,7 +1,7 @@
 // app/api/students/[id]/reject/route.ts — Reject student
 import { NextRequest, NextResponse } from "next/server";
 import { getPool, initDatabase, StudentRow } from "@/lib/db";
-import { getAdminFromCookie } from "@/lib/auth";
+import { getAdminFromCookie, canOperateRoom } from "@/lib/auth";
 import { sendDiscordNotification } from "@/lib/discord";
 import { notifyStudentStatusChange } from "@/lib/push-notify";
 import { logEvent, getRequestContext } from "@/lib/access-log";
@@ -41,6 +41,11 @@ export async function POST(
       return NextResponse.json({ error: "ไม่พบข้อมูลนักศึกษา" }, { status: 404 });
     }
     const student = students[0];
+
+    // Enforce BOLA/IDOR room permission check before rejecting the student request
+    if (!canOperateRoom(admin, student.requested_room)) {
+      return NextResponse.json({ error: "ไม่มีสิทธิ์ควบคุมห้องนี้" }, { status: 403 });
+    }
 
     await pool.query(
       "UPDATE students SET status = 'rejected', approved_by = $1, approved_at = CURRENT_TIMESTAMP, rejection_reason = $2 WHERE id = $3",
