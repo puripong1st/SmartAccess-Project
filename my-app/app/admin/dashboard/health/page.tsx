@@ -77,7 +77,7 @@ function LatencyBar({ ms, max = 1000 }: { ms: number; max?: number }) {
     "linear-gradient(90deg, #EF4444, #F87171)";
   return (
     <div style={{ background: "var(--bg-primary)", borderRadius: 6, height: 8, overflow: "hidden", flex: 1 }}>
-      <div style={{ width: `${pct}%`, height: "100%", background: color, borderRadius: 6, transition: "width 0.6s ease" }} />
+      <div style={{ width: "100%", height: "100%", background: color, borderRadius: 6, transform: `scaleX(${pct / 100})`, transformOrigin: "left", transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)" }} />
     </div>
   );
 }
@@ -516,11 +516,13 @@ export default function HealthPage() {
                     </div>
                     <div style={{ background: "var(--bg-secondary)", borderRadius: 6, height: 10, overflow: "hidden", border: "1px solid var(--border)" }}>
                       <div style={{
-                        width: `${Math.min((item.value / item.max) * 100, 100)}%`,
+                        width: "100%",
                         height: "100%",
                         background: `linear-gradient(90deg, ${item.color}, ${item.color}90)`,
                         borderRadius: 6,
-                        transition: "width 0.6s ease"
+                        transform: `scaleX(${Math.min(item.value / item.max, 1)})`,
+                        transformOrigin: "left",
+                        transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)"
                       }} />
                     </div>
                     <span style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 2, display: "block" }}>

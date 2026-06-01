@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-01T11:51:00Z",
+  "title": "Design System: SmartAccess",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "University Purple",
+        "canonical": "#7C3AED",
+        "tonalRamp": ["#F5F3FF", "#EDE9FE", "#DDD6FE", "#C7D2FE", "#A78BFA", "#8B5CF6", "#7C3AED", "#5B21B6"]
+      },
+      "accent": {
+        "role": "secondary",
+        "displayName": "Education Pink",
+        "canonical": "#DB2777",
+        "tonalRamp": ["#FDF2F8", "#FCE7F3", "#FBCFE8", "#F9A8D4", "#F472B6", "#EC4899", "#DB2777", "#9D174D"]
+      },
+      "bg-primary": {
+        "role": "neutral",
+        "displayName": "Ultra-light Lilac BG",
+        "canonical": "#FAF9FF",
+        "tonalRamp": ["#FAF9FF", "#F3F0FF", "#EBE5FF", "#DFD5FF", "#CEBDFF", "#B399FF", "#946EFF", "#723DFF"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display Title",
+        "purpose": "Hero stats and large welcome headings on dashboard."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section titles and main page headers."
+      },
+      "body": {
+        "displayName": "Body Text",
+        "purpose": "Standard paragraphs, detail labels, and descriptions."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-sm",
+        "value": "0 2px 8px -1px rgba(124, 58, 237, 0.04)",
+        "purpose": "Used for small control tabs and active button states."
+      },
+      {
+        "name": "shadow-md",
+        "value": "0 10px 25px -5px rgba(124, 58, 237, 0.06), 0 8px 16px -6px rgba(124, 58, 237, 0.04)",
+        "purpose": "Standard elevation for content cards at rest."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0 20px 40px -10px rgba(124, 58, 237, 0.1), 0 10px 20px -8px rgba(124, 58, 237, 0.05)",
+        "purpose": "Elevated hover state for interactive cards and modals."
+      }
+    ],
+    "motion": [
+      {
+        "name": "tactile-ease",
+        "value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "purpose": "Spring-back physics transition for hover and active click states."
+      },
+      {
+        "name": "fluid-ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Standard acceleration curve for page fade-in and drawers."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "640px" },
+      { "name": "tablet", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Tactile Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Premium gradient button with satisfying tactile spring feedback on hover/click.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14M12 5l7 7-7 7\"/></svg>ดำเนินการต่อ</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 600; color: #ffffff; background: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%); border: none; border-radius: 12px; padding: 12px 24px; cursor: pointer; box-shadow: 0 4px 15px -3px rgba(124, 58, 237, 0.3); transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); } .ds-btn-primary:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 25px -4px rgba(124, 58, 237, 0.45); filter: brightness(1.04); } .ds-btn-primary:active { transform: translateY(0) scale(0.97); }"
+    },
+    {
+      "name": "Tactile Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Hollow button for secondary actions with a subtle purple-pale hover highlight.",
+      "html": "<button class=\"ds-btn-secondary\">ยกเลิก</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 600; color: #7C3AED; background: #ffffff; border: 1px solid rgba(124, 58, 237, 0.16); border-radius: 12px; padding: 12px 24px; cursor: pointer; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); } .ds-btn-secondary:hover { transform: translateY(-2px) scale(1.02); background: #F5F3FF; border-color: #A78BFA; } .ds-btn-secondary:active { transform: translateY(0) scale(0.97); }"
+    },
+    {
+      "name": "iOS Control Card",
+      "kind": "card",
+      "refersTo": "premium-card",
+      "description": "Clean, highly readable container featuring the university brand gradient accent on the top rim.",
+      "html": "<div class=\"ds-premium-card\"><div class=\"ds-card-header\"><h4>สถานะฮาร์ดแวร์</h4></div><div class=\"ds-card-body\"><div class=\"ds-status-row\"><span class=\"ds-status-dot pulse-green\"></span><p>ระบบเชื่อมต่อ ESP32 ปกติ</p></div></div></div>",
+      "css": ".ds-premium-card { background: #ffffff; border: 1px solid rgba(124, 58, 237, 0.08); box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.06); border-radius: 20px; overflow: hidden; position: relative; width: 100%; max-width: 320px; font-family: system-ui, sans-serif; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); } .ds-premium-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #7C3AED 0%, #DB2777 100%); opacity: 0.85; } .ds-premium-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.1); border-color: rgba(124, 58, 237, 0.2); } .ds-card-header { padding: 18px 20px 10px; } .ds-card-header h4 { margin: 0; font-size: 16px; font-weight: 700; color: #1E1B4B; } .ds-card-body { padding: 0 20px 18px; } .ds-status-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; } .ds-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: #10B981; } .pulse-green { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); animation: pulse-green-ring 1.6s infinite; } @keyframes pulse-green-ring { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } } .ds-status-row p { margin: 0; font-size: 13.5px; color: #6B7280; font-weight: 500; }"
+    },
+    {
+      "name": "iOS Tactile Input",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Input field with clear typography (auto-zoom prevention) and an attractive surrounding violet glow on focus.",
+      "html": "<input class=\"ds-smartaccess-input\" type=\"text\" placeholder=\"กรอกรหัสประจำตัวนักศึกษา...\" />",
+      "css": ".ds-smartaccess-input { width: 100%; max-width: 320px; background: #FAF9FF; border: 1px solid rgba(124, 58, 237, 0.16); border-radius: 12px; padding: 12px 16px; color: #1E1B4B; font-family: system-ui, sans-serif; font-size: 16px; font-weight: 500; outline: none; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); } .ds-smartaccess-input:focus { border-color: #7C3AED; background: #ffffff; box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12); } .ds-smartaccess-input::placeholder { color: #9CA3AF; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The iOS Control Center",
+    "overview": "ระบบดีไซน์ของ SmartAccess ได้รับแรงบันดาลใจหลักมาจากความประณีต สะอาดตา และการควบคุมที่ง่ายดายของหน้าจอ iOS Control Center โดยผสานความมั่นคงทางยุทธศาสตร์ความปลอดภัยเข้ากับ UI ยุคใหม่ที่ตอบสนองอย่างรวดเร็วและเป็นมิตรกับผู้ใช้งาน ตัวอินเทอร์เฟซมีความลื่นไหลเป็นธรรมชาติ โดยลดทอนองค์ประกอบเชิงตกแต่งที่ไม่จำเป็นออกทั้งหมด และมุ่งเน้นไปที่การควบคุมที่ฉับไวรวมศูนย์และการจัดเรียงข้อมูลที่มีสัดส่วนสวยงาม (Structured Information)\n\nการออกแบบนี้เน้นตอบสนองการปฏิสัมพันธ์แบบสัมผัสและเมาส์ด้วยความรู้สึกแบบ Tactile & Confident ทำให้ผู้ดูแลระบบรู้สึกมั่นใจและมีอำนาจในการจัดการสิทธิ์ ส่วนนักศึกษาก็สามารถเข้าถึงห้องเรียนได้อย่างสะดวกและลื่นไหลที่สุด",
+    "keyCharacteristics": [
+      "Tactile Responses: ปุ่มและองค์ประกอบโต้ตอบมีการเคลื่อนไหวตอบสนองเชิงฟิสิกส์เบา ๆ ดึงดูดการกด",
+      "Card-Centric Structure: นำเสนอข้อมูลที่ซับซ้อนด้วยเลย์เอาต์การ์ดที่มีมิติ ลอยเด่นสวยงาม",
+      "Balanced Proportions: ใช้น้ำหนักฟอนต์และช่องว่างขนาดใหญ่ (Generous Spacing) เพื่อสร้างการนำสายตาที่โปร่งสบาย",
+      "Vibrant Status Indicators: ใช้ไฟแสดงสถานะเรืองแสงแบบสีนีออนคมชัดสูงเพื่อความแม่นยำทางความปลอดภัย"
+    ],
+    "rules": [
+      {
+        "name": "The 10% Branding Rule",
+        "body": "สีชมพูแบรนด์ (Education Pink) จะถูกใช้ประดับตกแต่งหรือเน้นย้ำในส่วนสำคัญที่มีสัดส่วนไม่เกิน 10% ของหน้าจอ เพื่อคงความเรียบหรู มินิมอล และไม่แย่งสายตากับข้อมูลหลัก",
+        "section": "colors"
+      },
+      {
+        "name": "The Text-Wrap Balance Rule",
+        "body": "หัวข้อข่าวสารและหัวข้อการ์ดทั้งหมดต้องใช้ text-wrap: balance เพื่อป้องกันความยาวบรรทัดเหลื่อมล้ำและเพิ่มความพรีเมียมในการจัดวางตัวอักษร",
+        "section": "typography"
+      },
+      {
+        "name": "The Responsive Depth Rule",
+        "body": "ในโหมดมืด (Dark Theme) ค่าเงามินิมอลสีม่จะถูกปรับเปลี่ยนเป็นเงาสีดำสนิทที่มีความเข้มขึ้น (rgba(0, 0, 0, 0.6)) เพื่อรักษามิติความลึกในพื้นที่ที่แสงน้อย",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do ใช้ตัวจับคู่ฟอนต์ Noto Sans Thai และ Inter ร่วมกับ Line-height 1.6 สำหรับตัวหนังสือเนื้อหาหลักเพื่อความคมชัดสูงสุด",
+      "Do รักษาขอบสัมผัส (Touch Target) ทุกปุ่มกดบนสมาร์ทโฟนให้มีความสูงอย่างน้อย 44px เพื่อความสะดวกในการทัชของผู้ดูแลระบบ",
+      "Do ใช้ปุ่มแชร์และสิทธิ์ PWA บนหน้า Admin Dashboard เท่านั้น เพื่อไม่ให้รบกวนนักศึกษาฝั่งบริการ",
+      "Do ใช้ไฟสถานะกะพริบเรืองแสง (pulse-green / pulse-red) เพื่อแสดงสถานะเรียลไทม์ของฮาร์ดแวร์แทนสัญลักษณ์ทึบเชย ๆ"
+    ],
+    "donts": [
+      "Don't ใช้ขอบสีเหลี่ยมสีเทาทึบหรือตารางเชยๆ สไตล์เว็บราชการยุคเก่าเป็นเด็ดขาด ให้ใช้ขอบมนความโค้งมน 16px-20px และเบลอพื้นหลังแทน",
+      "Don't จัดองค์ประกอบและตารางเบียดเสียดแน่นจนลายตา ให้มีระยะห่าง Padding ขั้นต่ำ 16px เสมอในทุกการ์ดบนสมาร์ทโฟน",
+      "Don't ออกแบบปุ่มหรือขอบโค้งการ์ดที่โค้งงอมากเกินไป (ห้ามใช้ค่า border-radius เกิน 20px สำหรับการ์ดทั่วไป เพราะจะทำให้อินเทอร์เฟซดูล้นและไร้โครงสร้างที่น่าเชื่อถือ)",
+      "Don't ใช้สีฉูดฉาดแบบของเล่นเด็กในหน้าต่างแจ้งเตือน ให้รักษาโทนคู่สียุทธศาสตร์ ม่วงชมพู และโทนประสานพาสเทลเสมือนจริงขององค์กร"
+    ]
+  }
+}

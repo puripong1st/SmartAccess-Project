@@ -1078,7 +1078,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                               className="btn-ghost"
                               style={{ padding: "10px 14px", fontSize: 11.5, borderRadius: 10, flexShrink: 0, fontWeight: 700, borderColor: `${active.color}66`, color: active.color }}
                             >
-                              🧪 ทดสอบ
+                              🧪 ส่งข้อความทดสอบ
                             </button>
                           </div>
                         </div>

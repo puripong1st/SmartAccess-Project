@@ -187,10 +187,12 @@ export default function RoomsPage() {
                         <div
                           style={{
                             width: "100%",
-                            height: `${Math.max(pct, 5)}%`,
+                            height: "100%",
+                            transform: `scaleY(${Math.max(pct, 5) / 100})`,
+                            transformOrigin: "bottom",
                             background: "linear-gradient(to top, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)",
                             borderRadius: "4px 4px 0 0",
-                            transition: "height 0.3s ease",
+                            transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
                             minHeight: cnt > 0 ? 6 : 2
                           }}
                           title={`ช่วงเวลา ${hrLabel}:00 น. | ทั้งหมด ${cnt} ครั้ง`}
@@ -600,7 +602,7 @@ export default function RoomsPage() {
       </section>
 
       {/* OTA Firmware Control Center Card */}
-      <div className="premium-card" style={{ padding: 26, marginTop: 24, borderLeft: "4px solid var(--smartaccess-purple)", background: "var(--bg-secondary)" }}>
+      <div className="premium-card" style={{ padding: 26, marginTop: 24 }}>
         <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--smartaccess-purple)" }}>
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
@@ -634,7 +636,7 @@ export default function RoomsPage() {
                 const icon = isOtaTrigger ? <Download size={16} /> : isDelete ? <Trash2 size={16} /> : <Rocket size={16} />;
                 const color = isOtaTrigger ? "#3B82F6" : isDelete ? "#EF4444" : "#7C3AED";
                 return (
-                  <div key={log.id} style={{ padding: "8px 12px", background: "var(--bg-secondary)", border: "1px solid var(--border)", borderLeft: `3px solid ${color}`, borderRadius: 6 }}>
+                  <div key={log.id} style={{ padding: "8px 12px", background: `${color}08`, border: `1px solid ${color}35`, borderRadius: 6 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                       <span style={{ fontSize: 12, color: "var(--text-primary)", fontWeight: 600 }}>
                         {icon} {log.notes || log.action}

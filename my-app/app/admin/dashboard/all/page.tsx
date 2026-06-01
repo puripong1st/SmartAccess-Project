@@ -590,7 +590,7 @@ export default function AllPage() {
 
       {/* ── Log Data Retention & Maintenance Compliance Card ── */}
       {(isOwner || user.role === "log_viewer") && (
-        <div className="premium-card animate-fade-in" style={{ padding: 26, borderLeft: "4px solid var(--edu-pink)", background: "var(--bg-secondary)", textAlign: "left" }}>
+        <div className="premium-card animate-fade-in" style={{ padding: 26, textAlign: "left" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 12 }}>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
