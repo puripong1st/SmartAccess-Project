@@ -29,10 +29,10 @@ export default function PushNotificationManager({ studentDbId, inline = false }:
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // ตรวจ iOS/iPadOS (iPadOS รายงานตัวเป็น Mac จึงเช็ค touch ร่วม)
+    // ตรวจ iOS/iPadOS (iPadOS รายงานตัวเป็น Mac จึงเช็ค touch ร่วมและป้องกันการสับสนบน macOS เดสก์ท็อป)
     const ua = navigator.userAgent;
     const isIOS = /iphone|ipad|ipod/i.test(ua) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1 && 'ontouchend' in document);
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as unknown as { standalone?: boolean }).standalone === true;

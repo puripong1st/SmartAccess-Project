@@ -8691,29 +8691,40 @@ rate-limit, CSP/security headers, parameterized query, role-based field filterin
 - `sendDiscordNotification()` เดิม (caller 12 ไฟล์เรียกอยู่) ถูกทำเป็น alias → delegate ไป `sendNotification` ผ่าน dynamic import (กัน circular dependency) ดังนั้น **ทุก event ที่เคยส่ง Discord จะส่ง Telegram/LINE อัตโนมัติ** เมื่อมีการตั้งค่า
 - Telegram/LINE ไม่รองรับ embed → ใช้ `formatPlainText()` แปลงเป็นข้อความตัวอักษร (Telegram ส่ง `parse_mode: HTML`)
 
-### ช่องทางและรูปแบบการเชื่อมต่อ
-| ช่องทาง | API | สิ่งที่ต้องตั้ง | ฟรี? |
-|--------|-----|----------------|------|
-| Discord | Incoming Webhook | webhook URL ต่อช่อง | ✅ ไม่จำกัด |
-| Telegram | Bot API `sendMessage` | bot token (1) + chat id ต่อช่อง | ✅ ไม่จำกัด |
-| LINE | Messaging API `push` | channel access token (1) + target id ต่อช่อง | ⚠️ ~500 ข้อความ/เดือน |
+### ช่องทางและรูปแบบ�#### 73.39.6 การประยุกต์ใช้ระบบจัดระเบียบตารางแบบตอบสนองบนมือถือสำหรับการจัดการผู้ดูแลระบบ (Responsive Mobile Card Layout Adaptation ใน `admins/page.tsx`)
+- **ปัญหาเดิม:** ตารางทำเนียบผู้ดูแลระบบและเจ้าหน้าที่ดำเนินงาน (`admins/page.tsx`) มีขอบเขตความกว้างค่อนข้างมาก เมื่อแสดงผลบนหน้าจอโทรศัพท์ (ทรศ) ตัวตารางจะถูกบีบอัดสัดส่วนจนคอลัมน์ชื่อเต็มสิทธิ์ระบบและขอบเขตห้องซ้อนทับกันอย่างหนาแน่นและขอบตารางขาดลอยหายไป
+- **การแก้ไข:**
+  - ทำการจัดแบ่งวิวโดยการคลุมโครงสร้างตารางข้อมูลในคลาส `.desktop-view` (ซ่อนตัวอัตโนมัติบนขนาดหน้าจอ <= 1024px)
+  - เพิ่มคอมโพเนนต์การ์ดแสดงผลบนมือถือที่สวยงามตอบรับรูปแบบ PWA Touch-First ภายใต้บล็อก `.mobile-view` (แสดงผลเมื่อหน้าจอ <= 1024px) ซึ่งจะจัดเรียงข้อมูลผู้ดูแลระบบ ขอบเขตรับผิดชอบ และสิทธิ์ควบคุมอย่างเป็นสัดส่วน มีระเบียบคอลัมน์ลอยตัวแบบ Premium Glassmorphism
+  - ขยายขอบเขตการทำงานของปุ่ม Action (ถอนสิทธิ์, แก้ไขข้อมูล) ให้ตอบรับการสัมผัส (Touch Target) ขนาด min-height: 44px มอบความมั่นคงและปราศจากข้อผิดพลาดในการแตะใช้งาน
 
-> **หมายเหตุ LINE**: LINE Notify (webhook ง่าย ๆ) ปิดบริการ มี.ค. 2025 — ระบบจึงใช้ **LINE Messaging API** (push) ซึ่งมีโควตา free ~500 ข้อความ/เดือน แนะนำให้ Telegram/Discord เป็นช่องหลักถ้าปริมาณสูง
+#### 73.39.7 การกู้คืนแถบนำทางแบบแถบสไลด์ในตัวเลือกห้องเรียนบนมือถือ (Premium Horizontal Scrollbar Indicator ใน `globals.css`)
+- **ปัญหาเดิม:** คอนเทนเนอร์แถบเลือกฟิลเตอร์ห้องเรียนบนมือถือ (`.mobile-filter-container`) มีการซ่อนแถบเลื่อน (Scrollbar) ทั้งหมดผ่านคำสั่ง `display: none` เพื่อความสวยงาม แต่การไม่มีแถบนำร่องส่งผลเสียต่อการรับรู้ของผู้ใช้ (UX Anti-Pattern) โดยผู้ใช้ไม่รู้เลยว่ามีรายการห้องเพิ่มเติมทางด้านขวา (เช่น ห้อง CE-402, A-401, A-402) และคิดว่าระบบเกิดความผิดพลาดในการดึงข้อมูลไม่ครบ
+- **การแก้ไข:**
+  - ยกเลิกการซ่อนแถบเลื่อนถาวร โดยเปลี่ยนมาสร้างสไตล์แถบเลื่อนแบบเรืองแสงสีม่วงโกลว์ขนาดบางเฉียบพิเศษ 4px (`height: 4px`) พร้อมระบุรัศมีความโค้งมนพรีเมียมและความโปร่งแสงบางเบา (`rgba(124, 58, 237, 0.18)`)
+  - ทำให้บนหน้าจอมือถือปรากฏเส้นนำทางสีม่วงจางระดับพรีเมียม บ่งชี้สถานะการเลื่อนอย่างชัดเจน เป็นธรรมชาติ และส่งเสริมความน่าใช้งานทันทีตามหลักความเข้ากันได้สากล
 
-### คีย์ใน `system_settings`
-**Telegram** (กลาง): `telegram_bot_token`, `telegram_chat_register`, `telegram_chat_approve`, `telegram_chat_logs`, `telegram_chat_admin_audit`
-**Telegram** (รายห้อง): `room_telegram_register_{room}`, `room_telegram_approve_{room}`, `room_telegram_logs_{room}`
-**LINE** (กลาง): `line_channel_token`, `line_target_register`, `line_target_approve`, `line_target_logs`, `line_target_admin_audit`
-**LINE** (รายห้อง): `room_line_register_{room}`, `room_line_approve_{room}`, `room_line_logs_{room}`
+#### 73.39.8 การแก้ไขตัวแยกแยะอุปกรณ์ iOS เพื่อป้องกันข้อผิดพลาดบนคอมพิวเตอร์ macOS เดสก์ท็อป (Robust iOS Device Detection Bug Fix ใน `PushNotificationManager.tsx`)
+- **ปัญหาเดิม:** คำสั่งสำหรับตรวจจับประเภทระบบปฏิบัติการ iOS เพื่อทริกเกอร์แบนเนอร์ข้อความติดตั้งแอป ("เปิดแจ้งเตือนบน iPhone") มีตรรกะตรวจเช็คความเข้ากันได้ของ iPadOS โดยเทียบ `navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1` ส่งผลให้ผู้ใช้ที่เข้าใช้งานระบบด้วยคอมพิวเตอร์แล็ปท็อป macOS เดสก์ท็อป (MacBook) ที่มี Trackpad รองรับนิ้วมือแบบ Multi-Touch โดนตรวจจับเป็นอุปกรณ์ iOS และแสดงแบนเนอร์สีดำแนะนำการติดตั้งบน iPhone ลอยขึ้นมารบกวนอย่างผิดพลาด
+- **การแก้ไข:**
+  - ปรับปรุงการตรวจสอบเพิ่มเติมโดยเพิ่มการเช็ค `'ontouchend' in document` ซึ่งเป็นฟังก์ชันตรวจจับหน้าจอสัมผัส (Touch Screen) แท้จริงที่มีเฉพาะบนอุปกรณ์ iOS/iPadOS เท่านั้น
+  - ทำให้คอมพิวเตอร์ macOS เดสก์ท็อป ทั่วไปข้ามตรรกะนี้อย่างถูกต้อง ปราศจากแบนเนอร์แสดงความสับสน และแสดงปุ่มใน Sidebar Layout อย่างสมบูรณ์แบบ
 
-การเลือกปลายทาง: รายห้อง override → ส่วนกลาง fallback (เหมือน Discord); หมวด `admin_audit` ถ้าว่างจะ fallback ไป `*_logs`
+---
 
-### วิธีตั้งค่า
-**Telegram**: คุยกับ `@BotFather` → `/newbot` → ได้ **Bot Token**; หา **Chat ID** ของกลุ่ม/แชต (เช่นผ่าน `@userinfobot` หรือ `getUpdates`) แล้วเชิญบอทเข้ากลุ่ม → กรอกในแท็บตั้งค่าระบบ → กด"ทดสอบ"
-**LINE**: สร้าง Messaging API Channel ใน LINE Developers Console → ได้ **Channel Access Token (long-lived)**; ใช้ **User ID / Group ID** เป็น Target → กรอก → กด"ทดสอบ"
+### สรุปรายการไฟล์แก้ไขในสเต็ปนี้
 
-### UI (อัปเดต 2026-05-29)
-- **แท็บ sidebar** เปลี่ยนชื่อจาก "ตั้งค่าระบบ & Webhook" → **"ตั้งค่าการแจ้งเตือน"**; หัวข้อหน้าเป็น "🔔 ศูนย์ตั้งค่าการแจ้งเตือน"
+| ลำดับ | ชื่อไฟล์ | ประเภท | คำอธิบายการแก้ไข |
+|---|---|---|---|
+| 1 | `my-app/app/admin/dashboard/all/page.tsx` | **[MODIFY]** | อิมพลิเมนต์การแบ่งวิวด้วย `.desktop-view` และพัฒนาระบบกริดการ์ดแสดงผลบนมือถือ `.mobile-view` สำหรับทั้งทำเนียบและตาราง Audit Logs |
+| 2 | `my-app/app/admin/dashboard/rooms/page.tsx` | **[MODIFY]** | ทำการรีแฟกเตอร์ Layout สู่รูปแบบ Grid 2 คอลัมน์ และติดตั้งมาตรฐาน ARIA (`role="switch"`, `aria-checked`, `aria-pressed`) ให้กับสวิตช์และปุ่มวัน |
+| 3 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | นำคอมโพเนนต์ PushNotificationManager เข้ามาติดตั้งแบบ Inline ไว้ในเมนูด้านล่างของ Sidebar เพื่อความสะอาดตา |
+| 4 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | เพิ่มการรองรับพร็อพ `inline` และแก้ไขตรรกะการตรวจจับระบบปฏิบัติการ iOS ให้ถูกต้องแม่นยำ ปราศจากข้อผิดพลาดบนคอมพิวเตอร์เดสก์ท็อป |
+| 5 | `my-app/app/globals.css` | **[MODIFY]** | เพิ่มการกำหนดสไตล์ของปุ่ม Actions ในตาราง พร้อมกู้คืนการแสดงผลแถบเลื่อนแบบเรืองแสงสีม่วงบางเฉียบ 4px |
+| 6 | `my-app/app/admin/dashboard/admins/page.tsx` | **[MODIFY]** | อิมพลิเมนต์การแบ่งวิวด้วย `.desktop-view` และพัฒนาระบบกริดการ์ดแสดงผลบนมือถือ `.mobile-view` สำหรับตารางแอดมิน |
+| 7 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดแผนการแก้ไขทางสถาปัตยกรรมและรายละเอียด UI/UX สำหรับเล่มวิทยานิพนธ์ §73.39 |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>** เปลี่ยนชื่อจาก "ตั้งค่าระบบ & Webhook" → **"ตั้งค่าการแจ้งเตือน"**; หัวข้อหน้าเป็น "🔔 ศูนย์ตั้งค่าการแจ้งเตือน"
 - หน้าตั้งค่าใช้ **segmented selector** (Discord / Telegram / LINE) สลับดูทีละช่อง แทนการ์ดยาวเรียงกัน — แต่ละช่องมี token (Telegram/LINE) + 4 ปลายทาง + ปุ่มทดสอบ
 - ใน room modal แท็บเดิม "Discord Webhook" เปลี่ยนเป็น **"ระบบแจ้งเตือน"** และใช้ segmented selector เดียวกันสำหรับตั้ง override รายห้อง (Discord = URL+ปุ่มทดสอบ; Telegram/LINE = chat/target id ใช้ token ส่วนกลาง)
 

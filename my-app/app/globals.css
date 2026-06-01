@@ -936,7 +936,22 @@ button, a, [role="button"], input, select, textarea, label {
 }
 
 .mobile-filter-container::-webkit-scrollbar {
-  display: none !important; /* Hide scrollbars for a clean, app-like look */
+  height: 4px !important;
+  display: block !important;
+}
+
+.mobile-filter-container::-webkit-scrollbar-track {
+  background: rgba(124, 58, 237, 0.03) !important;
+  border-radius: 99px !important;
+}
+
+.mobile-filter-container::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.18) !important;
+  border-radius: 99px !important;
+}
+
+.mobile-filter-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.35) !important;
 }
 
 /* Extra safety bounds for very narrow screens (e.g. iPhone SE 1st Gen, 320px screen width) */
