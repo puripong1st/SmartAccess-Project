@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 11:24:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 11:36:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -16803,6 +16803,64 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดการวิเคราะห์ช่องโหว่และแผนภาพพิมพ์เขียว Zero-Trust V2.0 §73.36</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-37"></a></p>
+<h3>73.37 การจัดโครงสร้างไฟล์ควบคุมสัญจรและรักษาความปลอดภัยเพื่อรองรับ Next.js 16 (Next.js 16 Proxy Migration &amp; Global Middleware-to-Proxy Refactoring)</h3>
+<p>วันที่บันทึก: 1 มิถุนายน 2026</p>
+<h4>73.37.1 ปัญหาและความขัดแย้งของไฟล์ (Middleware and Proxy Conflicts in Next.js 16)</h4>
+<p>เมื่ออัปเกรดระบบเว็บแอปพลิเคชันสู่ Next.js 16 (Canary) มีการเปลี่ยนแปลงสถาปัตยกรรมการจัดการทราฟฟิกระดับโกลบอลครั้งสำคัญ โดยกำหนดเงื่อนไขห้ามใช้งานไฟล์ควบคุมสัญจรเดิม <code>middleware.ts</code> ร่วมกับไฟล์พร็อกซีควบคุมการเข้าถึงระบบ <code>proxy.ts</code> พร้อมกัน ซึ่งจะส่งผลให้ระบบไม่สามารถรันกระบวนการ Build ได้:</p>
+<ul>
+<li><strong>ข้อจำกัดของ Next.js 16:</strong> เมื่อตรวจพบทั้งไฟล์ <code>middleware.ts</code> และ <code>proxy.ts</code> ระบบจะรายงานความล้มเหลวด้วยข้อความ: <code>Error: Both middleware file &quot;./middleware.ts&quot; and proxy file &quot;./proxy.ts&quot; are detected. Please use &quot;./proxy.ts&quot; only.</code></li>
+<li><strong>ผลกระทบหากยกเลิกฟีเจอร์ใดฟีเจอร์หนึ่ง:</strong> <ol>
+<li>หากลบ <code>proxy.ts</code>: จะส่งผลให้ตรรกะความปลอดภัยในการเข้าถึงและการป้องกันการสปูฟสิทธิ์สำหรับเส้นทางแอดมิน (<code>/admin/dashboard/*</code>) เสียหาย แอดมินจะไม่ถูกส่งไปยังหน้าล็อกอินโดยอัตโนมัติ</li>
+<li>หากลบ <code>middleware.ts</code>: จะส่งผลให้สถาปัตยกรรมตัวจำกัดอัตราความเร็วสำหรับการใช้งาน API (Sensitive API Rate Limiting) ของผู้ใช้และฮาร์ดแวร์ IoT ไร้ความสามารถในการสกัดกั้น Brute-Force หรือ DoS</li>
+</ol>
+</li>
+</ul>
+<h4>73.37.2 การผสานสถาปัตยกรรมระดับโกลบอลสู่ระบบ Proxy ตัวเดียว (Consolidated Global Proxy Architecture)</h4>
+<p>ทีมพัฒนาได้ตัดสินใจทำการยุบรวมบทบาทหน้าที่ (Consolidation) ของระบบจัดสัญจรความปลอดภัย โดยการถ่ายโอนฟังก์ชันการจำกัดอัตราความเร็ว API และการสกัดกั้นไอพีทั้งหมดจาก <code>middleware.ts</code> มารันเป็นขั้นตอนเริ่มต้น (Early Evaluation) ภายในระบบของ <code>proxy.ts</code> ซึ่งทำงานบน Node.js runtime ตรรกะใหม่ทำงานดังนี้:</p>
+<ol>
+<li><strong>การตรวจสอบสิทธิ์และขีดจำกัดความเร็วของ API:</strong> เมื่อคำขอเริ่มต้นเข้ามา หากมีส่วนของพาธขึ้นต้นด้วย <code>/api/</code> ระบบจะประเมินผ่าน <code>SENSITIVE_ROUTES</code> โดยดึงค่าไอพีที่ตรวจสอบความปลอดภัยผ่าน <code>getClientIp</code> และประเมินผ่าน <code>rateLimitEdge</code></li>
+<li><strong>การตอบกลับกรณีเกินโควตา:</strong> หากพบว่าการส่งคำขอเกินความเร็วที่กำหนด จะส่งกลับโครงสร้างข้อมูล JSON แบบ 429 Too Many Requests ทันทีจากระดับพร็อกซี เพื่อไม่ให้คำขอไหลไปถึงระดับ Serverless API</li>
+<li><strong>การรักษาความปลอดภัยหน้าจอแผงแอดมิน:</strong> หากเป็นหน้าแดชบอร์ด จะประเมิน JWT โทเคนผ่าน <code>verifyToken</code> และจัดการคุกกี้ตามปกติ</li>
+<li><strong>ความสอดคล้องและการปรับแต่งมอนิเตอร์แมตช์ (Matcher Configuration):</strong> ปรับโครงสร้างส่วนท้ายของ <code>proxy.ts</code> ในตัวแปร <code>config</code> โดยการเพิ่มพาธ <code>&quot;/api/:path*&quot;</code> เข้าไป เพื่อให้ระบบพร็อกซีรับสายสัญญาณคำขอจาก APIs ได้ทั้งหมด</li>
+</ol>
+<h4>73.37.3 ผลลัพธ์เชิงตัวเลขและประสิทธิภาพ (Build Verification and Performance Output)</h4>
+<p>หลังจากทำการลบไฟล์ <code>middleware.ts</code> ออกจากระบบ และรันคำสั่ง <code>npm run build</code> พบข้อมูลดังนี้:</p>
+<ul>
+<li><strong>Build Success:</strong> ระบบรันสำเร็จลุล่วง 100% ไม่มีข้อผิดพลาดค้างคา (Error-Free Compilation)</li>
+<li><strong>TypeScript &amp; Router Compilation:</strong> ผ่านขั้นตอนการตรวจสอบอย่างรวดเร็ว (TypeScript compilation เสร็จสิ้นใน 6.2 วินาที)</li>
+<li><strong>Unified Proxy Entry:</strong> ในส่วนสรุปเส้นทางเบื้องหลัง ระบบแสดงผลตัวจัดการร่วมในฐานะ <code>Proxy (Middleware)</code> เพียงตัวเดียวที่ครอบคลุมการทำงานทุกส่วนอย่างสมบูรณ์</li>
+</ul>
+<h4>73.37.4 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/proxy.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ทำการอัปเกรดโครงสร้างภายใน โดยผสานสคริปต์ Rate Limiting, ดึงข้อมูลไอพีแท้จริง และขยายขอบเขตการดักจับเส้นทางผ่านตัวจับ <code>&quot;/api/:path*&quot;</code></td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/middleware.ts</code></td>
+<td><strong>[DELETE]</strong></td>
+<td>ทำการลบไฟล์นี้ออกจากโครงการอย่างเป็นทางการเพื่อยกเลิกการทับซ้อนและปลดล็อกการคอมไพล์ใน Next.js 16</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดแผนการแก้ไขทางสถาปัตยกรรมการย้ายระบบ Middleware สู่ Unified Proxy สำหรับการอนุมัติวิทยานิพนธ์ §73.37</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
