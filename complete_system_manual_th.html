@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:59:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 11:24:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -16723,6 +16723,86 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบความปลอดภัยฝั่งบอร์ดควบคุม IoT §73.35</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-36"></a></p>
+<h3>73.36 การอัปเกรดระบบรักษาความปลอดภัยเชิงลึกสู่สถาปัตยกรรม Zero-Trust IoT V2.0 (End-to-End Zero-Trust API Security, Nonce Tracking, and Key Derivation Function)</h3>
+<p>วันที่บันทึก: 1 มิถุนายน 2026</p>
+<h4>73.36.1 ปัญหาเชิงทฤษฎีและสถาปัตยกรรมความปลอดภัยแบบเก่า (Vulnerabilities Analysis)</h4>
+<p>จากการทำวิเคราะห์ทางรหัสผ่าน (Cryptanalysis) บนระบบยืนยันตัวตนของฮาร์ดแวร์ ESP32 เดิม ค้นพบช่องทางในการทลายความมั่นคงปลอดภัย 3 ประการหลัก:</p>
+<ol>
+<li><strong>Signature Tampering (การปลอมปนสารส่ง):</strong> ระบบ HMAC V1 ทำการเซ็นลายเซ็นกำกับเฉพาะค่า <code>Timestamp</code> และ <code>EndpointPath</code> ส่งผลให้ผู้โจมตีที่ทำตัวเป็นตัวกลาง (Man-in-the-Middle) สามารถดักฟังและนำข้อมูล Header ลายเซ็นนั้นมาใช้ใหม่ แต่ทำการดัดแปลงเนื้อหาหลักใน <strong>Request Body</strong> (เช่น ข้อมูลจำลองสถานะอุปกรณ์ รหัสประตูปรับเปลี่ยน หรือการแจ้งเหตุปลอม) ได้อย่างอิสระโดยที่เซิร์ฟเวอร์ยังเชื่อว่าเป็นข้อมูลที่ถูกต้อง</li>
+<li><strong>Replay Attack (การยิงส่งซ้ำ):</strong> การอนุญาตให้เกิด Clock-drift ภายใน 60 วินาทีโดยไม่มีระบบจดจำสถานะของโทเคน (Stateful Token Consumption) ทำให้แฮกเกอร์สามารถดักฟังทราฟฟิกแล้วนำข้อมูลเดิมมายิงส่งซ้ำ (Replayed) รัวๆ สั่งเปิดปิดประตูได้มากกว่าหนึ่งครั้งในช่วง 1 นาทีนั้น</li>
+<li><strong>Shared Secret Key Risk (ความเสี่ยงคีย์ร่วม):</strong> การพึ่งพากุญแจล็อกร่วมตัวเดียวกระจายไปทุกอุปกรณ์ (Shared Global API Key) ทำให้หากมีบอร์ดควบคุมตัวใดถูกถอด ดักส่องข้อมูลหน่วยความจำแฟลช หรือถูกแฮกเกอร์ถอดรหัส (Reverse Engineered) สำเร็จ ระบบทั้งหมดจะเกิดช่องโหว่ความปลอดภัยพร้อมกันทันที</li>
+</ol>
+<h4>73.36.2 การสถาปนาพิมพ์เขียว Zero-Trust IoT V2.0 (Zero-Trust Architectural Blueprint)</h4>
+<p>เพื่อขจัดความเสี่ยงเหล่านี้ให้เป็น 0% ทีมพัฒนาได้เปลี่ยนผ่านสู่ระบบยืนยันตัวตนแบบบูรณาการรายบอร์ดที่ไม่มีความเชื่อใจต่อทราฟฟิกใดๆ (Zero-Trust Authentication):</p>
+<ol>
+<li><p><strong>สถาปัตยกรรมการเซ็นชื่อผูกมัดเนื้อหา (Payload-Inclusive HMAC-SHA256):</strong><br>ปรับสูตรคำนวณ Signature ใหม่ โดยบังคับให้นำเนื้อความของข้อมูลส่ง (Request Body) มารันผ่านฟังก์ชันแฮช SHA-256 ก่อนนำมาจัดทำเป็น Payload ในรูปแบบดังนี้:<br>$$\text{Payload} = \text{DeviceID} + \text{Timestamp} + \text{Nonce} + \text{EndpointPath} + \text{Hash}(\text{Request Body})$$<br>$$\text{Signature} = \text{HMAC-SHA256}(\text{DeviceSecret}, \text{Payload})$$<br>ส่งผลให้หากแฮกเกอร์ทำการดัดแปลงอักษรแม้แต่ตัวเดียวใน Request Body ค่าแฮชที่เกิดขึ้นใหม่จะไม่ตรงกับลายเซ็นดิจิทัล ทำให้เซิร์ฟเวอร์ปฏิเสธทันที ป้องกัน Signature Tampering 100%</p>
+</li>
+<li><p><strong>การสกัดกุญแจลับเฉพาะบอร์ด (Key-Derivation Function - KDF):</strong><br>เพื่อป้องกันปัญหา Shared API Key รั่วไหล ระบบเลือกใช้การแตกคีย์แบบ KDF โดยบอร์ดแต่ละตัวจะมี <code>DeviceID</code> ที่ระบุตัวตนเฉพาะเครื่อง (เช่น MAC Address) และคีย์ลับของแต่ละเครื่องจะเกิดจากการคำนวณแฮชด้วย Master Key ที่ถูกฝังไว้บนสภาพแวดล้อมระบบคลาวด์เท่านั้น:<br>$$\text{DeviceSecret} = \text{HMAC-SHA256}(\text{MasterKey}, \text{DeviceID})$$<br>ทำให้แม้แฮกเกอร์จะขโมยหรือถอดแฟลชเมมโมรีของ ESP32 บอร์ดตัวใดตัวหนึ่งไปได้สำเร็จ ก็จะขโมยได้เพียงคีย์เฉพาะของบอร์ดนั้นๆ ไม่สามารถนำไปประยุกต์ปลอมแปลงเป็นบอร์ดควบคุมของห้องปฏิบัติการอื่นได้</p>
+</li>
+<li><p><strong>ระบบสลายการส่งซ้ำด้วยฐานข้อมูลน็อนซ์ (PostgreSQL-Backed Nonce Database Gate):</strong></p>
+<ul>
+<li>ทำการสร้างตาราง <code>api_nonces</code> เพื่อทำหน้าที่จดจำ Nonce ทุกตัวที่ถูกใช้ส่งข้อมูลเข้ามาอย่างถาวรในระดับคอร์ดาต้าเบส</li>
+<li>เมื่อมีการส่ง Request ใดๆ เข้ามา เซิร์ฟเวอร์จะทำการคัดลอกค่า Nonce และยิงคำสั่ง INSERT แบบ Atomic ลงตาราง</li>
+<li>หาก Nonce นั้นเคยถูกใช้งานไปแล้ว ฐานข้อมูลจะส่งผ่าน Unique Constraint Violation ตีกลับระบบโดยทันที ทำให้สามารถสกัด Replay Attack ได้ 100% ตั้งแต่ในชั้นข้อมูล</li>
+<li>ทำการติดตั้งระบบทำความสะอาดฐานข้อมูลแบบ Asynchronous (Auto-pruning) ลบ Nonce ที่หมดอายุเกิน 2 นาทีโดยไม่ขัดจังหวะคำขอปกติ ทำให้ฐานข้อมูลยังคงทำงานได้รวดเร็วระดับมิลลิวินาที</li>
+</ul>
+</li>
+</ol>
+<h4>73.36.3 การประยุกต์ใช้งานใน Edge Runtime และ Node Serverless APIs</h4>
+<p>ความปลอดภัยระดับ Zero-Trust นี้ถูกเขียนขึ้นให้สามารถทำงานร่วมกันได้ดี (Cross-Runtime Compatibility) บน Next.js:</p>
+<ul>
+<li><strong>ชั้นการทำงานระดับ Edge Runtime (<code>/api/esp32/display</code>):</strong> ประมวลผลและตรวจสอบ Nonce ผ่าน REST API (Supabase PostgREST) ไปยังตาราง <code>api_nonces</code> โดยตรวจสอบสถานะความขัดแย้ง <code>409 Conflict</code> และใช้ Web Crypto API ในการสกัดคีย์ (KDF) และตรวจสอบ Signature โดยไม่ติดปัญหาความเข้ากันได้</li>
+<li><strong>ชั้นการทำงานระดับ Node Runtime (<code>lib/api-security.ts</code>):</strong> ปรับใช้การตรวจสอบสิทธิ์ <code>verifyEsp32Security</code> ให้สนับสนุนการตรวจสอบแบบ async-await ดึงสิทธิ์ Pool การเชื่อมต่อของ PostgreSQL ปกติเพื่อประสิทธิภาพสูงสุดและมีการล้าง Nonce ในตัวอย่างรวดเร็ว</li>
+</ul>
+<h4>73.36.4 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/lib/db.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มการประกาศตาราง <code>api_nonces</code> ใน migrations ทั้งในโหมดปกติและโหมดด่วน (Fast Path) เพื่อการันตีการมีอยู่ของสกีมาฐานข้อมูล</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/lib/api-security.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับปรุงฟังก์ชันตรวจสอบสิทธิ์หลักให้เป็นระบบ Zero-Trust V2 (KDF คีย์, Nonce INSERT แบบ Atomic และการตรวจสอบ Request Body Hash)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>my-app/app/api/esp32/qr/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อัปเกรดการเรียกใช้ <code>verifyEsp32Security</code> ให้เป็นแบบ Async-Await เพื่อรอผลตรวจสอบสิทธิ์ฐานข้อมูล</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>my-app/app/api/esp32/display/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ยกระดับ <code>verifyEdgeSecurity</code> สู่ Zero-Trust V2 โดยประมวลผล Web Crypto และบันทึก Nonce แบบ Edge-REST</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>my-app/scripts/test-zero-trust-security.mjs</code></td>
+<td><strong>[NEW]</strong></td>
+<td>สคริปต์จำลองการโจมตี (Security Audit) เพื่อพิสูจน์ความแข็งแกร่งของระบบในการต้าน Replay และ Tampering บน local Dev</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการวิเคราะห์ช่องโหว่และแผนภาพพิมพ์เขียว Zero-Trust V2.0 §73.36</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

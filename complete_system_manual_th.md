@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-01 10:59:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-01 11:24:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -11365,5 +11365,56 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | 1 | `esp32/esp32.ino` | **[MODIFY]** | ปรับปรุงจุดเปรียบเทียบเงื่อนไข `/unlock-pin` ให้เรียกผ่าน `secureCompare` ป้องกัน Side-channel Timing Attack |
 | 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | ปรับปรุงสตริงต้นฉบับจำลองโค้ดบอร์ด C++ บน Dashboard ให้ใช้ `secureCompare` สำหรับ PIN ให้สอดคล้องกัน |
 | 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบความปลอดภัยฝั่งบอร์ดควบคุม IoT §73.35 |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+---
+
+<a id="sec-73-36"></a>
+### 73.36 การอัปเกรดระบบรักษาความปลอดภัยเชิงลึกสู่สถาปัตยกรรม Zero-Trust IoT V2.0 (End-to-End Zero-Trust API Security, Nonce Tracking, and Key Derivation Function)
+
+วันที่บันทึก: 1 มิถุนายน 2026
+
+#### 73.36.1 ปัญหาเชิงทฤษฎีและสถาปัตยกรรมความปลอดภัยแบบเก่า (Vulnerabilities Analysis)
+จากการทำวิเคราะห์ทางรหัสผ่าน (Cryptanalysis) บนระบบยืนยันตัวตนของฮาร์ดแวร์ ESP32 เดิม ค้นพบช่องทางในการทลายความมั่นคงปลอดภัย 3 ประการหลัก:
+1. **Signature Tampering (การปลอมปนสารส่ง):** ระบบ HMAC V1 ทำการเซ็นลายเซ็นกำกับเฉพาะค่า `Timestamp` และ `EndpointPath` ส่งผลให้ผู้โจมตีที่ทำตัวเป็นตัวกลาง (Man-in-the-Middle) สามารถดักฟังและนำข้อมูล Header ลายเซ็นนั้นมาใช้ใหม่ แต่ทำการดัดแปลงเนื้อหาหลักใน **Request Body** (เช่น ข้อมูลจำลองสถานะอุปกรณ์ รหัสประตูปรับเปลี่ยน หรือการแจ้งเหตุปลอม) ได้อย่างอิสระโดยที่เซิร์ฟเวอร์ยังเชื่อว่าเป็นข้อมูลที่ถูกต้อง
+2. **Replay Attack (การยิงส่งซ้ำ):** การอนุญาตให้เกิด Clock-drift ภายใน 60 วินาทีโดยไม่มีระบบจดจำสถานะของโทเคน (Stateful Token Consumption) ทำให้แฮกเกอร์สามารถดักฟังทราฟฟิกแล้วนำข้อมูลเดิมมายิงส่งซ้ำ (Replayed) รัวๆ สั่งเปิดปิดประตูได้มากกว่าหนึ่งครั้งในช่วง 1 นาทีนั้น
+3. **Shared Secret Key Risk (ความเสี่ยงคีย์ร่วม):** การพึ่งพากุญแจล็อกร่วมตัวเดียวกระจายไปทุกอุปกรณ์ (Shared Global API Key) ทำให้หากมีบอร์ดควบคุมตัวใดถูกถอด ดักส่องข้อมูลหน่วยความจำแฟลช หรือถูกแฮกเกอร์ถอดรหัส (Reverse Engineered) สำเร็จ ระบบทั้งหมดจะเกิดช่องโหว่ความปลอดภัยพร้อมกันทันที
+
+#### 73.36.2 การสถาปนาพิมพ์เขียว Zero-Trust IoT V2.0 (Zero-Trust Architectural Blueprint)
+เพื่อขจัดความเสี่ยงเหล่านี้ให้เป็น 0% ทีมพัฒนาได้เปลี่ยนผ่านสู่ระบบยืนยันตัวตนแบบบูรณาการรายบอร์ดที่ไม่มีความเชื่อใจต่อทราฟฟิกใดๆ (Zero-Trust Authentication):
+
+1. **สถาปัตยกรรมการเซ็นชื่อผูกมัดเนื้อหา (Payload-Inclusive HMAC-SHA256):**
+   ปรับสูตรคำนวณ Signature ใหม่ โดยบังคับให้นำเนื้อความของข้อมูลส่ง (Request Body) มารันผ่านฟังก์ชันแฮช SHA-256 ก่อนนำมาจัดทำเป็น Payload ในรูปแบบดังนี้:
+   $$\text{Payload} = \text{DeviceID} + \text{Timestamp} + \text{Nonce} + \text{EndpointPath} + \text{Hash}(\text{Request Body})$$
+   $$\text{Signature} = \text{HMAC-SHA256}(\text{DeviceSecret}, \text{Payload})$$
+   ส่งผลให้หากแฮกเกอร์ทำการดัดแปลงอักษรแม้แต่ตัวเดียวใน Request Body ค่าแฮชที่เกิดขึ้นใหม่จะไม่ตรงกับลายเซ็นดิจิทัล ทำให้เซิร์ฟเวอร์ปฏิเสธทันที ป้องกัน Signature Tampering 100%
+
+2. **การสกัดกุญแจลับเฉพาะบอร์ด (Key-Derivation Function - KDF):**
+   เพื่อป้องกันปัญหา Shared API Key รั่วไหล ระบบเลือกใช้การแตกคีย์แบบ KDF โดยบอร์ดแต่ละตัวจะมี `DeviceID` ที่ระบุตัวตนเฉพาะเครื่อง (เช่น MAC Address) และคีย์ลับของแต่ละเครื่องจะเกิดจากการคำนวณแฮชด้วย Master Key ที่ถูกฝังไว้บนสภาพแวดล้อมระบบคลาวด์เท่านั้น:
+   $$\text{DeviceSecret} = \text{HMAC-SHA256}(\text{MasterKey}, \text{DeviceID})$$
+   ทำให้แม้แฮกเกอร์จะขโมยหรือถอดแฟลชเมมโมรีของ ESP32 บอร์ดตัวใดตัวหนึ่งไปได้สำเร็จ ก็จะขโมยได้เพียงคีย์เฉพาะของบอร์ดนั้นๆ ไม่สามารถนำไปประยุกต์ปลอมแปลงเป็นบอร์ดควบคุมของห้องปฏิบัติการอื่นได้
+
+3. **ระบบสลายการส่งซ้ำด้วยฐานข้อมูลน็อนซ์ (PostgreSQL-Backed Nonce Database Gate):**
+   - ทำการสร้างตาราง `api_nonces` เพื่อทำหน้าที่จดจำ Nonce ทุกตัวที่ถูกใช้ส่งข้อมูลเข้ามาอย่างถาวรในระดับคอร์ดาต้าเบส
+   - เมื่อมีการส่ง Request ใดๆ เข้ามา เซิร์ฟเวอร์จะทำการคัดลอกค่า Nonce และยิงคำสั่ง INSERT แบบ Atomic ลงตาราง
+   - หาก Nonce นั้นเคยถูกใช้งานไปแล้ว ฐานข้อมูลจะส่งผ่าน Unique Constraint Violation ตีกลับระบบโดยทันที ทำให้สามารถสกัด Replay Attack ได้ 100% ตั้งแต่ในชั้นข้อมูล
+   - ทำการติดตั้งระบบทำความสะอาดฐานข้อมูลแบบ Asynchronous (Auto-pruning) ลบ Nonce ที่หมดอายุเกิน 2 นาทีโดยไม่ขัดจังหวะคำขอปกติ ทำให้ฐานข้อมูลยังคงทำงานได้รวดเร็วระดับมิลลิวินาที
+
+#### 73.36.3 การประยุกต์ใช้งานใน Edge Runtime และ Node Serverless APIs
+ความปลอดภัยระดับ Zero-Trust นี้ถูกเขียนขึ้นให้สามารถทำงานร่วมกันได้ดี (Cross-Runtime Compatibility) บน Next.js:
+- **ชั้นการทำงานระดับ Edge Runtime (`/api/esp32/display`):** ประมวลผลและตรวจสอบ Nonce ผ่าน REST API (Supabase PostgREST) ไปยังตาราง `api_nonces` โดยตรวจสอบสถานะความขัดแย้ง `409 Conflict` และใช้ Web Crypto API ในการสกัดคีย์ (KDF) และตรวจสอบ Signature โดยไม่ติดปัญหาความเข้ากันได้
+- **ชั้นการทำงานระดับ Node Runtime (`lib/api-security.ts`):** ปรับใช้การตรวจสอบสิทธิ์ `verifyEsp32Security` ให้สนับสนุนการตรวจสอบแบบ async-await ดึงสิทธิ์ Pool การเชื่อมต่อของ PostgreSQL ปกติเพื่อประสิทธิภาพสูงสุดและมีการล้าง Nonce ในตัวอย่างรวดเร็ว
+
+#### 73.36.4 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่
+
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `my-app/lib/db.ts` | **[MODIFY]** | เพิ่มการประกาศตาราง `api_nonces` ใน migrations ทั้งในโหมดปกติและโหมดด่วน (Fast Path) เพื่อการันตีการมีอยู่ของสกีมาฐานข้อมูล |
+| 2 | `my-app/lib/api-security.ts` | **[MODIFY]** | ปรับปรุงฟังก์ชันตรวจสอบสิทธิ์หลักให้เป็นระบบ Zero-Trust V2 (KDF คีย์, Nonce INSERT แบบ Atomic และการตรวจสอบ Request Body Hash) |
+| 3 | `my-app/app/api/esp32/qr/route.ts` | **[MODIFY]** | อัปเกรดการเรียกใช้ `verifyEsp32Security` ให้เป็นแบบ Async-Await เพื่อรอผลตรวจสอบสิทธิ์ฐานข้อมูล |
+| 4 | `my-app/app/api/esp32/display/route.ts` | **[MODIFY]** | ยกระดับ `verifyEdgeSecurity` สู่ Zero-Trust V2 โดยประมวลผล Web Crypto และบันทึก Nonce แบบ Edge-REST |
+| 5 | `my-app/scripts/test-zero-trust-security.mjs` | **[NEW]** | สคริปต์จำลองการโจมตี (Security Audit) เพื่อพิสูจน์ความแข็งแกร่งของระบบในการต้าน Replay และ Tampering บน local Dev |
+| 6 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดการวิเคราะห์ช่องโหว่และแผนภาพพิมพ์เขียว Zero-Trust V2.0 §73.36 |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

@@ -159,8 +159,16 @@ async function applyIdempotentMigrations(pool: Pool): Promise<void> {
       offline_pin VARCHAR(10)
     )
   `);
+  // api_nonces: เก็บ Nonce สำหรับตรวจจับ Replay Attack
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS api_nonces (
+      id BIGSERIAL PRIMARY KEY,
+      nonce VARCHAR(64) UNIQUE NOT NULL,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )
+  `);
   migrationsApplied = true;
-  console.log("[DB] Idempotent migrations applied (access_logs columns + fcm_tokens + esp32_heartbeats ensured)");
+  console.log("[DB] Idempotent migrations applied (access_logs columns + fcm_tokens + esp32_heartbeats + api_nonces ensured)");
 }
 
 export async function initDatabase(): Promise<void> {
@@ -494,6 +502,15 @@ export async function initDatabase(): Promise<void> {
         last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         status VARCHAR(20) DEFAULT 'online',
         offline_pin VARCHAR(10)
+      )
+    `);
+
+    // api_nonces Table for Replay Attack Prevention
+    await initPool.query(`
+      CREATE TABLE IF NOT EXISTS api_nonces (
+        id BIGSERIAL PRIMARY KEY,
+        nonce VARCHAR(64) UNIQUE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
       )
     `);
 

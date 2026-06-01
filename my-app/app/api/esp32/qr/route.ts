@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
     const isDevelopment = process.env.NODE_ENV !== "production";
     const admin = await getAdminFromCookie();
 
-    const securityCheck = verifyEsp32Security(req, "/api/esp32/qr");
+    const securityCheck = await verifyEsp32Security(req, "/api/esp32/qr");
     const isAuthenticatedDevice = securityCheck.allowed;
 
     if (!isAuthenticatedDevice && !isDevelopment && !admin) {

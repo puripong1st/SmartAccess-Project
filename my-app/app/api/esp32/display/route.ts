@@ -27,7 +27,7 @@ const SB_HEADERS = {
   "Content-Type": "application/json",
 };
 
-// ─── Edge-compatible HMAC security check ─────────────────────────────────────
+// ─── Edge-compatible HMAC security check (Zero-Trust V2) ─────────────────────
 async function verifyEdgeSecurity(
   req: NextRequest,
   endpointPath: string
@@ -37,24 +37,65 @@ async function verifyEdgeSecurity(
     return { allowed: false, error: NextResponse.json({ error: "Server misconfigured" }, { status: 503 }) };
   }
 
-  const clientApiKey = req.headers.get("x-api-key");
-  if (!clientApiKey || !secureEqual(clientApiKey, apiKey)) {
-    return { allowed: false, error: NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: CORS }) };
-  }
-
+  // 1. Retrieve Required Security Headers
+  const deviceId = req.headers.get("x-device-id");
   const timestampStr = req.headers.get("x-timestamp");
+  const nonce = req.headers.get("x-nonce");
   const providedSig = req.headers.get("x-hmac-signature");
-  if (!timestampStr || !providedSig) {
-    return { allowed: false, error: NextResponse.json({ error: "Missing Signature" }, { status: 401, headers: CORS }) };
+
+  if (!deviceId || !timestampStr || !nonce || !providedSig) {
+    return { allowed: false, error: NextResponse.json({ error: "Missing Security Headers" }, { status: 401, headers: CORS }) };
   }
 
+  // 2. Validate Timestamp (Max 60 seconds drift)
   const ts = parseInt(timestampStr, 10);
   const now = Math.floor(Date.now() / 1000);
   if (isNaN(ts) || Math.abs(now - ts) > 60) {
     return { allowed: false, error: NextResponse.json({ error: "Token Expired" }, { status: 401, headers: CORS }) };
   }
 
-  const expected = await hmacSHA256(`${timestampStr}:${endpointPath}`, apiKey);
+  // 3. Database Nonce Verification via Supabase REST API (POST to api_nonces)
+  const nonceRes = await sbFetch("api_nonces", {
+    method: "POST",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify({ nonce }),
+  });
+
+  if (nonceRes.status === 409 || !nonceRes.ok) {
+    console.warn(`[Edge Security] Replay attack blocked or database error! Nonce: ${nonce}`);
+    return { allowed: false, error: NextResponse.json({ error: "Replay Detected" }, { status: 401, headers: CORS }) };
+  }
+
+  // Asynchronously prune expired nonces (older than 2 minutes) to keep database tidy
+  const twoMinutesAgo = new Date(Date.now() - 120_000).toISOString();
+  sbFetch(`api_nonces?created_at=lt.${encodeURIComponent(twoMinutesAgo)}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=minimal" }
+  }).catch(e => console.error("[Edge Security] Nonce pruning error:", e));
+
+  // 4. Key Derivation Function (KDF): Derive unique device key on Edge
+  const deviceSecret = await hmacSHA256(deviceId, apiKey);
+
+  // 5. Request Body Hashing on Edge
+  let bodyText = "";
+  if (req.method === "POST" || req.method === "PUT" || req.method === "PATCH") {
+    try {
+      const clone = req.clone();
+      bodyText = await clone.text();
+    } catch (e) {}
+  }
+
+  const encoder = new TextEncoder();
+  const data = encoder.encode(bodyText);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const bodyHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+
+  // 6. Signature Verification
+  // Format: "deviceId:timestampStr:nonce:endpointPath:bodyHash"
+  const payloadToSign = `${deviceId}:${timestampStr}:${nonce}:${endpointPath}:${bodyHash}`;
+  const expected = await hmacSHA256(payloadToSign, deviceSecret);
+
   if (!secureEqual(expected, providedSig)) {
     return { allowed: false, error: NextResponse.json({ error: "Invalid Signature" }, { status: 401, headers: CORS }) };
   }
