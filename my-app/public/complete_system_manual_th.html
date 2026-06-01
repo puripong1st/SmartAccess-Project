@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 12:20:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 12:51:08 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -13062,46 +13062,9 @@ bool tlsClientInitialized = false;
 <li><code>sendDiscordNotification()</code> เดิม (caller 12 ไฟล์เรียกอยู่) ถูกทำเป็น alias → delegate ไป <code>sendNotification</code> ผ่าน dynamic import (กัน circular dependency) ดังนั้น <strong>ทุก event ที่เคยส่ง Discord จะส่ง Telegram/LINE อัตโนมัติ</strong> เมื่อมีการตั้งค่า</li>
 <li>Telegram/LINE ไม่รองรับ embed → ใช้ <code>formatPlainText()</code> แปลงเป็นข้อความตัวอักษร (Telegram ส่ง <code>parse_mode: HTML</code>)</li>
 </ul>
-<h3>ช่องทางและรูปแบบการเชื่อมต่อ</h3>
-<table>
-<thead>
-<tr>
-<th>ช่องทาง</th>
-<th>API</th>
-<th>สิ่งที่ต้องตั้ง</th>
-<th>ฟรี?</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Discord</td>
-<td>Incoming Webhook</td>
-<td>webhook URL ต่อช่อง</td>
-<td>✅ ไม่จำกัด</td>
-</tr>
-<tr>
-<td>Telegram</td>
-<td>Bot API <code>sendMessage</code></td>
-<td>bot token (1) + chat id ต่อช่อง</td>
-<td>✅ ไม่จำกัด</td>
-</tr>
-<tr>
-<td>LINE</td>
-<td>Messaging API <code>push</code></td>
-<td>channel access token (1) + target id ต่อช่อง</td>
-<td>⚠️ ~500 ข้อความ/เดือน</td>
-</tr>
-</tbody></table>
-<blockquote>
-<p><strong>หมายเหตุ LINE</strong>: LINE Notify (webhook ง่าย ๆ) ปิดบริการ มี.ค. 2025 — ระบบจึงใช้ <strong>LINE Messaging API</strong> (push) ซึ่งมีโควตา free ~500 ข้อความ/เดือน แนะนำให้ Telegram/Discord เป็นช่องหลักถ้าปริมาณสูง</p>
-</blockquote>
-<h3>คีย์ใน <code>system_settings</code></h3>
-<p><strong>Telegram</strong> (กลาง): <code>telegram_bot_token</code>, <code>telegram_chat_register</code>, <code>telegram_chat_approve</code>, <code>telegram_chat_logs</code>, <code>telegram_chat_admin_audit</code><br><strong>Telegram</strong> (รายห้อง): <code>room_telegram_register_{room}</code>, <code>room_telegram_approve_{room}</code>, <code>room_telegram_logs_{room}</code><br><strong>LINE</strong> (กลาง): <code>line_channel_token</code>, <code>line_target_register</code>, <code>line_target_approve</code>, <code>line_target_logs</code>, <code>line_target_admin_audit</code><br><strong>LINE</strong> (รายห้อง): <code>room_line_register_{room}</code>, <code>room_line_approve_{room}</code>, <code>room_line_logs_{room}</code></p>
-<p>การเลือกปลายทาง: รายห้อง override → ส่วนกลาง fallback (เหมือน Discord); หมวด <code>admin_audit</code> ถ้าว่างจะ fallback ไป <code>*_logs</code></p>
-<h3>วิธีตั้งค่า</h3>
-<p><strong>Telegram</strong>: คุยกับ <code>@BotFather</code> → <code>/newbot</code> → ได้ <strong>Bot Token</strong>; หา <strong>Chat ID</strong> ของกลุ่ม/แชต (เช่นผ่าน <code>@userinfobot</code> หรือ <code>getUpdates</code>) แล้วเชิญบอทเข้ากลุ่ม → กรอกในแท็บตั้งค่าระบบ → กด&quot;ทดสอบ&quot;<br><strong>LINE</strong>: สร้าง Messaging API Channel ใน LINE Developers Console → ได้ <strong>Channel Access Token (long-lived)</strong>; ใช้ <strong>User ID / Group ID</strong> เป็น Target → กรอก → กด&quot;ทดสอบ&quot;</p>
-<h3>UI (อัปเดต 2026-05-29)</h3>
+<h3>ช่องทางและรูปแบบการตั้งค่าหน้า UI</h3>
 <ul>
-<li><strong>แท็บ sidebar</strong> เปลี่ยนชื่อจาก &quot;ตั้งค่าระบบ &amp; Webhook&quot; → <strong>&quot;ตั้งค่าการแจ้งเตือน&quot;</strong>; หัวข้อหน้าเป็น &quot;🔔 ศูนย์ตั้งค่าการแจ้งเตือน&quot;</li>
+<li>** &quot;ตั้งค่าระบบ &amp; Webhook&quot; → <strong>&quot;ตั้งค่าการแจ้งเตือน&quot;</strong>; หัวข้อหน้าเป็น &quot;🔔 ศูนย์ตั้งค่าการแจ้งเตือน&quot;</li>
 <li>หน้าตั้งค่าใช้ <strong>segmented selector</strong> (Discord / Telegram / LINE) สลับดูทีละช่อง แทนการ์ดยาวเรียงกัน — แต่ละช่องมี token (Telegram/LINE) + 4 ปลายทาง + ปุ่มทดสอบ</li>
 <li>ใน room modal แท็บเดิม &quot;Discord Webhook&quot; เปลี่ยนเป็น <strong>&quot;ระบบแจ้งเตือน&quot;</strong> และใช้ segmented selector เดียวกันสำหรับตั้ง override รายห้อง (Discord = URL+ปุ่มทดสอบ; Telegram/LINE = chat/target id ใช้ token ส่วนกลาง)</li>
 </ul>
@@ -17022,6 +16985,24 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 </ul>
 </li>
 </ul>
+<h4>73.39.7 การกู้คืนแถบนำทางแบบแถบสไลด์ในตัวเลือกห้องเรียนบนมือถือ (Premium Horizontal Scrollbar Indicator ใน <code>globals.css</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> คอนเทนเนอร์แถบเลือกฟิลเตอร์ห้องเรียนบนมือถือ (<code>.mobile-filter-container</code>) มีการซ่อนแถบเลื่อน (Scrollbar) ทั้งหมดผ่านคำสั่ง <code>display: none</code> เพื่อความสวยงาม แต่การไม่มีแถบนำร่องส่งผลเสียต่อการรับรู้ของผู้ใช้ (UX Anti-Pattern) โดยผู้ใช้ไม่รู้เลยว่ามีรายการห้องเพิ่มเติมทางด้านขวา (เช่น ห้อง CE-402, A-401, A-402) และคิดว่าระบบเกิดความผิดพลาดในการดึงข้อมูลไม่ครบ</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>ยกเลิกการซ่อนแถบเลื่อนถาวร โดยเปลี่ยนมาสร้างสไตล์แถบเลื่อนแบบเรืองแสงสีม่วงโกลว์ขนาดบางเฉียบพิเศษ 4px (<code>height: 4px</code>) พร้อมระบุรัศมีความโค้งมนพรีเมียมและความโปร่งแสงบางเบา (<code>rgba(124, 58, 237, 0.18)</code>)</li>
+<li>ทำให้บนหน้าจอมือถือปรากฏเส้นนำทางสีม่วงจางระดับพรีเมียม บ่งชี้สถานะการเลื่อนอย่างชัดเจน เป็นธรรมชาติ และส่งเสริมความน่าใช้งานทันทีตามหลักความเข้ากันได้สากล</li>
+</ul>
+</li>
+</ul>
+<h4>73.39.8 การแก้ไขตัวแยกแยะอุปกรณ์ iOS เพื่อป้องกันข้อผิดพลาดบนคอมพิวเตอร์ macOS เดสก์ท็อป (Robust iOS Device Detection Bug Fix ใน <code>PushNotificationManager.tsx</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> คำสั่งสำหรับตรวจจับประเภทระบบปฏิบัติการ iOS เพื่อทริกเกอร์แบนเนอร์ข้อความติดตั้งแอป (&quot;เปิดแจ้งเตือนบน iPhone&quot;) มีตรรกะตรวจเช็คความเข้ากันได้ของ iPadOS โดยเทียบ <code>navigator.platform === &#39;MacIntel&#39; &amp;&amp; navigator.maxTouchPoints &gt; 1</code> ส่งผลให้ผู้ใช้ที่เข้าใช้งานระบบด้วยคอมพิวเตอร์แล็ปท็อป macOS เดสก์ท็อป (MacBook) ที่มี Trackpad รองรับนิ้วมือแบบ Multi-Touch โดนตรวจจับเป็นอุปกรณ์ iOS และแสดงแบนเนอร์สีดำแนะนำการติดตั้งบน iPhone ลอยขึ้นมารบกวนอย่างผิดพลาด</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>ปรับปรุงการตรวจสอบเพิ่มเติมโดยเพิ่มการเช็ค <code>&#39;ontouchend&#39; in document</code> ซึ่งเป็นฟังก์ชันตรวจจับหน้าจอสัมผัส (Touch Screen) แท้จริงที่มีเฉพาะบนอุปกรณ์ iOS/iPadOS เท่านั้น</li>
+<li>ทำให้คอมพิวเตอร์ macOS เดสก์ท็อป ทั่วไปข้ามตรรกะนี้อย่างถูกต้อง ปราศจากแบนเนอร์แสดงความสับสน และแสดงปุ่มใน Sidebar Layout อย่างสมบูรณ์แบบ</li>
+</ul>
+</li>
+</ul>
 <hr>
 <h3>สรุปรายการไฟล์แก้ไขในสเต็ปนี้</h3>
 <table>
@@ -17055,13 +17036,13 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>4</td>
 <td><code>my-app/app/components/PushNotificationManager.tsx</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>เพิ่มการรองรับพร็อพ <code>inline</code> และการจัดวางโครงสร้างแบบฝังตัวในสถาปัตยกรรมแถบเมนูแทน Floating Widget</td>
+<td>เพิ่มการรองรับพร็อพ <code>inline</code> และแก้ไขตรรกะการตรวจจับระบบปฏิบัติการ iOS ให้ถูกต้องแม่นยำ ปราศจากข้อผิดพลาดบนคอมพิวเตอร์เดสก์ท็อป</td>
 </tr>
 <tr>
 <td>5</td>
 <td><code>my-app/app/globals.css</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>เพิ่มการกำหนดสไตล์ของปุ่ม <code>.btn-success</code> (ปุ่มเฉดสีเขียวมรกต) และ <code>.btn-danger-light</code> (ปุ่มแดงโปร่งแสง) เติมเต็มการแสดงผล Action</td>
+<td>เพิ่มการกำหนดสไตล์ของปุ่ม Actions ในตาราง พร้อมกู้คืนการแสดงผลแถบเลื่อนแบบเรืองแสงสีม่วงบางเฉียบ 4px</td>
 </tr>
 <tr>
 <td>6</td>
@@ -17077,7 +17058,6 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
-
       </article>
     </main>
   </div>
