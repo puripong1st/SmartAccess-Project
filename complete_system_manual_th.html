@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 12:51:08 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 12:58:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -17057,7 +17057,93 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>บันทึกรายละเอียดแผนการแก้ไขทางสถาปัตยกรรมและรายละเอียด UI/UX สำหรับเล่มวิทยานิพนธ์ §73.39</td>
 </tr>
 </tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<h2>73.40 การแก้ไขข้อบกพร่อง UI เชิงลึกบนมือถือสำหรับหน้ารอยืนยันสิทธิ์และสถานะว่างเปล่า (Mobile-First Bug Fixes: Pending Page Filter Scroll, EmptyState Responsive, iOS Banner Overlay Removal)</h2>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2569 (12:58 น. ICT)</p>
+<p>ตรวจพบและดำเนินการแก้ไขข้อบกพร่อง 3 จุดบนหน้ารอยืนยันสิทธิ์ (<code>pending/page.tsx</code>) ที่ส่งผลกระทบต่อประสบการณ์ผู้ใช้บนโทรศัพท์มือถือโดยเฉพาะ iPhone:</p>
+<h4>73.40.1 การแก้ไขแถบเลือกห้องเรียนที่ไม่สามารถเลื่อนได้บนมือถือ (Mobile Room Filter Horizontal Scroll Fix ใน <code>pending/page.tsx</code> และ <code>globals.css</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> แถบเลือกห้องเรียน (Room Filter Tabs) ที่ใช้คลาส <code>.mobile-filter-container</code> ถูกบรรจุอยู่ภายในคอนเทนเนอร์ระดับพ่อ (Parent Div) ที่กำหนด <code>display: &quot;flex&quot;</code> ร่วมกับ <code>flexWrap: &quot;wrap&quot;</code> และ <code>justifyContent: &quot;space-between&quot;</code> ส่งผลให้บนหน้าจอมือถือ คอนเทนเนอร์ระดับพ่อไม่อนุญาตให้ <code>.mobile-filter-container</code> ขยายเต็มความกว้างหน้าจอ ปุ่มห้องเรียนทางด้านขวาถูกตัดหายไป (เช่น ห้อง A-401, A-402) และไม่สามารถเลื่อนนิ้วปัดไปทางขวาเพื่อดูห้องเพิ่มเติมได้เลย</li>
+<li><strong>สาเหตุหลัก:</strong><ol>
+<li>คอนเทนเนอร์ระดับพ่อใช้ <code>flexWrap: &quot;wrap&quot;</code> ทำให้ตัว Filter Container ไม่ได้รับความกว้าง 100% ของหน้าจอ เพราะปุ่มเสียงเตือน (Audio Toggle) ครอบครองพื้นที่ข้างเคียงไปส่วนหนึ่ง</li>
+<li>ปุ่มตัวกรองห้องเรียนไม่ได้ตั้ง <code>flex-shrink: 0</code> จึงถูกบีบขนาดลดลงจนข้อความถูกย่อหรือถูกซ่อน</li>
+<li>คอนเทนเนอร์ไม่มี <code>min-width: 0</code> ซึ่งเป็นคุณสมบัติสำคัญที่จำเป็นต้องมีเพื่อให้ Flex child สามารถหดตัวต่ำกว่าขนาดเนื้อหาภายในได้ (CSS Flex Specification §4.5)</li>
+</ol>
+</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>เปลี่ยนโครงสร้างคอนเทนเนอร์ระดับพ่อจาก <code>flexWrap: &quot;wrap&quot;</code> เป็น <code>flexDirection: &quot;column&quot;</code> เพื่อให้แถบเลือกห้องเรียนและปุ่มเสียงเตือนอยู่คนละแถว (Row Stacking) แทนการแย่งพื้นที่แนวนอน</li>
+<li>เพิ่ม <code>min-width: 0</code> ลงในคอนเทนเนอร์ <code>.mobile-filter-container</code> เพื่อให้ Flex child หดตัวได้ตามขนาดจอจริง</li>
+<li>เพิ่มกฎ CSS <code>.mobile-filter-container &gt; button { flex-shrink: 0 !important; }</code> เพื่อป้องกันปุ่มห้องเรียนไม่ให้ถูกบีบอัดขนาดจนอ่านไม่ออก</li>
+<li>เพิ่ม <code>touch-action: pan-x</code> เพื่อบอกเบราว์เซอร์มือถือให้จัดลำดับความสำคัญของการเลื่อนนิ้วแนวนอนก่อนเสมอ</li>
+<li>เพิ่ม <code>scrollbar-width: thin</code> และ <code>scrollbar-color</code> สำหรับ Firefox ที่ไม่รองรับ <code>::-webkit-scrollbar</code></li>
+</ul>
+</li>
+</ul>
+<h4>73.40.2 การปรับปรุง EmptyState ให้เข้ากับ Layout บนมือถือ (Responsive EmptyState Adaptation ใน <code>EmptyState.tsx</code> และ <code>globals.css</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> คอมโพเนนต์สถานะว่างเปล่า (<code>EmptyState</code>) ที่แสดงเมื่อไม่มีคำขอรอดำเนินการ (<code>filteredPending.length === 0</code>) ใช้ <code>padding: &quot;60px 20px&quot;</code> และภาพ SVG Illustration ขนาด 120×120px ซึ่งเป็นขนาดสำหรับเดสก์ท็อป เมื่อแสดงผลบนมือถือจึงสิ้นเปลืองพื้นที่หน้าจอมาก ทำให้ต้องเลื่อนจอหลายครั้งกว่าจะเห็นเนื้อหาด้านล่าง และ UI ดูโปร่งกว้างเกินไปไม่เข้ากับ Layout โมบายที่กระชับ</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>เพิ่มคลาส <code>.empty-state-container</code> และ <code>.empty-state-illustration</code> ให้กับคอมโพเนนต์ EmptyState เพื่อรองรับการ Override ด้วย CSS Media Query</li>
+<li>เพิ่ม <code>@media (max-width: 768px)</code> ใน <code>globals.css</code> เพื่อลด padding จาก 60px เหลือ 32px, ลดขนาด SVG Illustration จาก 120×120px เหลือ 80×80px, ลด margin-bottom ของ illustration จาก 20px เหลือ 12px, และลด border-radius จาก 20px เหลือ 16px</li>
+<li>ผลลัพธ์: EmptyState บนมือถือจะแสดงผลกระชับ มีสัดส่วนเหมาะสม และเข้ากับ Layout แบบมือถืออย่างเป็นธรรมชาติ</li>
+</ul>
+</li>
+</ul>
+<h4>73.40.3 การยกเลิกแบนเนอร์ลอย iOS และเปลี่ยนเป็นการแสดงผลแบบฝังตัว (iOS Install Banner: Fixed Overlay → Inline Sidebar ใน <code>PushNotificationManager.tsx</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> บน iPhone/iPad ที่ยังไม่ได้เพิ่มเว็บลงหน้าจอโฮม (ยังเปิดผ่าน Safari ไม่อยู่ในโหมด Standalone) ระบบจะแสดงแบนเนอร์สีดำทึบแบบ <code>position: fixed</code> ลอยอยู่ด้านล่างหน้าจอ (<code>bottom: 20px</code>) ขนาดใหญ่พร้อม backdrop-filter blur หนา คร่อมเนื้อหาหน้าเว็บด้านล่าง ทำให้ผู้ใช้ไม่สามารถมองเห็นหรือกดปุ่มที่อยู่ใต้แบนเนอร์ได้ และแบนเนอร์ไม่มีปุ่มปิด</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li><strong>ลบแบนเนอร์ลอยทั้งหมด</strong> (<code>position: fixed</code>) ออกจากการเรนเดอร์บนหน้าจอหลัก</li>
+<li>เมื่อคอมโพเนนต์ PushNotificationManager ถูกเรียกในโหมด <code>inline</code> (ฝังตัวในแถบเมนูด้านข้าง Sidebar) บน iOS จะแสดงเป็นกล่องข้อความเล็กๆ สีม่วงอ่อนกลมกลืนกับธีมแถบเมนู พร้อมข้อความแนะนำสั้นๆ ว่า &quot;เพิ่มเว็บลงหน้าจอโฮมก่อน → เปิดแอปจากไอคอน&quot;</li>
+<li>เมื่ออยู่ในโหมดไม่ใช่ <code>inline</code> (เช่น ถูกเรียกจากหน้าเว็บโดยตรง) จะคืนค่า <code>null</code> ไม่แสดงอะไรเลย เพราะตัว inline ใน Sidebar จัดการเรื่องนี้แล้ว</li>
+<li>ผลลัพธ์: หน้าจอมือถือปราศจากองค์ประกอบลอยรบกวน ข้อแนะนำ iOS ถูกจัดสรรไว้ในตำแหน่งที่สมเหตุสมผลภายในเมนูด้านข้าง</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>สรุปรายการไฟล์แก้ไขในสเต็ปนี้</h3>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายการแก้ไข</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/admin/dashboard/pending/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เปลี่ยนโครงสร้างคอนเทนเนอร์แถบเลือกห้องเรียนจาก flexWrap เป็น column layout เพื่อให้ mobile-filter-container สามารถเลื่อนแนวนอนได้</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่ม flex-shrink:0 ให้ปุ่มตัวกรอง, เพิ่ม min-width:0 ให้ filter container, เพิ่ม touch-action:pan-x, เพิ่ม Firefox scrollbar support, เพิ่ม EmptyState responsive styles</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>my-app/app/components/EmptyState.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่ม className สำหรับ .empty-state-container และ .empty-state-illustration เพื่อรองรับ CSS media query override บนมือถือ</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>my-app/app/components/PushNotificationManager.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ลบแบนเนอร์ iOS แบบ fixed overlay ด้านล่างจอ เปลี่ยนเป็น inline compact banner เฉพาะในโหมด sidebar</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการแก้ไขข้อบกพร่อง UI บนมือถือ §73.40</td>
+</tr>
+</tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
       </article>
     </main>
   </div>

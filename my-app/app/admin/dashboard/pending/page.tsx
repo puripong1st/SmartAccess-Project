@@ -84,9 +84,9 @@ export default function PendingPage() {
     <div ref={pendingSectionRef} className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 20 }}>
       
       {/* Beautiful Classroom Filter Tabs & Audio Controls */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {/* Classroom Selector */}
-        <div className="mobile-filter-container" style={{ background: "rgba(124, 58, 237, 0.04)", padding: 6, borderRadius: 14, border: "1px solid rgba(124, 58, 237, 0.08)" }}>
+        <div className="mobile-filter-container" style={{ background: "rgba(124, 58, 237, 0.04)", padding: 6, borderRadius: 14, border: "1px solid rgba(124, 58, 237, 0.08)", minWidth: 0 }}>
           <button
             onClick={() => setPendingRoomFilter("all")}
             style={{

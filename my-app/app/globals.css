@@ -929,10 +929,19 @@ button, a, [role="button"], input, select, textarea, label {
   overflow-x: auto !important;
   white-space: nowrap !important;
   -webkit-overflow-scrolling: touch !important; /* Smooth iOS kinetic scroll */
+  scrollbar-width: thin; /* Firefox thin scrollbar */
+  scrollbar-color: rgba(124, 58, 237, 0.18) transparent;
   padding: 6px 12px !important;
   gap: 8px !important;
   width: 100% !important;
   max-width: 100% !important;
+  min-width: 0 !important; /* Critical: allows flex child to shrink below content size */
+  touch-action: pan-x; /* Hint to browser: horizontal scroll only */
+}
+
+.mobile-filter-container > button {
+  flex-shrink: 0 !important; /* Prevent buttons from being compressed */
+  white-space: nowrap !important;
 }
 
 .mobile-filter-container::-webkit-scrollbar {
@@ -952,6 +961,22 @@ button, a, [role="button"], input, select, textarea, label {
 
 .mobile-filter-container::-webkit-scrollbar-thumb:hover {
   background: rgba(124, 58, 237, 0.35) !important;
+}
+
+/* 📱 Responsive EmptyState for mobile */
+@media (max-width: 768px) {
+  .empty-state-container {
+    padding: 32px 16px !important;
+    margin: 8px 0 !important;
+    border-radius: 16px !important;
+  }
+  .empty-state-illustration svg {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  .empty-state-illustration {
+    margin-bottom: 12px !important;
+  }
 }
 
 /* Extra safety bounds for very narrow screens (e.g. iPhone SE 1st Gen, 320px screen width) */

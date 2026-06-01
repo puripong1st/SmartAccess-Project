@@ -89,6 +89,7 @@ export default function EmptyState({
 
   return (
     <div
+      className="empty-state-container animate-fade-in"
       style={{
         padding: "60px 20px",
         textAlign: "center",
@@ -101,9 +102,8 @@ export default function EmptyState({
         border: "1.5px dashed var(--border)",
         margin: "12px 0"
       }}
-      className="animate-fade-in"
     >
-      <div style={{ marginBottom: 20, filter: "drop-shadow(0 8px 16px rgba(124, 58, 237, 0.08))" }}>
+      <div className="empty-state-illustration" style={{ marginBottom: 20, filter: "drop-shadow(0 8px 16px rgba(124, 58, 237, 0.08))" }}>
         {renderIllustration()}
       </div>
       <h4 style={{ fontSize: 16, fontWeight: 900, color: "var(--text-primary)", margin: "0 0 8px 0" }}>

@@ -232,27 +232,26 @@ export default function PushNotificationManager({ studentDbId, inline = false }:
 
   // iPhone/iPad บน Safari (ยังไม่เพิ่มลงหน้าโฮม) — แนะนำให้ติดตั้งเป็นแอปก่อน
   if (iosNeedsInstall) {
-    return (
-      <div style={{ position: 'fixed', bottom: 20, right: 20, left: 20, maxWidth: 420, marginLeft: 'auto', zIndex: 999 }}>
+    if (inline) {
+      return (
         <div style={{
-          background: 'rgba(15, 10, 30, 0.92)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(124,58,237,0.35)',
-          borderRadius: 16,
-          padding: '14px 16px',
-          boxShadow: '0 12px 30px rgba(0,0,0,0.45)',
-          color: '#fff',
-          fontSize: 12.5,
-          lineHeight: 1.55,
+          background: 'rgba(124, 58, 237, 0.06)',
+          border: '1px solid rgba(124, 58, 237, 0.15)',
+          borderRadius: 12,
+          padding: '10px 14px',
+          color: 'var(--text-secondary)',
+          fontSize: 11.5,
+          lineHeight: 1.5,
         }}>
-          <strong style={{ display: 'block', fontSize: 13.5, marginBottom: 4 }}>🔔 เปิดแจ้งเตือนบน iPhone</strong>
-          iOS รับการแจ้งเตือนได้เฉพาะเมื่อเพิ่มเว็บลงหน้าจอโฮมก่อน:
-          แตะปุ่ม <b>แชร์</b> (□↑) ด้านล่าง → <b>เพิ่มลงในหน้าจอโฮม</b> → เปิดแอปจากไอคอน แล้วกดเปิดแจ้งเตือนอีกครั้ง
+          <strong style={{ display: 'block', fontSize: 12, marginBottom: 2, color: 'var(--text-primary)' }}>📱 เปิดแจ้งเตือน</strong>
+          เพิ่มเว็บลงหน้าจอโฮมก่อน → เปิดแอปจากไอคอน
         </div>
-      </div>
-    );
+      );
+    }
+    // Non-inline: don't render the fixed banner at all — the inline sidebar version handles it
+    return null;
   }
+
 
   // If not supported, do not show anything
   if (!supported) return null;
