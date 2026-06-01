@@ -8,8 +8,12 @@ esp32/build/
 .vscode/
 .obsidian/
 
-# Tools & Agents
+# Tools, AI Agents & Local scratch folders
 .antigravitycli/
+.claude/
+.impeccable/
+scratch/
+my-app/scratch/
 skills-lock.json
 my-app/.claude/
 
