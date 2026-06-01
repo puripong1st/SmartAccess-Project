@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 13:35:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 13:42:07 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -17267,8 +17267,56 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>บันทึกการแก้ไขวิญญาณสไตล์ชีทเชิงลึกและการแก้ปัญหาคอลัมน์กึ่งกลางเบี้ยว §73.42</td>
 </tr>
 </tbody></table>
+<hr>
+<h2>73.43 การปรับปรุงปุ่มควบคุมเสียงเตือนคิวสู่การ์ดสวิตช์เปิด-ปิดพรีเมียมสไตล์ iOS (Premium Real-Time Audio Queue Alert Switch Card Redesign: iOS-Style Glassmorphic Layout and Micro-Animations)</h2>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2026 (13:42 น. ICT)</p>
+<p>ตรวจพบและดำเนินการปรับปรุงส่วนควบคุมระบบเสียงแจ้งเตือนคำขอแบบเรียลไทม์ใหม่ เพื่อความพรีเมียมสวยงามสอดรับกับสถาปัตยกรรม UI/UX ระดับสากล:</p>
+<h4>73.43.1 ข้อจำกัดของปุ่มควบคุมเสียงเดิม (Limitations of the Primitive Audio Toggle Button)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ปุ่มควบคุมเสียงแจ้งเตือนเดิมใช้แท็ก <code>&lt;button&gt;</code> ธรรมดาที่มีความกว้างเต็มขนาดหน้าจอ (Full Width) ซึ่งมีลักษณะยืดถ่างอย่างไม่เป็นธรรมชาติบนอุปกรณ์สมาร์ตโฟนและเดสก์ท็อป ดูไม่มีความลึกเชิงมิติ และไม่มีข้อความอธิบายการใช้งาน (Tooltip/Description) ที่เป็นมิตร ส่งผลให้การโต้ตอบของผู้ใช้อาจเกิดความสับสนหรือมีสุนทรียภาพที่เรียบง่ายเกินไป ไม่เหมาะสมกับมาตรฐานวิทยานิพนธ์ระดับพรีเมียม</li>
+</ul>
+<h4>73.43.2 สถาปัตยกรรมและรายละเอียดการออกแบบการ์ดสวิตช์พรีเมียมใหม่ (iOS-Style Premium Switch Card Design &amp; Implementation)</h4>
+<ul>
+<li><strong>การแก้ไขและออกแบบใหม่:</strong><ul>
+<li>พัฒนาโครงสร้าง HTML/JSX ใหม่ใน <code>pending/page.tsx</code> โดยเปลี่ยนจาก <code>&lt;button&gt;</code> ที่ยืดกว้าง มาเป็นการ์ดลักษณะ <strong>iOS Settings Card</strong> ผสมผสานดีไซน์ <strong>Glassmorphism</strong></li>
+<li>ติดตั้งไอคอนเวกเตอร์ Volume2/VolumeX ที่มีขนาดชัดเจนขึ้น (<code>20px</code>) บรรจุในกรอบกลมมน <code>.audio-toggle-icon-wrap</code> ที่จะทำหน้าที่เปล่งแสงพัลส์สีเขียวอ่อนกระตุ้นอย่างต่อเนื่อง (<code>pulse-soft</code>) เมื่อระบบเสียงถูกเปิดใช้งาน เพื่อสื่อวิชวลการทำแบบเรียลไทม์ (Active Feedback Loop)</li>
+<li>เพิ่มเนื้อหาข้อความอธิบายชัดเจน (Typography Hierarchy) โดยมีชื่อระบบหลักว่า &quot;ระบบเสียงเตือนคิวเรียลไทม์ (Real-Time Audio Alerts)&quot; ขนาดตัวหนาและมีคำอธิบายตัวย่อยสีอ่อนช่วยแนะแนวการใช้งานแก่แอดมินผู้ดูแล</li>
+<li>ตกแต่งหน้าต่างสวิตช์เลื่อนสไตล์ iOS (iOS-Style Sliding Switch) ไว้ทางด้านขวาของโครงสร้างการ์ด โดยประกอบไปด้วยคอนเทนเนอร์รางเลื่อน <code>.audio-toggle-switch</code> สีเขียวมรกตเมื่อเปิด/สีเทาหม่นเมื่อปิด และปุ่มกดกลมสีขาว <code>.audio-toggle-slider</code> ที่ลอยมิติสวยงาม ซึ่งจะเลื่อนสไลด์สลับตแหน่งแนวนอนผ่าน CSS Transform <code>translateX</code> เมื่อเกิดเหตุการณ์คลิก</li>
+<li>มอบสัมผัสการตอบสนองที่ไหลลื่นด้วยสมการการเคลื่อนไหวแบบฟิสิกส์สปริงระดับพรีเมียม (<code>cubic-bezier(0.34, 1.56, 0.64, 1)</code>)</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>สรุปรายการไฟล์แก้ไขในสเต็ปนี้</h3>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายการแก้ไข</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มกฎสไตล์ .audio-toggle-card, .audio-toggle-switch, .audio-toggle-slider, .audio-toggle-icon-wrap และทรานซิชันคิวบิกสปริงสำหรับสวิตช์ iOS</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/pending/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>แทนที่ปุ่มเสียงเดิมด้วย UI การ์ดสวิตช์สไตล์ iOS แสดงรายละเอียดระบบและเสียงประกอบ Soft Chime บนการคลิกเปิดใช้งานอย่างแม่นยำ</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกสถาปัตยกรรมและหลักการออกแบบแผงควบคุมเสียงสไตล์ iOS ระดับพรีเมียม §73.43</td>
+</tr>
+</tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
-
       </article>
     </main>
   </div>

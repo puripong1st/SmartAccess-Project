@@ -108,31 +108,28 @@ export default function PendingPage() {
         </div>
 
         {/* Audio Controls */}
-        <button
+        <div
           onClick={() => {
             setAudioEnabled(!audioEnabled);
             if (!audioEnabled) {
               playSoftChime(); // Play test sound on enable so user knows it works!
             }
           }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "8px 16px",
-            borderRadius: 12,
-            border: "1px solid " + (audioEnabled ? "rgba(16, 185, 129, 0.2)" : "var(--border)"),
-            background: audioEnabled ? "rgba(16, 185, 129, 0.05)" : "var(--bg-secondary)",
-            color: audioEnabled ? "#10B981" : "var(--text-secondary)",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: "pointer",
-            transition: "all 0.2s ease",
-            boxShadow: "var(--shadow-sm)"
-          }}
+          className={`audio-toggle-card ${audioEnabled ? "active" : "inactive"}`}
         >
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>{audioEnabled ? <><Volume2 size={14} /> เสียงเตือนคิว: เปิด</> : <><VolumeX size={14} /> เสียงเตือนคิว: ปิด</>}</span>
-        </button>
+          <div className="audio-toggle-content">
+            <div className="audio-toggle-icon-wrap">
+              {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </div>
+            <div className="audio-toggle-text">
+              <span className="audio-toggle-title">ระบบเสียงเตือนคิวเรียลไทม์ (Real-Time Audio Alerts)</span>
+              <span className="audio-toggle-desc">ส่งเสียงเตือนทันทีเมื่อมีผู้ยื่นคำขอใหม่เข้ามา เพื่อความรวดเร็วในการบริหารจัดการ</span>
+            </div>
+          </div>
+          <div className="audio-toggle-switch">
+            <div className="audio-toggle-slider" />
+          </div>
+        </div>
       </div>
 
       <div className="premium-card" style={{ padding: 24 }}>
