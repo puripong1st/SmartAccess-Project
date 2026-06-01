@@ -124,7 +124,7 @@ ${wokwiDefine}
 
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
 const char* CURRENT_VERSION = "1.0.0";
-const char* FIRMWARE_URL = "https://project-sigma-ivory-21.vercel.app/api/esp32/firmware-ota";
+const char* FIRMWARE_URL = "${origin}/api/esp32/firmware-ota";
 
 WiFiServer localServer(80); // เว็บเซิร์ฟเวอร์ LAN สำหรับคิวเปิดประตู/โหมดออฟไลน์
 bool localServerStarted = false;
@@ -172,7 +172,7 @@ String ip_address_str = "0.0.0.0";
 String last_door_trigger = "idle";
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
-void drawQRCode(String qrText, int startX, int startY, int boxSize) {
+void drawQRCode(const String& qrText, int startX, int startY, int boxSize) {
   QRCode qrcode;
 
   // ใช้ QR Code Version 7 (45x45 modules) รองรับ URL ยาวสูงสุด 154 ตัวอักษร
@@ -209,8 +209,8 @@ void drawQRCode(String qrText, int startX, int startY, int boxSize) {
 
 // 1. หน้าจอหลักโหมดสแตนด์บาย (Idle Mode) — ดีไซน์พรีเมียมถอดแบบมาจาก Next.js
 // esp32-preview
-void drawMainScreen(int queueCount, String lastApprovedName, String timeStr,
-                    String qrText) {
+void drawMainScreen(int queueCount, const String& lastApprovedName, const String& timeStr,
+                    const String& qrText) {
   // พื้นหลังสีน้ำเงินดำหรูหรา #06070D
   tft.fillScreen(tft.color565(6, 7, 13));
 
@@ -344,7 +344,7 @@ void drawScanningScreen() {
 }
 
 // 3. หน้าจอปลดล็อกผ่านสำเร็จ (Access Granted Mode) — สีเขียวสะท้อนแสงหรูหราดีไซน์พรีเมียม
-void drawUnlockedScreen(String approvedName, String studentId) {
+void drawUnlockedScreen(const String& approvedName, const String& studentId) {
   tft.fillScreen(tft.color565(3, 12, 5)); // สีเขียวเข้มสไตล์ฟอเรสต์ #030C05
 
   // วงกลมไฟสีเขียวสลักตราถูก
@@ -440,11 +440,12 @@ const char* cache_key_file = "/qr_key.bin";
 String cached_offline_pin = "123456"; // Default PIN
 
 // Forward declarations
-bool validateOfflineQR(String grant);
-void triggerDoorOpenOffline(String grant);
-void saveOfflineLog(String student_id);
+bool validateOfflineQR(const String& grant);
+void triggerDoorOpenOffline(const String& grant);
+void saveOfflineLog(const String& student_id);
 void syncStudentCache();
 void syncOfflineLogs();
+bool secureCompare(const char* a, const char* b);
 
 #ifndef WOKWI_SIM
 void onOTAStart() {
@@ -576,20 +577,25 @@ void startLocalServer() {
   }
 }
 
-String base64Decode(String input) {
-  input.replace("-", "+");
-  input.replace("_", "/");
-  while (input.length() % 4) {
-    input += "=";
+String base64Decode(const String& input) {
+  String decodedInput = input;
+  decodedInput.replace("-", "+");
+  decodedInput.replace("_", "/");
+  while (decodedInput.length() % 4) {
+    decodedInput += "=";
   }
-  int len = input.length();
-  uint8_t* out = (uint8_t*)malloc(len);
+  int len = decodedInput.length();
+  uint8_t* out = (uint8_t*)malloc(len + 1);
+  if (!out) {
+    DBG("base64Decode: malloc failed!");
+    return "";
+  }
   int decoded_len = 0;
   const char* lookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   int bits = 0;
   int val = 0;
   for (int i = 0; i < len; i++) {
-    char c = input[i];
+    char c = decodedInput[i];
     if (c == '=') break;
     const char* p = strchr(lookup, c);
     if (!p) continue;
@@ -601,17 +607,15 @@ String base64Decode(String input) {
       out[decoded_len++] = (val >> bits) & 0xFF;
     }
   }
-  String res = "";
-  for (int i = 0; i < decoded_len; i++) {
-    res += (char)out[i];
-  }
+  out[decoded_len] = '\\0';
+  String res = String((char*)out);
   free(out);
   return res;
 }
 
 // Hex-encoded HMAC-SHA256 — ตรงกับ Node.js crypto.createHmac('sha256', key).digest('hex')
 // ใช้สำหรับ x-hmac-signature header ที่ server ตรวจสอบ
-String generateHMACHex(String payload, String key) {
+String generateHMACHex(const String& payload, const String& key) {
   uint8_t hmacResult[32];
   mbedtls_md_context_t ctx;
   mbedtls_md_init(&ctx);
@@ -624,12 +628,12 @@ String generateHMACHex(String payload, String key) {
   for (int i = 0; i < 32; i++) {
     sprintf(hexBuf + i * 2, "%02x", hmacResult[i]);
   }
-  hexBuf[64] = '\0';
+  hexBuf[64] = '\\0';
   return String(hexBuf);
 }
 
 // Base64url-encoded HMAC-SHA256 (ใช้สำหรับ offline grant validation)
-String generateHMAC(String payload, String key) {
+String generateHMAC(const String& payload, const String& key) {
   uint8_t hmacResult[32];
   mbedtls_md_context_t ctx;
   mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
@@ -658,7 +662,7 @@ String generateHMAC(String payload, String key) {
   return encoded;
 }
 
-bool validateOfflineQR(String grant) {
+bool validateOfflineQR(const String& grant) {
   if (cached_qr_key == "") {
     DBG("No cached QR signing key. Cannot validate offline.");
     return false;
@@ -699,7 +703,7 @@ bool validateOfflineQR(String grant) {
   File f = SPIFFS.open(cache_students_file, "r");
   if (!f) return false;
   
-  StaticJsonDocument<2048> cacheDoc;
+  DynamicJsonDocument cacheDoc(4096); // Allocated on Heap to prevent Stack Overflow
   DeserializationError cacheErr = deserializeJson(cacheDoc, f);
   f.close();
   if (cacheErr) {
@@ -723,8 +727,8 @@ bool validateOfflineQR(String grant) {
   return true;
 }
 
-void saveOfflineLog(String student_id) {
-  StaticJsonDocument<1536> logDoc;
+void saveOfflineLog(const String& student_id) {
+  DynamicJsonDocument logDoc(3072); // Allocated on Heap to prevent Stack Overflow
   if (SPIFFS.exists(cache_logs_file)) {
     File f = SPIFFS.open(cache_logs_file, "r");
     if (f) {
@@ -753,7 +757,7 @@ void saveOfflineLog(String student_id) {
   }
 }
 
-void triggerDoorOpenOffline(String grant) {
+void triggerDoorOpenOffline(const String& grant) {
   int dotIdx = grant.indexOf(".");
   String encodedPayload = grant.substring(0, dotIdx);
   String decoded = base64Decode(encodedPayload);
@@ -951,7 +955,7 @@ void syncStudentCache() {
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
-    StaticJsonDocument<2048> doc;
+    DynamicJsonDocument doc(4096); // Heap allocated to support larger responses
     DeserializationError error = deserializeJson(doc, payload);
     if (!error) {
       if (doc.containsKey("qr_key")) {
@@ -1009,7 +1013,7 @@ void syncTimeViaHTTP() {
   if (displayIdx != -1) {
     timeUrl = timeUrl.substring(0, displayIdx) + "/time";
   } else {
-    timeUrl = "https://project-sigma-ivory-21.vercel.app/api/esp32/time"; // Fallback
+    timeUrl = "${origin}/api/esp32/time"; // Fallback
   }
   
   DBG("Attempting HTTP Time Sync Fallback via: " + timeUrl);
@@ -1033,7 +1037,7 @@ void syncTimeViaHTTP() {
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
-    StaticJsonDocument<192> doc;
+    StaticJsonDocument<256> doc; // Increased safely on stack
     DeserializationError error = deserializeJson(doc, payload);
     if (!error && doc.containsKey("timestamp")) {
       long serverTime = doc["timestamp"];
@@ -1279,13 +1283,13 @@ void loop() {
           syncOfflineLogs();
         }
         String payload = http.getString();
-        StaticJsonDocument<384> doc;
+        DynamicJsonDocument doc(1024); // Increased to 1024 to prevent buffer overflows from long URLs or JSON nesting
         DeserializationError error = deserializeJson(doc, payload);
 
         if (!error) {
           bool update_available = doc["update_available"] | false;
           if (update_available) {
-            Serial.println("[OTA] New version found! Starting OTA...");
+            Serial.println("[INFO] New version found! Starting OTA...");
             http.end();
 #ifndef WOKWI_SIM
             performHTTPSOTA();
@@ -1418,10 +1422,22 @@ void loop() {
       http.end();
     }
   } else if (WiFi.status() != WL_CONNECTED) {
-    digitalWrite(LED_WIFI, LOW);
-    delay(250);
-    digitalWrite(LED_WIFI, HIGH);
-    delay(250);
+    // Non-blocking WiFi status blinker & reconnection logic to prevent sluggish performance
+    static unsigned long lastWifiBlink = 0;
+    static bool wifiBlinkState = false;
+    if (millis() - lastWifiBlink >= 250) {
+      lastWifiBlink = millis();
+      wifiBlinkState = !wifiBlinkState;
+      digitalWrite(LED_WIFI, wifiBlinkState ? HIGH : LOW);
+    }
+
+    static unsigned long lastWifiRetry = 0;
+    if (millis() - lastWifiRetry >= 10000) {
+      lastWifiRetry = millis();
+      Serial.println("[WIFI] Connection lost. Attempting non-blocking reconnect...");
+      WiFi.disconnect();
+      WiFi.begin(ssid, password);
+    }
   }
 }
 

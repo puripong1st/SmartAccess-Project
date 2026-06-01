@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:31:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:36:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -13810,6 +13810,42 @@ if (decoded.role === &quot;door_operator&quot;) {
 </ul>
 </li>
 </ol>
+<h3>71.53.11 การปรับปรุงความเสถียรและความมั่นคงปลอดภัยของเฟิร์มแวร์ ESP32 (Memory Resilience, Non-blocking WiFi &amp; Heap JSON Allocation)</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2569 (10:35 น. ICT)</p>
+<p>ดำเนินการตรวจสอบสัญจรทางวิศวกรรมของเฟิร์มแวร์ <code>esp32.ino</code> และองค์ประกอบโครงสร้างการต่อพ่วง รวมถึงคัดกรองจุดเสี่ยงและ Bug สำคัญที่อาจทำให้บอร์ดค้างหรือแครชเมื่อใช้งานจริง:</p>
+<ol>
+<li><strong>การจัดการหน่วยความจำและลดการเกิด Memory Fragmentation (Memory &amp; String Management):</strong><ul>
+<li><strong>กลไกปัญหาเดิม:</strong> ในฟังก์ชัน <code>base64Decode</code> มีการจองหน่วยความจำผ่านคำสั่ง <code>malloc(len)</code> ซึ่งไม่ได้ตรวจเช็กค่าว่าง (Null Pointer check) ทำให้มีโอกาสแครชได้หากแรมเต็ม และมีการต่อสายอักขระตัวอักษรทีละตัวในลูป (<code>res += (char)out[i]</code>) ซึ่งก่อให้เกิดเศษหน่วยความจำ (Fragmentation) สะสมรวดเร็วบน Heap รวมถึงการส่งผ่านวัตถุ <code>String</code> แบบส่งผ่านโดยค่า (Pass-by-value) ในพารามิเตอร์ฟังก์ชันต่าง ๆ</li>
+<li><strong>การปรับปรุง:</strong> <ul>
+<li>เพิ่มการตรวจสอบข้อผิดพลาดจากการจองแรมของ <code>malloc</code> โดยหากส่งค่ากลับเป็น <code>NULL</code> จะทำการยกเลิกและแจ้งเตือนทันที</li>
+<li>ขยายขนาดการจองบล็อกข้อมูลเป็น <code>malloc(len + 1)</code> เพื่อเติมตัวอักษรบอกจุดสิ้นสุด NULL-Terminator <code>\0</code> ได้อย่างปลอดภัย</li>
+<li>แปลงบัฟเฟอร์อักขระอาร์เรย์ (<code>uint8_t* out</code>) กลับไปเป็นวัตถุ <code>String</code> แบบครั้งเดียวผ่าน Constructor แทนการต่ออักขระทีละตัว ช่วยลดภาระการจัดสรร Heap</li>
+<li>ปรับปรุงการส่งค่าสายอักขระในพารามิเตอร์ทั้งหมดให้เป็นแบบอ้างอิงและเป็นค่าคงตัว (<code>const String&amp;</code>) ป้องกันการคัดลอกวัตถุซ้ำซ้อนบน Stack</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>ความเสถียรของวงจรวิทยุและระบบการเชื่อมต่อเครือข่ายจำลองแบบไร้การหน่วงเวลา (Non-blocking WiFi &amp; HTTP Resilience):</strong><ul>
+<li><strong>กลไกปัญหาเดิม:</strong> เมื่อสัญญาณเครือข่าย WiFi ขาดหายหรือหลุดจากการสื่อสาร บล็อกโค้ดเดิมใน <code>loop()</code> จะรันคำสั่งหน่วงไฟ LED สองจังหวะผ่าน <code>delay(250)</code> ซึ่งเป็นการบล็อกการทำงานหลัก (Blocking code) เป็นเวลา 500ms ทุก ๆ รอบลูป ทำให้ระบบตอบรับคำขอปลดล็อกออฟไลน์บนโลคอลเซิร์ฟเวอร์ LAN <code>handleLocalValidation()</code> มีความหน่วง ทำงานได้ล่าช้า หรือแครชเนื่องจากไคลเอนต์ไทม์เอาต์</li>
+<li><strong>การปรับปรุง:</strong> เปลี่ยนโครงสร้างการตรวจสอบสัญจร WiFi และการกะพริบของหลอดไฟสีน้ำเงินให้เป็นระบบไร้การหน่วงเวลา (Non-blocking Timer) อาศัยคำสั่งนาฬิการะบบ <code>millis()</code> ทำให้ระบบโลคอลเซิร์ฟเวอร์ LAN ยังคงทำงานและตอบสนองต่อผู้ใช้งานด้วยความเร็วสูงสุดในขณะที่บอร์ดพยายามเชื่อมต่อ WiFi</li>
+</ul>
+</li>
+<li><strong>การหลีกเลี่ยงสภาวะ Stack Overflow จากตัวแปล JSON ขนาดใหญ่ (Heap JSON Allocation via DynamicJsonDocument):</strong><ul>
+<li><strong>กลไกปัญหาเดิม:</strong> บัฟเฟอร์ JSON เดิมเช่น <code>cacheDoc</code> และ <code>logDoc</code> ถูกประกาศเป็นชนิด <code>StaticJsonDocument</code> ขนาด 2048 และ 1536 ไบต์บนหน่วยความจำ Stack ซึ่งบนสถาปัตยกรรม ESP32 การจองพื้นที่ Stack ที่กว้างเกินไปในระดับลึก (Nested Function Calls) อาจทำให้เกิดสภาวะ Stack Overflow บอร์ดรีบูตตัวเอง และสำหรับบัฟเฟอร์การโพลล์คำสั่งหลักใน <code>loop()</code> มีขนาดเพียง 384 ไบต์ ซึ่งมีโอกาสเกิดปัญหา Buffer Overflow และปฏิเสธการดึงคำสั่ง (DeserializationError) หากมีค่าสเปเชียลลิงก์สมัครเรียน (Register URL) หรือรหัสนักศึกษาอนุมัติยาวกว่าปกติ</li>
+<li><strong>การปรับปรุง:</strong><ul>
+<li>เปลี่ยนมาใช้วัตถุ <code>DynamicJsonDocument</code> ที่จัดสรรข้อมูลบน Heap แทนสำหรับข้อมูลขนาดกลางและใหญ่</li>
+<li>ขยายขนาดพื้นที่การประมวลผลการดึงตารางแคชนักศึกษาออฟไลน์ (<code>cacheDoc</code>) เป็น 4096 ไบต์ และข้อมูลล็อกออฟไลน์ (<code>logDoc</code>) เป็น 3072 ไบต์</li>
+<li>ขยายขนาดพื้นที่ของบัฟเฟอร์ประมวลผลคำสั่งโพลล์ในลูปหลักเป็น 1024 ไบต์ ช่วยขจัดปัญหาการถอดรหัสล้มเหลว (JSON Decoding Failures) ได้สมบูรณ์แบบ</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>ความสมบูรณ์ในการบิลด์สำหรับบอร์ดฮาร์ดแวร์จริง (Physical Board Compilation Verification):</strong><ul>
+<li><strong>กลไกปัญหาเดิม:</strong> ในสภาพแวดล้อมที่ผู้พัฒนาสับเปลี่ยนโหมดจากการรันในจำลอง (Wokwi Sim) ไปยังบอร์ดจริงโดยการนำเครื่องหมาย <code>#define WOKWI_SIM</code> ออก จะทำให้คอมไพเลอร์ฟ้องหาตัวแปรใบรับรองความปลอดภัย <code>root_ca_cert</code> ซึ่งช่องโหว่นี้เกิดจากไฟล์ <code>config.h</code> ขาดการฝังตัวแปรนี้ไว้</li>
+<li><strong>การปรับปรุง:</strong> นำประมวลข้อมูลใบรับรอง Root CA จาก ISRG Root X1 ของ Let&#39;s Encrypt จากไฟล์เทมเพลตฝังตัวเข้าสู่ <code>config.h</code> ตัวจริง ทำให้บอร์ดสามารถรองรับการตรวจสอบสิทธิ์สัญจรปลายทาง Vercel Next.js ผ่าน HTTPS ได้ทั้งในโหมดจำลอง (ที่มีระบบ setInsecure ใน Wokwi) และบอร์ดจริงได้อย่างสมบูรณ์</li>
+</ul>
+</li>
+</ol>
 <h3>71.53.6 สรุปไฟล์ที่เปลี่ยน (อ้างอิงเร็ว)</h3>
 <table>
 <thead>
@@ -13824,7 +13860,11 @@ if (decoded.role === &quot;door_operator&quot;) {
 </tr>
 <tr>
 <td><code>esp32/esp32.ino</code></td>
-<td>ตัด ElegantOTA, <code>WOKWI_SIM</code>, แก้ <code>&#39;\0&#39;</code>, edge-trigger door, อัปเดต Poll URL พ่วง <code>&amp;slim=true</code> และลดขนาด StaticJsonDocument เป็น 384 ไบต์, เพิ่มระบบกู้ชีพ NTP Sync Timeout ผ่าน HTTP Fallback, และเพิ่มคำสั่งบังคับติดตาม Redirect (302) สำหรับเฟิร์มแวร์ OTA</td>
+<td>ตัด ElegantOTA, <code>WOKWI_SIM</code>, แก้ <code>&#39;\0&#39;</code>, edge-trigger door, อัปเดต Poll URL พ่วง <code>&amp;slim=true</code>, เพิ่มระบบกู้ชีพ NTP Sync Timeout ผ่าน HTTP Fallback, บังคับติดตาม Redirect (302) สำหรับ OTA, จัดระเบียบพารามิเตอร์แบบ <code>const String&amp;</code> เพื่อลดแรม, ถอดรหัส Base64 แบบ Heap ครั้งเดียวไร้รอยต่อ, ป้องกัน Null Pointer Dereference ของ malloc, และย้ายขนาด JSON Documents (cacheDoc: 4096, logDoc: 3072, display main loop: 1024) ไปเป็น DynamicJsonDocument บน Heap เพื่อป้องกันสภาวะ Stack/Buffer Overflow</td>
+</tr>
+<tr>
+<td><code>esp32/config.h</code></td>
+<td><strong>ปรับปรุงใหม่</strong> — เพิ่มใบรับรองความปลอดภัย Root CA (<code>root_ca_cert</code>) สำหรับ Vercel/HTTPS เพื่อให้บอร์ดจำลองและบอร์ดฮาร์ดแวร์จริงสามารถคอมไพล์ผ่านได้ 100% ไร้รอยต่อ</td>
 </tr>
 <tr>
 <td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
