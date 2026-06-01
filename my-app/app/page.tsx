@@ -1861,6 +1861,9 @@ function RegistrationPageInner() {
               </label>
               <input
                 id="student_id"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9\-]*"
                 aria-invalid={error ? "true" : "false"}
                 className="smartaccess-input"
                 placeholder="กรอกรหัสนักศึกษา เช่น 076158050650-8"
@@ -1868,7 +1871,7 @@ function RegistrationPageInner() {
                 onChange={e => handleStudentIdInput(e.target.value)}
                 maxLength={16}
                 required
-                style={{ fontFamily: "monospace", letterSpacing: "1px", fontSize: 15, fontWeight: 700 }}
+                style={{ fontFamily: "monospace", letterSpacing: "1px", fontSize: 16, fontWeight: 700 }}
               />
             </div>
 
@@ -2047,15 +2050,15 @@ function RegistrationPageInner() {
         </div>
 
         {/* Navigation Footlinks */}
-        <div className="animate-fade-in-delay-2" style={{ textAlign: "center", marginTop: 24, display: "flex", justifyContent: "center", alignItems: "center", gap: 12 }}>
-          <a href="/admin/login" style={{ color: "var(--smartaccess-purple)", fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
+        <div className="animate-fade-in-delay-2 navigation-footlinks-container" style={{ marginTop: 24 }}>
+          <a href="/admin/login" className="navigation-footlink-item" style={{ color: "var(--smartaccess-purple)", fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
             <LockIcon />
-            สำหรับเจ้าหน้าที่ (Admin Login)
+            <span>สำหรับเจ้าหน้าที่ (Admin Login)</span>
           </a>
-          <span style={{ color: "var(--text-muted)", fontSize: 12 }}>•</span>
-          <a href="/esp32-preview" style={{ color: "var(--edu-pink)", fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
+          <span className="navigation-footlink-sep" style={{ color: "var(--text-muted)", fontSize: 12 }}>•</span>
+          <a href="/esp32-preview" className="navigation-footlink-item" style={{ color: "var(--edu-pink)", fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
             <TVIcon />
-            จำลองหน้าจอ ESP32 Simulator
+            <span>จำลองหน้าจอ ESP32 Simulator</span>
           </a>
         </div>
       </div>

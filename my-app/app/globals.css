@@ -216,10 +216,16 @@ button, a, [role="button"], input, select, textarea, label {
   padding: 12px 16px;
   color: var(--text-primary);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 16px; /* iOS Safari auto-zoom prevention (must be >= 16px) */
   font-weight: 500;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
+}
+
+@media (min-width: 768px) {
+  .smartaccess-input {
+    font-size: 14px; /* Scaled down for desktops where precision is high and screens are large */
+  }
 }
 
 .smartaccess-input:focus {
@@ -849,3 +855,79 @@ button, a, [role="button"], input, select, textarea, label {
   -webkit-backdrop-filter: blur(16px);
 }
 
+/* 📱 Premium Horizontal Scrollable Filter Container for Mobile */
+.mobile-filter-container {
+  display: flex !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  -webkit-overflow-scrolling: touch !important; /* Smooth iOS kinetic scroll */
+  padding: 6px 12px !important;
+  gap: 8px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.mobile-filter-container::-webkit-scrollbar {
+  display: none !important; /* Hide scrollbars for a clean, app-like look */
+}
+
+/* Extra safety bounds for very narrow screens (e.g. iPhone SE 1st Gen, 320px screen width) */
+@media (max-width: 360px) {
+  .mobile-card-grid-container,
+  .room-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  }
+}
+
+/* 📱 Mobile-First premium navigation footlinks to prevent misclicks */
+.navigation-footlinks-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.navigation-footlink-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.navigation-footlink-item:hover {
+  background: var(--smartaccess-purple-pale);
+}
+
+@media (max-width: 640px) {
+  .navigation-footlinks-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .navigation-footlink-sep {
+    display: none !important;
+  }
+  
+  .navigation-footlink-item {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-medium);
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+  }
+}
+@media (min-width: 1025px) {
+  .mobile-filter-container {
+    overflow-x: visible !important;
+    white-space: normal !important;
+    max-width: none !important;
+    width: auto !important;
+    flex-wrap: wrap !important;
+  }
+}

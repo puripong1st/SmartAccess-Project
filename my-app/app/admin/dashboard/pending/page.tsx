@@ -86,7 +86,7 @@ export default function PendingPage() {
       {/* Beautiful Classroom Filter Tabs & Audio Controls */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
         {/* Classroom Selector */}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", background: "rgba(124, 58, 237, 0.04)", padding: 6, borderRadius: 14, border: "1px solid rgba(124, 58, 237, 0.08)" }}>
+        <div className="mobile-filter-container" style={{ background: "rgba(124, 58, 237, 0.04)", padding: 6, borderRadius: 14, border: "1px solid rgba(124, 58, 237, 0.08)" }}>
           <button
             onClick={() => setPendingRoomFilter("all")}
             style={{
@@ -224,6 +224,7 @@ export default function PendingPage() {
                               setSelectedPendingIds([]);
                             }
                           }}
+                          style={{ width: 20, height: 20, cursor: "pointer", accentColor: "var(--smartaccess-purple)" }}
                         />
                       </th>
                     )}
@@ -262,6 +263,7 @@ export default function PendingPage() {
                                   setSelectedPendingIds((prev: number[]) => prev.filter(x => x !== student.id));
                                 }
                               }}
+                              style={{ width: 20, height: 20, cursor: "pointer", accentColor: "var(--smartaccess-purple)" }}
                             />
                           </td>
                         )}
