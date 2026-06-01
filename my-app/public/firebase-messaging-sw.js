@@ -59,6 +59,13 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
   // เราส่งแบบ data-only payload จากเซิร์ฟเวอร์ จึงต้องสร้าง notification เองที่นี่
   // (กันปัญหา "แจ้งเตือนซ้ำ 2 ครั้ง" จากการที่เบราว์เซอร์แสดง notification payload ให้อัตโนมัติ)
   messaging.onBackgroundMessage(async (payload) => {
+    // หากมีฟิลด์ notification ติดมาใน payload, FCM JS SDK จะดึงไปแสดงผลแบบ Native ให้อยู่แล้ว
+    // เราจะไม่รันคำสั่ง showNotification ซ้ำเพื่อหลีกเลี่ยงการแจ้งเตือนซ้ำซ้อน (Double Notification)
+    if (payload.notification) {
+      console.log('[PWA SW] FCM native notification exists. Skipping manual showNotification to prevent duplicates.');
+      return;
+    }
+
     const d = payload.data || {};
     const type = d.type;
 

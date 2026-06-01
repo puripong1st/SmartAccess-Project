@@ -29,10 +29,19 @@ export async function POST(req: NextRequest) {
     console.log('[FCM-Test] Dispatching test push notification to token:', token.substring(0, 15) + '...');
     const result = await sendFCMNotification({
       token,
+      notification: {
+        title: '🔔 ทดสอบแจ้งเตือน SmartAccess PWA',
+        body: 'ยินดีด้วย! ระบบแจ้งเตือนพุชบนมือถือและ Service Worker ของคุณทำงานอย่างสมบูรณ์แบบเรียลไทม์แล้ว 🚀',
+      },
       webpush: {
+        notification: {
+          title: '🔔 ทดสอบแจ้งเตือน SmartAccess PWA',
+          body: 'ยินดีด้วย! ระบบแจ้งเตือนพุชบนมือถือและ Service Worker ของคุณทำงานอย่างสมบูรณ์แบบเรียลไทม์แล้ว 🚀',
+          icon: '/icons/icon-128x128.png',
+          badge: '/icons/icon-96x96.png',
+        },
         fcm_options: { link: '/admin/dashboard' },
       },
-      // ส่งแบบ data-only ให้ Service Worker สร้าง notification เอง (กันแจ้งเตือนซ้ำ)
       data: {
         title: '🔔 ทดสอบแจ้งเตือน SmartAccess PWA',
         body: 'ยินดีด้วย! ระบบแจ้งเตือนพุชบนมือถือและ Service Worker ของคุณทำงานอย่างสมบูรณ์แบบเรียลไทม์แล้ว 🚀',

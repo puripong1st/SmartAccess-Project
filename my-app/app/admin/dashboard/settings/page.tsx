@@ -184,10 +184,25 @@ export default function SettingsPage() {
           "fcm_notify_status_change",
           "fcm_notify_security_alert"
         ];
+        const prefs: Record<string, string> = {};
         pwaKeys.forEach(k => {
           const val = rawSettings[k] === "0" ? "0" : "1";
           setLocalSetting(k, val);
+          prefs[k] = val;
         });
+
+        // ส่งข้อมูลตั้งค่าแจ้งเตือนขึ้นไปเซิร์ฟเวอร์เพื่อให้เก็บลง DB ทันที
+        if (deviceToken) {
+          await fetch('/api/notifications/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: deviceToken,
+              role: 'admin',
+              preferences: prefs,
+            }),
+          });
+        }
       }
 
       await handleSaveSettings(e);

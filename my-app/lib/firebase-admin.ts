@@ -6,10 +6,17 @@ import { getPool } from './db';
 // Firebase Admin SDK types (เราใช้ REST API โดยตรงเพื่อไม่ต้องเพิ่ม dependency)
 interface FCMMessage {
   token: string;
-  // หมายเหตุ: เราส่งแบบ "data-only" (ไม่มีฟิลด์ notification) โดยเจตนา
-  // เพื่อให้ Service Worker เป็นผู้สร้างการแจ้งเตือนเองผ่าน onBackgroundMessage
-  // กันปัญหาเบราว์เซอร์แสดงการแจ้งเตือนซ้ำซ้อน (double notification)
+  notification?: {
+    title: string;
+    body: string;
+  };
   webpush?: {
+    notification?: {
+      title: string;
+      body: string;
+      icon?: string;
+      badge?: string;
+    };
     fcm_options?: {
       link?: string;
     };
@@ -176,14 +183,19 @@ async function removeInvalidToken(token: string): Promise<void> {
  */
 export async function getUserTokens(
   userId: number,
-  role: 'student' | 'admin'
+  role: 'student' | 'admin',
+  type?: string
 ): Promise<string[]> {
   try {
     const pool = getPool();
-    const { rows } = await pool.query(
-      'SELECT fcm_token FROM fcm_tokens WHERE user_id = $1 AND role = $2',
-      [userId, role]
-    );
+    let query = 'SELECT fcm_token FROM fcm_tokens WHERE user_id = $1 AND role = $2';
+    const params: any[] = [userId, role];
+
+    if (type && ['fcm_notify_register', 'fcm_notify_door_open', 'fcm_notify_status_change', 'fcm_notify_security_alert'].includes(type)) {
+      query += ` AND ${type} = '1'`;
+    }
+
+    const { rows } = await pool.query(query, params);
     return rows.map((r: { fcm_token: string }) => r.fcm_token);
   } catch (error) {
     console.error('[FCM] Failed to get user tokens:', error);
@@ -194,14 +206,18 @@ export async function getUserTokens(
 /**
  * ดึง FCM tokens ของผู้ดูแลระบบทุกคน (สำหรับส่งแจ้งเตือนกลุ่ม)
  */
-export async function getAllAdminTokens(): Promise<string[]> {
+export async function getAllAdminTokens(type?: string): Promise<string[]> {
   try {
     const pool = getPool();
-    const { rows } = await pool.query(
-      `SELECT DISTINCT ft.fcm_token FROM fcm_tokens ft
+    let query = `SELECT DISTINCT ft.fcm_token FROM fcm_tokens ft
        INNER JOIN admin_users au ON ft.user_id = au.id AND ft.role = 'admin'
-       WHERE au.is_active = TRUE`
-    );
+       WHERE au.is_active = TRUE`;
+
+    if (type && ['fcm_notify_register', 'fcm_notify_door_open', 'fcm_notify_status_change', 'fcm_notify_security_alert'].includes(type)) {
+      query += ` AND ft.${type} = '1'`;
+    }
+
+    const { rows } = await pool.query(query);
     return rows.map((r: { fcm_token: string }) => r.fcm_token);
   } catch (error) {
     console.error('[FCM] Failed to get admin tokens:', error);
@@ -228,10 +244,21 @@ export async function sendPushToTokens(
     tokens.map((token) =>
       sendFCMNotification({
         token,
+        // เพิ่มฟิลด์ notification ระดับบนสุด เพื่อให้ iOS (iPhone) แสดงแจ้งเตือนได้จริงในเบื้องหลัง
+        notification: {
+          title,
+          body,
+        },
         webpush: {
+          notification: {
+            title,
+            body,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-96x96.png',
+          },
           fcm_options: { link: url || '/' },
         },
-        // ส่งเนื้อหาทั้งหมดผ่าน data ให้ SW สร้าง notification เอง (ดู firebase-messaging-sw.js)
+        // คงฟิลด์ data ไว้เพื่อให้ Service Worker สามารถดึงไปใช้งานเมื่อกดคลิกได้
         data: {
           title,
           body,

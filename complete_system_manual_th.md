@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-01 11:36:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-01 12:20:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -11453,5 +11453,52 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | 1 | `my-app/proxy.ts` | **[MODIFY]** | ทำการอัปเกรดโครงสร้างภายใน โดยผสานสคริปต์ Rate Limiting, ดึงข้อมูลไอพีแท้จริง และขยายขอบเขตการดักจับเส้นทางผ่านตัวจับ `"/api/:path*"` |
 | 2 | `my-app/middleware.ts` | **[DELETE]** | ทำการลบไฟล์นี้ออกจากโครงการอย่างเป็นทางการเพื่อยกเลิกการทับซ้อนและปลดล็อกการคอมไพล์ใน Next.js 16 |
 | 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดแผนการแก้ไขทางสถาปัตยกรรมการย้ายระบบ Middleware สู่ Unified Proxy สำหรับการอนุมัติวิทยานิพนธ์ §73.37 |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+---
+
+<a id="sec-73-38"></a>
+### 73.38 การเพิ่มความละเอียดในการแจ้งเตือนพุช PWA และระบบตัวกรองสิทธิ์รายอุปกรณ์บนเซิร์ฟเวอร์แบบ Zero-Trust (PWA Push Notifications Detail Enhancement & Reliable Server-Side Preferences Filtering for Admins)
+
+วันที่บันทึก: 1 มิถุนายน 2026
+
+#### 73.38.1 ปัญหาและข้อจำกัดของระบบแจ้งเตือนพุชเดิมบน iOS (iOS Web Push Constraints & Double Notification Flaws)
+ในการทดสอบการทำงานของระบบแจ้งเตือน PWA บนอุปกรณ์ iPhone (iOS Web Push) พบว่าไม่ปรากฏการแจ้งเตือนใด ๆ บนหน้าจอโทรศัพท์มือถือเลย และในระบบเดิมยังพบข้อจำกัดทางวิศวกรรม 3 ประการหลัก:
+1. **การถูกบล็อกข้อมูลโดย APNs (Silent Pushes Dropped on iOS):** ระบบเดิมส่งข้อมูลพุชแบบ "data-only" เพื่อให้ Service Worker ทำหน้าที่ประมวลผลเบื้องหลังและสร้างการแจ้งเตือนเอง แต่ Apple Push Notification service (APNs) ของ iOS บล็อกการปลุกการทำงานของ Service Worker แบบไม่มีการแสดงผล (Silent/Data-only Pushes) ในเบื้องหลังทั้งหมดเพื่อรักษาพลังงานแบตเตอรี่ ทำให้ iPhone ไม่แสดงการแจ้งเตือนใด ๆ
+2. **ปัญหาการแจ้งเตือนซ้ำซ้อน (Double Notification Flaw):** หากแก้ไขโดยการใส่บล็อก `notification` ตรง ๆ ในฟิลด์ของ FCM ตัวเบราว์เซอร์จะดักแสดงผลทันทีแบบ Native แต่โค้ด Service Worker เดิมใน `onBackgroundMessage` จะสั่ง `showNotification` ซ้ำอีกรอบ ทำให้บน Android/Chrome จะเด้งการแจ้งเตือนซ้ำกัน 2 ครั้ง
+3. **การหลุดรอดของฟิลเตอร์กรองสิทธิ์ฝั่ง Client:** ระบบกรองการแจ้งเตือนพุช (เช่น ปิดเสียงแจ้งเตือนการสแกนเปิดประตูทั่วไป หรือปิดแจ้งเตือนการสมัครใหม่) เดิมใช้ IndexedDB ฝั่ง Client ในการตรวจจับและคัดกรอง แต่บน iOS ที่เบราว์เซอร์หยิบ `notification` ไปวาดผลเองโดยตรง จะทำให้ตัวกรองใน Service Worker ถูกข้ามผ่านทั้งหมด (Bypassed) ผู้ใช้จะได้รับแจ้งเตือนที่กดปิดไว้รบกวนตลอดเวลา
+
+#### 73.38.2 สถาปัตยกรรมทางออกและการกรองสิทธิ์ฝั่งเซิร์ฟเวอร์ (Hybrid Payload & Server-Side Filtering Resolution)
+เพื่อแก้ปัญหานี้ให้สามารถทำงานได้อย่างเสถียร 100% บนทุกแพลตฟอร์ม (ทั้ง iOS, Android, Desktop) และรองรับการปิดแจ้งเตือนเฉพาะกลุ่มอย่างน่าเชื่อถือ จึงได้วางระบบใหม่ดังนี้:
+
+1. **สถาปัตยกรรมการรับส่งข้อมูลแบบผสมผสาน (Hybrid Payload Deployment):**
+   ปรับปรุงโครงสร้างคำสั่งส่งข้อความพุชใน `lib/firebase-admin.ts` ให้แนบทั้ง `notification` (ระดับบนสุดสำหรับความเข้ากันได้แบบ Native บน iOS), `webpush.notification` (กำหนดไอคอนและภาพพื้นหลังสำหรับ Web Push), และ `data` (เก็บ Metadata และ URL สำหรับการทำ Deep Linking เมื่อผู้ใช้คลิกเปิดแอป)
+2. **การป้องกันแจ้งเตือนซ้ำซ้อนในระดับ Service Worker:**
+   แก้ไขโค้ด `public/firebase-messaging-sw.js` ในฟังก์ชัน `onBackgroundMessage` ให้ตรวจสอบหากพบว่า `payload.notification` มีการแนบมาด้วย จะส่งผ่านตรรกะแบบ Early Return ข้ามขั้นตอนการเรียกคำสั่ง `showNotification` ซ้ำซ้อน เพื่อไม่เกิด Double Notification บน Android
+3. **ระบบการตั้งค่าสิทธิ์และตัวกรองที่ฝั่งเซิร์ฟเวอร์ (Server-Side Preference Storage):**
+   - **อัปเกรดฐานข้อมูล:** เพิ่มคอลัมน์เก็บสถานะการตั้งค่าพุชแบบบิตระบุสิทธิ์ลงในตาราง `fcm_tokens` ได้แก่: `fcm_notify_register`, `fcm_notify_door_open`, `fcm_notify_status_change`, `fcm_notify_security_alert` โดยใช้ Schema Migration แบบ idempotent ใน `lib/db.ts`
+   - **เชื่อมโยงการตั้งค่าจากหน้าตั้งค่า (Dashboard Settings Synchronization):** ปรับปรุงหน้า `SettingsPage` ของแอดมิน เพื่อให้เมื่อทำการกดบันทึกหรือทริกเกอร์การตั้งค่าพุช ระบบจะทำการเขียนบันทึกลง IndexedDB ประจำเครื่อง และยิงขออัปเดตลงเซิร์ฟเวอร์ผ่าน `POST /api/notifications/register` ไปพร้อมกัน เพื่อเก็บการตั้งค่านั้นลงแถวฐานข้อมูลโดยตรง
+   - **ฟิลเตอร์ก่อนส่งในระดับคิวรี่ (Zero-Trust Server Filtering):** แก้ไขฟังก์ชัน `getUserTokens` และ `getAllAdminTokens` ให้รับพารามิเตอร์ประเภทของการแจ้งเตือนที่ต้องการส่ง และเขียนคำสั่ง SQL เพิ่มเงื่อนไข `WHERE [type_column] = '1'` ส่งผลให้เซิร์ฟเวอร์จะไม่ยอมยิงข้อความใด ๆ ไปหากผู้ใช้คนนั้นตั้งค่าปิดไว้จากหน้าตั้งค่า
+
+#### 73.38.3 การยกระดับความละเอียดการแจ้งเตือนเท่าระดับแอปพลิเคชัน Discord & Telegram
+เพื่อประสบการณ์ในการตอบรับข้อมูลที่ดีเยี่ยม ได้ทำการเปลี่ยนข้อความพุชมาตรฐานใน `lib/push-notify.ts` ให้แสดงสัดส่วนข้อมูลที่อัดแน่น คมชัด และสว่างไสวด้วย Emoji บ่งชี้การทำรายการ:
+- **คำขอลงทะเบียนใหม่:** 📝 อนุมัติสิทธิ์เข้าเรียน | มีผู้ใช้ส่งคำขอรับอนุมัติสิทธิ์เข้าเรียน: ชื่อ-สกุล, รหัสนักศึกษา, ห้องเรียนเป้าหมาย, วันที่-เวลา
+- **ตรวจพบการเปิดประตู:** 🚪 ตรวจพบการเปิดประตูสำเร็จ | ยืนยันความปลอดภัยการเข้า-ออกห้องเรียน: สถานที่, วันที่, เวลา พร้อมคำเตือนกรณีตรวจพบความน่าสงสัย
+- **ภัยคุกคามไซเบอร์:** 🚨 [ALERT] ตรวจพบเหตุการณ์ความมั่นคงปลอดภัยระดับวิกฤต | บ่งบอกรายละเอียด อุณหภูมิ สถานะ หรือการโจมตีทาง API
+
+#### 73.38.4 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่
+
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `my-app/lib/db.ts` | **[MODIFY]** | อัปเกรด Schema ฐานข้อมูล เพิ่มคอลัมน์เก็บตั้งค่า Preferences ลงตาราง `fcm_tokens` ภายใน Idempotent Migrations |
+| 2 | `my-app/lib/firebase-admin.ts` | **[MODIFY]** | ปรับปรุงสถาปัตยกรรม Payload สู่รูปแบบ Hybrid (iOS/Android Compat) และอัปเกรดคิวรี่ Token ให้รองรับการตรวจสอบ Preference คอลัมน์ |
+| 3 | `my-app/lib/push-notify.ts` | **[MODIFY]** | อัปเกรดรายละเอียดเนื้อหาข้อความพุช (ใส่ตัวระบุ วันเวลา และสีสันสไตล์ Discord/Telegram) และส่งพารามิเตอร์ Preference ไปคัดกรองใน SQL |
+| 4 | `my-app/app/api/notifications/register/route.ts` | **[MODIFY]** | อัปเกรด Endpoint ให้รองรับการรับออบเจกต์ `preferences` จากเว็บแอดมิน เพื่อเขียนทับลงคอลัมน์ฐานข้อมูล |
+| 5 | `my-app/app/api/notifications/test/route.ts` | **[MODIFY]** | ปรับเปลี่ยนตัวส่งคำขอทดสอบสู่สถาปัตยกรรม Hybrid Payload ป้องกัน iPhone สลัดสายทิ้ง |
+| 6 | `my-app/public/firebase-messaging-sw.js` | **[MODIFY]** | เพิ่มเงื่อนไขข้ามผ่าน manual rendering ใน Service Worker เมื่อได้รับแจ้งเตือนแบบ Hybrid เพื่อป้องกันปัญหา Double Notification |
+| 7 | `my-app/app/components/PushNotificationManager.tsx` | **[MODIFY]** | ปรับตัวเชื่อมต่อฝั่งแอดมิน ให้อ่านและประมวลผล Preferences จาก localStorage ส่งขึ้นเซิร์ฟเวอร์ตอนรีจิสเตอร์ |
+| 8 | `my-app/app/admin/dashboard/settings/page.tsx` | **[MODIFY]** | เสริมความแข็งแกร่งของระบบซิงค์ข้อมูล โดยยิงอัปเดตลงเซิร์ฟเวอร์ทุกครั้งเมื่อแอดมินแก้ไขการตั้งค่าแจ้งเตือน |
+| 9 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดการตรวจสอบและพัฒนาระบบความเข้ากันได้และการตั้งค่าพุช PWA บน iOS §73.38 |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

@@ -133,6 +133,14 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
         return;
       }
 
+      // ดึงการตั้งค่าแจ้งเตือนจาก localStorage เพื่อส่งไปบันทึกบนเซิร์ฟเวอร์
+      const preferences = {
+        fcm_notify_register: localStorage.getItem('smartaccess_local_fcm_notify_register') || '1',
+        fcm_notify_door_open: localStorage.getItem('smartaccess_local_fcm_notify_door_open') || '1',
+        fcm_notify_status_change: localStorage.getItem('smartaccess_local_fcm_notify_status_change') || '1',
+        fcm_notify_security_alert: localStorage.getItem('smartaccess_local_fcm_notify_security_alert') || '1',
+      };
+
       const res = await fetch('/api/notifications/register', {
         method: 'POST',
         headers: {
@@ -143,6 +151,7 @@ export default function PushNotificationManager({ studentDbId }: PushNotificatio
           role,
           userId: resolvedUserId,
           deviceInfo: navigator.userAgent.substring(0, 100),
+          preferences,
         }),
       });
 

@@ -150,6 +150,24 @@ async function applyIdempotentMigrations(pool: Pool): Promise<void> {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await pool.query(`
+    DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='fcm_tokens' AND column_name='fcm_notify_register') THEN
+            ALTER TABLE fcm_tokens ADD COLUMN fcm_notify_register VARCHAR(2) DEFAULT '1';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='fcm_tokens' AND column_name='fcm_notify_door_open') THEN
+            ALTER TABLE fcm_tokens ADD COLUMN fcm_notify_door_open VARCHAR(2) DEFAULT '1';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='fcm_tokens' AND column_name='fcm_notify_status_change') THEN
+            ALTER TABLE fcm_tokens ADD COLUMN fcm_notify_status_change VARCHAR(2) DEFAULT '1';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='fcm_tokens' AND column_name='fcm_notify_security_alert') THEN
+            ALTER TABLE fcm_tokens ADD COLUMN fcm_notify_security_alert VARCHAR(2) DEFAULT '1';
+        END IF;
+    END
+    $$;
+  `);
   // esp32_heartbeats: ตารางเก็บสถานะบอร์ดและการทำ Offline Fallback
   await pool.query(`
     CREATE TABLE IF NOT EXISTS esp32_heartbeats (

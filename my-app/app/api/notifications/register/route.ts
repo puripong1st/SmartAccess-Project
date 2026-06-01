@@ -27,8 +27,14 @@ export async function POST(req: NextRequest) {
       role?: string;
       userId?: number;
       deviceInfo?: string;
+      preferences?: {
+        fcm_notify_register?: string;
+        fcm_notify_door_open?: string;
+        fcm_notify_status_change?: string;
+        fcm_notify_security_alert?: string;
+      };
     };
-    const { token, role, userId, deviceInfo } = body;
+    const { token, role, userId, deviceInfo, preferences } = body;
 
     if (!token || typeof token !== 'string') {
       return NextResponse.json({ error: 'Missing FCM token' }, { status: 400 });
@@ -55,7 +61,7 @@ export async function POST(req: NextRequest) {
       resolvedUserId = userId;
     }
 
-    const success = await registerFCMToken(resolvedUserId, role, token, deviceInfo);
+    const success = await registerFCMToken(resolvedUserId, role, token, deviceInfo, preferences);
 
     if (!success) {
       return NextResponse.json({ error: 'Failed to register token' }, { status: 500 });
