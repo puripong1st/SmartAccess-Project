@@ -118,6 +118,7 @@ ${wokwiDefine}
 #include <WiFiClientSecure.h> // สำหรับรัน HTTPS บนระบบคลาวด์ Vercel
 #include <mbedtls/md.h>
 #include <time.h> // สำหรับ NTP time sync (ใช้ใน HMAC timestamp)
+#include <sys/time.h> // สำหรับ settimeofday
 
 #include "config.h"
 
@@ -999,6 +1000,54 @@ void syncOfflineLogs() {
   http.end();
 }
 
+void syncTimeViaHTTP() {
+  if (WiFi.status() != WL_CONNECTED) return;
+  
+  String timeUrl = String(server_url);
+  int displayIdx = timeUrl.indexOf("/display");
+  if (displayIdx != -1) {
+    timeUrl = timeUrl.substring(0, displayIdx) + "/time";
+  } else {
+    timeUrl = "https://project-sigma-ivory-21.vercel.app/api/esp32/time"; // Fallback
+  }
+  
+  DBG("Attempting HTTP Time Sync Fallback via: " + timeUrl);
+  HTTPClient http;
+  
+  if (timeUrl.startsWith("https://")) {
+#ifdef WOKWI_SIM
+    static WiFiClientSecure simClient;
+    simClient.setInsecure();
+    http.begin(simClient, timeUrl);
+#else
+    static WiFiClientSecure secureClient;
+    secureClient.setInsecure();
+    http.begin(secureClient, timeUrl);
+#endif
+  } else {
+    http.begin(timeUrl);
+  }
+  
+  http.setTimeout(4000);
+  int httpCode = http.GET();
+  if (httpCode == 200) {
+    String payload = http.getString();
+    StaticJsonDocument<192> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    if (!error && doc.containsKey("timestamp")) {
+      long serverTime = doc["timestamp"];
+      struct timeval tv;
+      tv.tv_sec = serverTime;
+      tv.tv_usec = 0;
+      settimeofday(&tv, NULL);
+      Serial.println("[INFO] HTTP Time Synced fallback: " + String((long)time(nullptr)));
+    }
+  } else {
+    Serial.printf("[ERROR] HTTP Time Sync fallback failed, HTTP Code: %d\\n", httpCode);
+  }
+  http.end();
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println("[BOOT] System starting...");
@@ -1081,7 +1130,14 @@ void setup() {
       ntp_wait++;
     }
   }
-  Serial.println("[INFO] NTP synced: " + String((long)time(nullptr)));
+  
+  // NTP Fallback
+  if (time(nullptr) < 1000000000UL) {
+    Serial.println("[WARNING] NTP Sync Timeout. Attempting HTTP Time Fallback...");
+    syncTimeViaHTTP();
+  } else {
+    Serial.println("[INFO] NTP synced: " + String((long)time(nullptr)));
+  }
 
   ip_address_str = WiFi.localIP().toString();
 
@@ -1158,21 +1214,22 @@ void loop() {
       time_str = String(timeBuf);
 
       HTTPClient http;
-      if (String(server_url).startsWith("https://")) {
+      String pollUrl = String(server_url) + "&slim=true";
+      if (pollUrl.startsWith("https://")) {
 #ifdef WOKWI_SIM
         static WiFiClientSecure simClient;
         simClient.setInsecure();
-        http.begin(simClient, server_url);
+        http.begin(simClient, pollUrl);
 #else
         if (!tlsClientInitialized) {
           persistentTlsClient.setCACert(root_ca_cert);
           tlsClientInitialized = true;
         }
         http.setReuse(true);
-        http.begin(persistentTlsClient, server_url);
+        http.begin(persistentTlsClient, pollUrl);
 #endif
       } else {
-        http.begin(server_url);
+        http.begin(pollUrl);
       }
 
       http.setTimeout(5000);
@@ -1221,7 +1278,7 @@ void loop() {
           syncOfflineLogs();
         }
         String payload = http.getString();
-        StaticJsonDocument<768> doc;
+        StaticJsonDocument<384> doc;
         DeserializationError error = deserializeJson(doc, payload);
 
         if (!error) {

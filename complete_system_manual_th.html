@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:18:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 10:25:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -9678,7 +9678,7 @@ responses:
 </thead>
 <tbody><tr>
 <td>GET</td>
-<td>/api/esp32/display?room=X</td>
+<td>/api/esp32/display?room=X&amp;slim=true</td>
 <td>X-API-Key</td>
 <td>Polled every 2s — returns active QR + queue + command</td>
 </tr>
@@ -9699,6 +9699,76 @@ responses:
 <td>/api/esp32/door-status</td>
 <td>X-API-Key</td>
 <td>Report unlock success/fail</td>
+</tr>
+</tbody></table>
+<h3>71.53.8 ระบบ Slim Polling Mode สำหรับลดหน่วยความจำและรักษาระดับเสถียรภาพบอร์ด IoT</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2569 (10:23 น. ICT)</p>
+<p>ตรวจพบและดำเนินการเพิ่มขีดความสามารถการสื่อสารในโหมดประหยัดทรัพยากร เพื่อรักษาระดับเสถียรภาพการประมวลผล JSON บนหน่วยความจำ SRAM ของบอร์ด ESP32:</p>
+<ol>
+<li><strong>ปัญหา Heap Fragmentation และ Stack Overflow บน ESP32:</strong><ul>
+<li><strong>สาเหตุ:</strong> การสื่อสารที่ Polling ถี่ๆ ทุก 2 วินาที คืนข้อมูล Payload ขนาดใหญ่กว่า 700 ไบต์ที่มี Nested Objects (display.color_theme, URLs, server_time, status) ทำให้เกิด Heap Fragmentation บนบอร์ด และส่งผลให้บอร์ดเกิด Stack Overflow หรือ Reboot ตัวเองโดยไม่มีสาเหตุเมื่อทำงานไประยะหนึ่ง</li>
+</ul>
+</li>
+<li><strong>การพัฒนาตรรกะการคัดย่อในฝั่ง API Backend (Slim Polling):</strong><ul>
+<li><strong>แนวทางแก้ไข:</strong> ปรับปรุง <code>/api/esp32/display</code> ให้รองรับ Param <code>slim=true</code> โดยระบบจะสับเปลี่ยนไปเรนเดอร์ Lightweight JSON Payload หดขนาดข้อมูลลงถึง 70% คงเหลือเฉพาะฟิลด์แกนหลักในการควบคุมกลอนและโทเคนแสดงผลหน้าจอ (<code>active_token</code>, <code>door_trigger</code>, <code>pending_count</code>, <code>last_approved.name</code>, <code>last_approved.student_id</code>, <code>server_time_text</code>, <code>update_available</code>, <code>firmware_version</code>, <code>offline_pin</code>) และปิดกั้น Object ความสวยงามทั้งหมด ทำให้ขนาด Payload ลดลงต่ำกว่า 200 ไบต์</li>
+</ul>
+</li>
+<li><strong>การประยุกต์ใช้และคำนวณ Buffer ใหม่ในฝั่งเฟิร์มแวร์ ESP32:</strong><ul>
+<li><strong>แนวทางแก้ไข:</strong> อัปเดต <code>esp32.ino</code> ให้ยิง Polling โดยพ่วงพารามิเตอร์ <code>&amp;slim=true</code> และทำการลดขนาดของ StaticJsonDocument จาก <code>768</code> ไบต์ลงเหลือ <code>384</code> ไบต์ เพื่อช่วยประหยัด Dynamic Buffer บน SRAM</li>
+</ul>
+</li>
+</ol>
+<h3>71.53.6 สรุปไฟล์ที่เปลี่ยน (อ้างอิงเร็ว)</h3>
+<table>
+<thead>
+<tr>
+<th>ไฟล์</th>
+<th>การเปลี่ยนแปลง</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>my-app/scripts/compile_manual.js</code></td>
+<td>ปลดล็อก Bug การส่งออกรายงานขาวล้วนของส่วนยื่น PDF/PNG, ฝัง CSS เข้าไปในไฟล์เวกเตอร์ SVG ที่เซฟจากแผนผัง Mermaid, สับเปลี่ยนระบบการเซฟรูป PNG โดยการจับภาพเรนเดอร์ด้วย html2canvas ตรงพิกัด, และสร้างปุ่มคัดลอกโค้ด Mermaid ในแต่ละไดอะแกรม</td>
+</tr>
+<tr>
+<td><code>esp32/esp32.ino</code></td>
+<td>ตัด ElegantOTA, <code>WOKWI_SIM</code>, แก้ <code>&#39;\0&#39;</code>, edge-trigger door, อัปเดต Poll URL พ่วง <code>&amp;slim=true</code> และลดขนาด StaticJsonDocument เป็น 384 ไบต์</td>
+</tr>
+<tr>
+<td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
+<td>sync เฟิร์มแวร์ + ปลด escape <code>\${...}</code></td>
+</tr>
+<tr>
+<td><code>my-app/app/api/esp32/display/route.ts</code></td>
+<td><code>await</code> consume คำสั่งเปิดประตู และเพิ่มสับเปลี่ยน Slim Polling Mode เมื่อส่ง query parameter <code>slim=true</code></td>
+</tr>
+<tr>
+<td><code>my-app/app/page.tsx</code></td>
+<td>bypass session → <code>localStorage</code></td>
+</tr>
+<tr>
+<td><code>my-app/lib/db.ts</code></td>
+<td>คอลัมน์ <code>severity</code> + <code>user_agent</code> + backfill + index</td>
+</tr>
+<tr>
+<td><code>my-app/lib/access-log.ts</code></td>
+<td><strong>ไฟล์ใหม่</strong> — helper บันทึก log รวมศูนย์</td>
+</tr>
+<tr>
+<td><code>my-app/lib/discord.ts</code></td>
+<td>event <code>security_alert</code>, <code>system_summary</code>, device ใน embed</td>
+</tr>
+<tr>
+<td><code>my-app/app/api/system/summary/route.ts</code></td>
+<td><strong>ไฟล์ใหม่</strong> — รายงานสรุปรายวัน/สัปดาห์</td>
+</tr>
+<tr>
+<td><code>my-app/vercel.json</code></td>
+<td><strong>ไฟล์ใหม่</strong> — Vercel Cron</td>
+</tr>
+<tr>
+<td>routes: <code>approve</code>, <code>door</code>, <code>reject</code>, <code>bypass</code>, <code>auth/login</code></td>
+<td>ใช้ <code>logEvent</code> เก็บ IP/อุปกรณ์/severity</td>
 </tr>
 </tbody></table>
 <p><strong>Polling response example:</strong></p>

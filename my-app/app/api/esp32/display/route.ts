@@ -261,34 +261,54 @@ export async function GET(req: NextRequest) {
       hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
     });
 
-    const payload = {
-      title: "SmartAccess Door Access",
-      subtitle: "คณะครุศาสตร์อุตสาหกรรม มทร.พระนคร",
-      active_token: activeToken,
-      qr_url: `${appUrl}/api/esp32/qr?room=${room}`,
-      register_url: `${appUrl}/?room=${room}`,
-      pending_count: pendingCount,
-      last_approved: lastStudent
-        ? {
-            name: `${lastStudent.first_name} ${lastStudent.last_name}`,
-            student_id: displayStudentId,
-            time: lastStudent.approved_at,
-          }
-        : null,
-      server_time: serverTimeIso,
-      server_time_text: serverTimeText,
-      timezone: "Asia/Bangkok",
-      status: "online",
-      door_trigger: doorTrigger,
-      requested_room: room,
-      update_available: updateAvailable,
-      firmware_version: serverVer,
-      offline_pin: allSettings[`offline_pin_${room}`] || "123456",
-      display: {
-        width: 320, height: 240, orientation: "landscape",
-        color_theme: { bg: "#000000", primary: "#4CAF50", secondary: "#FFD700", text: "#FFFFFF", error: "#F44336" },
-      },
-    };
+    const isSlim = searchParams.get("slim") === "true";
+
+    const payload = isSlim
+      ? {
+          active_token: activeToken,
+          pending_count: pendingCount,
+          last_approved: lastStudent
+            ? {
+                name: `${lastStudent.first_name} ${lastStudent.last_name}`,
+                student_id: displayStudentId,
+              }
+            : null,
+          server_time_text: serverTimeText,
+          door_trigger: doorTrigger,
+          update_available: updateAvailable,
+          firmware_version: serverVer,
+          offline_pin: allSettings[`offline_pin_${room}`] || "123456",
+        }
+      : {
+          title: "SmartAccess Door Access",
+          subtitle: "คณะครุศาสตร์อุตสาหกรรม มทร.พระนคร",
+          active_token: activeToken,
+          qr_url: `${appUrl}/api/esp32/qr?room=${room}`,
+          register_url: `${appUrl}/?room=${room}`,
+          pending_count: pendingCount,
+          last_approved: lastStudent
+            ? {
+                name: `${lastStudent.first_name} ${lastStudent.last_name}`,
+                student_id: displayStudentId,
+                time: lastStudent.approved_at,
+              }
+            : null,
+          server_time: serverTimeIso,
+          server_time_text: serverTimeText,
+          timezone: "Asia/Bangkok",
+          status: "online",
+          door_trigger: doorTrigger,
+          requested_room: room,
+          update_available: updateAvailable,
+          firmware_version: serverVer,
+          offline_pin: allSettings[`offline_pin_${room}`] || "123456",
+          display: {
+            width: 320,
+            height: 240,
+            orientation: "landscape",
+            color_theme: { bg: "#000000", primary: "#4CAF50", secondary: "#FFD700", text: "#FFFFFF", error: "#F44336" },
+          },
+        };
 
     // ─── ETag (skip when door open) ───────────────────────────────────────
     if (doorTrigger === "idle") {

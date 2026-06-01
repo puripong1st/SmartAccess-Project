@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-01 10:18:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-01 10:25:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -6418,10 +6418,38 @@ responses:
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | /api/esp32/display?room=X | X-API-Key | Polled every 2s — returns active QR + queue + command |
+| GET | /api/esp32/display?room=X&slim=true | X-API-Key | Polled every 2s — returns active QR + queue + command |
 | POST | /api/esp32/qr/verify | X-API-Key | Validate scanned QR |
 | POST | /api/esp32/heartbeat | X-API-Key | Update room_last_seen |
 | POST | /api/esp32/door-status | X-API-Key | Report unlock success/fail |
+
+### 71.53.8 ระบบ Slim Polling Mode สำหรับลดหน่วยความจำและรักษาระดับเสถียรภาพบอร์ด IoT
+
+**วันที่ดำเนินการ:** 1 มิถุนายน 2569 (10:23 น. ICT)
+
+ตรวจพบและดำเนินการเพิ่มขีดความสามารถการสื่อสารในโหมดประหยัดทรัพยากร เพื่อรักษาระดับเสถียรภาพการประมวลผล JSON บนหน่วยความจำ SRAM ของบอร์ด ESP32:
+1. **ปัญหา Heap Fragmentation และ Stack Overflow บน ESP32:**
+   - **สาเหตุ:** การสื่อสารที่ Polling ถี่ๆ ทุก 2 วินาที คืนข้อมูล Payload ขนาดใหญ่กว่า 700 ไบต์ที่มี Nested Objects (display.color_theme, URLs, server_time, status) ทำให้เกิด Heap Fragmentation บนบอร์ด และส่งผลให้บอร์ดเกิด Stack Overflow หรือ Reboot ตัวเองโดยไม่มีสาเหตุเมื่อทำงานไประยะหนึ่ง
+2. **การพัฒนาตรรกะการคัดย่อในฝั่ง API Backend (Slim Polling):**
+   - **แนวทางแก้ไข:** ปรับปรุง `/api/esp32/display` ให้รองรับ Param `slim=true` โดยระบบจะสับเปลี่ยนไปเรนเดอร์ Lightweight JSON Payload หดขนาดข้อมูลลงถึง 70% คงเหลือเฉพาะฟิลด์แกนหลักในการควบคุมกลอนและโทเคนแสดงผลหน้าจอ (`active_token`, `door_trigger`, `pending_count`, `last_approved.name`, `last_approved.student_id`, `server_time_text`, `update_available`, `firmware_version`, `offline_pin`) และปิดกั้น Object ความสวยงามทั้งหมด ทำให้ขนาด Payload ลดลงต่ำกว่า 200 ไบต์
+3. **การประยุกต์ใช้และคำนวณ Buffer ใหม่ในฝั่งเฟิร์มแวร์ ESP32:**
+   - **แนวทางแก้ไข:** อัปเดต `esp32.ino` ให้ยิง Polling โดยพ่วงพารามิเตอร์ `&slim=true` และทำการลดขนาดของ StaticJsonDocument จาก `768` ไบต์ลงเหลือ `384` ไบต์ เพื่อช่วยประหยัด Dynamic Buffer บน SRAM 
+
+### 71.53.6 สรุปไฟล์ที่เปลี่ยน (อ้างอิงเร็ว)
+
+| ไฟล์ | การเปลี่ยนแปลง |
+|------|----------------|
+| `my-app/scripts/compile_manual.js` | ปลดล็อก Bug การส่งออกรายงานขาวล้วนของส่วนยื่น PDF/PNG, ฝัง CSS เข้าไปในไฟล์เวกเตอร์ SVG ที่เซฟจากแผนผัง Mermaid, สับเปลี่ยนระบบการเซฟรูป PNG โดยการจับภาพเรนเดอร์ด้วย html2canvas ตรงพิกัด, และสร้างปุ่มคัดลอกโค้ด Mermaid ในแต่ละไดอะแกรม |
+| `esp32/esp32.ino` | ตัด ElegantOTA, `WOKWI_SIM`, แก้ `'\0'`, edge-trigger door, อัปเดต Poll URL พ่วง `&slim=true` และลดขนาด StaticJsonDocument เป็น 384 ไบต์ |
+| `my-app/app/admin/dashboard/ArduinoCode.ts` | sync เฟิร์มแวร์ + ปลด escape `\${...}` |
+| `my-app/app/api/esp32/display/route.ts` | `await` consume คำสั่งเปิดประตู และเพิ่มสับเปลี่ยน Slim Polling Mode เมื่อส่ง query parameter `slim=true` |
+| `my-app/app/page.tsx` | bypass session → `localStorage` |
+| `my-app/lib/db.ts` | คอลัมน์ `severity` + `user_agent` + backfill + index |
+| `my-app/lib/access-log.ts` | **ไฟล์ใหม่** — helper บันทึก log รวมศูนย์ |
+| `my-app/lib/discord.ts` | event `security_alert`, `system_summary`, device ใน embed |
+| `my-app/app/api/system/summary/route.ts` | **ไฟล์ใหม่** — รายงานสรุปรายวัน/สัปดาห์ |
+| `my-app/vercel.json` | **ไฟล์ใหม่** — Vercel Cron |
+| routes: `approve`, `door`, `reject`, `bypass`, `auth/login` | ใช้ `logEvent` เก็บ IP/อุปกรณ์/severity |
 
 **Polling response example:**
 ```json
