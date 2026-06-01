@@ -288,123 +288,244 @@ export default function AllPage() {
             illustration="search"
           />
         ) : (
-          <div className="smartaccess-table-container">
-            <table className="smartaccess-table">
-              <thead>
-                <tr>
-                  <th>ชื่อ - นามสกุล / รหัสนักศึกษา</th>
-                  <th>ระดับชั้นปี / ข้อมูลคณะสาขา</th>
-                  <th>สิทธิ์ห้อง / วันเวลาลงทะเบียน</th>
-                  <th>สถานะอนุมัติ (Access Status)</th>
-                  <th style={{ textAlign: "right" }}>การจัดการ (Actions)</th>
-                </tr>
-              </thead>
-              <tbody>
+          <>
+            {/* 🖥️ Desktop View: Classic professional grid table */}
+            <div className="desktop-view smartaccess-table-container">
+              <table className="smartaccess-table">
+                <thead>
+                  <tr>
+                    <th>ชื่อ - นามสกุล / รหัสนักศึกษา</th>
+                    <th>ระดับชั้นปี / ข้อมูลคณะสาขา</th>
+                    <th>สิทธิ์ห้อง / วันเวลาลงทะเบียน</th>
+                    <th>สถานะอนุมัติ (Access Status)</th>
+                    <th style={{ textAlign: "right" }}>การจัดการ (Actions)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredStudents.map(student => (
+                    <tr key={student.id} style={{ borderBottom: "1px solid var(--border)", fontSize: 13, background: "rgba(255,255,255,0.01)" }}>
+                      <td style={{ padding: "14px" }}>
+                        <div style={{ fontWeight: 800, color: "var(--text-primary)" }}>
+                          {student.title}{highlightSearchText(student.first_name + " " + student.last_name, searchQ)}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                          <IdCardIcon />
+                          <span>รหัสประจำตัว: {highlightSearchText(student.student_id, searchQ)}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px" }}>
+                        <div style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                          <GraduationIcon />
+                          <span>ชั้นปีที่ {student.year}</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
+                          <span><FacultyIcon /> {student.faculty}</span>
+                          <span><BranchIcon /> สาขา {student.branch}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px" }}>
+                        <span style={{ background: "linear-gradient(135deg, var(--smartaccess-purple-pale) 0%, rgba(219,39,119,0.06) 100%)", border: "1px solid var(--border)", color: "var(--smartaccess-purple-dark)", borderRadius: "6px", padding: "4px 8px", fontSize: 11, fontWeight: 900 }}>
+                          ห้อง {student.requested_room}
+                        </span>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 8 }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><CalendarDays size={13} /> {formatDateTime(student.registered_at)}</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: "14px" }}>
+                         {/* Access status rendering */}
+                         {student.status === "approved" && (
+                           <span style={{
+                             display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
+                             background: "rgba(16,185,129,0.12)", color: "#10B981", border: "1px solid rgba(16,185,129,0.2)"
+                           }}>
+                             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+                             ได้สิทธิ์ผ่านประตู
+                           </span>
+                         )}
+                         {student.status === "rejected" && (
+                           <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
+                             <span style={{
+                               display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
+                               background: "rgba(239,68,68,0.12)", color: "#F87171", border: "1px solid rgba(239,68,68,0.2)"
+                             }}>
+                               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444" }} />
+                               ถูกปฏิเสธสิทธิ์
+                             </span>
+                             {student.rejection_reason && (
+                               <span style={{ fontSize: 10.5, color: "var(--text-secondary)", fontStyle: "italic", marginLeft: 2 }}>
+                                 เหตุผล: {student.rejection_reason}
+                               </span>
+                             )}
+                           </div>
+                         )}
+                         {student.status === "pending" && (
+                           <span style={{
+                             display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
+                             background: "rgba(245,158,11,0.12)", color: "#FBBF24", border: "1px solid rgba(245,158,11,0.2)"
+                           }}>
+                             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B" }} />
+                             รอยืนยันสิทธิ์
+                           </span>
+                         )}
+                      </td>
+                      <td style={{ padding: "12px 14px", textAlign: "right" }}>
+                        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", flexWrap: "wrap", alignItems: "center" }}>
+                          {isOwner && (
+                            <button
+                              onClick={() => handleDelete(student.id, student.first_name + " " + student.last_name)}
+                              className="btn-danger-light"
+                              title="ลบข้อมูลถาวร"
+                            >
+                              ลบ
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleExportSingleStudentPDF(student.id, student.first_name + " " + student.last_name)}
+                            disabled={loadingId === student.id}
+                            className="btn-ghost"
+                            style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}
+                          >
+                            {loadingId === student.id ? <><Loader2 size={13} className="animate-spin" /> ดึงข้อมูล...</> : <><FileSpreadsheet size={13} /> ออกการ์ด PDF</>}
+                          </button>
+
+                          {student.status === "approved" && (isOwner || user.role === "door_operator") && (
+                            <button
+                              onClick={() => handleOpenDoor(student.id)}
+                              disabled={loadingId === student.id}
+                              className="btn-success"
+                              style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}
+                            >
+                              <Unlock size={13} /> {loadingId === student.id ? "เปิด..." : "เปิดประตู"}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 📱 Mobile View: Beautiful card items without sideways scrolls */}
+            <div className="mobile-view">
+              <div className="mobile-card-grid-container">
                 {filteredStudents.map(student => (
-                  <tr key={student.id} style={{ borderBottom: "1px solid var(--border)", fontSize: 13, background: "rgba(255,255,255,0.01)" }}>
-                    <td style={{ padding: "14px" }}>
-                      <div style={{ fontWeight: 800, color: "var(--text-primary)" }}>
-                        {student.title}{highlightSearchText(student.first_name + " " + student.last_name, searchQ)}
+                  <div
+                    key={student.id}
+                    className="premium-card animate-scale-in"
+                    style={{
+                      padding: "20px",
+                      background: "var(--bg-secondary)",
+                      border: "1px solid var(--border-medium)",
+                      boxShadow: "var(--shadow-sm)"
+                    }}
+                  >
+                    {/* Header: Name, ID, Requested Room */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
+                      <div>
+                        <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 15 }}>
+                          {student.title}{highlightSearchText(student.first_name + " " + student.last_name, searchQ)}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                          <IdCardIcon />
+                          <span>รหัส: {highlightSearchText(student.student_id, searchQ)}</span>
+                        </div>
                       </div>
-                      <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                        <IdCardIcon />
-                        <span>รหัสประจำตัว: {highlightSearchText(student.student_id, searchQ)}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                      <div style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ background: "linear-gradient(135deg, var(--smartaccess-purple-pale) 0%, rgba(219,39,119,0.06) 100%)", border: "1px solid var(--border)", color: "var(--smartaccess-purple-dark)", borderRadius: "6px", padding: "4px 8px", fontSize: 11, fontWeight: 900, whiteSpace: "nowrap" }}>
+                        ห้อง {student.requested_room}
+                      </span>
+                    </div>
+
+                    {/* Body: Academic Information & Room/Date */}
+                    <div style={{ background: "rgba(124, 58, 237, 0.02)", borderRadius: 12, padding: 12, marginBottom: 16, border: "1px solid var(--border)", fontSize: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ display: "flex", gap: 6, color: "var(--text-primary)", alignItems: "center" }}>
                         <GraduationIcon />
                         <span>ชั้นปีที่ {student.year}</span>
                       </div>
-                      <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, display: "flex", flexDirection: "column", gap: 2 }}>
+                      <div style={{ fontSize: 11, color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: 4 }}>
                         <span><FacultyIcon /> {student.faculty}</span>
                         <span><BranchIcon /> สาขา {student.branch}</span>
                       </div>
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                      <span style={{ background: "linear-gradient(135deg, var(--smartaccess-purple-pale) 0%, rgba(219,39,119,0.06) 100%)", border: "1px solid var(--border)", color: "var(--smartaccess-purple-dark)", borderRadius: "6px", padding: "4px 8px", fontSize: 11, fontWeight: 900 }}>
-                        ห้อง {student.requested_room}
-                      </span>
-                      <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 8 }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><CalendarDays size={13} /> {formatDateTime(student.registered_at)}</span>
+                      <div style={{ borderTop: "1px dashed var(--border)", paddingTop: 8, marginTop: 4, fontSize: 11, color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: 5 }}>
+                        <CalendarDays size={13} />
+                        <span>ลงทะเบียน: {formatDateTime(student.registered_at)}</span>
                       </div>
-                    </td>
-                    <td style={{ padding: "14px" }}>
-                       {/* Access status rendering */}
-                       {student.status === "approved" && (
-                         <span style={{
-                           display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
-                           background: "rgba(16,185,129,0.12)", color: "#10B981", border: "1px solid rgba(16,185,129,0.2)"
-                         }}>
-                           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
-                           ได้สิทธิ์ผ่านประตู
-                         </span>
-                       )}
-                       {student.status === "rejected" && (
-                         <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
-                           <span style={{
-                             display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
-                             background: "rgba(239,68,68,0.12)", color: "#F87171", border: "1px solid rgba(239,68,68,0.2)"
-                           }}>
-                             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444" }} />
-                             ถูกปฏิเสธสิทธิ์
-                           </span>
-                           {student.rejection_reason && (
-                             <span style={{ fontSize: 10.5, color: "var(--text-secondary)", fontStyle: "italic", marginLeft: 2 }}>
-                               เหตุผล: {student.rejection_reason}
-                             </span>
-                           )}
-                         </div>
-                       )}
-                       {student.status === "pending" && (
-                         <span style={{
-                           display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
-                           background: "rgba(245,158,11,0.12)", color: "#FBBF24", border: "1px solid rgba(245,158,11,0.2)"
-                         }}>
-                           <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B" }} />
-                           รอยืนยันสิทธิ์
-                         </span>
-                       )}
-                    </td>
-                    <td style={{ padding: "14px", textAlign: "right" }}>
-                      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                        {isOwner && (
-                          <button
-                            onClick={() => handleDelete(student.id, student.first_name + " " + student.last_name)}
-                            className="btn-danger-light"
-                            style={{ padding: "6px 8px", borderRadius: 8, fontSize: 12 }}
-                            title="ลบข้อมูลถาวร"
-                          >
-                            ลบ
-                          </button>
-                        )}
+                    </div>
 
+                    {/* Status Badge */}
+                    <div style={{ marginBottom: 16 }}>
+                      {student.status === "approved" && (
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
+                          background: "rgba(16,185,129,0.12)", color: "#10B981", border: "1px solid rgba(16,185,129,0.2)"
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+                          ได้สิทธิ์ผ่านประตู
+                        </span>
+                      )}
+                      {student.status === "rejected" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
+                          <span style={{
+                            display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
+                            background: "rgba(239,68,68,0.12)", color: "#F87171", border: "1px solid rgba(239,68,68,0.2)"
+                          }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#EF4444" }} />
+                            ถูกปฏิเสธสิทธิ์
+                          </span>
+                          {student.rejection_reason && (
+                            <span style={{ fontSize: 10.5, color: "var(--text-secondary)", fontStyle: "italic", marginLeft: 2 }}>
+                              เหตุผล: {student.rejection_reason}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {student.status === "pending" && (
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
+                          background: "rgba(245,158,11,0.12)", color: "#FBBF24", border: "1px solid rgba(245,158,11,0.2)"
+                        }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#F59E0B" }} />
+                          รอยืนยันสิทธิ์
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Action buttons */}
+                    <div style={{ display: "flex", gap: 6, width: "100%", flexWrap: "wrap" }}>
+                      {isOwner && (
                         <button
-                          onClick={() => handleExportSingleStudentPDF(student.id, student.first_name + " " + student.last_name)}
-                          disabled={loadingId === student.id}
-                          className="btn-ghost"
-                          style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}
+                          onClick={() => handleDelete(student.id, student.first_name + " " + student.last_name)}
+                          className="btn-danger-light"
+                          style={{ flex: "1 1 45%", padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700 }}
                         >
-                          {loadingId === student.id ? <><Loader2 size={13} className="animate-spin" /> ดึงข้อมูล...</> : <><FileSpreadsheet size={13} /> ออกการ์ด PDF</>}
+                          ลบข้อมูล
                         </button>
-
-                        {student.status === "approved" && (isOwner || user.role === "door_operator") && (
-                          <button
-                            onClick={() => handleOpenDoor(student.id)}
-                            disabled={loadingId === student.id}
-                            className="btn-success"
-                            style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}
-                          >
-                            <Unlock size={13} /> {loadingId === student.id ? "เปิด..." : "เปิดประตู"}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                      )}
+                      <button
+                        onClick={() => handleExportSingleStudentPDF(student.id, student.first_name + " " + student.last_name)}
+                        disabled={loadingId === student.id}
+                        className="btn-ghost"
+                        style={{ flex: "1 1 45%", padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5 }}
+                      >
+                        {loadingId === student.id ? <><Loader2 size={13} className="animate-spin" /> ดึงข้อมูล...</> : <><FileSpreadsheet size={13} /> PDF</>}
+                      </button>
+                      {student.status === "approved" && (isOwner || user.role === "door_operator") && (
+                        <button
+                          onClick={() => handleOpenDoor(student.id)}
+                          disabled={loadingId === student.id}
+                          className="btn-success"
+                          style={{ flex: "1 1 100%", padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                        >
+                          <Unlock size={13} /> {loadingId === student.id ? "กำลังเปิด..." : "เปิดประตู"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
 
@@ -456,7 +577,9 @@ export default function AllPage() {
               illustration="search"
             />
           ) : (
-            <div className="smartaccess-table-container">
+            <>
+            {/* 🖥️ Desktop View: Classic professional grid table */}
+            <div className="desktop-view smartaccess-table-container">
               <table className="smartaccess-table">
                 <thead>
                   <tr>
@@ -537,6 +660,95 @@ export default function AllPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* 📱 Mobile View: Beautiful card items without sideways scrolls */}
+            <div className="mobile-view">
+              <div className="mobile-card-grid-container">
+                {displayedLogs.map(log => {
+                  const meta = getLogActionMetadata(log);
+                  const isRejectedUser = isAccessRejectedLog(log);
+
+                  return (
+                    <div
+                      key={log.id}
+                      className="premium-card animate-scale-in"
+                      style={{
+                        padding: "20px",
+                        background: "var(--bg-secondary)",
+                        border: "1px solid var(--border-medium)",
+                        boxShadow: "var(--shadow-sm)"
+                      }}
+                    >
+                      {/* Header: Timestamp & Requested Room */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 12 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary)" }}>
+                          {formatDateTime(log.timestamp)}
+                        </span>
+                        <span style={{ background: "linear-gradient(135deg, var(--smartaccess-purple-pale) 0%, rgba(219,39,119,0.06) 100%)", border: "1px solid var(--border)", color: "var(--smartaccess-purple-dark)", borderRadius: "6px", padding: "4px 8px", fontSize: 11, fontWeight: 900, whiteSpace: "nowrap" }}>
+                          ห้อง {log.requested_room || "ส่วนกลาง"}
+                        </span>
+                      </div>
+
+                      {/* Action & Severity Badges */}
+                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 12 }}>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 900,
+                          background: meta.color + "14", color: meta.color, border: `1px solid ${meta.color}25`
+                        }}>
+                          {meta.icon} {meta.label}
+                        </span>
+                        {(log.severity === "warning" || log.severity === "critical") && (
+                          <span style={{
+                            display: "inline-flex", alignItems: "center", padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 900,
+                            background: log.severity === "critical" ? "#EF444422" : "#F59E0B22",
+                            color: log.severity === "critical" ? "#EF4444" : "#D97706",
+                            border: `1px solid ${log.severity === "critical" ? "#EF444444" : "#F59E0B44"}`
+                          }}>
+                            {log.severity === "critical" ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><AlertOctagon size={11} /> CRITICAL</span> : <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={11} /> WARNING</span>}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* User/Operator Info */}
+                      <div style={{ background: "rgba(124, 58, 237, 0.02)", borderRadius: 12, padding: 12, marginBottom: 12, border: "1px solid var(--border)", fontSize: 12 }}>
+                        {log.student_name ? (
+                          <div>
+                            <span style={{ fontSize: 10.5, color: "var(--text-secondary)", display: "block" }}>นักศึกษา/ผู้ผ่านเข้า:</span>
+                            <div style={{ fontWeight: 800, color: "var(--text-primary)", fontSize: 13, marginTop: 2 }}>{log.student_name}</div>
+                            {log.student_code && <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>รหัสประจำตัว: {log.student_code}</div>}
+                          </div>
+                        ) : log.admin_name ? (
+                          <div>
+                            <span style={{ fontSize: 10.5, color: "var(--text-secondary)", display: "block" }}>ผู้ดำเนินการ (แอดมิน):</span>
+                            <div style={{ fontWeight: 800, color: "var(--smartaccess-purple-dark)", fontSize: 13, marginTop: 2 }}>แอดมิน {log.admin_name}</div>
+                            <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4 }}>สิทธิ์บัญชี: {log.esp32_response || "ผู้ดูแลระบบ"}</div>
+                          </div>
+                        ) : (
+                          <span style={{ color: "var(--text-muted)", fontSize: 11.5 }}>ไม่มีข้อมูลผู้ดำเนินการ</span>
+                        )}
+                      </div>
+
+                      {/* Additional Security Info */}
+                      <div style={{ fontSize: 11.5, display: "flex", flexDirection: "column", gap: 6 }}>
+                        {isRejectedUser && log.esp32_response && (
+                          <div style={{ color: "#EF4444", fontWeight: 700, fontSize: "11px", display: "flex", gap: 4, alignItems: "center" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><AlertTriangle size={12} /> บันทึกปฏิเสธ: {log.esp32_response}</span>
+                          </div>
+                        )}
+                        {renderLogNotes(log.notes)}
+                        {(log.ip_address || log.user_agent) && (
+                          <div style={{ borderTop: "1px dashed var(--border)", paddingTop: 8, marginTop: 4, fontSize: 10.5, color: "var(--text-muted)", display: "flex", flexWrap: "wrap", gap: 8 }}>
+                            {log.ip_address && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Globe size={11} /> IP: {log.ip_address}</span>}
+                            {log.user_agent && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Laptop size={11} /> {formatDeviceFromUA(log.user_agent)}</span>}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
           )}
 
           {/* Logs Pagination component */}

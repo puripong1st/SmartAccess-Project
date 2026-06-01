@@ -942,3 +942,24 @@ button, a, [role="button"], input, select, textarea, label {
   }
 }
 
+/* ── Accessible Focus States for SmartAccess Controls ── */
+.smartaccess-toggle-switch:focus-visible {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.45) !important;
+  border-color: var(--smartaccess-purple) !important;
+}
+
+.smartaccess-day-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.45) !important;
+  border-color: var(--smartaccess-purple) !important;
+}
+
+.smartaccess-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #FFF !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.smartaccess-copy-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.6) !important;
+  border-color: #FFF !important;
+}

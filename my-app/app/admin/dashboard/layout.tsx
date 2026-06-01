@@ -1224,6 +1224,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                             copyToClipboard(codeElement.textContent || "");
                           }
                         }}
+                        className="smartaccess-copy-btn"
                         style={{
                           position: "absolute",
                           top: 12,
@@ -1236,7 +1237,9 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                           border: "1px solid rgba(255,255,255,0.15)",
                           color: "#E2E8F0",
                           cursor: "pointer",
-                          zIndex: 10
+                          zIndex: 10,
+                          transition: "all 0.15s ease",
+                          outline: "none"
                         }}
                       >
                         📋 คัดลอก config.h
@@ -1254,7 +1257,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                           color: "#E2E8F0",
                           overflowX: "auto",
                           whiteSpace: "pre",
-                          maxHeight: 240,
+                          maxHeight: 480,
                           textAlign: "left",
                           lineHeight: 1.5
                         }}
@@ -1279,6 +1282,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                             copyToClipboard(codeElement.textContent || "");
                           }
                         }}
+                        className="smartaccess-copy-btn"
                         style={{
                           position: "absolute",
                           top: 12,
@@ -1291,7 +1295,9 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                           border: "1px solid rgba(255,255,255,0.15)",
                           color: "#E2E8F0",
                           cursor: "pointer",
-                          zIndex: 10
+                          zIndex: 10,
+                          transition: "all 0.15s ease",
+                          outline: "none"
                         }}
                       >
                         📋 คัดลอก esp32.ino
@@ -1309,7 +1315,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                           color: "#E2E8F0",
                           overflowX: "auto",
                           whiteSpace: "pre",
-                          maxHeight: 340,
+                          maxHeight: 480,
                           textAlign: "left",
                           lineHeight: 1.5
                         }}

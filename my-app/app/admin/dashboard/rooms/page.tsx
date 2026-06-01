@@ -467,120 +467,179 @@ export default function RoomsPage() {
 
                   {expandedRoomSettings.has(roomItem.room) && (() => {
                     const cfg = roomConfigs[roomItem.room] ?? defaultRoomConfig();
-                    const Toggle = ({ on, onToggle }: { on: boolean; onToggle: () => void }) => (
-                      <button type="button" onClick={onToggle} style={{ width: 44, height: 24, borderRadius: 13, background: on ? "linear-gradient(135deg,var(--smartaccess-purple),var(--edu-pink))" : "rgba(255,255,255,0.08)", border: "1px solid var(--border)", position: "relative", cursor: "pointer", padding: 0, flexShrink: 0, display: "flex", alignItems: "center" }}>
+                    const Toggle = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) => (
+                      <button
+                        type="button"
+                        onClick={onToggle}
+                        role="switch"
+                        aria-checked={on}
+                        aria-label={label}
+                        className="smartaccess-toggle-switch"
+                        style={{
+                          width: 44,
+                          height: 24,
+                          borderRadius: 13,
+                          background: on ? "linear-gradient(135deg,var(--smartaccess-purple),var(--edu-pink))" : "rgba(255,255,255,0.08)",
+                          border: "1px solid var(--border)",
+                          position: "relative",
+                          cursor: "pointer",
+                          padding: 0,
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          outline: "none",
+                          transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+                        }}
+                      >
                         <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#FFF", position: "absolute", left: on ? 22 : 3, transition: "left 0.2s cubic-bezier(0.4,0,0.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
                       </button>
                     );
                     const activeDays = cfg.auto_approve_days ? cfg.auto_approve_days.split(",").map(Number).filter(n => !isNaN(n)) : [];
-                    const dayDefs = [{ val: 1, label: "จ.", color: "#EAB308" }, { val: 2, label: "อ.", color: "#EC4899" }, { val: 3, label: "พ.", color: "#10B981" }, { val: 4, label: "พฤ.", color: "#F97316" }, { val: 5, label: "ศ.", color: "#3B82F6" }, { val: 6, label: "ส.", color: "#8B5CF6" }, { val: 0, label: "อา.", color: "#EF4444" }];
-                    return (
-                      <div className="animate-fade-in" style={{ marginTop: 8, padding: 16, background: "rgba(124,58,237,0.03)", border: "1px solid var(--border)", borderRadius: 10, display: "flex", flexDirection: "column", gap: 14 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                          <div>
-                            <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
-                              <span>เข้าห้องอัตโนมัติไม่ต้องรออนุมัติ</span>
-                              <span
-                                title="ระบบจะข้ามขั้นตอนให้ผู้ดูแลกดยืนยัน และทริกเกอร์บอร์ดเปิดประตูให้ทันที หากผู้ใช้สแกนเข้ามาในช่วงเวลาให้บริการที่กำหนด"
-                                style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                                </svg>
-                              </span>
-                            </div>
-                            <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.4 }}>นักศึกษาใหม่ยื่นในเวลาบริการ อนุมัติผ่านเข้าห้องทันที</div>
-                          </div>
-                          <Toggle on={cfg.auto_approve_enabled} onToggle={() => setRoomConfig(roomItem.room, { auto_approve_enabled: !cfg.auto_approve_enabled })} />
-                        </div>
+                    const dayDefs = [{ val: 1, label: "จ.", fullName: "จันทร์", color: "#EAB308" }, { val: 2, label: "อ.", fullName: "อังคาร", color: "#EC4899" }, { val: 3, label: "พ.", fullName: "พุธ", color: "#10B981" }, { val: 4, label: "พฤ.", fullName: "พฤหัสบดี", color: "#F97316" }, { val: 5, label: "ศ.", fullName: "ศุกร์", color: "#3B82F6" }, { val: 6, label: "ส.", fullName: "เสาร์", color: "#8B5CF6" }, { val: 0, label: "อา.", fullName: "อาทิตย์", color: "#EF4444" }];
+                     return (
+                       <div
+                         className="animate-fade-in"
+                         style={{
+                           marginTop: 10,
+                           padding: 18,
+                           background: "rgba(124, 58, 237, 0.02)",
+                           border: "1px solid var(--border-medium)",
+                           borderRadius: 12,
+                           display: "grid",
+                           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                           gap: 20
+                         }}
+                       >
+                         {/* Column 1: Approval & Automation */}
+                         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                             <div>
+                               <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
+                                 <span>เข้าห้องอัตโนมัติไม่ต้องรออนุมัติ</span>
+                                 <span
+                                   title="ระบบจะข้ามขั้นตอนให้ผู้ดูแลกดยืนยัน และทริกเกอร์บอร์ดเปิดประตูให้ทันที หากผู้ใช้สแกนเข้ามาในช่วงเวลาให้บริการที่กำหนด"
+                                   style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
+                                 >
+                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                     <circle cx="12" cy="12" r="10" />
+                                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                     <line x1="12" y1="17" x2="12.01" y2="17" />
+                                   </svg>
+                                 </span>
+                               </div>
+                               <div style={{ fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.45, marginTop: 4 }}>นักศึกษาใหม่ยื่นในเวลาบริการ อนุมัติผ่านเข้าห้องทันที</div>
+                             </div>
+                             <Toggle on={cfg.auto_approve_enabled} onToggle={() => setRoomConfig(roomItem.room, { auto_approve_enabled: !cfg.auto_approve_enabled })} label="เข้าห้องอัตโนมัติไม่ต้องรออนุมัติ" />
+                           </div>
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, background: "rgba(0,0,0,0.12)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                            <div>
-                              <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
-                                <span>ช่วยกรอกข้อมูลอัตโนมัติ (Auto-fill)</span>
-                                <span
-                                  title="อำนวยความสะดวกให้นักศึกษาที่เคยสแกนแล้ว เมื่อใส่ชื่อ-รหัสนักศึกษาเดิม ระบบจะดึง คณะ/สาขา เดิมมาเติมให้ในฟอร์มทันที"
-                                  style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                                  </svg>
-                                </span>
-                              </div>
-                              <div style={{ fontSize: 11, color: "var(--text-secondary)" }}>ดึงชั้นปี คณะ สาขาจากนักศึกษาเดิมกรอกให้อัตโนมัติ</div>
-                            </div>
-                            <Toggle on={cfg.auto_fill_enabled} onToggle={() => setRoomConfig(roomItem.room, { auto_fill_enabled: !cfg.auto_fill_enabled })} />
-                          </div>
-                          {cfg.auto_fill_enabled && (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                              {[{ val: "auto", label: "เด้งขึ้นมาให้เองอัตโนมัติ (Auto Pop-up)" }, { val: "manual", label: "แสดงปุ่มให้กดเลือกเอง (Manual Confirmation)" }].map(o => (
-                                <label key={o.val} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12 }}>
-                                  <input type="radio" name={`auto_fill_mode_${roomItem.room}`} value={o.val} checked={cfg.auto_fill_mode === o.val} onChange={() => setRoomConfig(roomItem.room, { auto_fill_mode: o.val })} style={{ accentColor: "var(--smartaccess-purple)" }} />
-                                  {o.label}
-                                </label>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                           <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 12, background: "rgba(255, 255, 255, 0.02)", borderRadius: 10, border: "1px solid var(--border-medium)" }}>
+                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                               <div>
+                                 <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
+                                   <span>ช่วยกรอกข้อมูลอัตโนมัติ (Auto-fill)</span>
+                                   <span
+                                     title="อำนวยความสะดวกให้นักศึกษาที่เคยสแกนแล้ว เมื่อใส่ชื่อ-รหัสนักศึกษาเดิม ระบบจะดึง คณะ/สาขา เดิมมาเติมให้ในฟอร์มทันที"
+                                     style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
+                                   >
+                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                       <circle cx="12" cy="12" r="10" />
+                                       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                       <line x1="12" y1="17" x2="12.01" y2="17" />
+                                     </svg>
+                                   </span>
+                                 </div>
+                                 <div style={{ fontSize: 11, color: "var(--text-secondary)", marginTop: 4, lineHeight: 1.4 }}>ดึงชั้นปี คณะ สาขาจากนักศึกษาเดิมกรอกให้อัตโนมัติ</div>
+                               </div>
+                               <Toggle on={cfg.auto_fill_enabled} onToggle={() => setRoomConfig(roomItem.room, { auto_fill_enabled: !cfg.auto_fill_enabled })} label="ช่วยกรอกข้อมูลอัตโนมัติ" />
+                             </div>
+                             {cfg.auto_fill_enabled && (
+                               <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px dashed var(--border)", paddingTop: 8, marginTop: 2 }}>
+                                 {[{ val: "auto", label: "เด้งขึ้นมาให้เองอัตโนมัติ (Auto Pop-up)" }, { val: "manual", label: "แสดงปุ่มให้กดเลือกเอง (Manual Confirmation)" }].map(o => (
+                                   <label key={o.val} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12, color: "var(--text-primary)" }}>
+                                     <input type="radio" name={`auto_fill_mode_${roomItem.room}`} value={o.val} checked={cfg.auto_fill_mode === o.val} onChange={() => setRoomConfig(roomItem.room, { auto_fill_mode: o.val })} style={{ accentColor: "var(--smartaccess-purple)" }} />
+                                     {o.label}
+                                   </label>
+                                 ))}
+                               </div>
+                             )}
+                           </div>
+                         </div>
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          <label style={{ fontSize: 12, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 5 }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                              <Lock size={13} />
-                              <span>ความปลอดภัยหน้าจอ ESP32 (รหัสนักศึกษาล่าสุด)</span>
-                              <span
-                                title="ตั้งค่าความเป็นส่วนตัวของนักศึกษาที่แสดงบนจอ TFT LCD ของบอร์ด ESP32 เพื่อให้เป็นไปตามนโยบาย PDPA"
-                                style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                                </svg>
-                              </span>
-                            </span>
-                          </label>
-                          <select value={cfg.student_id_display_mode} onChange={e => setRoomConfig(roomItem.room, { student_id_display_mode: e.target.value })} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 12.5, outline: "none" }}>
-                            <option value="full">โชว์รหัสแบบเต็ม (Full ID)</option>
-                            <option value="masked">เซ็นเซอร์บางส่วน (Masked ID)</option>
-                            <option value="hidden">ปิดการแสดงผล (Hidden)</option>
-                          </select>
-                        </div>
+                         {/* Column 2: ESP32 Security & Time Schedule */}
+                         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                             <label style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 5 }}>
+                               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                                 <Lock size={13} />
+                                 <span>ความปลอดภัยหน้าจอ ESP32 (รหัสนักศึกษาล่าสุด)</span>
+                                 <span
+                                   title="ตั้งค่าความเป็นส่วนตัวของนักศึกษาที่แสดงบนจอ TFT LCD ของบอร์ด ESP32 เพื่อให้เป็นไปตามนโยบาย PDPA"
+                                   style={{ display: "inline-flex", color: "var(--smartaccess-purple)", cursor: "help" }}
+                                 >
+                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                     <circle cx="12" cy="12" r="10" />
+                                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                     <line x1="12" y1="17" x2="12.01" y2="17" />
+                                   </svg>
+                                 </span>
+                               </span>
+                             </label>
+                             <select value={cfg.student_id_display_mode} onChange={e => setRoomConfig(roomItem.room, { student_id_display_mode: e.target.value })} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 12.5, outline: "none" }}>
+                               <option value="full">โชว์รหัสแบบเต็ม (Full ID)</option>
+                               <option value="masked">เซ็นเซอร์บางส่วน (Masked ID)</option>
+                               <option value="hidden">ปิดการแสดงผล (Hidden)</option>
+                             </select>
+                           </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                          <div>
-                            <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>เวลาเริ่มบริการ</label>
-                            <input type="time" value={cfg.auto_approve_start_time} onChange={e => setRoomConfig(roomItem.room, { auto_approve_start_time: e.target.value })} style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 13 }} />
-                          </div>
-                          <div>
-                            <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>เวลาปิดบริการ</label>
-                            <input type="time" value={cfg.auto_approve_end_time} onChange={e => setRoomConfig(roomItem.room, { auto_approve_end_time: e.target.value })} style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 13 }} />
-                          </div>
-                        </div>
+                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                             <div>
+                               <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>เวลาเริ่มบริการ</label>
+                               <input type="time" value={cfg.auto_approve_start_time} onChange={e => setRoomConfig(roomItem.room, { auto_approve_start_time: e.target.value })} style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 13 }} />
+                             </div>
+                             <div>
+                               <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4 }}>เวลาปิดบริการ</label>
+                               <input type="time" value={cfg.auto_approve_end_time} onChange={e => setRoomConfig(roomItem.room, { auto_approve_end_time: e.target.value })} style={{ width: "100%", padding: "7px 10px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 13 }} />
+                             </div>
+                           </div>
 
-                        <div>
-                          <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 8 }}>วันเปิดให้บริการอัตโนมัติ</label>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                            {dayDefs.map(day => {
-                              const isOn = activeDays.includes(day.val);
-                              return (
-                                <button type="button" key={day.val} onClick={() => {
-                                  const updated = isOn ? activeDays.filter(d => d !== day.val) : [...activeDays, day.val];
-                                  updated.sort((a, b) => a - b);
-                                  setRoomConfig(roomItem.room, { auto_approve_days: updated.join(",") });
-                                }} style={{ padding: "5px 9px", borderRadius: 14, border: isOn ? `1.5px solid ${day.color}` : "1.5px solid var(--border)", background: isOn ? `${day.color}15` : "transparent", color: isOn ? "var(--text-primary)" : "var(--text-secondary)", fontSize: 11.5, fontWeight: isOn ? 700 : 500, cursor: "pointer" }}>
-                                  {day.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
+                           <div>
+                             <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 8 }}>วันเปิดให้บริการอัตโนมัติ</label>
+                             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                               {dayDefs.map(day => {
+                                 const isOn = activeDays.includes(day.val);
+                                 return (
+                                   <button
+                                     type="button"
+                                     key={day.val}
+                                     onClick={() => {
+                                       const updated = isOn ? activeDays.filter(d => d !== day.val) : [...activeDays, day.val];
+                                       updated.sort((a, b) => a - b);
+                                       setRoomConfig(roomItem.room, { auto_approve_days: updated.join(",") });
+                                     }}
+                                     aria-pressed={isOn}
+                                     aria-label={`วัน${day.fullName}`}
+                                     className="smartaccess-day-btn"
+                                     style={{
+                                       padding: "5px 10px",
+                                       borderRadius: 14,
+                                       border: isOn ? `1.5px solid ${day.color}` : "1.5px solid var(--border)",
+                                       background: isOn ? `${day.color}15` : "transparent",
+                                       color: isOn ? "var(--text-primary)" : "var(--text-secondary)",
+                                       fontSize: 11.5,
+                                       fontWeight: isOn ? 700 : 500,
+                                       cursor: "pointer",
+                                       transition: "all 0.15s ease",
+                                       outline: "none"
+                                     }}
+                                   >
+                                     {day.label}
+                                   </button>
+                                 );
+                               })}
+                             </div>
+                           </div>
+                         </div>
+                       </div>
                     );
                   })()}
                 </div>
