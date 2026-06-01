@@ -141,8 +141,8 @@ export default function DashboardCharts({ analyticsData, exportSummary }: Dashbo
         <h4 style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
           🍩 สัดส่วนสถานะนักศึกษาทั้งหมดในระบบ (Status Proportion)
         </h4>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: 260 }}>
-          <div style={{ width: "60%", height: "100%", position: "relative" }}>
+        <div className="donut-chart-flex">
+          <div className="donut-chart-visual">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -188,14 +188,14 @@ export default function DashboardCharts({ analyticsData, exportSummary }: Dashbo
               </span>
             </div>
           </div>
-          {/* Custom Legends on the side */}
-          <div style={{ width: "40%", display: "flex", flexDirection: "column", gap: 10, paddingLeft: 10 }}>
+          {/* Custom Legends on the side / bottom */}
+          <div className="donut-chart-legend-container">
             {finalPieData.map((item, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ display: "inline-block", width: 12, height: 12, borderRadius: "4px", backgroundColor: item.color }} />
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-primary)" }}>{item.name}</span>
-                  <span style={{ fontSize: 12, fontWeight: 900, color: item.color }}>{item.value} คน</span>
+              <div key={i} className="donut-legend-item">
+                <span className="donut-legend-color-dot" style={{ backgroundColor: item.color }} />
+                <div className="donut-legend-details">
+                  <span className="donut-legend-name">{item.name}</span>
+                  <span className="donut-legend-value" style={{ color: item.color }}>{item.value} คน</span>
                 </div>
               </div>
             ))}

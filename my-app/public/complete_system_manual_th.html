@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 12:58:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-01 13:25:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -17140,6 +17140,74 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดการแก้ไขข้อบกพร่อง UI บนมือถือ §73.40</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>73.41 การแก้ไขข้อบกพร่อง UI เชิงลึกบนมือถือเพิ่มเติมสำหรับการแสดงผล Donut Chart และการเลื่อนแถบเลือกห้องเรียน (Deep Responsive &amp; Mobile UI Fixes: Donut Chart Collapsing and Classroom Filter Premium Horizontal Scroll Overlay Indicator)</h2>
+<p><strong>วันที่ดำเนินการ:</strong> 1 มิถุนายน 2026 (13:14 น. ICT)</p>
+<p>ตรวจพบและดำเนินการแก้ไขข้อบกพร่อง UI/UX เพิ่มเติมบนหน้าจอแผงควบคุมมือถือ เพื่อความเป็นมืออาชีพสูงสุด:</p>
+<h4>73.41.1 การแก้ไข Donut Chart แหว่ง/แบนบนหน้าจอมือถือ (Responsive Donut Chart Columns Layout Stacking in <code>DashboardCharts.tsx</code> &amp; <code>globals.css</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> กราฟวงกลมแสดงสัดส่วนสถานะนักศึกษาทั้งหมดในระบบ (Status Proportion Donut Chart) มีการตัดขอบ (Clipped) ของเส้นส่วนโค้งสีเขียว (อนุมัติแล้ว) ด้านขวากราฟให้แบนลงบนหน้าจอขนาดเล็ก เนื่องจากถูกบีบด้วยระบบแถบข้างแนวนอนแบบ flex ที่ตั้งสัดส่วนความกว้าง <code>width: 60%</code> สำหรับตัวกราฟ และ <code>width: 40%</code> สำหรับคำอธิบายสถานะ นอกจากนี้ ข้อความคำอธิบายภาษาไทยที่มีความยาวมากส่งผลให้เกิดการเว้นบรรทัดสับสนและเบียดเสียด ไม่เป็นระเบียบ</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>สร้างคลาสวิชวลตอบสนอง <code>.donut-chart-flex</code>, <code>.donut-chart-visual</code>, และ <code>.donut-chart-legend-container</code> ใน <code>globals.css</code> แทนการป้อนค่า inline</li>
+<li>บนขนาดหน้าจอ <code>&lt;= 640px</code> ระบบ CSS จะทริกเกอร์ Media Query สั่งการจัดวางแนวตั้งอัตโนมัติ (<code>flex-direction: column !important</code>) ปรับความกว้างของขอบเขตวาดกราฟเป็น <code>100%</code> และขยายขนาดพิกัดอย่างสมดุล (สูงสุด <code>240px</code> และความสูง <code>200px</code>) ทำให้ Recharts สามารถคำนวณสัดส่วน SVG วาดเส้นโค้งวงกลมได้อย่างเต็มสัดส่วน 100% สมบูรณ์ ปราศจากรอยแหว่งแบน</li>
+<li>ปรับปรุงการ์ดคำอธิบายสถานะด้านล่างให้แสดงผลในรูปแบบ Grid แนวนอนแบบจัดกึ่งกลางและลอยตัวสวยงาม (<code>.donut-legend-item</code>) ตกแต่งสไตล์ Glassmorphism ขนาดกะทัดรัด ทำให้อ่านข้อมูลสถิติแยกตามกลุ่มได้ลื่นไหล ไม่ซ้อนทับกัน</li>
+</ul>
+</li>
+</ul>
+<h4>73.41.2 การสร้าง Fading Mask เพื่อบอกทิศทางการเลื่อนแถบห้องเรียนและ Flex Spacer ท้ายแถบเลื่อน (Premium Edge Fade Mask &amp; Horizontal Flex Spacer in <code>pending/page.tsx</code> &amp; <code>globals.css</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ปุ่มเลือกห้องเรียนแบบเลื่อนนิ้วแนวนอน (<code>.mobile-filter-container</code>) ด้านบนหน้าแผงควบคุม จะตัดจบอย่างหยาบกระด้างที่บริเวณขอบจอขวา ทำให้ผู้ใช้มองไม่เห็นว่าสามารถปัดหน้าจอเพื่อดูห้องเรียนถัดไปได้ (เช่น ปุ่ม <code>ห้อง CE-402</code> ขาดหายไปครึ่งหนึ่งอย่างไร้ระเบียบ) และเมื่อปัดเลื่อนจนสุดรายการ ปุ่มสุดท้ายจะชิดติดขอบขวาอย่างรุนแรงเนื่องจากเบราว์เซอร์บนมือถือบางตัวละเลยค่า <code>padding-right</code> ในคอนเทนเนอร์ overflow</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>เพิ่ม <strong>Premium Scroll Fade Mask</strong> โดยบรรจุคำสั่ง CSS <code>mask-image: linear-gradient(to right, black 85%, transparent 100%)</code> และ <code>-webkit-mask-image</code> ให้กับ <code>.mobile-filter-container</code> เพื่อทำการหรี่แสงตัวอักษรและพื้นหลังทางด้านขวาของขอบเลื่อนให้อ่อนลงอย่างเป็นนวัตกรรม บ่งชี้ความสามารถในการสไลด์แถบได้อย่างเป็นธรรมชาติ</li>
+<li>นำเทคนิค <strong>Horizontal Flex Spacer (<code>::after</code>)</strong> ขนาด <code>width: 16px</code> มาติดตั้งเพิ่มเติมที่ท้ายองค์ประกอบของแถบเลื่อนใน CSS เพื่อสร้างขอบเขตหยุดเลื่อนที่สมมาตรกับระยะเริ่มแรก ปุ่มสุดท้ายของรายการไม่ชนติดขอบจอด้านขวาอีกต่อไป</li>
+</ul>
+</li>
+</ul>
+<h4>73.41.3 การรีแฟกเตอร์ปุ่มตัวเลือกฟิลเตอร์สู่คลาสระบบ (Tab Button CSS Extraction in <code>pending/page.tsx</code> &amp; <code>globals.css</code>)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ปุ่มฟิลเตอร์ในห้องเรียนต่าง ๆ บนหน้ารอยืนยันสิทธิ์ มีการระบุสไตล์การตกแต่ง สีม่วงชมพูไล่ระดับ กรอบเงา และเอฟเฟกต์ปฏิสัมพันธ์ผ่านคุณสมบัติ inline styles ยุ่งยากและเบียดบังขนาดไฟล์ JSX</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>ย้ายและแปลงค่าสไตล์ทั้งหมดเข้าสู่คลาสระบบสำเร็จรูป <code>.filter-tab-btn</code> และ <code>.filter-tab-btn.active</code> ใน <code>globals.css</code></li>
+<li>ตกแต่งเอฟเฟกต์คลิกปุ่มสัมผัส (Active State Touch) ด้วยไมโครทรานซิชันหดตัวขนาดเล็กอันหรูหรา (<code>transform: scale(0.96)</code>) พร้อมขยายความกว้างและสูงการแตะ (Touch Target) ให้กระชับเต็มขนาด <code>padding: 10px 18px</code> เพื่อลดข้อผิดพลาดในการสัมผัสของนิ้วผู้ใช้งาน</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>สรุปรายการไฟล์แก้ไขในสเต็ปนี้</h3>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ชื่อไฟล์</th>
+<th>ประเภท</th>
+<th>คำอธิบายการแก้ไข</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อิมพลิเมนต์สไตล์ชีท Donut Chart Responsive, Premium Scroll Fade Mask, Flex Spacer ::after, และคลาสสลับปุ่มฟิลเตอร์ .filter-tab-btn</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/components/DashboardCharts.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>รีแฟกเตอร์ Donut Chart Markup ให้ถอนการป้อน inline styles และจับคู่อินเทอร์เฟซเข้ากับคลาสใหม่เพื่อแก้ปัญหาแหว่งบนมือถือ</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>my-app/app/admin/dashboard/pending/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ถอน inline styles ของปุ่มเลือกฟิลเตอร์ห้องเรียนและสลับคลาส CSS แทน ปลดล็อก Touch Target สม่ำเสมอ</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการแก้ไขระบบวิชวลเชิงลึกและการตอบสนองบนมือถือ §73.41</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

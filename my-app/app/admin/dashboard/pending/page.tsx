@@ -89,23 +89,9 @@ export default function PendingPage() {
         <div className="mobile-filter-container" style={{ background: "rgba(124, 58, 237, 0.04)", padding: 6, borderRadius: 14, border: "1px solid rgba(124, 58, 237, 0.08)", minWidth: 0 }}>
           <button
             onClick={() => setPendingRoomFilter("all")}
-            style={{
-              padding: "8px 16px",
-              borderRadius: 10,
-              border: "none",
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: "pointer",
-              touchAction: "manipulation",
-              userSelect: "none",
-              WebkitTapHighlightColor: "transparent",
-              background: pendingRoomFilter === "all" ? "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)" : "transparent",
-              color: pendingRoomFilter === "all" ? "#ffffff" : "var(--text-secondary)",
-              boxShadow: pendingRoomFilter === "all" ? "0 4px 12px rgba(124, 58, 237, 0.2)" : "none",
-              transition: "all 0.1s ease" // ทำให้ตอบสนองเร็วขึ้น
-            }}
+            className={`filter-tab-btn ${pendingRoomFilter === "all" ? "active" : ""}`}
           >
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><DoorClosed size={14} /> ทุกห้องเรียน ({pending.length})</span>
+            <DoorClosed size={14} /> ทุกห้องเรียน ({pending.length})
           </button>
           {roomsList.map(r => {
             const count = pending.filter(s => s.requested_room === r.room).length;
@@ -113,21 +99,7 @@ export default function PendingPage() {
               <button
                 key={r.room}
                 onClick={() => setPendingRoomFilter(r.room)}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: 10,
-                  border: "none",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  touchAction: "manipulation",
-                  userSelect: "none",
-                  WebkitTapHighlightColor: "transparent",
-                  background: pendingRoomFilter === r.room ? "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)" : "transparent",
-                  color: pendingRoomFilter === r.room ? "#ffffff" : "var(--text-secondary)",
-                  boxShadow: pendingRoomFilter === r.room ? "0 4px 12px rgba(124, 58, 237, 0.2)" : "none",
-                  transition: "all 0.1s ease" // ทำให้ตอบสนองเร็วขึ้น
-                }}
+                className={`filter-tab-btn ${pendingRoomFilter === r.room ? "active" : ""}`}
               >
                 ห้อง {r.room} ({count})
               </button>
