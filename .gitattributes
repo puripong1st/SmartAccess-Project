@@ -5,3 +5,11 @@ complete_system_manual_th.html linguist-documentation
 my-app/public/complete_system_manual_th.html linguist-documentation
 *.html linguist-documentation
 *.pdf linguist-documentation
+
+# ซ่อนโฟลเดอร์เครื่องมือและสคริปต์ของ AI และสคริปต์เสริมอื่นๆ จากการนับสถิติภาษา (Linguist)
+.claude/**/* linguist-vendored
+.impeccable/**/* linguist-vendored
+scratch/**/* linguist-vendored
+my-app/scratch/**/* linguist-vendored
+my-app/scripts/**/* linguist-vendored
+my-app/check-db.js linguist-vendored
