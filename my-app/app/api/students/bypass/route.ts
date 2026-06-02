@@ -5,6 +5,7 @@ import { openDoor } from "@/lib/esp32";
 import { sendDiscordNotification } from "@/lib/discord";
 import { rateLimit } from "@/lib/rate-limit";
 import { logEvent, getRequestContext } from "@/lib/access-log";
+import { notifyAdminBypassEntry } from "@/lib/push-notify";
 
 let initialized = false;
 async function ensureInit() {
@@ -139,6 +140,16 @@ export async function POST(req: NextRequest) {
       ip,
       userAgent,
     }).catch((err) => console.error("[Bypass Notification] failed:", err));
+
+    // Send PWA Push Notification to admins for Bypass entry
+    if (esp32Result.success) {
+      notifyAdminBypassEntry(
+        `${student.first_name} ${student.last_name}`,
+        student.student_id,
+        student.year || "",
+        room
+      ).catch((err) => console.error("[Bypass PWA Notification] failed:", err));
+    }
 
     return NextResponse.json({
       success: esp32Result.success,

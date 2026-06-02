@@ -14,16 +14,13 @@ export async function notifyStudentStatusChange(
     const tokens = await getUserTokens(studentDbId, 'student', 'fcm_notify_status_change');
     if (tokens.length === 0) return;
 
-    const timeString = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const dateString = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
-
     const title = status === 'approved'
       ? '✅ คำขอเข้าห้องได้รับการอนุมัติแล้ว'
-      : '❌ คำขอเข้าห้องถูกปฏิเสธ';
+      : '❌ คำขอเข้าห้องเรียนถูกปฏิเสธ';
 
     const body = status === 'approved'
-      ? `📢 อัปเดตสถานะสิทธิ์การเข้าใช้งาน:\n📍 ห้องเรียน: ${room}\n📅 วันที่: ${dateString}\n⏰ เวลา: ${timeString} น.\n\n🎉 ยินดีด้วย! คำขอได้รับการอนุมัติแล้ว คุณสามารถเปิดเว็บสแกน QR Code เพื่อเปิดประตูเข้าห้องเรียนได้ทันที 🚀`
-      : `⚠️ อัปเดตสถานะสิทธิ์การเข้าใช้งาน:\n📍 ห้องเรียน: ${room}\n📅 วันที่: ${dateString}\n⏰ เวลา: ${timeString} น.\n❌ สาเหตุ: ${reason || 'ข้อมูลไม่ครบถ้วน'}\n\nกรุณาติดต่ออาจารย์ผู้สอนหรือแอดมินเพื่อแก้ไขข้อมูลเพิ่มเติม`;
+      ? `📍 ห้อง ${room}\n🎉 เปิดเว็บเพื่อสแกน QR Code เข้าห้องได้ทันที`
+      : `📍 ห้อง ${room}\n⚠️ สาเหตุ: ${reason || 'ข้อมูลไม่ครบถ้วน'}`;
 
     await sendPushToTokens(tokens, title, body, '/', 'fcm_notify_status_change');
   } catch (error) {
@@ -43,10 +40,9 @@ export async function notifyStudentDoorOpen(
     if (tokens.length === 0) return;
 
     const timeString = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const dateString = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
 
-    const title = '🚪 ตรวจพบการเปิดประตูสำเร็จ';
-    const body = `🔒 ยืนยันความปลอดภัยการเข้า-ออกห้องเรียน:\n📍 สถานที่: ห้อง ${room}\n📅 วันที่: ${dateString}\n⏰ เวลา: ${timeString} น.\n\nระบบตรวจพบการสแกนเปิดประตูด้วยบัญชีของคุณ หากคุณไม่ได้ดำเนินการด้วยตนเอง กรุณาติดต่อแอดมินหรือเปลี่ยนรหัสผ่านเพื่อความปลอดภัยทันที`;
+    const title = '🚪 เปิดประตูสำเร็จ';
+    const body = `📍 ห้อง ${room}\n⏰ ${timeString} น.\n🔒 หากไม่ใช่คุณกรุณาแจ้งผู้ดูแลระบบทันที`;
 
     await sendPushToTokens(tokens, title, body, '/', 'fcm_notify_door_open');
   } catch (error) {
@@ -60,6 +56,7 @@ export async function notifyStudentDoorOpen(
 export async function notifyAdminNewRegistration(
   studentName: string,
   studentId: string,
+  studentYear: number | string,
   room: string
 ): Promise<void> {
   try {
@@ -67,14 +64,60 @@ export async function notifyAdminNewRegistration(
     if (tokens.length === 0) return;
 
     const timeString = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const dateString = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
 
-    const title = '📝 มีคำขอลงทะเบียนเข้าห้องเรียนใหม่';
-    const body = `🎓 มีผู้ใช้ส่งคำขอรับอนุมัติสิทธิ์เข้าเรียน:\n👤 ชื่อ-สกุล: ${studentName}\n🆔 รหัสนักศึกษา: ${studentId}\n📍 ขอเข้าใช้ห้อง: ${room}\n📅 วันที่: ${dateString}\n⏰ เวลา: ${timeString} น.\n\nกรุณาเข้าสู่ระบบแดชบอร์ดผู้ดูแลระบบเพื่อตรวจสอบและดำเนินการอนุมัติสิทธิ์ต่อไป`;
+    const title = '📝 คำขอลงทะเบียนเข้าห้องใหม่';
+    const body = `👤 ${studentName} (${studentId}) ชั้นปี ${studentYear}\n📍 ห้อง ${room}\n⏰ ${timeString} น.`;
 
     await sendPushToTokens(tokens, title, body, '/admin/dashboard', 'fcm_notify_register');
   } catch (error) {
     console.error('[Push] Failed to notify admin new registration:', error);
+  }
+}
+
+/**
+ * แจ้งเตือนผู้ดูแลระบบทุกคนเมื่อคำขอได้รับการอนุมัติสำเร็จ
+ */
+export async function notifyAdminStudentApproved(
+  studentName: string,
+  studentId: string,
+  studentYear: number | string,
+  room: string,
+  adminName: string
+): Promise<void> {
+  try {
+    const tokens = await getAllAdminTokens('fcm_notify_register');
+    if (tokens.length === 0) return;
+
+    const title = '✅ อนุมัติสิทธิ์เข้าใช้งานสำเร็จ';
+    const body = `👤 ${studentName} (${studentId}) ชั้นปี ${studentYear}\n📍 ห้อง ${room}\n👑 โดย: ${adminName}`;
+
+    await sendPushToTokens(tokens, title, body, '/admin/dashboard', 'fcm_notify_register');
+  } catch (error) {
+    console.error('[Push] Failed to notify admin student approved:', error);
+  }
+}
+
+/**
+ * แจ้งเตือนผู้ดูแลระบบทุกคนเมื่อมีผู้เข้าห้องเรียนผ่านสิทธิ์ Bypass
+ */
+export async function notifyAdminBypassEntry(
+  studentName: string,
+  studentId: string,
+  studentYear: number | string,
+  room: string
+): Promise<void> {
+  try {
+    const tokens = await getAllAdminTokens('fcm_notify_security_alert');
+    if (tokens.length === 0) return;
+
+    const timeString = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const title = '⚡ ผ่านเข้าห้องเรียนด้วย Bypass';
+    const body = `👤 ${studentName} (${studentId}) ชั้นปี ${studentYear}\n📍 ห้อง ${room}\n⏰ ${timeString} น.`;
+
+    await sendPushToTokens(tokens, title, body, '/admin/dashboard', 'fcm_notify_security_alert');
+  } catch (error) {
+    console.error('[Push] Failed to notify admin bypass entry:', error);
   }
 }
 
@@ -90,10 +133,9 @@ export async function notifyAdminSecurityAlert(
     if (tokens.length === 0) return;
 
     const timeString = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const dateString = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
 
-    const title = `🚨 [ALERT] ${alertTitle}`;
-    const body = `🔥 ตรวจพบเหตุการณ์ด้านความปลอดภัยระดับวิกฤต!\n📍 หัวข้อ: ${alertTitle}\n📅 วันที่: ${dateString}\n⏰ เวลา: ${timeString} น.\n📝 รายละเอียด: ${alertDetail}\n\nกรุณาเข้าตรวจสอบสถานะบอร์ดและการเข้า-ออกในแดชบอร์ดโดยด่วนเพื่อความปลอดภัยสูงสุดของระบบ`;
+    const title = `🚨 แจ้งเตือน: ${alertTitle}`;
+    const body = `📝 รายละเอียด: ${alertDetail}\n⏰ ${timeString} น.`;
 
     await sendPushToTokens(tokens, title, body, '/admin/dashboard', 'fcm_notify_security_alert');
   } catch (error) {

@@ -329,6 +329,7 @@ export async function POST(req: NextRequest) {
           notifyAdminNewRegistration(
             `${sanitizedTitle}${sanitizedFirstName} ${sanitizedLastName}`,
             existingStudent.student_id,
+            yearNum,
             sanitizedRequestedRoom
           ),
           'admin push notification'
@@ -414,6 +415,7 @@ export async function POST(req: NextRequest) {
         notifyAdminNewRegistration(
           `${sanitizedTitle}${sanitizedFirstName} ${sanitizedLastName}`,
           sanitizedStudentId,
+          yearNum,
           sanitizedRequestedRoom
         ),
         'admin push notification'

@@ -5,7 +5,7 @@ import { getAdminFromCookie, canOperateRoom } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { openDoor } from "@/lib/esp32";
 import { sendDiscordNotification } from "@/lib/discord";
-import { notifyStudentStatusChange } from "@/lib/push-notify";
+import { notifyStudentStatusChange, notifyAdminStudentApproved } from "@/lib/push-notify";
 import { sweepExpiredPending } from "@/lib/auto-reject";
 import { logEvent, getRequestContext } from "@/lib/access-log";
 
@@ -41,7 +41,7 @@ export async function POST(
 
     // 1. Fetch the student record first to verify room authorization and status
     const { rows: studentCheckRows } = await pool.query(
-      "SELECT id, first_name, last_name, student_id, requested_room, status FROM students WHERE id = $1",
+      "SELECT id, first_name, last_name, student_id, year, requested_room, status FROM students WHERE id = $1",
       [studentId]
     );
     if (studentCheckRows.length === 0) {
@@ -53,6 +53,7 @@ export async function POST(
       first_name: string;
       last_name: string;
       student_id: string;
+      year: number;
       requested_room: string;
       status: string;
     };
@@ -127,6 +128,20 @@ export async function POST(
       notifyStudentStatusChange(studentId, esp32Result.success ? 'approved' : 'rejected', student.requested_room),
       'push notification'
     );
+
+    // PWA Push Notification → แจ้งเตือนผู้ดูแลระบบทุกคนว่าอนุมัติสำเร็จแล้ว
+    if (esp32Result.success) {
+      runBackground(
+        notifyAdminStudentApproved(
+          `${student.first_name} ${student.last_name}`,
+          student.student_id,
+          student.year,
+          student.requested_room,
+          admin.full_name
+        ),
+        'admin approval push notification'
+      );
+    }
 
     return NextResponse.json({
       success: true,
