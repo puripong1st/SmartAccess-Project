@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 14:54:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 14:57:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1067,6 +1067,7 @@
 <li><a href="#sec-73-47">73.47 การปรับปรุงระดับความปลอดภัยและการเข้าถึงของปุ่มสวิตช์ควบคุมห้องเรียน (SmartAccess Classroom Toggle Switches UI/UX Accessibility &amp; Focus Restoration Overhaul)</a></li>
 <li><a href="#sec-73-48">73.48 การทดแทนแอนิเมชันแบบเด้งเป็นแบบไหลลื่นพรีเมียม (SmartAccess Bounce-to-Exponential Smooth Animation Transition Overhaul)</a></li>
 <li><a href="#sec-73-49">73.49 การขยายและยกระดับแผงตั้งค่าห้องเรียนสำหรับแอดมินเป็นสองคอลัมน์ (SmartAccess Classroom Settings Two-Column Responsive Grid Overhaul)</a></li>
+<li><a href="#sec-73-50">73.50 การจัดกลุ่มปุ่มการจัดการทำรายการในตารางประวัติเป็นเมนูสามจุด (SmartAccess Student Directory Table Actions Dropdown Menu Overhaul)</a></li>
 </ul>
 <hr>
 <h3>📕 บทที่ 4: ผลการดำเนินงานและการทดสอบระบบ (Results &amp; Evaluation)</h3>
@@ -17735,6 +17736,50 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดแผนการแก้ไขทางโครงสร้างการวางสัญลักษณ์และข้อมูลของแดชบอร์ดรายห้อง (§73.49)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-50"></a></p>
+<h3>73.50 การจัดกลุ่มปุ่มการจัดการทำรายการในตารางประวัติเป็นเมนูสามจุด (SmartAccess Student Directory Table Actions Dropdown Menu Overhaul)</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 2 มิถุนายน 2026 (14:57 น. ICT)</p>
+<p>แผงควบคุมระบบทำการปรับปรุงเชิงโครงสร้างและแก้ไขปัญหาความเสี่ยงของขนาดการแสดงผลบนตารางสิทธิ์ผู้ใช้และประวัติส่งคำขอ (Student Directory Directory Table) เพื่อป้องกันปัญหาความหนาแน่นเชิงวิชวลและการหักตกบรรทัดของปุ่มทำรายการ (Actions Button Wrapping) โดยมีรายละเอียดการพัฒนาดังนี้:</p>
+<h4>73.50.1 ปัญหาการเบียดเสียดของปุ่มจัดการแถวประวัติ (Table Actions Crowding &amp; Button Wrapping)</h4>
+<ul>
+<li><strong>ปัญหาทางหน้าจอขนาดกลาง (Viewport Bottleneck):</strong> ในไฟล์ตารางทำเนียบสิทธิ์ <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/all/page.tsx">all/page.tsx</a> คอลัมน์การจัดการแถวสิทธิ์ (Actions) มีการวางปุ่มทำรายการหลัก 3 ปุ่มเรียงกันในแนวนอน ได้แก่ ปุ่ม &quot;ลบสิทธิ์&quot; (Delete), ปุ่ม &quot;ออกการ์ด PDF&quot; (Single PDF Export) และปุ่ม &quot;เปิดประตู&quot; (Unlock Door) </li>
+<li><strong>ผลกระทบทางวิชวล:</strong> เมื่อแสดงผลบนหน้าจอแล็ปท็อปขนาดกลาง หรือหน้าจอแท็บเล็ตระดับกลาง (iPad/Tablet Viewport) คอลัมน์ Actions จะถูกบีบอัดทำให้ปุ่ม 3 ปุ่มจัดเรียงซ้อนทับกันหรือหักตกลงมาบรรทัดใหม่ ส่งผลให้ส่วนหัวและแถวข้อมูลในตารางบิดเบี้ยว เสียสัดส่วนสมมาตรทางดีไซน์ และเพิ่มอัตราการสัมผัสปุ่มผิดพลาด (Accidental clicks) จากการเบียดกัน</li>
+</ul>
+<h4>73.50.2 การเปลี่ยนผ่านสู่ระบบ Dropdown สองมิติ (Harmony Popover &amp; Focus Protection)</h4>
+<ul>
+<li><strong>การจัดกลุ่ม Actions ลงในปุ่ม 3 จุด:</strong><ul>
+<li>เพิ่มคอมโพเนนต์ย่อยเพื่อจัดการสถานะเมนูเปิด-ปิด <code>activeMenuId</code> สำหรับติดตามว่าประวัติแถวใดกำลังถูกกดเลือก เพื่อหลีกเลี่ยงการแสดงผลซ้อนทับกัน</li>
+<li>นำเข้าไอคอนสัญลักษณ์เวกเตอร์ <code>MoreVertical</code> จาก <code>lucide-react</code> เพื่อทำหน้าที่เป็นปุ่มสลับการมองเห็น (Toggle Trigger)</li>
+<li>จัดทำแผงป๊อปอัปสเตตัส (Popover UI Panel) ลอยแบบกระจกโปร่งแสง (Glassmorphic Popover) ตกแต่งด้วยเงาฟุ้งและเบลอฉากหลังลอยตัว <code>backdropFilter: &quot;blur(8px)&quot;</code> ร่วมกับเงาลอยมิติดับเบิลเลเยอร์ <code>var(--shadow-lg)</code> </li>
+<li>ทำการจัดวางปุ่มคำสั่งทั้งหมดให้เป็นแนวตั้ง เรียงสัดส่วนเต็มแถว มีระยะห่างที่พอเหมาะสำหรับนิ้วมือและเมาส์ และรองรับการสัญจรที่ปลอดภัย ปิดกล่องโดยอัตโนมัติเมื่อกดสัมผัสพื้นที่ภายนอกตาราง (Outside Click Event Listener)</li>
+</ul>
+</li>
+<li><strong>สิทธิประโยชน์ทางวิชวล:</strong> หน้าตาตารางโดยรวมมีความเป็นระเบียบ เรียบร้อย หรูหรา ปุ่ม Actions มีขนาดคงที่กะทัดรัดกว้างเพียงขนาดมาตรฐาน ไม่ยืดขยาย และขจัดการเบียดทับบรรทัดได้อย่างถาวร</li>
+</ul>
+<h4>73.50.3 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/admin/dashboard/all/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>นำเข้า MoreVertical, เพิ่มระบบ Outside Click Listener และย้าย Actions ในตาราง Desktop เข้าสู่ Popover</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดแผนการแก้ไขทางสถาปัตยกรรมแถบจัดการ Actions ในตารางทำเนียบสิทธิ์ (§73.50)</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

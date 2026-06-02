@@ -21,6 +21,7 @@ import {
   Laptop,
   ShieldCheck,
   Scale,
+  MoreVertical,
 } from "lucide-react";
 import { useDashboard } from "../DashboardContext";
 import EmptyState from "../../../components/EmptyState";
@@ -134,9 +135,17 @@ export default function AllPage() {
   } = useDashboard();
 
   const [pageLoading, setPageLoading] = React.useState(true);
+  const [activeMenuId, setActiveMenuId] = React.useState<number | string | null>(null);
+
   React.useEffect(() => {
     const t = setTimeout(() => setPageLoading(false), 450);
     return () => clearTimeout(t);
+  }, []);
+
+  React.useEffect(() => {
+    const handleOutsideClick = () => setActiveMenuId(null);
+    document.addEventListener("click", handleOutsideClick);
+    return () => document.removeEventListener("click", handleOutsideClick);
   }, []);
 
   if (!user) return null;
@@ -368,36 +377,128 @@ export default function AllPage() {
                            </span>
                          )}
                       </td>
-                      <td style={{ padding: "12px 14px", textAlign: "right" }}>
-                        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", flexWrap: "wrap", alignItems: "center" }}>
-                          {isOwner && (
-                            <button
-                              onClick={() => handleDelete(student.id, student.first_name + " " + student.last_name)}
-                              className="btn-danger-light"
-                              title="ลบข้อมูลถาวร"
-                            >
-                              ลบ
-                            </button>
-                          )}
-
+                      <td style={{ padding: "12px 14px", textAlign: "right", position: "relative" }}>
+                        <div style={{ display: "inline-block", position: "relative" }}>
                           <button
-                            onClick={() => handleExportSingleStudentPDF(student.id, student.first_name + " " + student.last_name)}
-                            disabled={loadingId === student.id}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuId(activeMenuId === student.id ? null : student.id);
+                            }}
                             className="btn-ghost"
-                            style={{ padding: "6px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 8,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              border: "1px solid var(--border)"
+                            }}
+                            aria-label="Actions"
+                            aria-expanded={activeMenuId === student.id}
                           >
-                            {loadingId === student.id ? <><Loader2 size={13} className="animate-spin" /> ดึงข้อมูล...</> : <><FileSpreadsheet size={13} /> ออกการ์ด PDF</>}
+                            <MoreVertical size={16} />
                           </button>
 
-                          {student.status === "approved" && (isOwner || user.role === "door_operator") && (
-                            <button
-                              onClick={() => handleOpenDoor(student.id)}
-                              disabled={loadingId === student.id}
-                              className="btn-success"
-                              style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}
+                          {activeMenuId === student.id && (
+                            <div
+                              className="animate-scale-in"
+                              style={{
+                                position: "absolute",
+                                right: 0,
+                                top: "calc(100% + 6px)",
+                                background: "var(--bg-secondary)",
+                                border: "1px solid var(--border-medium)",
+                                borderRadius: 12,
+                                boxShadow: "var(--shadow-lg)",
+                                zIndex: 100,
+                                minWidth: 160,
+                                display: "flex",
+                                flexDirection: "column",
+                                padding: 6,
+                                gap: 4,
+                                backdropFilter: "blur(8px)"
+                              }}
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <Unlock size={13} /> {loadingId === student.id ? "เปิด..." : "เปิดประตู"}
-                            </button>
+                              {student.status === "approved" && (isOwner || user.role === "door_operator") && (
+                                <button
+                                  onClick={() => {
+                                    handleOpenDoor(student.id);
+                                    setActiveMenuId(null);
+                                  }}
+                                  disabled={loadingId === student.id}
+                                  className="btn-success"
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    borderRadius: 8,
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    justifyContent: "flex-start",
+                                    border: "none",
+                                    textAlign: "left"
+                                  }}
+                                >
+                                  <Unlock size={14} />
+                                  <span>{loadingId === student.id ? "กำลังเปิด..." : "เปิดประตู"}</span>
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => {
+                                  handleExportSingleStudentPDF(student.id, student.first_name + " " + student.last_name);
+                                  setActiveMenuId(null);
+                                }}
+                                disabled={loadingId === student.id}
+                                className="btn-ghost"
+                                style={{
+                                  width: "100%",
+                                  padding: "8px 12px",
+                                  borderRadius: 8,
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 8,
+                                  justifyContent: "flex-start",
+                                  border: "none",
+                                  textAlign: "left"
+                                }}
+                              >
+                                <FileSpreadsheet size={14} />
+                                <span>{loadingId === student.id ? "กำลังดึง..." : "ออกการ์ด PDF"}</span>
+                              </button>
+
+                              {isOwner && (
+                                <button
+                                  onClick={() => {
+                                    handleDelete(student.id, student.first_name + " " + student.last_name);
+                                    setActiveMenuId(null);
+                                  }}
+                                  className="btn-danger-light"
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px 12px",
+                                    borderRadius: 8,
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    justifyContent: "flex-start",
+                                    border: "none",
+                                    textAlign: "left"
+                                  }}
+                                >
+                                  <Trash2 size={14} />
+                                  <span>ลบประวัติ</span>
+                                </button>
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>
