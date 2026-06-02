@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-02 10:52:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-02 11:05:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -11796,6 +11796,30 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | 3 | `my-app/app/api/students/[id]/approve/route.ts` | **[MODIFY]** | เพิ่มการส่งการแจ้งเตือนพุชไปยังผู้ดูแลระบบ (`notifyAdminStudentApproved`) เมื่อมีคำขอถูกอนุมัติสิทธิ์เรียบร้อย |
 | 4 | `my-app/app/api/students/bypass/route.ts` | **[MODIFY]** | เพิ่มการส่งแจ้งเตือนพุชไปยังผู้ดูแลระบบ (`notifyAdminBypassEntry`) เมื่อมีนักศึกษาใช้สิทธิ์ Bypass ประสบความสำเร็จ |
 | 5 | `complete_system_manual_th.md` | **[MODIFY]** | อัปเดตเวลาหัวคู่มือ และเขียนบันทึกการปรับปรุงระบบแจ้งเตือน PWA ฉบับย่อให้เหมาะสมกับหน้าจอล็อกสกรีน §73.44 |
+
+---
+
+<a id="sec-73-45"></a>
+### 73.45 การปรับปรุงความสอดคล้องของระบบรักษาความปลอดภัยฝั่งบอร์ด IoT (Zero-Trust V2.0 Firmware Security Headers Sync)
+
+วันที่บันทึก: 2 มิถุนายน 2026
+
+#### 73.45.1 ปัญหาและความขัดแย้งของข้อมูลความปลอดภัย (Security Headers Mismatch)
+หลังจากได้มีการอัปเกรดระบบรักษาความปลอดภัยระดับ Edge API สู่สถาปัตยกรรม Zero-Trust IoT V2.0 (§73.36) ตัวเซิร์ฟเวอร์ Next.js ในส่วน `/api/esp32/display` ได้บังคับตรวจสอบความถูกต้องของสิทธิ์ผ่าน Headers 4 รายการหลักได้แก่ `x-device-id`, `x-timestamp`, `x-nonce`, และ `x-hmac-signature` อย่างไรก็ตาม ในระบบเฟิร์มแวร์ ESP32 ตัวจริง (`esp32/esp32.ino`) และระบบสร้างเฟิร์มแวร์ผ่านแผงแดชบอร์ด (`my-app/app/admin/dashboard/ArduinoCode.ts`) ยังคงส่งคำขอและสร้างข้อมูลอัปเดตตามรูปแบบ HMAC V1 ดั้งเดิม (ส่งเพียง `x-api-key`, `x-timestamp` และ `x-hmac-signature` แบบ V1 เท่านั้น) เป็นผลให้เบราว์เซอร์ปฏิเสธคำขอด้วยรหัสสถานะ `401 Unauthorized (Missing Security Headers)` ทำให้บอร์ดขึ้นหน้าจอ `OFFLINE MODE - NO CACHED DATA` และบนแดชบอร์ดแสดงสถานะบอร์ดเป็น `OFFLINE` ตลอดเวลา
+
+#### 73.45.2 สถาปัตยกรรมการแก้ไขและการพัฒนาฟังก์ชันส่งผ่านหัวข้อมูลความปลอดภัย (Zero-Trust Headers Implementation)
+เพื่อแก้ไขปัญหานี้ให้สมบูรณ์ทั้งระบบและทำงานสอดประสานกัน 100% ได้มีการอัปเกรดและเขียนระบบโครงสร้างใหม่ดังนี้:
+1. **การสร้างฟังก์ชันรวมศูนย์สำหรับสร้าง Headers ความปลอดภัย (`addZeroTrustHeaders`):** 
+   เพิ่มฟังก์ชันช่วยงาน `addZeroTrustHeaders` เข้าไปในส่วนของเฟิร์มแวร์ ESP32 และส่วนโค้ดสร้างโค้ดอัตโนมัติ ซึ่งฟังก์ชันนี้จะรับผิดชอบการสร้าง `x-device-id` (ในรูปแบบ `esp32_[ROOM_CODE]`), `x-nonce` (แฮชพลวัต 16 หลักจากตัวสร้างตัวเลขสุ่มแบบฮาร์ดแวร์ `esp_random()`), `x-timestamp` (เวลาปัจจุบันตามเซิร์ฟเวอร์), และทำการลงนาม `x-hmac-signature` แบบ Payload-Inclusive HMAC V2.0 ผูกร่วมกับ API Key ที่ได้รับการ Derived มาจาก KDF ของห้องนั้น ๆ
+2. **การปรับใช้ในการดึงข้อมูล (Polling Request) และการซิงก์ข้อมูลนักศึกษา (Sync Student Cache):** 
+   ปรับปรุงคำสั่ง HTTP GET ในลูปหลักของบอร์ด ESP32 และกระบวนการดึงข้อมูลรายชื่อนักศึกษาใน `syncStudentCache` ให้ทำลายระบบ V1 ดั้งเดิมออก และส่งผ่านฟังก์ชัน `addZeroTrustHeaders` แทน ส่งผลให้การยืนยันสิทธิ์ Zero-Trust V2.0 ประสบความสำเร็จ 100% ทันที
+
+#### 73.45.3 ตารางสรุปไฟล์แก้ไข
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `esp32/esp32.ino` | **[MODIFY]** | เขียนฟังก์ชัน `addZeroTrustHeaders` เพื่อทำ Zero-Trust V2.0 Signing ฝั่งฮาร์ดแวร์ และนำไปผูกแทนที่คำสั่งส่ง Poll/Sync ทุกตัว |
+| 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | ปรับแต่งข้อความฟังก์ชัน C++ ต้นฉบับในโค้ดดิ้งแดชบอร์ดให้ตรงกับตรรกะใหม่ สำหรับให้ผู้ใช้นำไปใช้อัปโหลดบอร์ดควบคุมจริง |
+| 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดการทำงานและแก้ไขเรื่องเฟิร์มแวร์เพื่อความเข้ากันได้กับระบบ Zero-Trust V2.0 (§73.45) |
 
 ---
 

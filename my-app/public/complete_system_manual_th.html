@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 10:52:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 11:05:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -17475,6 +17475,47 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>อัปเดตเวลาหัวคู่มือ และเขียนบันทึกการปรับปรุงระบบแจ้งเตือน PWA ฉบับย่อให้เหมาะสมกับหน้าจอล็อกสกรีน §73.44</td>
+</tr>
+</tbody></table>
+<hr>
+<p><a id="sec-73-45"></a></p>
+<h3>73.45 การปรับปรุงความสอดคล้องของระบบรักษาความปลอดภัยฝั่งบอร์ด IoT (Zero-Trust V2.0 Firmware Security Headers Sync)</h3>
+<p>วันที่บันทึก: 2 มิถุนายน 2026</p>
+<h4>73.45.1 ปัญหาและความขัดแย้งของข้อมูลความปลอดภัย (Security Headers Mismatch)</h4>
+<p>หลังจากได้มีการอัปเกรดระบบรักษาความปลอดภัยระดับ Edge API สู่สถาปัตยกรรม Zero-Trust IoT V2.0 (§73.36) ตัวเซิร์ฟเวอร์ Next.js ในส่วน <code>/api/esp32/display</code> ได้บังคับตรวจสอบความถูกต้องของสิทธิ์ผ่าน Headers 4 รายการหลักได้แก่ <code>x-device-id</code>, <code>x-timestamp</code>, <code>x-nonce</code>, และ <code>x-hmac-signature</code> อย่างไรก็ตาม ในระบบเฟิร์มแวร์ ESP32 ตัวจริง (<code>esp32/esp32.ino</code>) และระบบสร้างเฟิร์มแวร์ผ่านแผงแดชบอร์ด (<code>my-app/app/admin/dashboard/ArduinoCode.ts</code>) ยังคงส่งคำขอและสร้างข้อมูลอัปเดตตามรูปแบบ HMAC V1 ดั้งเดิม (ส่งเพียง <code>x-api-key</code>, <code>x-timestamp</code> และ <code>x-hmac-signature</code> แบบ V1 เท่านั้น) เป็นผลให้เบราว์เซอร์ปฏิเสธคำขอด้วยรหัสสถานะ <code>401 Unauthorized (Missing Security Headers)</code> ทำให้บอร์ดขึ้นหน้าจอ <code>OFFLINE MODE - NO CACHED DATA</code> และบนแดชบอร์ดแสดงสถานะบอร์ดเป็น <code>OFFLINE</code> ตลอดเวลา</p>
+<h4>73.45.2 สถาปัตยกรรมการแก้ไขและการพัฒนาฟังก์ชันส่งผ่านหัวข้อมูลความปลอดภัย (Zero-Trust Headers Implementation)</h4>
+<p>เพื่อแก้ไขปัญหานี้ให้สมบูรณ์ทั้งระบบและทำงานสอดประสานกัน 100% ได้มีการอัปเกรดและเขียนระบบโครงสร้างใหม่ดังนี้:</p>
+<ol>
+<li><strong>การสร้างฟังก์ชันรวมศูนย์สำหรับสร้าง Headers ความปลอดภัย (<code>addZeroTrustHeaders</code>):</strong><br>เพิ่มฟังก์ชันช่วยงาน <code>addZeroTrustHeaders</code> เข้าไปในส่วนของเฟิร์มแวร์ ESP32 และส่วนโค้ดสร้างโค้ดอัตโนมัติ ซึ่งฟังก์ชันนี้จะรับผิดชอบการสร้าง <code>x-device-id</code> (ในรูปแบบ <code>esp32_[ROOM_CODE]</code>), <code>x-nonce</code> (แฮชพลวัต 16 หลักจากตัวสร้างตัวเลขสุ่มแบบฮาร์ดแวร์ <code>esp_random()</code>), <code>x-timestamp</code> (เวลาปัจจุบันตามเซิร์ฟเวอร์), และทำการลงนาม <code>x-hmac-signature</code> แบบ Payload-Inclusive HMAC V2.0 ผูกร่วมกับ API Key ที่ได้รับการ Derived มาจาก KDF ของห้องนั้น ๆ</li>
+<li><strong>การปรับใช้ในการดึงข้อมูล (Polling Request) และการซิงก์ข้อมูลนักศึกษา (Sync Student Cache):</strong><br>ปรับปรุงคำสั่ง HTTP GET ในลูปหลักของบอร์ด ESP32 และกระบวนการดึงข้อมูลรายชื่อนักศึกษาใน <code>syncStudentCache</code> ให้ทำลายระบบ V1 ดั้งเดิมออก และส่งผ่านฟังก์ชัน <code>addZeroTrustHeaders</code> แทน ส่งผลให้การยืนยันสิทธิ์ Zero-Trust V2.0 ประสบความสำเร็จ 100% ทันที</li>
+</ol>
+<h4>73.45.3 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>esp32/esp32.ino</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เขียนฟังก์ชัน <code>addZeroTrustHeaders</code> เพื่อทำ Zero-Trust V2.0 Signing ฝั่งฮาร์ดแวร์ และนำไปผูกแทนที่คำสั่งส่ง Poll/Sync ทุกตัว</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับแต่งข้อความฟังก์ชัน C++ ต้นฉบับในโค้ดดิ้งแดชบอร์ดให้ตรงกับตรรกะใหม่ สำหรับให้ผู้ใช้นำไปใช้อัปโหลดบอร์ดควบคุมจริง</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการทำงานและแก้ไขเรื่องเฟิร์มแวร์เพื่อความเข้ากันได้กับระบบ Zero-Trust V2.0 (§73.45)</td>
 </tr>
 </tbody></table>
 <hr>

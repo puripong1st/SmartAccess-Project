@@ -1,20 +1,26 @@
 /*
   ==============================================================
   SmartAccess Door Access Controller - Firmware for ESP32
-  ห้องปฏิบัติการเรียนการสอน: กำหนด room_code ในไฟล์ config.h
-  โหมด: Wokwi Simulator (ควบคุมด้วย #define WOKWI_SIM ด้านล่าง)
+  ห้องปฏิบัติการเรียนการสอน: Classroom CE-402
+  โหมด: Wokwi Simulator
   ระบบรองรับการรันผ่านคลาวด์ Vercel (HTTPS WiFiClientSecure)
   ==============================================================
 */
-#define WOKWI_SIM  // โหมด Wokwi Simulator — ห้าม deploy ขึ้นบอร์ดจริงโดยเปิดค่านี้ไว้!
-#define DEBUG_MODE false  // ⚠️ Set true for development ONLY
+#define WOKWI_SIM // Wokwi Simulator mode — NEVER deploy to production with this
+                  // defined!
+// 💡 สำหรับจำลองบน Wokwi Web อย่าลืมสร้างแท็บ libraries.txt และระบุ:
+// Adafruit GFX Library
+// Adafruit ILI9341
+// ArduinoJson@6.21.3
+// QRCode
+#define DEBUG_MODE false // ⚠️ Set true for development ONLY
 
 #if DEBUG_MODE
-  #define DBG(x) Serial.println(x)
-  #define DBGF(fmt, ...) Serial.printf(fmt, __VA_ARGS__)
+#define DBG(x) Serial.println(x)
+#define DBGF(fmt, ...) Serial.printf(fmt, __VA_ARGS__)
 #else
-  #define DBG(x)
-  #define DBGF(fmt, ...)
+#define DBG(x)
+#define DBGF(fmt, ...)
 #endif
 
 #include "ricmoo_qrcode.h"
@@ -32,25 +38,25 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h> // สำหรับรัน HTTPS บนระบบคลาวด์ Vercel
 #include <mbedtls/md.h>
-#include <time.h> // สำหรับ NTP time sync (ใช้ใน HMAC timestamp)
 #include <sys/time.h> // สำหรับ settimeofday
+#include <time.h>     // สำหรับ NTP time sync (ใช้ใน HMAC timestamp)
 
 #include "config.h"
 
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
-const char* CURRENT_VERSION = "1.0.0";
-const char* FIRMWARE_URL = "https://project-sigma-ivory-21.vercel.app/api/esp32/firmware-ota";
+const char *CURRENT_VERSION = "1.0.0";
+const char *FIRMWARE_URL =
+    "https://project-sigma-ivory-21.vercel.app/api/esp32/firmware-ota";
 
 WiFiServer localServer(80); // เว็บเซิร์ฟเวอร์ LAN สำหรับคิวเปิดประตู/โหมดออฟไลน์
 bool localServerStarted = false;
 
-
 // ─── Compile-time production safety guard ───────────────────────────────────
 // Prevents accidentally shipping a Wokwi simulation build to a real device.
 #ifdef PRODUCTION
-  #ifdef WOKWI_SIM
-    #error "WOKWI_SIM must not be defined in production builds!"
-  #endif
+#ifdef WOKWI_SIM
+#error "WOKWI_SIM must not be defined in production builds!"
+#endif
 #endif
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -67,11 +73,11 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 // ─── Adaptive Polling ────────────────────────────────────────────────────────
 // เร่งความเร็ว polling เมื่อตรวจพบกิจกรรม ชะลอลงเมื่อ idle ประหยัด API call
-const unsigned long POLL_FAST   = 200;   // ms — มีคำสั่งรอ / เพิ่งปลดล็อก
-const unsigned long POLL_NORMAL = 1000;  // ms — ทำงานปกติ
-const unsigned long POLL_SLOW   = 5000;  // ms — idle ต่อเนื่อง 5 รอบ
-unsigned long currentPollDelay  = POLL_NORMAL;
-int idleCycles = 0; // นับรอบที่ไม่มีกิจกรรม
+const unsigned long POLL_FAST = 200;    // ms — มีคำสั่งรอ / เพิ่งปลดล็อก
+const unsigned long POLL_NORMAL = 1000; // ms — ทำงานปกติ
+const unsigned long POLL_SLOW = 5000;   // ms — idle ต่อเนื่อง 5 รอบ
+unsigned long currentPollDelay = POLL_NORMAL;
+int idleCycles = 0;   // นับรอบที่ไม่มีกิจกรรม
 String lastEtag = ""; // ETag จาก server สำหรับ 304 check
 
 // ─── TFT Dirty-region tracking ───────────────────────────────────────────────
@@ -87,7 +93,7 @@ String ip_address_str = "0.0.0.0";
 String last_door_trigger = "idle";
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
-void drawQRCode(const String& qrText, int startX, int startY, int boxSize) {
+void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
   QRCode qrcode;
 
   // ใช้ QR Code Version 7 (45x45 modules) รองรับ URL ยาวสูงสุด 154 ตัวอักษร
@@ -124,8 +130,8 @@ void drawQRCode(const String& qrText, int startX, int startY, int boxSize) {
 
 // 1. หน้าจอหลักโหมดสแตนด์บาย (Idle Mode) — ดีไซน์พรีเมียมถอดแบบมาจาก Next.js
 // esp32-preview
-void drawMainScreen(int queueCount, const String& lastApprovedName, const String& timeStr,
-                    const String& qrText) {
+void drawMainScreen(int queueCount, const String &lastApprovedName,
+                    const String &timeStr, const String &qrText) {
   // พื้นหลังสีน้ำเงินดำหรูหรา #06070D
   tft.fillScreen(tft.color565(6, 7, 13));
 
@@ -259,7 +265,7 @@ void drawScanningScreen() {
 }
 
 // 3. หน้าจอปลดล็อกผ่านสำเร็จ (Access Granted Mode) — สีเขียวสะท้อนแสงหรูหราดีไซน์พรีเมียม
-void drawUnlockedScreen(const String& approvedName, const String& studentId) {
+void drawUnlockedScreen(const String &approvedName, const String &studentId) {
   tft.fillScreen(tft.color565(3, 12, 5)); // สีเขียวเข้มสไตล์ฟอเรสต์ #030C05
 
   // วงกลมไฟสีเขียวสลักตราถูก
@@ -346,21 +352,21 @@ int api_fail_count = 0;
 unsigned long last_student_sync = 0;
 unsigned long last_log_sync = 0;
 const unsigned long SYNC_STUDENTS_INTERVAL = 300000; // 5 minutes
-const unsigned long SYNC_LOGS_INTERVAL = 60000;     // 1 minute
+const unsigned long SYNC_LOGS_INTERVAL = 60000;      // 1 minute
 
 String cached_qr_key = "";
-const char* cache_students_file = "/student_cache.json";
-const char* cache_logs_file = "/offline_logs.json";
-const char* cache_key_file = "/qr_key.bin";
+const char *cache_students_file = "/student_cache.json";
+const char *cache_logs_file = "/offline_logs.json";
+const char *cache_key_file = "/qr_key.bin";
 String cached_offline_pin = "123456"; // Default PIN
 
 // Forward declarations
-bool validateOfflineQR(const String& grant);
-void triggerDoorOpenOffline(const String& grant);
-void saveOfflineLog(const String& student_id);
+bool validateOfflineQR(const String &grant);
+void triggerDoorOpenOffline(const String &grant);
+void saveOfflineLog(const String &student_id);
 void syncStudentCache();
 void syncOfflineLogs();
-bool secureCompare(const char* a, const char* b);
+bool secureCompare(const char *a, const char *b);
 
 #ifndef WOKWI_SIM
 void onOTAStart() {
@@ -403,7 +409,8 @@ void onOTAEnd(bool success) {
 
 // ─── OTA Progress Bar บน TFT ─────────────────────────────────────────────────
 void onOTAProgress(int current, int total) {
-  if (total <= 0) return;
+  if (total <= 0)
+    return;
   int pct = (current * 100) / total;
   int barW = (pct * 280) / 100;
   // Progress bar background
@@ -445,7 +452,8 @@ void performHTTPSOTA() {
   httpUpdate.rebootOnUpdate(true);
   httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
   httpUpdate.addHeader("x-esp32-version", CURRENT_VERSION);
-  httpUpdate.addHeader("Authorization", "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
+  httpUpdate.addHeader("Authorization",
+                       "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
   // แนบ callback แสดง progress bar
   httpUpdate.onProgress(onOTAProgress);
 
@@ -492,7 +500,7 @@ void startLocalServer() {
   }
 }
 
-String base64Decode(const String& input) {
+String base64Decode(const String &input) {
   String decodedInput = input;
   decodedInput.replace("-", "+");
   decodedInput.replace("_", "/");
@@ -500,20 +508,23 @@ String base64Decode(const String& input) {
     decodedInput += "=";
   }
   int len = decodedInput.length();
-  uint8_t* out = (uint8_t*)malloc(len + 1);
+  uint8_t *out = (uint8_t *)malloc(len + 1);
   if (!out) {
     DBG("base64Decode: malloc failed!");
     return "";
   }
   int decoded_len = 0;
-  const char* lookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const char *lookup =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   int bits = 0;
   int val = 0;
   for (int i = 0; i < len; i++) {
     char c = decodedInput[i];
-    if (c == '=') break;
-    const char* p = strchr(lookup, c);
-    if (!p) continue;
+    if (c == '=')
+      break;
+    const char *p = strchr(lookup, c);
+    if (!p)
+      continue;
     int idx = p - lookup;
     val = (val << 6) | idx;
     bits += 6;
@@ -523,20 +534,22 @@ String base64Decode(const String& input) {
     }
   }
   out[decoded_len] = '\0';
-  String res = String((char*)out);
+  String res = String((char *)out);
   free(out);
   return res;
 }
 
-// Hex-encoded HMAC-SHA256 — ตรงกับ Node.js crypto.createHmac('sha256', key).digest('hex')
-// ใช้สำหรับ x-hmac-signature header ที่ server ตรวจสอบ
-String generateHMACHex(const String& payload, const String& key) {
+// Hex-encoded HMAC-SHA256 — ตรงกับ Node.js crypto.createHmac('sha256',
+// key).digest('hex') ใช้สำหรับ x-hmac-signature header ที่ server ตรวจสอบ
+String generateHMACHex(const String &payload, const String &key) {
   uint8_t hmacResult[32];
   mbedtls_md_context_t ctx;
   mbedtls_md_init(&ctx);
   mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-  mbedtls_md_hmac_starts(&ctx, (const unsigned char *)key.c_str(), key.length());
-  mbedtls_md_hmac_update(&ctx, (const unsigned char *)payload.c_str(), payload.length());
+  mbedtls_md_hmac_starts(&ctx, (const unsigned char *)key.c_str(),
+                         key.length());
+  mbedtls_md_hmac_update(&ctx, (const unsigned char *)payload.c_str(),
+                         payload.length());
   mbedtls_md_hmac_finish(&ctx, hmacResult);
   mbedtls_md_free(&ctx);
   char hexBuf[65];
@@ -548,19 +561,22 @@ String generateHMACHex(const String& payload, const String& key) {
 }
 
 // Base64url-encoded HMAC-SHA256 (ใช้สำหรับ offline grant validation)
-String generateHMAC(const String& payload, const String& key) {
+String generateHMAC(const String &payload, const String &key) {
   uint8_t hmacResult[32];
   mbedtls_md_context_t ctx;
   mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
   mbedtls_md_init(&ctx);
   mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 1);
-  mbedtls_md_hmac_starts(&ctx, (const unsigned char*)key.c_str(), key.length());
-  mbedtls_md_hmac_update(&ctx, (const unsigned char*)payload.c_str(), payload.length());
+  mbedtls_md_hmac_starts(&ctx, (const unsigned char *)key.c_str(),
+                         key.length());
+  mbedtls_md_hmac_update(&ctx, (const unsigned char *)payload.c_str(),
+                         payload.length());
   mbedtls_md_hmac_finish(&ctx, hmacResult);
   mbedtls_md_free(&ctx);
 
   String encoded = "";
-  const char* lookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const char *lookup =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   int bits = 0;
   int val = 0;
   for (int i = 0; i < 32; i++) {
@@ -577,23 +593,57 @@ String generateHMAC(const String& payload, const String& key) {
   return encoded;
 }
 
-bool validateOfflineQR(const String& grant) {
+void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
+  time_t nowTs = time(nullptr);
+  String timestampStr = String((long)nowTs);
+  
+  String device_id = "esp32_" + String(room_code);
+  
+  // Nonce generation: using esp_random to prevent replay attacks (Zero-Trust V2.0)
+  uint32_t r1 = esp_random();
+  uint32_t r2 = esp_random();
+  char nonceBuf[17];
+  sprintf(nonceBuf, "%08x%08x", r1, r2);
+  String nonce = String(nonceBuf);
+  
+  String body_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; // SHA-256 of empty string
+  
+  // 1. KDF: Derive device secret key
+  String device_secret = generateHMACHex(device_id, String(api_key));
+  
+  // 2. Construct Payload: "deviceId:timestampStr:nonce:endpointPath:bodyHash"
+  String hmacPayload = device_id + ":" + timestampStr + ":" + nonce + ":" + endpoint + ":" + body_hash;
+  
+  // 3. Compute signature
+  String signature = generateHMACHex(hmacPayload, device_secret);
+
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("x-api-key", api_key);
+  http.addHeader("x-esp32-version", CURRENT_VERSION);
+  http.addHeader("x-device-id", device_id);
+  http.addHeader("x-timestamp", timestampStr);
+  http.addHeader("x-nonce", nonce);
+  http.addHeader("x-hmac-signature", signature);
+}
+
+bool validateOfflineQR(const String &grant) {
   if (cached_qr_key == "") {
     DBG("No cached QR signing key. Cannot validate offline.");
     return false;
   }
   int dotIdx = grant.indexOf(".");
-  if (dotIdx == -1) return false;
-  
+  if (dotIdx == -1)
+    return false;
+
   String encodedPayload = grant.substring(0, dotIdx);
   String signature = grant.substring(dotIdx + 1);
-  
+
   String expectedSignature = generateHMAC(encodedPayload, cached_qr_key);
   if (!secureCompare(signature.c_str(), expectedSignature.c_str())) {
     DBG("Offline signature verification failed!");
     return false;
   }
-  
+
   String decoded = base64Decode(encodedPayload);
   StaticJsonDocument<384> doc;
   DeserializationError err = deserializeJson(doc, decoded);
@@ -601,31 +651,33 @@ bool validateOfflineQR(const String& grant) {
     DBG("Failed to parse decoded payload JSON!");
     return false;
   }
-  
-  const char* room = doc["room"];
-  const char* student_id = doc["student_id"];
-  
+
+  const char *room = doc["room"];
+  const char *student_id = doc["student_id"];
+
   if (String(room) != String(room_code)) {
     DBG("Room mismatch in offline grant!");
     return false;
   }
-  
+
   if (!SPIFFS.exists(cache_students_file)) {
     DBG("No student cache JSON file exists!");
     return false;
   }
-  
+
   File f = SPIFFS.open(cache_students_file, "r");
-  if (!f) return false;
-  
-  DynamicJsonDocument cacheDoc(4096); // Allocated on Heap to prevent Stack Overflow
+  if (!f)
+    return false;
+
+  DynamicJsonDocument cacheDoc(
+      4096); // Allocated on Heap to prevent Stack Overflow
   DeserializationError cacheErr = deserializeJson(cacheDoc, f);
   f.close();
   if (cacheErr) {
     DBG("Failed to parse student cache JSON file!");
     return false;
   }
-  
+
   JsonArray arr = cacheDoc.as<JsonArray>();
   bool found = false;
   for (JsonVariant v : arr) {
@@ -642,8 +694,9 @@ bool validateOfflineQR(const String& grant) {
   return true;
 }
 
-void saveOfflineLog(const String& student_id) {
-  DynamicJsonDocument logDoc(3072); // Allocated on Heap to prevent Stack Overflow
+void saveOfflineLog(const String &student_id) {
+  DynamicJsonDocument logDoc(
+      3072); // Allocated on Heap to prevent Stack Overflow
   if (SPIFFS.exists(cache_logs_file)) {
     File f = SPIFFS.open(cache_logs_file, "r");
     if (f) {
@@ -672,44 +725,45 @@ void saveOfflineLog(const String& student_id) {
   }
 }
 
-void triggerDoorOpenOffline(const String& grant) {
+void triggerDoorOpenOffline(const String &grant) {
   int dotIdx = grant.indexOf(".");
   String encodedPayload = grant.substring(0, dotIdx);
   String decoded = base64Decode(encodedPayload);
   StaticJsonDocument<256> doc;
   deserializeJson(doc, decoded);
   String student_id = doc["student_id"].as<String>();
-  
+
   saveOfflineLog(student_id);
-  
+
   Serial.println("[INFO] Door unlocked");
   DBG("🔓 OFFLINE ACCESS GRANTED! Opening door...");
-  
+
   drawScanningScreen();
   tone(BUZZER_PIN, 1500, 100);
   delay(1200);
-  
+
   drawUnlockedScreen("OFFLINE MEMBER", student_id);
   digitalWrite(RELAY_PIN, HIGH);
-  
+
   tone(BUZZER_PIN, 1000, 150);
   delay(180);
   tone(BUZZER_PIN, 1500, 150);
   delay(180);
   tone(BUZZER_PIN, 2000, 300);
-  
+
   int countdownMs = 3800;
   int stepSize = 320 / 38;
   for (int i = 0; i < 38; i++) {
     tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
+                 tft.color565(6, 78, 59));
     delay(100);
   }
   digitalWrite(RELAY_PIN, LOW);
   Serial.println("[INFO] Door locked");
   DBG("🔒 Door auto locked (Offline).");
   tone(BUZZER_PIN, 800, 250);
-  
+
   last_queue_count = -1;
   last_approved_name = "FORCE_REDRAW";
   last_active_token = "FORCE_REDRAW";
@@ -717,7 +771,8 @@ void triggerDoorOpenOffline(const String& grant) {
 
 void handleLocalValidation() {
   WiFiClient client = localServer.available();
-  if (!client) return;
+  if (!client)
+    return;
   DBG("New client connected to local offline validation server.");
   unsigned long timeout = millis() + 2000;
   String req = "";
@@ -725,7 +780,8 @@ void handleLocalValidation() {
     if (client.available()) {
       char c = client.read();
       req += c;
-      if (req.endsWith("\r\n\r\n")) break;
+      if (req.endsWith("\r\n\r\n"))
+        break;
     }
   }
   if (req.indexOf("POST /door/open") != -1) {
@@ -764,7 +820,8 @@ void handleLocalValidation() {
     tone(BUZZER_PIN, 1500, 100);
     delay(1200);
 
-    drawUnlockedScreen("VERIFIED MEMBER", studentId != "" ? studentId : "ONLINE STUDENT");
+    drawUnlockedScreen("VERIFIED MEMBER",
+                       studentId != "" ? studentId : "ONLINE STUDENT");
     digitalWrite(RELAY_PIN, HIGH);
 
     tone(BUZZER_PIN, 1000, 150);
@@ -776,7 +833,8 @@ void handleLocalValidation() {
     int stepSize = 320 / 38;
     for (int i = 0; i < 38; i++) {
       tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-      tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+      tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
+                   tft.color565(6, 78, 59));
       delay(100);
     }
     digitalWrite(RELAY_PIN, LOW);
@@ -794,12 +852,13 @@ void handleLocalValidation() {
     int grantIdx = req.indexOf("grant=");
     if (grantIdx != -1) {
       int endIdx = req.indexOf(" ", grantIdx);
-      if (endIdx == -1) endIdx = req.indexOf("\r", grantIdx);
+      if (endIdx == -1)
+        endIdx = req.indexOf("\r", grantIdx);
       String grant = req.substring(grantIdx + 6, endIdx);
       grant.replace("%2E", ".");
       grant.replace("%2D", "-");
       grant.replace("%5F", "_");
-      
+
       bool valid = validateOfflineQR(grant);
       if (valid) {
         client.println("HTTP/1.1 200 OK");
@@ -820,7 +879,8 @@ void handleLocalValidation() {
     int pinIdx = req.indexOf("pin=");
     if (pinIdx != -1) {
       int endIdx = req.indexOf(" ", pinIdx);
-      if (endIdx == -1) endIdx = req.indexOf("\r", pinIdx);
+      if (endIdx == -1)
+        endIdx = req.indexOf("\r", pinIdx);
       String enteredPin = req.substring(pinIdx + 4, endIdx);
       if (secureCompare(enteredPin.c_str(), cached_offline_pin.c_str())) {
         client.println("HTTP/1.1 200 OK");
@@ -842,14 +902,20 @@ void handleLocalValidation() {
     client.println("Content-Type: text/html; charset=utf-8");
     client.println("Connection: close");
     client.println();
-    client.println("<!DOCTYPE html><html><head><meta charset='utf-8'><title>SmartAccess Offline Mode</title></head>");
-    client.println("<body style='font-family:sans-serif; text-align:center; padding:50px;'>");
+    client.println(
+        "<!DOCTYPE html><html><head><meta charset='utf-8'><title>SmartAccess "
+        "Offline Mode</title></head>");
+    client.println("<body style='font-family:sans-serif; text-align:center; "
+                   "padding:50px;'>");
     client.println("<h1 style='color:#F59E0B;'>⚠️ OFFLINE MODE ACTIVE</h1>");
     client.println("<p>ระบบอยู่ในโหมดออฟไลน์ (อินเทอร์เน็ตขัดข้อง)</p>");
     client.println("<p>กรุณาสแกนคีย์ QR โค้ดปลดล็อกของท่าน หรือกรอก Offline PIN</p>");
     client.println("<form method='POST' action='/unlock-pin'>");
-    client.println("<input type='password' name='pin' placeholder='Enter PIN' style='padding:10px;font-size:16px;'><br><br>");
-    client.println("<button type='submit' style='padding:10px 20px;font-size:16px;background:#10B981;color:white;border:none;'>Unlock Door</button>");
+    client.println("<input type='password' name='pin' placeholder='Enter PIN' "
+                   "style='padding:10px;font-size:16px;'><br><br>");
+    client.println("<button type='submit' style='padding:10px "
+                   "20px;font-size:16px;background:#10B981;color:white;border:"
+                   "none;'>Unlock Door</button>");
     client.println("</form>");
     client.println("</body></html>");
   }
@@ -857,16 +923,16 @@ void handleLocalValidation() {
   client.stop();
 }
 
-
 void syncStudentCache() {
-  if (WiFi.status() != WL_CONNECTED) return;
+  if (WiFi.status() != WL_CONNECTED)
+    return;
   HTTPClient http;
   String syncUrl = String(server_url) + "&sync=1";
   static WiFiClientSecure secureClient;
   WiFiClientSecure *client = &secureClient;
   client->setInsecure();
   http.begin(*client, syncUrl);
-  http.addHeader("x-api-key", api_key);
+  addZeroTrustHeaders(http, "/api/esp32/display");
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
@@ -874,7 +940,7 @@ void syncStudentCache() {
     DeserializationError error = deserializeJson(doc, payload);
     if (!error) {
       if (doc.containsKey("qr_key")) {
-        const char* key = doc["qr_key"];
+        const char *key = doc["qr_key"];
         cached_qr_key = String(key);
         File f = SPIFFS.open(cache_key_file, "w");
         if (f) {
@@ -897,10 +963,13 @@ void syncStudentCache() {
 }
 
 void syncOfflineLogs() {
-  if (WiFi.status() != WL_CONNECTED) return;
-  if (!SPIFFS.exists(cache_logs_file)) return;
+  if (WiFi.status() != WL_CONNECTED)
+    return;
+  if (!SPIFFS.exists(cache_logs_file))
+    return;
   File f = SPIFFS.open(cache_logs_file, "r");
-  if (!f) return;
+  if (!f)
+    return;
   String content = f.readString();
   f.close();
   HTTPClient http;
@@ -921,19 +990,21 @@ void syncOfflineLogs() {
 }
 
 void syncTimeViaHTTP() {
-  if (WiFi.status() != WL_CONNECTED) return;
-  
+  if (WiFi.status() != WL_CONNECTED)
+    return;
+
   String timeUrl = String(server_url);
   int displayIdx = timeUrl.indexOf("/display");
   if (displayIdx != -1) {
     timeUrl = timeUrl.substring(0, displayIdx) + "/time";
   } else {
-    timeUrl = "https://project-sigma-ivory-21.vercel.app/api/esp32/time"; // Fallback
+    timeUrl =
+        "https://project-sigma-ivory-21.vercel.app/api/esp32/time"; // Fallback
   }
-  
+
   DBG("Attempting HTTP Time Sync Fallback via: " + timeUrl);
   HTTPClient http;
-  
+
   if (timeUrl.startsWith("https://")) {
 #ifdef WOKWI_SIM
     static WiFiClientSecure simClient;
@@ -947,7 +1018,7 @@ void syncTimeViaHTTP() {
   } else {
     http.begin(timeUrl);
   }
-  
+
   http.setTimeout(4000);
   int httpCode = http.GET();
   if (httpCode == 200) {
@@ -960,10 +1031,12 @@ void syncTimeViaHTTP() {
       tv.tv_sec = serverTime;
       tv.tv_usec = 0;
       settimeofday(&tv, NULL);
-      Serial.println("[INFO] HTTP Time Synced fallback: " + String((long)time(nullptr)));
+      Serial.println("[INFO] HTTP Time Synced fallback: " +
+                     String((long)time(nullptr)));
     }
   } else {
-    Serial.printf("[ERROR] HTTP Time Sync fallback failed, HTTP Code: %d\n", httpCode);
+    Serial.printf("[ERROR] HTTP Time Sync fallback failed, HTTP Code: %d\n",
+                  httpCode);
   }
   http.end();
 }
@@ -1050,10 +1123,11 @@ void setup() {
       ntp_wait++;
     }
   }
-  
+
   // NTP Fallback
   if (time(nullptr) < 1000000000UL) {
-    Serial.println("[WARNING] NTP Sync Timeout. Attempting HTTP Time Fallback...");
+    Serial.println(
+        "[WARNING] NTP Sync Timeout. Attempting HTTP Time Fallback...");
     syncTimeViaHTTP();
   } else {
     Serial.println("[INFO] NTP synced: " + String((long)time(nullptr)));
@@ -1090,7 +1164,8 @@ void loop() {
       unsigned long mm = (sec / 60) % 60;
       unsigned long ss = sec % 60;
       char timeBuf[10];
-      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm, (int)ss);
+      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm,
+               (int)ss);
 
       static unsigned long lastScreenUpdate = 0;
       if (millis() - lastScreenUpdate > 5000) {
@@ -1130,7 +1205,8 @@ void loop() {
       unsigned long mm = (sec / 60) % 60;
       unsigned long ss = sec % 60;
       char timeBuf[10];
-      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm, (int)ss);
+      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm,
+               (int)ss);
       time_str = String(timeBuf);
 
       HTTPClient http;
@@ -1153,16 +1229,7 @@ void loop() {
       }
 
       http.setTimeout(5000);
-      http.addHeader("Content-Type", "application/json");
-      http.addHeader("x-api-key", api_key);
-      http.addHeader("x-esp32-version", CURRENT_VERSION);
-
-      time_t nowTs = time(nullptr);
-      String timestampStr = String((long)nowTs);
-      String hmacPayload = timestampStr + ":/api/esp32/display";
-      String signature = generateHMACHex(hmacPayload, String(api_key));
-      http.addHeader("x-timestamp", timestampStr);
-      http.addHeader("x-hmac-signature", signature);
+      addZeroTrustHeaders(http, "/api/esp32/display");
       if (lastEtag.length() > 0) {
         http.addHeader("If-None-Match", lastEtag);
       }
@@ -1198,7 +1265,9 @@ void loop() {
           syncOfflineLogs();
         }
         String payload = http.getString();
-        DynamicJsonDocument doc(1024); // Increased to 1024 to prevent buffer overflows from long URLs or JSON nesting
+        DynamicJsonDocument doc(
+            1024); // Increased to 1024 to prevent buffer overflows from long
+                   // URLs or JSON nesting
         DeserializationError error = deserializeJson(doc, payload);
 
         if (!error) {
@@ -1217,7 +1286,10 @@ void loop() {
             if (new_pin != cached_offline_pin) {
               cached_offline_pin = new_pin;
               File f = SPIFFS.open("/offline_pin.txt", "w");
-              if (f) { f.print(cached_offline_pin); f.close(); }
+              if (f) {
+                f.print(cached_offline_pin);
+                f.close();
+              }
             }
           }
 
@@ -1230,7 +1302,8 @@ void loop() {
 
           String approvedName = "";
           String studentId = "";
-          if (doc.containsKey("last_approved") && !doc["last_approved"].isNull()) {
+          if (doc.containsKey("last_approved") &&
+              !doc["last_approved"].isNull()) {
             approvedName = doc["last_approved"]["name"].as<String>();
             studentId = doc["last_approved"]["student_id"].as<String>();
           }
@@ -1249,20 +1322,26 @@ void loop() {
             } else {
               baseUrl = "https://project-sigma-ivory-21.vercel.app";
             }
-            qrText = baseUrl + "/?scan=" + String(active_token) + "&room=" + String(requested_room);
+            qrText = baseUrl + "/?scan=" + String(active_token) +
+                     "&room=" + String(requested_room);
           }
 
-          DBGF("Door command: %s | Queue: %d\n", door_trigger ? door_trigger : "NULL", pending_count);
+          DBGF("Door command: %s | Queue: %d\n",
+               door_trigger ? door_trigger : "NULL", pending_count);
 
           if (String(door_trigger) == "open") {
             idleCycles = 0;
             currentPollDelay = POLL_FAST;
-          } else if (pending_count != last_queue_count || studentId != last_approved_name || (active_token && String(active_token) != last_active_token)) {
+          } else if (pending_count != last_queue_count ||
+                     studentId != last_approved_name ||
+                     (active_token &&
+                      String(active_token) != last_active_token)) {
             idleCycles = 0;
             currentPollDelay = POLL_NORMAL;
           } else {
             idleCycles++;
-            if (idleCycles >= 5) currentPollDelay = POLL_SLOW;
+            if (idleCycles >= 5)
+              currentPollDelay = POLL_SLOW;
           }
 
           bool isOpenCmd = (door_trigger && String(door_trigger) == "open");
@@ -1288,8 +1367,10 @@ void loop() {
 
             int stepSize = 320 / 38;
             for (int i = 0; i < 38; i++) {
-              tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-              tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+              tft.fillRect(0, 236, 320 - (i * stepSize), 4,
+                           tft.color565(16, 185, 129));
+              tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
+                           tft.color565(6, 78, 59));
               delay(100);
             }
 
@@ -1301,8 +1382,10 @@ void loop() {
             last_queue_count = -1;
             last_approved_name = "FORCE_REDRAW";
             last_active_token = "FORCE_REDRAW";
-          }
-          else if (pending_count != last_queue_count || studentId != last_approved_name || (active_token && String(active_token) != last_active_token)) {
+          } else if (pending_count != last_queue_count ||
+                     studentId != last_approved_name ||
+                     (active_token &&
+                      String(active_token) != last_active_token)) {
             last_queue_count = pending_count;
             last_approved_name = studentId;
             if (active_token)
@@ -1337,7 +1420,8 @@ void loop() {
       http.end();
     }
   } else if (WiFi.status() != WL_CONNECTED) {
-    // Non-blocking WiFi status blinker & reconnection logic to prevent sluggish performance
+    // Non-blocking WiFi status blinker & reconnection logic to prevent sluggish
+    // performance
     static unsigned long lastWifiBlink = 0;
     static bool wifiBlinkState = false;
     if (millis() - lastWifiBlink >= 250) {
@@ -1349,18 +1433,19 @@ void loop() {
     static unsigned long lastWifiRetry = 0;
     if (millis() - lastWifiRetry >= 10000) {
       lastWifiRetry = millis();
-      Serial.println("[WIFI] Connection lost. Attempting non-blocking reconnect...");
+      Serial.println(
+          "[WIFI] Connection lost. Attempting non-blocking reconnect...");
       WiFi.disconnect();
       WiFi.begin(ssid, password);
     }
   }
 }
 
-bool secureCompare(const char* a, const char* b) {
+bool secureCompare(const char *a, const char *b) {
   size_t lenA = strlen(a);
   size_t lenB = strlen(b);
   size_t len = (lenA > lenB) ? lenA : lenB;
-  
+
   volatile uint8_t result = lenA ^ lenB;
   for (size_t i = 0; i < len; i++) {
     uint8_t ca = (i < lenA) ? a[i] : 0;

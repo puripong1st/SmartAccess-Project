@@ -662,6 +662,39 @@ String generateHMAC(const String& payload, const String& key) {
   return encoded;
 }
 
+void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
+  time_t nowTs = time(nullptr);
+  String timestampStr = String((long)nowTs);
+  
+  String device_id = "esp32_" + String(room_code);
+  
+  // Nonce generation: using esp_random to prevent replay attacks (Zero-Trust V2.0)
+  uint32_t r1 = esp_random();
+  uint32_t r2 = esp_random();
+  char nonceBuf[17];
+  sprintf(nonceBuf, "%08x%08x", r1, r2);
+  String nonce = String(nonceBuf);
+  
+  String body_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; // SHA-256 of empty string
+  
+  // 1. KDF: Derive device secret key
+  String device_secret = generateHMACHex(device_id, String(api_key));
+  
+  // 2. Construct Payload: "deviceId:timestampStr:nonce:endpointPath:bodyHash"
+  String hmacPayload = device_id + ":" + timestampStr + ":" + nonce + ":" + endpoint + ":" + body_hash;
+  
+  // 3. Compute signature
+  String signature = generateHMACHex(hmacPayload, device_secret);
+
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("x-api-key", api_key);
+  http.addHeader("x-esp32-version", CURRENT_VERSION);
+  http.addHeader("x-device-id", device_id);
+  http.addHeader("x-timestamp", timestampStr);
+  http.addHeader("x-nonce", nonce);
+  http.addHeader("x-hmac-signature", signature);
+}
+
 bool validateOfflineQR(const String& grant) {
   if (cached_qr_key == "") {
     DBG("No cached QR signing key. Cannot validate offline.");
@@ -951,7 +984,7 @@ void syncStudentCache() {
   WiFiClientSecure *client = &secureClient;
   client->setInsecure();
   http.begin(*client, syncUrl);
-  http.addHeader("x-api-key", api_key);
+  addZeroTrustHeaders(http, "/api/esp32/display");
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
@@ -1238,16 +1271,7 @@ void loop() {
       }
 
       http.setTimeout(5000);
-      http.addHeader("Content-Type", "application/json");
-      http.addHeader("x-api-key", api_key);
-      http.addHeader("x-esp32-version", CURRENT_VERSION);
-
-      time_t nowTs = time(nullptr);
-      String timestampStr = String((long)nowTs);
-      String hmacPayload = timestampStr + ":/api/esp32/display";
-      String signature = generateHMACHex(hmacPayload, String(api_key));
-      http.addHeader("x-timestamp", timestampStr);
-      http.addHeader("x-hmac-signature", signature);
+      addZeroTrustHeaders(http, "/api/esp32/display");
       if (lastEtag.length() > 0) {
         http.addHeader("If-None-Match", lastEtag);
       }
