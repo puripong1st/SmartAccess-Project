@@ -1350,7 +1350,7 @@ void loop() {
 
           String qrText = "";
           if (active_token) {
-            String baseUrl = "https://project-sigma-ivory-21.vercel.app";
+            String baseUrl = "https://smartaccess-project.vercel.app";
             String currentRoom = String(room_code);
             
             if (register_url) {

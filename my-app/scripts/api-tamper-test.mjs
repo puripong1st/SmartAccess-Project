@@ -13,7 +13,7 @@
 //   8. CORS: try a cross-origin POST with Origin: evil.com — should NOT echo.
 //
 // Run against staging unless you accept noise in production logs.
-// Usage:  node scripts/api-tamper-test.mjs --base https://project-sigma-ivory-21.vercel.app
+// Usage:  node scripts/api-tamper-test.mjs --base https://smartaccess-project.vercel.app
 
 const args = Object.fromEntries(
   process.argv.slice(2).flatMap((arg, i, arr) => {
@@ -23,7 +23,7 @@ const args = Object.fromEntries(
     return [[key, val]];
   })
 );
-const BASE = (args.base || "https://project-sigma-ivory-21.vercel.app").replace(/\/$/, "");
+const BASE = (args.base || "https://smartaccess-project.vercel.app").replace(/\/$/, "");
 const ROOM = args.room || "CE-401";
 
 const results = [];

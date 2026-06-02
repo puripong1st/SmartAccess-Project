@@ -17,7 +17,7 @@
 // hosts to confirm error handling.
 
 const BAD_HOST = "https://offline-test.invalid.example";
-const REAL_HOST = process.argv[2] || "https://project-sigma-ivory-21.vercel.app";
+const REAL_HOST = process.argv[2] || "https://smartaccess-project.vercel.app";
 
 async function probe(label, url, opts = {}) {
   const start = performance.now();

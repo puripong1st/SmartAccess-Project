@@ -1031,7 +1031,7 @@ ${wokwiDefine}
 
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
 const char* CURRENT_VERSION = "1.0.0";
-const char* FIRMWARE_URL = "https://project-sigma-ivory-21.vercel.app/api/esp32/firmware-ota";
+const char* FIRMWARE_URL = "https://smartaccess-project.vercel.app/api/esp32/firmware-ota";
 
 #ifndef WOKWI_SIM
 WebServer localServer(80); // พอร์ตเว็บเซิร์ฟเวอร์สำหรับคิวและ ElegantOTA
@@ -2168,7 +2168,7 @@ void loop() {
             if (idx != -1) {
               baseUrl = regUrl.substring(0, idx);
             } else {
-              baseUrl = "${origin || "https://project-sigma-ivory-21.vercel.app"}";
+              baseUrl = "${origin || "https://smartaccess-project.vercel.app"}";
             }
             qrText = baseUrl + "/?scan=" + String(active_token) +
                      "&room=" + String(requested_room);

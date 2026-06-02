@@ -340,19 +340,19 @@ npm run dev
 เปิดเว็บ
 
 ```text
-https://project-sigma-ivory-21.vercel.app
+https://smartaccess-project.vercel.app
 ```
 
 หน้า Admin
 
 ```text
-https://project-sigma-ivory-21.vercel.app/admin/login
+https://smartaccess-project.vercel.app/admin/login
 ```
 
 หน้าจำลอง ESP32
 
 ```text
-https://project-sigma-ivory-21.vercel.app/esp32-preview
+https://smartaccess-project.vercel.app/esp32-preview
 ```
 
 > [!NOTE]
@@ -401,7 +401,7 @@ INITIAL_ADMIN_PASSWORD=admin123456
 INITIAL_ADMIN_FULL_NAME="System Administrator"
 
 # ── การแจ้งเตือน & เผชิญเหตุ Ops (ทางเลือก) ──
-NEXT_PUBLIC_APP_URL=https://project-sigma-ivory-21.vercel.app
+NEXT_PUBLIC_APP_URL=https://smartaccess-project.vercel.app
 DISCORD_WEBHOOK_URL=
 CRON_SECRET=some-random-cron-secret
 ```
@@ -500,7 +500,7 @@ CRON_SECRET=some-random-cron-secret
 เปิด
 
 ```text
-https://project-sigma-ivory-21.vercel.app/admin/login
+https://smartaccess-project.vercel.app/admin/login
 ```
 
 กรอก username/password ที่มีในตาราง `admin_users`
@@ -5748,7 +5748,7 @@ RETURNING *;
    ```
 2. รันแอปพลิเคชันหรือยิงคำร้องแบบ GET ไปหา API ระบบเพื่อกระตุ้นฟังก์ชันตรวจสอบตัวแปร:
    ```bash
-   curl -I https://project-sigma-ivory-21.vercel.app/api/system/settings?seed=true
+   curl -I https://smartaccess-project.vercel.app/api/system/settings?seed=true
    ```
 3. ตัวฟังก์ชัน in `lib/db.ts` จะเข้ารหัสลับรหัสผ่านและสร้างแถวข้อมูล `owner` ลงในตาราง `admin_users` อัตโนมัติ
 4. **มาตรการป้องกันความปลอดภัยสูงสุด (Security Rollback):** หลังจากได้รับข้อความตอบรับการสร้างแอดมินเริ่มต้นสำเร็จ ให้ปรับเปลี่ยนสลับค่าตัวแปร `ALLOW_DEV_SEED=false` ในระบบทันทีเพื่อล็อกช่องทาง Seeding และเริ่มใช้งานล็อกอินระบบตามปกติ
@@ -7107,7 +7107,7 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 
 **ขั้นตอนการอนุมัตินักศึกษา:**
 
-1. เข้า `https://project-sigma-ivory-21.vercel.app/admin/login`
+1. เข้า `https://smartaccess-project.vercel.app/admin/login`
 2. กรอก username/password ที่ได้รับ
 3. ดูแท็บ "คิวรอตรวจสอบ" — เห็นรายชื่อนักศึกษารอผ่าน
 4. กดปุ่ม ✅ **อนุมัติ** หรือ ❌ **ปฏิเสธ** ข้างชื่อ
@@ -8039,7 +8039,7 @@ sequenceDiagram
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
 const char* CURRENT_VERSION = "1.0.0";
-const char* FIRMWARE_URL = "https://project-sigma-ivory-21.vercel.app/api/esp32/firmware-ota";
+const char* FIRMWARE_URL = "https://smartaccess-project.vercel.app/api/esp32/firmware-ota";
 const char* API_KEY = "SUPER_SECURE_ESP32_ACCESS_TOKEN";
 
 // ฟังก์ชันดึงและติดตั้ง Root Certificate เพื่อทำ HTTPS Verification (SSL Handshake ป้องกันการสวมรอย)
@@ -8398,7 +8398,7 @@ void handleLocalOTALoop() {
 
 > **อัปเดตก่อนหน้า 1**: 2026-05-27 22:30:00 +07:00 — ย้าย §71.19-71.23 (PDPA, ISF, CCA, T&C, Privacy) ไปต่อท้าย §71.18 ให้เลขข้อเรียงถูกต้อง + เพิ่ม **§71.24-71.38 จำนวน 15 บทย่อยใหม่** ครอบคลุม: STRIDE/DREAD Threat Model, DFD ระดับ 0/1/2 สำหรับ PDPA DPIA, กฎหมายเพิ่มเติม (CCSA + ก.พ.อ. + กฎกระทรวง 47 + License audit), ROPA ตาม PDPA ม.39, Schematic+PCB+BOM, Relay Timing+Flyback diode physics, OpenAPI 3.0 spec, CI/CD pipeline + branch strategy, NIST 800-61 IRP + แบบฟอร์ม สคส. 72 ชม., Accessibility (Screen reader/Keyboard/ARIA/TTS/Physical), UAT + SUS questionnaire, Literature Review เปรียบเทียบงานวิจัยอื่น 6 ชิ้น, Hardware Reliability (MTBF/IP rating/Operating env/Maintenance schedule), Network Topology (VLAN + Firewall request form + Bandwidth estimation), คู่มือผู้ใช้แยกเล่ม (Student/Operator/Owner Quick Guides)
 
-> **อัปเดตก่อนหน้า**: 2026-05-27 21:44:42 +07:00 — เปลี่ยนชื่อโปรเจกต์และระบบทั้งหมดในเอกสารอ้างอิงเชิงวิชาการให้เป็น "Innovative system for managing access rights and controlling classroom access via wireless network", ปรับปรุงลิงก์เป็น Production URL (project-sigma-ivory-21.vercel.app), เพิ่มหัวข้อ §71 อธิบายสถาปัตยกรรมเชิงลึกสำหรับการทำเล่มวิทยานิพนธ์รวม 18 บทย่อยเชิงปฏิบัติสมบูรณ์แบบสูงสุดเพื่อรองรับ NotebookLM อย่างเต็มสตรีม ล่าสุดอัปเดตรายละเอียดเรื่องการแบ่งแยกสิทธิ์ของแอดมินรายห้อง (คอลัมน์ allowed_rooms), นโยบายยกระดับรหัสผ่านแอดมินใหม่ (ความยาวอย่างน้อย 12 ตัวอักษร) และปรับโครงสร้างระบบแจ้งเตือนแบบแบ่งแยกตามหมวดหมู่ประเภทเหตุการณ์ลงในเนื้อหาบทเรียนหลักทั้งหมดเรียบร้อย
+> **อัปเดตก่อนหน้า**: 2026-05-27 21:44:42 +07:00 — เปลี่ยนชื่อโปรเจกต์และระบบทั้งหมดในเอกสารอ้างอิงเชิงวิชาการให้เป็น "Innovative system for managing access rights and controlling classroom access via wireless network", ปรับปรุงลิงก์เป็น Production URL (smartaccess-project.vercel.app), เพิ่มหัวข้อ §71 อธิบายสถาปัตยกรรมเชิงลึกสำหรับการทำเล่มวิทยานิพนธ์รวม 18 บทย่อยเชิงปฏิบัติสมบูรณ์แบบสูงสุดเพื่อรองรับ NotebookLM อย่างเต็มสตรีม ล่าสุดอัปเดตรายละเอียดเรื่องการแบ่งแยกสิทธิ์ของแอดมินรายห้อง (คอลัมน์ allowed_rooms), นโยบายยกระดับรหัสผ่านแอดมินใหม่ (ความยาวอย่างน้อย 12 ตัวอักษร) และปรับโครงสร้างระบบแจ้งเตือนแบบแบ่งแยกตามหมวดหมู่ประเภทเหตุการณ์ลงในเนื้อหาบทเรียนหลักทั้งหมดเรียบร้อย
 
 > **อัปเดตล่าสุด**: 2026-05-28 16:30:00 +07:00 — **คู่มือเชิงลึกและแนวปฏิบัติการอัปโหลดเฟิร์มแวร์ผ่านเว็บด้วย Supabase Storage แบบ 0% Vercel CPU Load (Lightweight & Secure Cloud Firmware OTA Update Center)**
 > 
@@ -9461,7 +9461,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 | **1.4** | JWT Expiration Validation | CWE-613 | Verifies that the auth middleware rejects expired JWT tokens. | <span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span> | 57.30ms | Correctly rejected expired JWT with HTTP 401. |
 | **1.5** | Mass-Assignment & XSS Protection on Registration | CWE-915 | Verifies that registrations filter out unauthorized fields (e.g. role, id, is_active) and sanitize XSS payloads. | <span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span> | 1952.26ms | Status: 201. Mass assign ignored: true. Data Sanitized perfectly. |
 | **1.6** | SQL Injection Parametric Audit | CWE-89 | Verifies that SQL Injection strings passed to parameterized API endpoints are safely blocked. | <span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span> | 45.09ms | Query 1 (OR 1=1): HTTP 400 - "ID นักศึกษาต้องเป็นตัวเลข". Query 2 (DROP TABLE): HTTP 400 - "ID นักศึกษาต้องเป็นตัวเลข". |
-| **1.7** | CORS Spoofed Origin Prevention | CWE-942 | Verifies that CORS origins are restricted to configured hosts, and evil.com origins are not reflected. | <span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span> | 8.02ms | Access-Control-Allow-Origin header returned: "https://project-sigma-ivory-21.vercel.app". Blocked cross-origin reflection successfully. |
+| **1.7** | CORS Spoofed Origin Prevention | CWE-942 | Verifies that CORS origins are restricted to configured hosts, and evil.com origins are not reflected. | <span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span> | 8.02ms | Access-Control-Allow-Origin header returned: "https://smartaccess-project.vercel.app". Blocked cross-origin reflection successfully. |
 | **1.8** | Security Headers Verification | CWE-693 | Verifies that security headers (CSP, XSS-Protection, Frame Options) are fully active. | <span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span> | 38.13ms | Headers found - CSP: Active, XFO: Missing, Content-Type-Options: nosniff. |
 | **1.9** | ESP32 API Key Validation (Data Exposure Prevention) | CWE-200 | Verifies that the active QR token is hidden from public API responses unless a valid x-api-key is supplied. | <span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span> | 13.68ms | Exposed without key: false. Exposed with invalid key: false. |
 | **1.10** | QR Token Replay Verification | CWE-294 | Verifies that a one-time dynamic QR token cannot be re-used (replayed) once consumed. | <span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span> | 139.38ms | First verification attempt: HTTP 400. Second verification attempt: HTTP 400. Both rejected correctly. |
@@ -11819,7 +11819,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 2. **การปรับใช้ในการดึงข้อมูล (Polling Request) และการซิงก์ข้อมูลนักศึกษา (Sync Student Cache):** 
    ปรับปรุงคำสั่ง HTTP GET ในลูปหลักของบอร์ด ESP32 และกระบวนการดึงข้อมูลรายชื่อนักศึกษาใน `syncStudentCache` ให้ทำลายระบบ V1 ดั้งเดิมออก และส่งผ่านฟังก์ชัน `addZeroTrustHeaders` แทน ส่งผลให้การยืนยันสิทธิ์ Zero-Trust V2.0 ประสบความสำเร็จ 100% ทันที
 3. **การพัฒนาสถาปัตยกรรมทางเลือกสำหรับการสร้างคีย์ QR (QR Target URL Construction Fallback):**
-   แก้ไขตรรกะในเฟิร์มแวร์เมื่อเซิร์ฟเวอร์ส่งชุดข้อมูลคำตอบแบบย่อ (Slim Payload: ซึ่งไม่มีตัวแปร `register_url` และ `requested_room`) โดยกำหนดให้บอร์ดประเมินดึงชื่อห้องจากค่าตัวแปรในบอร์ด และทำการสกัดแยกเอา Base URL (เช่น `https://project-sigma-ivory-21.vercel.app` หรือ `http://localhost:3000`) ออกมาจากตัวแปร `server_url` หลัก เพื่อนำมาประกอบร่วมกับ `active_token` สร้าง QR Target URL ขึ้นมาวาดบนหน้าจอได้อย่างสมบูรณ์ ป้องกันหน้าจอค้างอยู่ที่สถานะ `Loading QR...`
+   แก้ไขตรรกะในเฟิร์มแวร์เมื่อเซิร์ฟเวอร์ส่งชุดข้อมูลคำตอบแบบย่อ (Slim Payload: ซึ่งไม่มีตัวแปร `register_url` และ `requested_room`) โดยกำหนดให้บอร์ดประเมินดึงชื่อห้องจากค่าตัวแปรในบอร์ด และทำการสกัดแยกเอา Base URL (เช่น `https://smartaccess-project.vercel.app` หรือ `http://localhost:3000`) ออกมาจากตัวแปร `server_url` หลัก เพื่อนำมาประกอบร่วมกับ `active_token` สร้าง QR Target URL ขึ้นมาวาดบนหน้าจอได้อย่างสมบูรณ์ ป้องกันหน้าจอค้างอยู่ที่สถานะ `Loading QR...`
 4. **การแก้ไขตารางข้อมูลสัญญาณชีพเชื่อมต่อและความคลาดเคลื่อนของเวลา (Heartbeat Database Mapping & Timezone Drift Fix):**
    - แก้ไขระบบตรวจสอบสถานะของห้องเรียน ( getESP32Status ใน `my-app/lib/esp32.ts` ) เนื่องจากระบบดั้งเดิมทำการตรวจสอบสัญญาณชีพของบอร์ดโดยการเรียกดูจากตาราง `system_settings` ( คีย์ `room_last_seen_${room}` ) แต่ส่วนขยายระบบ Edge API ได้ย้ายการอัปเดตไปที่ตาราง `esp32_heartbeats` แทน จึงเปลี่ยนมาอ่านจากตาราง `esp32_heartbeats`
    - แก้ปัญหาระบบแสดงสถานะเป็น `OFFLINE` ตลอดเวลาบนเซิร์ฟเวอร์โลคอลไทย (UTC+7) ซึ่งเกิดจากความขัดแย้งในการแปลงเขตเวลาของตารางประเภท `TIMESTAMP` ที่ไม่มีเขตเวลากำกับ (node-postgres ตีความเป็นเวลาท้องถิ่น ทำให้ค่าติดลบไป 7 ชั่วโมงหรือ 25,200 วินาที เกินขีดจำกัดออนไลน์ 120 วินาที) โดยอัปเกรดคำสั่งคิวรีให้ใช้ดึงผ่าน **`EXTRACT(EPOCH FROM last_seen)`** ซึ่งเป็นมาตรฐานวิเคราะห์สัญจรแบบสากล ทำให้คำนวณผลต่างเวลาได้อย่างแม่นยำระดับวินาทีตรงกัน 100% ทั้งบน Local Dev และ Vercel Production

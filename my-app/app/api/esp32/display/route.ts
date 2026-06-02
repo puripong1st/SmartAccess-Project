@@ -9,7 +9,7 @@ import { sbUpsert } from "@/lib/supabase-edge";
 import { cacheGet, cacheSet } from "@/lib/kv-cache";
 
 const ALLOWED_ORIGIN = (
-  process.env.NEXT_PUBLIC_APP_URL || "https://project-sigma-ivory-21.vercel.app"
+  process.env.NEXT_PUBLIC_APP_URL || "https://smartaccess-project.vercel.app"
 ).replace(/\/$/, "");
 
 const CORS = {

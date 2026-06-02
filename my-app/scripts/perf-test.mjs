@@ -17,7 +17,7 @@ const args = Object.fromEntries(
   })
 );
 
-const BASE = (args.base || "https://project-sigma-ivory-21.vercel.app").replace(/\/$/, "");
+const BASE = (args.base || "https://smartaccess-project.vercel.app").replace(/\/$/, "");
 const ROOM = args.room || "CE-401";
 const RUNS = parseInt(args.runs || "20", 10);
 

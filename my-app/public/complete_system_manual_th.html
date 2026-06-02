@@ -1250,13 +1250,13 @@ npm install
 <pre><code class="language-bash">npm run dev
 </code></pre>
 <p>เปิดเว็บ</p>
-<pre><code class="language-text">https://project-sigma-ivory-21.vercel.app
+<pre><code class="language-text">https://smartaccess-project.vercel.app
 </code></pre>
 <p>หน้า Admin</p>
-<pre><code class="language-text">https://project-sigma-ivory-21.vercel.app/admin/login
+<pre><code class="language-text">https://smartaccess-project.vercel.app/admin/login
 </code></pre>
 <p>หน้าจำลอง ESP32</p>
-<pre><code class="language-text">https://project-sigma-ivory-21.vercel.app/esp32-preview
+<pre><code class="language-text">https://smartaccess-project.vercel.app/esp32-preview
 </code></pre>
 <div class="alert-box alert-note"><strong>NOTE:</strong> ลิงก์ด้านบนเป็นเว็บไซต์จำลองบนโปรดักชันหลัก (Production URL) สำหรับรันใช้งานจริง ส่วนกรณีที่รันระบบทดสอบภายในเครื่องนักพัฒนา (Local Development) สามารถเข้าใช้งานผ่าน `http://localhost:3000`, `http://localhost:3000/admin/login` และ `http://localhost:3000/esp32-preview` ตามลำดับ
 </div><h3>3.2 ตัวแปรสภาพแวดล้อมที่ควรตั้งค่า</h3>
@@ -1299,7 +1299,7 @@ INITIAL_ADMIN_PASSWORD=admin123456
 INITIAL_ADMIN_FULL_NAME=&quot;System Administrator&quot;
 
 # ── การแจ้งเตือน &amp; เผชิญเหตุ Ops (ทางเลือก) ──
-NEXT_PUBLIC_APP_URL=https://project-sigma-ivory-21.vercel.app
+NEXT_PUBLIC_APP_URL=https://smartaccess-project.vercel.app
 DISCORD_WEBHOOK_URL=
 CRON_SECRET=some-random-cron-secret
 </code></pre>
@@ -1370,7 +1370,7 @@ CRON_SECRET=some-random-cron-secret
 <h2>5. วิธีใช้งานเว็บสำหรับ Admin</h2>
 <h3>5.1 เข้าสู่ระบบ</h3>
 <p>เปิด</p>
-<pre><code class="language-text">https://project-sigma-ivory-21.vercel.app/admin/login
+<pre><code class="language-text">https://smartaccess-project.vercel.app/admin/login
 </code></pre>
 <p>กรอก username/password ที่มีในตาราง <code>admin_users</code></p>
 <p>เมื่อ login สำเร็จ ระบบจะสร้าง JWT และเก็บใน cookie ชื่อ <code>smartaccess_admin_token</code></p>
@@ -8499,7 +8499,7 @@ INITIAL_ADMIN_PASSWORD=SecurePassword_2026!
 INITIAL_ADMIN_FULL_NAME=System Main Administrator
 </code></pre>
 </li>
-<li>รันแอปพลิเคชันหรือยิงคำร้องแบบ GET ไปหา API ระบบเพื่อกระตุ้นฟังก์ชันตรวจสอบตัวแปร:<pre><code class="language-bash">curl -I https://project-sigma-ivory-21.vercel.app/api/system/settings?seed=true
+<li>รันแอปพลิเคชันหรือยิงคำร้องแบบ GET ไปหา API ระบบเพื่อกระตุ้นฟังก์ชันตรวจสอบตัวแปร:<pre><code class="language-bash">curl -I https://smartaccess-project.vercel.app/api/system/settings?seed=true
 </code></pre>
 </li>
 <li>ตัวฟังก์ชัน in <code>lib/db.ts</code> จะเข้ารหัสลับรหัสผ่านและสร้างแถวข้อมูล <code>owner</code> ลงในตาราง <code>admin_users</code> อัตโนมัติ</li>
@@ -10792,7 +10792,7 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 <h4>71.38.2 คู่มืออาจารย์ดูแลห้อง (door_operator)</h4>
 <p><strong>ขั้นตอนการอนุมัตินักศึกษา:</strong></p>
 <ol>
-<li>เข้า <code>https://project-sigma-ivory-21.vercel.app/admin/login</code></li>
+<li>เข้า <code>https://smartaccess-project.vercel.app/admin/login</code></li>
 <li>กรอก username/password ที่ได้รับ</li>
 <li>ดูแท็บ &quot;คิวรอตรวจสอบ&quot; — เห็นรายชื่อนักศึกษารอผ่าน</li>
 <li>กดปุ่ม ✅ <strong>อนุมัติ</strong> หรือ ❌ <strong>ปฏิเสธ</strong> ข้างชื่อ</li>
@@ -12288,7 +12288,7 @@ SELECT version, COUNT(*) FROM consent_records GROUP BY version;
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
 const char* CURRENT_VERSION = &quot;1.0.0&quot;;
-const char* FIRMWARE_URL = &quot;https://project-sigma-ivory-21.vercel.app/api/esp32/firmware-ota&quot;;
+const char* FIRMWARE_URL = &quot;https://smartaccess-project.vercel.app/api/esp32/firmware-ota&quot;;
 const char* API_KEY = &quot;SUPER_SECURE_ESP32_ACCESS_TOKEN&quot;;
 
 // ฟังก์ชันดึงและติดตั้ง Root Certificate เพื่อทำ HTTPS Verification (SSL Handshake ป้องกันการสวมรอย)
@@ -12664,7 +12664,7 @@ void handleLocalOTALoop() {
 <p><strong>อัปเดตก่อนหน้า 1</strong>: 2026-05-27 22:30:00 +07:00 — ย้าย §71.19-71.23 (PDPA, ISF, CCA, T&amp;C, Privacy) ไปต่อท้าย §71.18 ให้เลขข้อเรียงถูกต้อง + เพิ่ม <strong>§71.24-71.38 จำนวน 15 บทย่อยใหม่</strong> ครอบคลุม: STRIDE/DREAD Threat Model, DFD ระดับ 0/1/2 สำหรับ PDPA DPIA, กฎหมายเพิ่มเติม (CCSA + ก.พ.อ. + กฎกระทรวง 47 + License audit), ROPA ตาม PDPA ม.39, Schematic+PCB+BOM, Relay Timing+Flyback diode physics, OpenAPI 3.0 spec, CI/CD pipeline + branch strategy, NIST 800-61 IRP + แบบฟอร์ม สคส. 72 ชม., Accessibility (Screen reader/Keyboard/ARIA/TTS/Physical), UAT + SUS questionnaire, Literature Review เปรียบเทียบงานวิจัยอื่น 6 ชิ้น, Hardware Reliability (MTBF/IP rating/Operating env/Maintenance schedule), Network Topology (VLAN + Firewall request form + Bandwidth estimation), คู่มือผู้ใช้แยกเล่ม (Student/Operator/Owner Quick Guides)</p>
 </blockquote>
 <blockquote>
-<p><strong>อัปเดตก่อนหน้า</strong>: 2026-05-27 21:44:42 +07:00 — เปลี่ยนชื่อโปรเจกต์และระบบทั้งหมดในเอกสารอ้างอิงเชิงวิชาการให้เป็น &quot;Innovative system for managing access rights and controlling classroom access via wireless network&quot;, ปรับปรุงลิงก์เป็น Production URL (project-sigma-ivory-21.vercel.app), เพิ่มหัวข้อ §71 อธิบายสถาปัตยกรรมเชิงลึกสำหรับการทำเล่มวิทยานิพนธ์รวม 18 บทย่อยเชิงปฏิบัติสมบูรณ์แบบสูงสุดเพื่อรองรับ NotebookLM อย่างเต็มสตรีม ล่าสุดอัปเดตรายละเอียดเรื่องการแบ่งแยกสิทธิ์ของแอดมินรายห้อง (คอลัมน์ allowed_rooms), นโยบายยกระดับรหัสผ่านแอดมินใหม่ (ความยาวอย่างน้อย 12 ตัวอักษร) และปรับโครงสร้างระบบแจ้งเตือนแบบแบ่งแยกตามหมวดหมู่ประเภทเหตุการณ์ลงในเนื้อหาบทเรียนหลักทั้งหมดเรียบร้อย</p>
+<p><strong>อัปเดตก่อนหน้า</strong>: 2026-05-27 21:44:42 +07:00 — เปลี่ยนชื่อโปรเจกต์และระบบทั้งหมดในเอกสารอ้างอิงเชิงวิชาการให้เป็น &quot;Innovative system for managing access rights and controlling classroom access via wireless network&quot;, ปรับปรุงลิงก์เป็น Production URL (smartaccess-project.vercel.app), เพิ่มหัวข้อ §71 อธิบายสถาปัตยกรรมเชิงลึกสำหรับการทำเล่มวิทยานิพนธ์รวม 18 บทย่อยเชิงปฏิบัติสมบูรณ์แบบสูงสุดเพื่อรองรับ NotebookLM อย่างเต็มสตรีม ล่าสุดอัปเดตรายละเอียดเรื่องการแบ่งแยกสิทธิ์ของแอดมินรายห้อง (คอลัมน์ allowed_rooms), นโยบายยกระดับรหัสผ่านแอดมินใหม่ (ความยาวอย่างน้อย 12 ตัวอักษร) และปรับโครงสร้างระบบแจ้งเตือนแบบแบ่งแยกตามหมวดหมู่ประเภทเหตุการณ์ลงในเนื้อหาบทเรียนหลักทั้งหมดเรียบร้อย</p>
 </blockquote>
 <blockquote>
 <p><strong>อัปเดตล่าสุด</strong>: 2026-05-28 16:30:00 +07:00 — <strong>คู่มือเชิงลึกและแนวปฏิบัติการอัปโหลดเฟิร์มแวร์ผ่านเว็บด้วย Supabase Storage แบบ 0% Vercel CPU Load (Lightweight &amp; Secure Cloud Firmware OTA Update Center)</strong></p>
@@ -14036,7 +14036,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 <td align="left">Verifies that CORS origins are restricted to configured hosts, and evil.com origins are not reflected.</td>
 <td align="left"><span style="color:green; font-weight:bold;">✅ ปลอดภัย (Mitigated)</span></td>
 <td align="left">8.02ms</td>
-<td align="left">Access-Control-Allow-Origin header returned: &quot;<a href="https://project-sigma-ivory-21.vercel.app">https://project-sigma-ivory-21.vercel.app</a>&quot;. Blocked cross-origin reflection successfully.</td>
+<td align="left">Access-Control-Allow-Origin header returned: &quot;<a href="https://smartaccess-project.vercel.app">https://smartaccess-project.vercel.app</a>&quot;. Blocked cross-origin reflection successfully.</td>
 </tr>
 <tr>
 <td align="left"><strong>1.8</strong></td>
@@ -17493,7 +17493,7 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <ol>
 <li><strong>การสร้างฟังก์ชันรวมศูนย์สำหรับสร้าง Headers ความปลอดภัย (<code>addZeroTrustHeaders</code>):</strong><br>เพิ่มฟังก์ชันช่วยงาน <code>addZeroTrustHeaders</code> เข้าไปในส่วนของเฟิร์มแวร์ ESP32 และส่วนโค้ดสร้างโค้ดอัตโนมัติ ซึ่งฟังก์ชันนี้จะรับผิดชอบการสร้าง <code>x-device-id</code> (ในรูปแบบ <code>esp32_[ROOM_CODE]</code>), <code>x-nonce</code> (แฮชพลวัต 16 หลักจากตัวสร้างตัวเลขสุ่มแบบฮาร์ดแวร์ <code>esp_random()</code>), <code>x-timestamp</code> (เวลาปัจจุบันตามเซิร์ฟเวอร์), และทำการลงนาม <code>x-hmac-signature</code> แบบ Payload-Inclusive HMAC V2.0 ผูกร่วมกับ API Key ที่ได้รับการ Derived มาจาก KDF ของห้องนั้น ๆ</li>
 <li><strong>การปรับใช้ในการดึงข้อมูล (Polling Request) และการซิงก์ข้อมูลนักศึกษา (Sync Student Cache):</strong><br>ปรับปรุงคำสั่ง HTTP GET ในลูปหลักของบอร์ด ESP32 และกระบวนการดึงข้อมูลรายชื่อนักศึกษาใน <code>syncStudentCache</code> ให้ทำลายระบบ V1 ดั้งเดิมออก และส่งผ่านฟังก์ชัน <code>addZeroTrustHeaders</code> แทน ส่งผลให้การยืนยันสิทธิ์ Zero-Trust V2.0 ประสบความสำเร็จ 100% ทันที</li>
-<li><strong>การพัฒนาสถาปัตยกรรมทางเลือกสำหรับการสร้างคีย์ QR (QR Target URL Construction Fallback):</strong><br>แก้ไขตรรกะในเฟิร์มแวร์เมื่อเซิร์ฟเวอร์ส่งชุดข้อมูลคำตอบแบบย่อ (Slim Payload: ซึ่งไม่มีตัวแปร <code>register_url</code> และ <code>requested_room</code>) โดยกำหนดให้บอร์ดประเมินดึงชื่อห้องจากค่าตัวแปรในบอร์ด และทำการสกัดแยกเอา Base URL (เช่น <code>https://project-sigma-ivory-21.vercel.app</code> หรือ <code>http://localhost:3000</code>) ออกมาจากตัวแปร <code>server_url</code> หลัก เพื่อนำมาประกอบร่วมกับ <code>active_token</code> สร้าง QR Target URL ขึ้นมาวาดบนหน้าจอได้อย่างสมบูรณ์ ป้องกันหน้าจอค้างอยู่ที่สถานะ <code>Loading QR...</code></li>
+<li><strong>การพัฒนาสถาปัตยกรรมทางเลือกสำหรับการสร้างคีย์ QR (QR Target URL Construction Fallback):</strong><br>แก้ไขตรรกะในเฟิร์มแวร์เมื่อเซิร์ฟเวอร์ส่งชุดข้อมูลคำตอบแบบย่อ (Slim Payload: ซึ่งไม่มีตัวแปร <code>register_url</code> และ <code>requested_room</code>) โดยกำหนดให้บอร์ดประเมินดึงชื่อห้องจากค่าตัวแปรในบอร์ด และทำการสกัดแยกเอา Base URL (เช่น <code>https://smartaccess-project.vercel.app</code> หรือ <code>http://localhost:3000</code>) ออกมาจากตัวแปร <code>server_url</code> หลัก เพื่อนำมาประกอบร่วมกับ <code>active_token</code> สร้าง QR Target URL ขึ้นมาวาดบนหน้าจอได้อย่างสมบูรณ์ ป้องกันหน้าจอค้างอยู่ที่สถานะ <code>Loading QR...</code></li>
 <li><strong>การแก้ไขตารางข้อมูลสัญญาณชีพเชื่อมต่อและความคลาดเคลื่อนของเวลา (Heartbeat Database Mapping &amp; Timezone Drift Fix):</strong><ul>
 <li>แก้ไขระบบตรวจสอบสถานะของห้องเรียน ( getESP32Status ใน <code>my-app/lib/esp32.ts</code> ) เนื่องจากระบบดั้งเดิมทำการตรวจสอบสัญญาณชีพของบอร์ดโดยการเรียกดูจากตาราง <code>system_settings</code> ( คีย์ <code>room_last_seen_${room}</code> ) แต่ส่วนขยายระบบ Edge API ได้ย้ายการอัปเดตไปที่ตาราง <code>esp32_heartbeats</code> แทน จึงเปลี่ยนมาอ่านจากตาราง <code>esp32_heartbeats</code></li>
 <li>แก้ปัญหาระบบแสดงสถานะเป็น <code>OFFLINE</code> ตลอดเวลาบนเซิร์ฟเวอร์โลคอลไทย (UTC+7) ซึ่งเกิดจากความขัดแย้งในการแปลงเขตเวลาของตารางประเภท <code>TIMESTAMP</code> ที่ไม่มีเขตเวลากำกับ (node-postgres ตีความเป็นเวลาท้องถิ่น ทำให้ค่าติดลบไป 7 ชั่วโมงหรือ 25,200 วินาที เกินขีดจำกัดออนไลน์ 120 วินาที) โดยอัปเกรดคำสั่งคิวรีให้ใช้ดึงผ่าน <strong><code>EXTRACT(EPOCH FROM last_seen)</code></strong> ซึ่งเป็นมาตรฐานวิเคราะห์สัญจรแบบสากล ทำให้คำนวณผลต่างเวลาได้อย่างแม่นยำระดับวินาทีตรงกัน 100% ทั้งบน Local Dev และ Vercel Production</li>

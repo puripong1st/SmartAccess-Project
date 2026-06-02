@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       ],
       footer: {
         text: `ทดสอบระบบโดยแอดมิน: ${admin.full_name} | SmartAccess`,
-        icon_url: "https://project-sigma-ivory-21.vercel.app/favicon.ico"
+        icon_url: "https://smartaccess-project.vercel.app/favicon.ico"
       },
       timestamp: new Date().toISOString(),
     };
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "SmartAccess BOT",
-        avatar_url: "https://project-sigma-ivory-21.vercel.app/favicon.ico",
+        avatar_url: "https://smartaccess-project.vercel.app/favicon.ico",
         embeds: [embed],
       }),
     });

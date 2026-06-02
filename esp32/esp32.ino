@@ -46,7 +46,7 @@
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
 const char *CURRENT_VERSION = "1.0.0";
 const char *FIRMWARE_URL =
-    "https://project-sigma-ivory-21.vercel.app/api/esp32/firmware-ota";
+    "https://smartaccess-project.vercel.app/api/esp32/firmware-ota";
 
 WiFiServer localServer(80); // เว็บเซิร์ฟเวอร์ LAN สำหรับคิวเปิดประตู/โหมดออฟไลน์
 bool localServerStarted = false;
@@ -596,24 +596,27 @@ String generateHMAC(const String &payload, const String &key) {
 void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
   time_t nowTs = time(nullptr);
   String timestampStr = String((long)nowTs);
-  
+
   String device_id = "esp32_" + String(room_code);
-  
-  // Nonce generation: using esp_random to prevent replay attacks (Zero-Trust V2.0)
+
+  // Nonce generation: using esp_random to prevent replay attacks (Zero-Trust
+  // V2.0)
   uint32_t r1 = esp_random();
   uint32_t r2 = esp_random();
   char nonceBuf[17];
   sprintf(nonceBuf, "%08x%08x", r1, r2);
   String nonce = String(nonceBuf);
-  
-  String body_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; // SHA-256 of empty string
-  
+
+  String body_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7"
+                     "852b855"; // SHA-256 of empty string
+
   // 1. KDF: Derive device secret key
   String device_secret = generateHMACHex(device_id, String(api_key));
-  
+
   // 2. Construct Payload: "deviceId:timestampStr:nonce:endpointPath:bodyHash"
-  String hmacPayload = device_id + ":" + timestampStr + ":" + nonce + ":" + endpoint + ":" + body_hash;
-  
+  String hmacPayload = device_id + ":" + timestampStr + ":" + nonce + ":" +
+                       endpoint + ":" + body_hash;
+
   // 3. Compute signature
   String signature = generateHMACHex(hmacPayload, device_secret);
 
@@ -999,7 +1002,7 @@ void syncTimeViaHTTP() {
     timeUrl = timeUrl.substring(0, displayIdx) + "/time";
   } else {
     timeUrl =
-        "https://project-sigma-ivory-21.vercel.app/api/esp32/time"; // Fallback
+        "https://smartaccess-project.vercel.app/api/esp32/time"; // Fallback
   }
 
   DBG("Attempting HTTP Time Sync Fallback via: " + timeUrl);
@@ -1314,9 +1317,9 @@ void loop() {
 
           String qrText = "";
           if (active_token) {
-            String baseUrl = "https://project-sigma-ivory-21.vercel.app";
+            String baseUrl = "https://smartaccess-project.vercel.app";
             String currentRoom = String(room_code);
-            
+
             if (register_url) {
               String regUrl = String(register_url);
               int idx = regUrl.indexOf("/?room=");
@@ -1331,11 +1334,11 @@ void loop() {
                 baseUrl = sUrl.substring(0, apiIdx);
               }
             }
-            
+
             if (requested_room) {
               currentRoom = String(requested_room);
             }
-            
+
             qrText = baseUrl + "/?scan=" + String(active_token) +
                      "&room=" + currentRoom;
           }
