@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 11:30:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 14:43:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1064,6 +1064,7 @@
 <li><a href="#sec-73-17">73.17 การออกแบบโครงสร้างความก้าวหน้าและการแสดงสถานะแบบอะซิงโครนัส</a></li>
 <li><a href="#sec-73-19">73.19 โครงสร้างแถบควบคุมสารบัญนำทางพลวัตแบบประสานสัญจรร่วมกัน</a></li>
 <li><a href="#sec-73-30">73.30 การปรับปรุงการแสดงผลแบบสัญจรและแถบควบคุมแบบตอบสนองบนสมาร์ตโฟนและ iPad (Responsive UI/UX iPad and Mobile Admin Dashboard Overhaul)</a></li>
+<li><a href="#sec-73-47">73.47 การปรับปรุงระดับความปลอดภัยและการเข้าถึงของปุ่มสวิตช์ควบคุมห้องเรียน (SmartAccess Classroom Toggle Switches UI/UX Accessibility &amp; Focus Restoration Overhaul)</a></li>
 </ul>
 <hr>
 <h3>📕 บทที่ 4: ผลการดำเนินงานและการทดสอบระบบ (Results &amp; Evaluation)</h3>
@@ -17592,7 +17593,50 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>บันทึกรายละเอียดเชิงลึกและอัปเดตคู่มือระบบเรื่องการแก้ไขสถานะ OFFLINE ที่เกิดจากสถาปัตยกรรมของ Edge Runtime (§73.46)</td>
 </tr>
 </tbody></table>
-
+<hr>
+<p><a id="sec-73-47"></a></p>
+<h3>73.47 การปรับปรุงระดับความปลอดภัยและการเข้าถึงของปุ่มสวิตช์ควบคุมห้องเรียน (SmartAccess Classroom Toggle Switches UI/UX Accessibility &amp; Focus Restoration Overhaul)</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 2 มิถุนายน 2026 (14:43 น. ICT)</p>
+<p>ตรวจพบและดำเนินการแก้ไขปัญหาการใช้งานสำหรับผู้พิการและผู้ใช้คีย์บอร์ดนำทาง (Accessibility) บริเวณปุ่มสวิตช์เปิด-ปิดการตั้งค่าการทำงานรายห้องเรียน บนหน้าแดชบอร์ดผู้ดูแลระบบ:</p>
+<h4>73.47.1 ปัญหาการหลุดของโฟกัสคีย์บอร์ดจากการ Remount (React Component Nested Definition Render Bug)</h4>
+<ul>
+<li><strong>อาการของปัญหา:</strong> <ul>
+<li>ภายในไฟล์ควบคุมส่วนจัดระดับห้องเรียน (<code>rooms/page.tsx</code>) คอมโพเนนต์สวิตช์เลือกเปิด-ปิด <code>Toggle</code> (สำหรับควบคุม Auto-Approve และ Auto-Fill) ได้ถูกประกาศแบบซ้อนโครงสร้าง (Nested Definition) อยู่ภายใต้ lambda expression ภายในฟังก์ชันการแสดงผลหลัก</li>
+<li>พฤติกรรมนี้เป็น Anti-pattern ที่สำคัญของ React เนื่องจากเมื่อผู้ใช้คลิกสลับค่าสถานะ (เช่น สลับปิด/เปิด Auto-Approve) State ของหน้าจอจะเปลี่ยนไป ส่งผลให้ฟังก์ชันระดับพ่อประมวลผลเรนเดอร์ใหม่ และทริกเกอร์สร้างฟังก์ชัน <code>Toggle</code> ขึ้นมาใหม่ในหน่วยความจำทันที </li>
+<li>ผลลัพธ์คือ React จำเป็นต้องถอดถอนปุ่ม Toggle ตัวเก่าออก (Unmount) แล้วสร้างปุ่มใหม่เข้ามาแทนที่ใน DOM Tree เสมอ ทำให้โฟกัสของคีย์บอร์ดนำทาง (Keyboard Focus) ที่สถิตอยู่ที่ปุ่มนั้นหลุดหายไปทันทีหลังกด ส่งผลให้ผู้ใช้ที่นำทางด้วยคีย์บอร์ด (Sam) ต้องทำการกด Tab ไล่หน้าใหม่เพื่อเรียกคืนโฟกัสในคำสั่งถัดไป เป็นการสร้าง Cognitive Overload สูงมาก</li>
+</ul>
+</li>
+<li><strong>การแก้ไขและอัปเดตสถาปัตยกรรม:</strong><ol>
+<li><strong>การรีแฟกเตอร์แยกส่วนประกอบ (Component Extraction):</strong> ดำเนินการตัดฟังก์ชัน <code>Toggle</code> ออกจาก Inner Render Scope ทั้งหมด และย้ายขึ้นไปสร้างเป็นคอมโพเนนต์อิสระระดับ Top-level ของไฟล์ <code>rooms/page.tsx</code></li>
+<li><strong>ความเสถียรในการเรนเดอร์ (Render Stability):</strong> เมื่อ <code>Toggle</code> เป็นอิสระและใช้รูปแบบการรับค่าผ่าน React Props ตัวแอปพลิเคชันจะอัปเดตเปลี่ยนค่าสถานะผ่านการ Re-render Property ปกติ โดยไม่มีการทำลายและสร้างปุ่มใหม่ใน DOM ส่งผลให้โฟกัสแป้นพิมพ์ (Focus state) ตรึงอยู่กับที่เดิมอย่างสมบูรณ์แบบ</li>
+<li><strong>มาตรฐานการเข้าถึงและการตอบรับ (Accessible Styling):</strong> ตรึงการแสดงผลปุ่มด้วย Class <code>.smartaccess-toggle-switch</code> ร่วมกับ Attributes <code>role=&quot;switch&quot;</code>, <code>aria-checked</code> และ <code>aria-label</code> พร้อมให้เอฟเฟกต์ Outline เรืองแสงสีม่วงเมื่อสัมผัสด้วย Tab คีย์บอร์ดนำทางตามที่กำหนดใน CSS</li>
+</ol>
+</li>
+</ul>
+<h4>73.47.2 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/admin/dashboard/rooms/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ย้ายการประกาศ <code>Toggle</code> สวิตช์ขึ้นไปเป็น Top-level component ป้องกันบั๊ก unmount ปล่อยโฟกัสหลุด</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดแผนการแก้ไขเชิงลึกด้านการเข้าถึงสากลของสวิตช์ควบคุมในระบบแดชบอร์ด (§73.47)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
       </article>
     </main>
   </div>

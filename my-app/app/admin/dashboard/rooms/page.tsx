@@ -52,6 +52,34 @@ const TrashIcon = () => (
   </svg>
 );
 
+const Toggle = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) => (
+  <button
+    type="button"
+    onClick={onToggle}
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    className="smartaccess-toggle-switch"
+    style={{
+      width: 44,
+      height: 24,
+      borderRadius: 13,
+      background: on ? "linear-gradient(135deg,var(--smartaccess-purple),var(--edu-pink))" : "rgba(255,255,255,0.08)",
+      border: "1px solid var(--border)",
+      position: "relative",
+      cursor: "pointer",
+      padding: 0,
+      flexShrink: 0,
+      display: "flex",
+      alignItems: "center",
+      outline: "none",
+      transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+    }}
+  >
+    <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#FFF", position: "absolute", left: on ? 22 : 3, transition: "left 0.2s cubic-bezier(0.4,0,0.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+  </button>
+);
+
 export default function RoomsPage() {
   const {
     isOwner,
@@ -467,33 +495,6 @@ export default function RoomsPage() {
 
                   {expandedRoomSettings.has(roomItem.room) && (() => {
                     const cfg = roomConfigs[roomItem.room] ?? defaultRoomConfig();
-                    const Toggle = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) => (
-                      <button
-                        type="button"
-                        onClick={onToggle}
-                        role="switch"
-                        aria-checked={on}
-                        aria-label={label}
-                        className="smartaccess-toggle-switch"
-                        style={{
-                          width: 44,
-                          height: 24,
-                          borderRadius: 13,
-                          background: on ? "linear-gradient(135deg,var(--smartaccess-purple),var(--edu-pink))" : "rgba(255,255,255,0.08)",
-                          border: "1px solid var(--border)",
-                          position: "relative",
-                          cursor: "pointer",
-                          padding: 0,
-                          flexShrink: 0,
-                          display: "flex",
-                          alignItems: "center",
-                          outline: "none",
-                          transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
-                        }}
-                      >
-                        <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#FFF", position: "absolute", left: on ? 22 : 3, transition: "left 0.2s cubic-bezier(0.4,0,0.2,1)", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-                      </button>
-                    );
                     const activeDays = cfg.auto_approve_days ? cfg.auto_approve_days.split(",").map(Number).filter(n => !isNaN(n)) : [];
                     const dayDefs = [{ val: 1, label: "จ.", fullName: "จันทร์", color: "#EAB308" }, { val: 2, label: "อ.", fullName: "อังคาร", color: "#EC4899" }, { val: 3, label: "พ.", fullName: "พุธ", color: "#10B981" }, { val: 4, label: "พฤ.", fullName: "พฤหัสบดี", color: "#F97316" }, { val: 5, label: "ศ.", fullName: "ศุกร์", color: "#3B82F6" }, { val: 6, label: "ส.", fullName: "เสาร์", color: "#8B5CF6" }, { val: 0, label: "อา.", fullName: "อาทิตย์", color: "#EF4444" }];
                      return (
