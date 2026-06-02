@@ -83,14 +83,12 @@ const htmlTemplate = `<!DOCTYPE html>
   
   <style>
     :root {
-      --primary: #7C3AED;        /* Purple */
+      --primary: #7C3AED;      /* Purple */
       --primary-dark: #6D28D9;
-      --primary-light: #A78BFA;
       --primary-pale: rgba(124, 58, 237, 0.05);
-      --secondary: #DB2777;      /* Pink */
+      --secondary: #DB2777;    /* Pink */
       --secondary-dark: #C2185B;
       --bg-primary: #F8FAFC;
-      --bg-primary-blur: rgba(248, 250, 252, 0.85);
       --bg-card: #FFFFFF;
       --text-main: #1E293B;
       --text-muted: #64748B;
@@ -99,13 +97,10 @@ const htmlTemplate = `<!DOCTYPE html>
       --shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.05), 0 8px 10px -6px rgba(124, 58, 237, 0.05);
       --font-th: 'Sarabun', sans-serif;
       --font-mono: 'Fira Code', monospace;
-      --font-display: 'Inter', sans-serif;
-      --max-width: 72ch;
     }
 
     body.dark-mode {
       --bg-primary: #0F172A;
-      --bg-primary-blur: rgba(15, 23, 42, 0.85);
       --bg-card: #1E293B;
       --text-main: #F1F5F9;
       --text-muted: #94A3B8;
@@ -158,11 +153,10 @@ const htmlTemplate = `<!DOCTYPE html>
 
     .mobile-logo {
       font-weight: 800;
-      font-size: 16px;
+      font-size: 17px;
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      font-family: var(--font-display);
     }
 
     .btn-hamburger {
@@ -194,11 +188,11 @@ const htmlTemplate = `<!DOCTYPE html>
       transition: transform 0.3s ease;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow: hidden; /* Pin header and search input, scroll toc-menu only */
     }
 
     .sidebar-header {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       padding-bottom: 16px;
       border-bottom: 2px dashed var(--border);
       text-align: center;
@@ -212,16 +206,13 @@ const htmlTemplate = `<!DOCTYPE html>
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 4px;
-      font-family: var(--font-display);
     }
 
     .sidebar-subtitle {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1.5px;
-      font-weight: 600;
-      font-family: var(--font-display);
+      letter-spacing: 1px;
     }
 
     .sidebar-search {
@@ -233,15 +224,14 @@ const htmlTemplate = `<!DOCTYPE html>
       color: var(--text-main);
       font-family: var(--font-th);
       font-size: 13px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s;
       flex-shrink: 0;
     }
 
     .sidebar-search:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
     }
 
     .toc-menu {
@@ -255,7 +245,7 @@ const htmlTemplate = `<!DOCTYPE html>
 
     /* Slick Premium Scrollbar for TOC Menu */
     .toc-menu::-webkit-scrollbar {
-      width: 5px;
+      width: 6px;
     }
     .toc-menu::-webkit-scrollbar-track {
       background: transparent;
@@ -263,14 +253,15 @@ const htmlTemplate = `<!DOCTYPE html>
     .toc-menu::-webkit-scrollbar-thumb {
       background: var(--border);
       border-radius: 3px;
+      transition: background 0.2s;
     }
     .toc-menu::-webkit-scrollbar-thumb:hover {
-      background: var(--primary-light);
+      background: var(--primary);
     }
 
     .toc-group-header {
       font-weight: 700;
-      font-size: 13px;
+      font-size: 13.5px;
       color: var(--primary);
       padding: 10px 12px;
       margin-top: 10px;
@@ -291,10 +282,11 @@ const htmlTemplate = `<!DOCTYPE html>
       border-left-color: var(--primary);
     }
 
+    /* CSS Grid accordion trick: animates height:0 → height:auto without knowing scrollHeight */
     .toc-group-list-wrapper {
       display: grid;
       grid-template-rows: 1fr;
-      transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out;
+      transition: grid-template-rows 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease-out;
       opacity: 1;
     }
     .toc-group-list-wrapper.collapsed {
@@ -308,12 +300,12 @@ const htmlTemplate = `<!DOCTYPE html>
       margin: 0;
       margin-top: 4px;
       padding-left: 4px;
-      overflow: hidden;
+      overflow: hidden; /* Required for grid trick: clip at 0fr */
     }
 
     .toc-group-arrow {
-      font-size: 9px;
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      font-size: 10px;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       opacity: 0.7;
     }
 
@@ -322,7 +314,7 @@ const htmlTemplate = `<!DOCTYPE html>
     }
 
     .toc-menu li {
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
     .toc-menu a {
@@ -330,9 +322,9 @@ const htmlTemplate = `<!DOCTYPE html>
       padding: 8px 12px;
       color: var(--text-main);
       text-decoration: none;
-      font-size: 13px;
+      font-size: 13.5px;
       border-radius: 8px;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -346,241 +338,91 @@ const htmlTemplate = `<!DOCTYPE html>
 
     .toc-menu a.active {
       background-color: var(--primary-pale);
-      color: var(--primary-dark);
+      color: var(--primary);
       font-weight: 700;
       border-left: 3px solid var(--primary);
       border-radius: 0 8px 8px 0;
       padding-left: 16px;
     }
 
-    body.dark-mode .toc-menu a.active {
-      color: var(--primary-light);
-    }
-
     .toc-menu a.toc-h3 {
-      padding-left: 20px;
-      font-size: 12px;
-      opacity: 0.8;
+      padding-left: 24px;
+      font-size: 12.5px;
+      opacity: 0.85;
     }
 
     .toc-menu a.toc-h3:hover {
-      padding-left: 24px;
+      padding-left: 28px;
     }
 
     .toc-menu a.toc-h3.active {
-      padding-left: 24px;
+      padding-left: 28px;
     }
 
     /* Main Content Area */
     .main-content {
       flex: 1;
-      padding: 40px 48px;
+      padding: 48px 64px;
       overflow-x: hidden;
       background-color: var(--bg-primary);
       min-width: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .content-wrapper-max {
-      width: 100%;
-      max-width: var(--max-width);
-      display: flex;
-      flex-direction: column;
     }
 
     .content-card {
       background-color: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 48px;
+      border-radius: 20px;
+      padding: 56px;
       box-shadow: var(--shadow);
       transition: background-color 0.3s, border-color 0.3s;
-      position: relative;
-    }
-
-    /* 📌 Segmented Tabs Navigation at Top */
-    .manual-tabs-container {
-      position: sticky;
-      top: 0;
-      z-index: 95;
-      background: var(--bg-primary-blur);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 16px 0;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      transition: background-color 0.3s, border-color 0.3s;
-    }
-
-    .manual-tabs-scroller {
-      width: 100%;
-      max-width: var(--max-width);
-      overflow-x: auto;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-
-    .manual-tabs-scroller::-webkit-scrollbar {
-      display: none;
-    }
-
-    .manual-tabs {
-      position: relative;
-      display: flex;
-      background: rgba(124, 58, 237, 0.04);
-      border: 1px solid var(--border);
-      padding: 4px;
-      border-radius: 12px;
-      width: max-content;
-      margin: 0 auto;
-      gap: 2px;
-      transition: background-color 0.3s, border-color 0.3s;
-    }
-
-    body.dark-mode .manual-tabs {
-      background: rgba(139, 92, 246, 0.05);
-    }
-
-    .tab-btn {
-      position: relative;
-      background: transparent;
-      border: none;
-      padding: 8px 16px;
-      font-family: var(--font-th);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-radius: 8px;
-      z-index: 2;
-      transition: color 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-
-    .tab-btn:hover {
-      color: var(--primary);
-    }
-
-    .tab-btn.active {
-      color: var(--primary-dark);
-    }
-
-    body.dark-mode .tab-btn.active {
-      color: var(--primary-light);
-    }
-
-    .tabs-slider-pill {
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      height: calc(100% - 8px);
-      background: var(--bg-card);
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(124, 58, 237, 0.06), 0 2px 4px rgba(0, 0, 0, 0.02);
-      z-index: 1;
-      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      pointer-events: none;
-      border: 1px solid rgba(124, 58, 237, 0.1);
-    }
-
-    body.dark-mode .tabs-slider-pill {
-      background: #243049;
-      border-color: rgba(167, 139, 250, 0.15);
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    /* 📊 Reading Progress Bar */
-    .reading-progress-container {
-      width: 100%;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin-bottom: 32px;
-      overflow: hidden;
-      flex-shrink: 0;
-      transition: background-color 0.3s;
-    }
-
-    .reading-progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-      border-radius: 2px;
-      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* 📖 Manual Section Layout & Switch Animations */
-    .manual-section {
-      display: none;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity 0.2s ease-out, transform 0.2s ease-out;
-    }
-
-    .manual-section.active {
-      display: block;
-      opacity: 1;
-      transform: translateY(0);
     }
 
     /* Typography */
     h1 {
-      font-size: 30px;
+      font-size: 32px;
       font-weight: 800;
       color: var(--primary);
-      line-height: 1.35;
+      line-height: 1.3;
       margin-top: 0;
       margin-bottom: 24px;
-      border-bottom: 2px solid var(--border);
+      border-bottom: 3px solid var(--border);
       padding-bottom: 16px;
-      text-wrap: balance;
     }
 
     h2 {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 750;
       color: var(--primary-dark);
-      margin-top: 36px;
+      margin-top: 48px;
       margin-bottom: 20px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid var(--border);
       padding-bottom: 8px;
-      text-wrap: balance;
     }
 
     body.dark-mode h2 {
-      color: var(--primary-light);
+      color: #A78BFA;
     }
 
     h3 {
-      font-size: 17.5px;
+      font-size: 19px;
       font-weight: 700;
       color: var(--secondary);
-      margin-top: 28px;
-      margin-bottom: 14px;
-      text-wrap: balance;
+      margin-top: 32px;
+      margin-bottom: 16px;
     }
 
     p, li {
       color: var(--text-main);
-      font-size: 15px;
-      line-height: 1.75;
+      font-size: 15.5px;
     }
 
     ul, ol {
-      padding-left: 20px;
+      padding-left: 24px;
       margin-bottom: 20px;
     }
 
     li {
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     /* Links */
@@ -588,11 +430,9 @@ const htmlTemplate = `<!DOCTYPE html>
       color: var(--primary);
       text-decoration: none;
       font-weight: 600;
-      transition: color 0.15s;
     }
 
     a:hover {
-      color: var(--primary-dark);
       text-decoration: underline;
     }
 
@@ -600,11 +440,9 @@ const htmlTemplate = `<!DOCTYPE html>
     .table-container {
       width: 100%;
       overflow-x: auto;
-      margin: 24px 0;
-      border-radius: 10px;
+      margin: 28px 0;
+      border-radius: 8px;
       border: 1px solid var(--border);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-      background-color: var(--bg-card);
     }
 
     table {
@@ -621,71 +459,30 @@ const htmlTemplate = `<!DOCTYPE html>
     }
 
     th {
-      background-color: rgba(124, 58, 237, 0.03);
+      background-color: var(--bg-primary);
       font-weight: 700;
       color: var(--primary-dark);
     }
-    
-    body.dark-mode th {
-      background-color: rgba(167, 139, 250, 0.04);
-      color: var(--primary-light);
-    }
 
     tr:nth-child(even) {
-      background-color: rgba(124, 58, 237, 0.01);
+      background-color: rgba(124, 58, 237, 0.02);
     }
 
-    /* Code Blocks syntax styling */
-    .code-block-wrapper {
-      position: relative;
-      margin: 20px 0;
-    }
-
-    .code-block-wrapper:hover .btn-copy-code {
-      opacity: 1;
-    }
-
-    .btn-copy-code {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #E2E8F0;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-family: var(--font-th);
-      font-weight: 600;
-      cursor: pointer;
-      opacity: 0;
-      transition: all 0.2s ease;
-      z-index: 5;
-    }
-
-    .btn-copy-code:hover {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-      transform: translateY(-1px);
-    }
-
+    /* Code Blocks - STRICT READABILITY FIX */
     pre {
       background-color: var(--code-bg) !important;
-      color: #F8FAFC !important;
-      border-radius: 10px;
-      padding: 18px !important;
+      color: #F8FAFC !important; /* Bright white/gray text */
+      border-radius: 12px;
+      padding: 20px !important;
       overflow-x: auto;
-      margin: 0 !important;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      margin: 24px 0;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     }
 
     code {
       font-family: var(--font-mono);
-      font-size: 13px;
-      background-color: rgba(124, 58, 237, 0.06);
+      font-size: 13.5px;
+      background-color: rgba(124, 58, 237, 0.08);
       color: var(--primary-dark);
       padding: 2px 6px;
       border-radius: 6px;
@@ -693,6 +490,7 @@ const htmlTemplate = `<!DOCTYPE html>
       overflow-wrap: break-word;
     }
 
+    /* Prevent ugly code text wrapping inside tables */
     table code {
       white-space: nowrap;
       word-break: normal;
@@ -700,31 +498,33 @@ const htmlTemplate = `<!DOCTYPE html>
 
     body.dark-mode code {
       color: #F472B6;
-      background-color: rgba(219, 39, 119, 0.12);
+      background-color: rgba(219, 39, 119, 0.15);
     }
 
     pre code {
       background-color: transparent !important;
-      color: #E2E8F0 !important;
+      color: #E2E8F0 !important; /* Bright text for dark background */
       padding: 0 !important;
       border-radius: 0;
+      word-break: normal;
     }
 
     /* Mermaid Diagrams Styling */
     .mermaid {
       background: white !important;
-      padding: 20px;
+      padding: 24px;
       border-radius: 12px;
       border: 1px solid var(--border);
-      margin: 24px 0;
+      margin: 28px 0;
       display: flex;
       justify-content: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      box-shadow: var(--shadow);
       overflow-x: auto;
-      position: relative;
+      position: relative; /* Added for absolute positioning of download button */
       transition: background-color 0.3s, border-color 0.3s;
     }
 
+    /* Mermaid Loader Skeleton & Spinner */
     .mermaid-loader-skeleton {
       display: flex;
       flex-direction: column;
@@ -732,17 +532,18 @@ const htmlTemplate = `<!DOCTYPE html>
       justify-content: center;
       gap: 12px;
       width: 100%;
-      min-height: 200px;
+      min-height: 250px;
       background: rgba(248, 250, 252, 0.4);
       border-radius: 8px;
+      transition: background-color 0.3s;
     }
     body.dark-mode .mermaid-loader-skeleton {
       background: rgba(30, 41, 59, 0.4);
     }
     .mermaid-loader-skeleton .spinner {
-      width: 28px;
-      height: 28px;
-      border: 3px solid rgba(124, 58, 237, 0.12);
+      width: 32px;
+      height: 32px;
+      border: 3.5px solid rgba(124, 58, 237, 0.15);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: mermaid-spin 1s linear infinite;
@@ -751,12 +552,15 @@ const htmlTemplate = `<!DOCTYPE html>
       to { transform: rotate(360deg); }
     }
 
+    /* Mermaid text readability and spacing fixes */
     .mermaid svg {
       font-family: var(--font-th) !important;
       max-width: 100%;
       height: auto;
     }
 
+    /* CRITICAL FIX: ป้องกันตัวอักษรไทย (สระบน/ล่าง วรรณยุกต์) ถูกตัดขอบกล่อง
+       foreignObject ของ Mermaid ตั้ง overflow:hidden เป็นค่าเริ่มต้น ทำให้ส่วนหางอักษรหาย */
     .mermaid svg foreignObject {
       overflow: visible !important;
     }
@@ -766,20 +570,21 @@ const htmlTemplate = `<!DOCTYPE html>
       overflow: visible !important;
     }
 
+    /* Support for beautiful HTML labels inside Mermaid nodes (v10+ foreignObject) */
     .mermaid div,
     .mermaid span,
     .mermaid div.label,
     .mermaid span.label,
     .mermaid p {
       font-family: var(--font-th) !important;
-      line-height: 1.6 !important;
-      font-size: 13px !important;
+      line-height: 1.6 !important;     /* เพิ่ม line-height กันสระบน/ล่างชนกันและถูกตัด */
+      font-size: 13.5px !important;
       color: #1E293B !important;
       font-weight: 500 !important;
-      white-space: nowrap;
+      white-space: nowrap;             /* ให้ Mermaid วัดความกว้างเต็มบรรทัด ไม่หักบรรทัดมั่ว */
       overflow: visible !important;
     }
-    
+    /* ป้าย node ใน flowchart — เผื่อพื้นที่แนวตั้งเล็กน้อย */
     .mermaid svg .node .label {
       overflow: visible !important;
     }
@@ -795,26 +600,28 @@ const htmlTemplate = `<!DOCTYPE html>
     .mermaid .edgeLabel rect {
       fill: #FFFFFF !important;
       opacity: 0.95 !important;
-      rx: 4px;
+      rx: 4px; /* Rounded corners for label boxes */
     }
     
     .mermaid .edgeLabel text {
       fill: #1E293B !important;
-      font-size: 11px !important;
+      font-size: 12px !important;
       font-weight: 600 !important;
     }
 
+    /* 🌓 COMPREHENSIVE DARK MODE DIALECT FOR MERMAID DIAGRAMS */
     body.dark-mode .mermaid {
-      background: #1E293B !important;
+      background: #1E293B !important; /* Premium dark background */
       border-color: #334155 !important;
     }
 
+    /* Dark Mode Flowcharts nodes styling */
     body.dark-mode .mermaid svg g.node rect,
     body.dark-mode .mermaid svg g.node circle,
     body.dark-mode .mermaid svg g.node polygon,
     body.dark-mode .mermaid svg g.node path {
-      fill: #2E1065 !important;
-      stroke: #A78BFA !important;
+      fill: #2E1065 !important; /* Deep royal dark purple */
+      stroke: #A78BFA !important; /* Glowing light purple border */
     }
 
     body.dark-mode .mermaid svg g.node .label,
@@ -831,22 +638,23 @@ const htmlTemplate = `<!DOCTYPE html>
     body.dark-mode .mermaid svg .noteText tspan,
     body.dark-mode .mermaid svg .labelText,
     body.dark-mode .mermaid svg .labelText tspan {
-      fill: #F8FAFC !important;
+      fill: #F8FAFC !important; /* Bright crisp text */
       color: #F8FAFC !important;
     }
 
     body.dark-mode .mermaid svg .edgePath .path {
-      stroke: #94A3B8 !important;
+      stroke: #94A3B8 !important; /* Bright silver arrow lines */
     }
 
     body.dark-mode .mermaid svg .edgeLabel rect {
-      fill: #1E293B !important;
+      fill: #1E293B !important; /* Dark overlay box under text on arrows */
     }
 
     body.dark-mode .mermaid svg .edgeLabel text {
-      fill: #F8FAFC !important;
+      fill: #F8FAFC !important; /* Crisp text on arrows */
     }
 
+    /* Dark Mode Sequence Diagrams elements */
     body.dark-mode .mermaid svg .actor {
       fill: #2E1065 !important;
       stroke: #A78BFA !important;
@@ -858,7 +666,7 @@ const htmlTemplate = `<!DOCTYPE html>
     }
 
     body.dark-mode .mermaid svg line {
-      stroke: #94A3B8 !important;
+      stroke: #94A3B8 !important; /* Bright connector lines */
     }
 
     body.dark-mode .mermaid svg .messageText {
@@ -884,7 +692,7 @@ const htmlTemplate = `<!DOCTYPE html>
     }
 
     body.dark-mode .mermaid svg .note {
-      fill: #312E81 !important;
+      fill: #312E81 !important; /* Deep dark indigo for notes */
       stroke: #818CF8 !important;
     }
 
@@ -892,65 +700,39 @@ const htmlTemplate = `<!DOCTYPE html>
       fill: #F8FAFC !important;
     }
 
-    /* 🛡️ Alert Boxes (Callouts) - Bulletproof complete border */
+    /* Alert Boxes (Callouts) */
     .alert-box {
       padding: 16px 20px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin: 20px 0;
-      background-color: var(--primary-pale);
+      border-left: 4px solid #7C3AED;
+      border-radius: 8px;
+      margin: 24px 0;
+      background-color: rgba(124, 58, 237, 0.04);
       font-size: 14.5px;
-      line-height: 1.6;
-    }
-
-    .alert-box strong {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      padding: 2px 8px;
-      border-radius: 4px;
-      color: white;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      font-family: var(--font-display);
     }
 
     .alert-note {
-      border-color: #93C5FD;
+      border-left-color: #3B82F6;
       background-color: rgba(59, 130, 246, 0.04);
     }
-    .alert-note strong {
-      background-color: #3B82F6;
-    }
     .alert-tip {
-      border-color: #34D399;
+      border-left-color: #10B981;
       background-color: rgba(16, 185, 129, 0.04);
     }
-    .alert-tip strong {
-      background-color: #10B981;
-    }
     .alert-warning {
-      border-color: #FBBF24;
+      border-left-color: #F59E0B;
       background-color: rgba(245, 158, 11, 0.04);
     }
-    .alert-warning strong {
-      background-color: #D97706;
-    }
     .alert-caution {
-      border-color: #F87171;
+      border-left-color: #EF4444;
       background-color: rgba(239, 68, 68, 0.04);
-    }
-    .alert-caution strong {
-      background-color: #EF4444;
     }
 
     /* Section Actions wrapper and button styles */
     .section-actions {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      margin-left: 12px;
+      gap: 12px;
+      margin-left: 16px;
       vertical-align: middle;
     }
 
@@ -958,7 +740,7 @@ const htmlTemplate = `<!DOCTYPE html>
       background: rgba(124, 58, 237, 0.06);
       border: 1px solid rgba(124, 58, 237, 0.15);
       color: var(--primary);
-      padding: 4px 8px;
+      padding: 4px 10px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: 700;
@@ -974,12 +756,12 @@ const htmlTemplate = `<!DOCTYPE html>
       background: var(--primary);
       color: white;
       transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(124, 58, 237, 0.12);
+      box-shadow: 0 4px 10px rgba(124, 58, 237, 0.15);
     }
     
     body.dark-mode .btn-section-export {
       background: rgba(167, 139, 250, 0.1);
-      border-color: rgba(167, 139, 250, 0.2);
+      border-color: rgba(167, 139, 250, 0.25);
       color: #A78BFA;
     }
     body.dark-mode .btn-section-export:hover {
@@ -987,28 +769,34 @@ const htmlTemplate = `<!DOCTYPE html>
       color: white;
     }
 
+    /* Print optimization to hide section action buttons */
+    @media print {
+      .section-actions, .btn-section-export {
+        display: none !important;
+      }
+    }
+
     /* Header Panel with utilities */
     .header-panel {
       display: flex;
       justify-content: flex-end;
-      gap: 10px;
-      margin-bottom: 20px;
-      width: 100%;
+      gap: 12px;
+      margin-bottom: 24px;
     }
 
     .btn-tool {
       background: var(--bg-card);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 8px 16px;
+      padding: 10px 18px;
       border-radius: 10px;
       cursor: pointer;
       font-family: var(--font-th);
-      font-size: 13px;
+      font-size: 13.5px;
       font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.02);
       transition: all 0.2s;
     }
@@ -1019,89 +807,6 @@ const htmlTemplate = `<!DOCTYPE html>
       transform: translateY(-1px);
     }
 
-    /* 🧭 Page Nav Panel (Prev/Next buttons) */
-    .manual-nav-panel {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      margin-top: 40px;
-      padding-top: 24px;
-      border-top: 1px solid var(--border);
-      width: 100%;
-      flex-shrink: 0;
-      transition: border-color 0.3s;
-    }
-
-    .nav-panel-btn {
-      flex: 1;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: all 0.2s ease;
-      min-height: 64px;
-      text-decoration: none !important;
-    }
-
-    .nav-panel-btn:hover {
-      border-color: var(--primary);
-      background-color: var(--primary-pale);
-      transform: translateY(-1px);
-    }
-
-    .nav-panel-btn.disabled {
-      opacity: 0.3;
-      pointer-events: none;
-      cursor: not-allowed;
-    }
-
-    .nav-arrow {
-      font-size: 18px;
-      color: var(--primary);
-      font-weight: 700;
-      transition: transform 0.2s;
-      font-family: var(--font-display);
-    }
-
-    .btn-prev:hover .nav-arrow {
-      transform: translateX(-3px);
-    }
-    .btn-next:hover .nav-arrow {
-      transform: translateX(3px);
-    }
-
-    .nav-btn-info {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      flex-grow: 1;
-      min-width: 0;
-    }
-
-    .nav-btn-label {
-      font-size: 10px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 600;
-    }
-
-    .nav-btn-title {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-      text-align: left;
-    }
-
     /* Backdrop Sidebar Overlay for mobile */
     .sidebar-overlay {
       display: none;
@@ -1110,9 +815,9 @@ const htmlTemplate = `<!DOCTYPE html>
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(3px);
-      z-index: 980;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 98;
     }
 
     .sidebar-overlay.active {
@@ -1122,10 +827,10 @@ const htmlTemplate = `<!DOCTYPE html>
     /* Back to Top button */
     .back-to-top {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 42px;
-      height: 42px;
+      bottom: 30px;
+      right: 30px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
       color: white;
@@ -1134,12 +839,12 @@ const htmlTemplate = `<!DOCTYPE html>
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 4px 12px rgba(124,58,237,0.25);
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(124,58,237,0.3);
       opacity: 0;
       visibility: hidden;
       transition: all 0.3s;
-      z-index: 99;
+      z-index: 999;
     }
 
     .back-to-top.visible {
@@ -1150,70 +855,60 @@ const htmlTemplate = `<!DOCTYPE html>
     /* 📱📱 HIGH RESPONSIVENESS FOR TABLET (iPad) & MOBILE 📱📱 */
     @media (max-width: 1024px) {
       .mobile-nav-bar {
-        display: flex;
+        display: flex; /* Show top action bar on Mobile/iPad */
       }
 
       .app-container {
-        padding-top: 56px;
+        padding-top: 56px; /* Offset for top bar */
       }
 
       .sidebar {
         position: fixed;
         top: 0;
         left: 0;
-        transform: translateX(-100%);
+        transform: translateX(-100%); /* Hide sidebar offscreen initially */
         z-index: 999;
         height: 100vh;
         box-shadow: 10px 0 25px rgba(0,0,0,0.1);
       }
 
       .sidebar.active {
-        transform: translateX(0);
+        transform: translateX(0); /* Slide in sidebar */
       }
 
       .main-content {
-        padding: 20px 16px;
+        padding: 24px 20px;
       }
 
       .content-card {
-        padding: 24px 20px;
-        border-radius: 12px;
+        padding: 32px 24px;
+        border-radius: 14px;
       }
 
       h1 {
-        font-size: 24px;
+        font-size: 26px;
       }
 
       h2 {
-        font-size: 19px;
-        margin-top: 28px;
+        font-size: 20px;
+        margin-top: 36px;
       }
 
       h3 {
-        font-size: 16px;
+        font-size: 17px;
       }
 
       pre {
-        padding: 12px !important;
+        padding: 14px !important;
       }
 
       code {
-        font-size: 12px;
+        font-size: 12.5px;
       }
       
       .header-panel {
-        margin-top: 4px;
+        margin-top: 8px;
         justify-content: center;
-      }
-
-      .manual-nav-panel {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .nav-panel-btn {
-        width: 100%;
-        min-height: 56px;
       }
     }
 
@@ -1224,29 +919,19 @@ const htmlTemplate = `<!DOCTYPE html>
         color: black !important;
         font-size: 12pt;
       }
-      .sidebar, .header-panel, .back-to-top, .sidebar-search, .mobile-nav-bar, .sidebar-overlay, .manual-tabs-container, .manual-nav-panel, .reading-progress-container {
+      .sidebar, .header-panel, .back-to-top, .sidebar-search, .mobile-nav-bar, .sidebar-overlay {
         display: none !important;
       }
       .main-content {
         padding: 0 !important;
         margin: 0 !important;
         width: 100% !important;
-        display: block !important;
-      }
-      .content-wrapper-max {
-        max-width: 100% !important;
       }
       .content-card {
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
         background: transparent !important;
-      }
-      .manual-section {
-        display: block !important;
-        opacity: 1 !important;
-        transform: none !important;
-        page-break-after: always;
       }
       pre, code {
         background-color: #f1f5f9 !important;
@@ -1270,6 +955,7 @@ const htmlTemplate = `<!DOCTYPE html>
         page-break-inside: avoid;
         page-break-after: auto;
       }
+      /* Disable content-visibility during print to prevent blank pages */
       .mermaid, pre, .table-container, .alert-box {
         content-visibility: visible !important;
       }
@@ -1278,7 +964,7 @@ const htmlTemplate = `<!DOCTYPE html>
     /* ⚡ Performance Optimizations for Large Documents */
     .mermaid, pre, .table-container, .alert-box {
       content-visibility: auto;
-      contain-intrinsic-size: auto 150px;
+      contain-intrinsic-size: auto 200px;
     }
   </style>
 </head>
@@ -1287,7 +973,7 @@ const htmlTemplate = `<!DOCTYPE html>
   <!-- Top bar for Mobile & iPad -->
   <header class="mobile-nav-bar">
     <button class="btn-hamburger" onclick="toggleSidebar()">
-      ☰ สารบัญ
+      ☰ สารบัญ / เมนู
     </button>
     <div class="mobile-logo">SmartAccess Manual</div>
   </header>
@@ -1310,75 +996,18 @@ const htmlTemplate = `<!DOCTYPE html>
 
     <!-- Main Content Area -->
     <main class="main-content">
-      <div class="content-wrapper-max">
-        
-        <!-- Utility Header -->
-        <div class="header-panel">
-          <button class="btn-tool" onclick="toggleReadingMode()">
-            📖 <span id="readingModeText">โหมดแยกตอน</span>
-          </button>
-          <button class="btn-tool" onclick="toggleDarkMode()">
-            🌓 <span id="themeText">โหมดมืด</span>
-          </button>
-          <button class="btn-tool" onclick="window.print()">
-            🖨️ พิมพ์ / บันทึก PDF
-          </button>
-        </div>
-
-        <!-- Sticky Segmented Tabs Control -->
-        <div class="manual-tabs-container" id="tabsContainer">
-          <div class="manual-tabs-scroller">
-            <div class="manual-tabs" id="manualTabs">
-              <button class="tab-btn active" onclick="selectTab(1)">
-                <span>📘 ภาคหลัก</span>
-              </button>
-              <button class="tab-btn" onclick="selectTab(2)">
-                <span>🔬 ภาคผนวก 1</span>
-              </button>
-              <button class="tab-btn" onclick="selectTab(3)">
-                <span>⚙️ ภาควิศวกร</span>
-              </button>
-              <button class="tab-btn" onclick="selectTab(4)">
-                <span>🎯 เจาะลึกพิเศษ</span>
-              </button>
-              <button class="tab-btn" onclick="selectTab(5)">
-                <span>📚 เล่มโครงงาน</span>
-              </button>
-              <div class="tabs-slider-pill" id="tabsSliderPill"></div>
-            </div>
-          </div>
-        </div>
-
-        <article class="content-card" id="compiledContentCard">
-          <!-- 📊 Reading Progress Bar Inside Card -->
-          <div class="reading-progress-container">
-            <div class="reading-progress-bar" id="readingProgressBar"></div>
-          </div>
-
-          <div id="compiledContent">
-            ${rawHtmlContent}
-          </div>
-
-          <!-- 🧭 Page Prev/Next Navigation Controls -->
-          <div class="manual-nav-panel" id="manualNavPanel">
-            <button class="nav-panel-btn btn-prev" id="btnPrevSection" onclick="navigateToPrevSection()">
-              <span class="nav-arrow">←</span>
-              <div class="nav-btn-info">
-                <span class="nav-btn-label">ตอนก่อนหน้า</span>
-                <span class="nav-btn-title" id="prevSectionTitle">บทนำ</span>
-              </div>
-            </button>
-            <button class="nav-panel-btn btn-next" id="btnNextSection" onclick="navigateToNextSection()">
-              <div class="nav-btn-info" style="text-align: right;">
-                <span class="nav-btn-label">ตอนถัดไป</span>
-                <span class="nav-btn-title" id="nextSectionTitle">ภาพรวมระบบ</span>
-              </div>
-              <span class="nav-arrow">→</span>
-            </button>
-          </div>
-        </article>
-
+      <div class="header-panel">
+        <button class="btn-tool" onclick="toggleDarkMode()">
+          🌓 <span id="themeText">โหมดมืด</span>
+        </button>
+        <button class="btn-tool" onclick="window.print()">
+          🖨️ บันทึกเป็น PDF / สั่งพิมพ์
+        </button>
       </div>
+
+      <article class="content-card" id="compiledContent">
+        ${rawHtmlContent}
+      </article>
     </main>
   </div>
 
@@ -1403,29 +1032,33 @@ const htmlTemplate = `<!DOCTYPE html>
       theme: 'default',
       securityLevel: 'loose',
       htmlLabels: true, // Render text via HTML foreignObject for perfect Thai font wrap and zero overlap!
+      // CRITICAL FIX: บังคับให้ Mermaid วัดความกว้างข้อความด้วยฟอนต์ Sarabun ตัวจริง
+      // (เดิม Mermaid วัดด้วยฟอนต์ fallback ก่อนฟอนต์ไทยโหลดเสร็จ ทำให้กล่องเล็กเกินจนตัวอักษรไทยถูกตัด)
       fontFamily: "'Sarabun', sans-serif",
       flowchart: {
         useMaxWidth: true,
         htmlLabels: true,
-        nodeSpacing: 80, // Significantly increase horizontal space between nodes
-        rankSpacing: 85, // Significantly increase vertical space between ranks
-        padding: 18, // Extra breathing space inside node boxes
-        curve: 'basis'  // Make lines smooth and curved
+        nodeSpacing: 80, // Significantly increase horizontal space between nodes (default is 40)
+        rankSpacing: 85, // Significantly increase vertical space between ranks (default is 50)
+        padding: 18, // เพิ่มระยะขอบในกล่อง node ให้ตัวอักษรไทยมีที่หายใจ ไม่ถูกตัด
+        curve: 'basis'  // Make lines smooth and curved, avoiding sharp overlapping zigzags!
       },
       sequence: {
-        actorMargin: 90,
-        messageMargin: 50,
+        actorMargin: 90, // Increase horizontal gap between actors
+        messageMargin: 50, // Increase vertical space between messages
         boxMargin: 18,
         noteMargin: 16,
         wrap: true,
-        width: 175
+        width: 175 // กว้างขึ้นต่อกล่องข้อความ กันตัวอักษรไทยล้น
       }
     });
   </script>
 
   <script>
+
     // Reusable function to inject download triggers
     function injectDownloadButtons(div, svg, index) {
+      // Create Button Container
       const btnContainer = document.createElement("div");
       btnContainer.style.position = "absolute";
       btnContainer.style.top = "12px";
@@ -1434,6 +1067,7 @@ const htmlTemplate = `<!DOCTYPE html>
       btnContainer.style.gap = "8px";
       btnContainer.style.zIndex = "10";
 
+      // Helper to style buttons beautifully
       function styleMermaidBtn(btn) {
         btn.style.background = "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)";
         btn.style.color = "white";
@@ -1457,6 +1091,7 @@ const htmlTemplate = `<!DOCTYPE html>
         };
       }
 
+      // Create PNG Button
       const btnPng = document.createElement("button");
       btnPng.innerHTML = "🖼️ เซฟรูป PNG";
       styleMermaidBtn(btnPng);
@@ -1464,17 +1099,19 @@ const htmlTemplate = `<!DOCTYPE html>
         saveSvgAsPng(div, "smartaccess_diagram_" + index + ".png");
       });
 
+      // Create SVG Button
       const btnSvg = document.createElement("button");
-      btnSvg.innerHTML = "📐 เซฟเวกเตอร์ SVG";
+      btnSvg.innerHTML = "📐 เซฟเวกเตอร์ SVG (ชัวร์สุด)";
       styleMermaidBtn(btnSvg);
       btnSvg.addEventListener("click", function() {
         saveSvgAsSvg(svg, "smartaccess_diagram_" + index + ".svg");
       });
 
+      // Create Copy Code Button
       const btnCopy = document.createElement("button");
       btnCopy.innerHTML = "📋 คัดลอกโค้ด Mermaid";
       styleMermaidBtn(btnCopy);
-      btnCopy.style.background = "linear-gradient(135deg, #10B981 0%, #059669 100%)";
+      btnCopy.style.background = "linear-gradient(135deg, #10B981 0%, #059669 100%)"; // Beautiful emerald gradient
       btnCopy.addEventListener("click", function() {
         const rawCode = div.getAttribute("data-mermaid-code");
         if (rawCode) {
@@ -1497,10 +1134,14 @@ const htmlTemplate = `<!DOCTYPE html>
       div.appendChild(btnContainer);
     }
 
+    // Lazy load and progressively render Mermaid diagrams using IntersectionObserver
     function initMermaidDiagrams() {
       const mermaidDivs = document.querySelectorAll(".mermaid");
       if (mermaidDivs.length === 0) return;
 
+      // ─── CRITICAL: รอให้ฟอนต์ Sarabun (ไทย) โหลดครบทุกน้ำหนักก่อน render ───
+      // มิฉะนั้น Mermaid จะวัดความกว้างข้อความด้วยฟอนต์ fallback แล้วสร้างกล่องเล็กเกินไป
+      // ทำให้ตัวอักษรไทยถูกตัด/ตกหล่นเมื่อฟอนต์จริงโหลดเสร็จภายหลัง
       const fontsReady = (function() {
         if (!document.fonts || !document.fonts.ready) return Promise.resolve();
         const loads = [
@@ -1509,17 +1150,21 @@ const htmlTemplate = `<!DOCTYPE html>
           document.fonts.load("600 14px Sarabun"),
           document.fonts.load("700 14px Sarabun")
         ];
+        // add a safety timeout of 800ms to never hang the render
         const timeoutPromise = new Promise(resolve => setTimeout(resolve, 800));
         const fontsPromise = Promise.all([document.fonts.ready, Promise.all(loads).catch(function(){})]);
         return Promise.race([fontsPromise, timeoutPromise]);
       })();
 
+      // 1. Initialize beautiful loading skeletons and backup raw code
       mermaidDivs.forEach((div, index) => {
         const diagramNum = index + 1;
+        
+        // Backup raw mermaid syntax
         const rawCode = div.textContent.trim();
         div.setAttribute("data-mermaid-code", rawCode);
         div.setAttribute("data-index", diagramNum);
-        div.textContent = "";
+        div.textContent = ""; // Clear content so it doesn't flash raw code
         
         const skeleton = document.createElement("div");
         skeleton.className = "mermaid-loader-skeleton";
@@ -1530,21 +1175,25 @@ const htmlTemplate = `<!DOCTYPE html>
         div.appendChild(skeleton);
       });
 
+      // 2. Setup IntersectionObserver to only render diagrams as the user scrolls near them
       const observer = new IntersectionObserver((entries, observerInstance) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             const div = entry.target;
-            observerInstance.unobserve(div);
+            observerInstance.unobserve(div); // Trigger only once
             
             const rawCode = div.getAttribute("data-mermaid-code");
             const diagramIndex = div.getAttribute("data-index");
             const skeleton = div.querySelector(".mermaid-loader-skeleton");
             
+            // Restore diagram raw code for rendering
             div.textContent = rawCode;
 
+            // Render this specific diagram asynchronously — รอฟอนต์ไทยก่อนเสมอ
             fontsReady.then(() => window.mermaid.run({
               nodes: [div]
             })).then(() => {
+              // Clean up the skeleton
               if (skeleton && skeleton.parentNode === div) {
                 div.removeChild(skeleton);
               }
@@ -1553,8 +1202,9 @@ const htmlTemplate = `<!DOCTYPE html>
               if (!svg) return;
               
               div.style.position = "relative";
-              div.style.paddingTop = "54px";
+              div.style.paddingTop = "54px"; // Create space for the download panel
               
+              // Inject download triggers
               injectDownloadButtons(div, svg, diagramIndex);
             }).catch(err => {
               console.error("Error rendering diagram " + diagramIndex + ":", err);
@@ -1567,10 +1217,11 @@ const htmlTemplate = `<!DOCTYPE html>
           }
         });
       }, {
-        rootMargin: "250px 0px",
+        rootMargin: "250px 0px", // Render when diagram is within 250px of viewport
         threshold: 0.01
       });
 
+      // 3. Observe each Mermaid container
       mermaidDivs.forEach(div => {
         observer.observe(div);
       });
@@ -1582,6 +1233,7 @@ const htmlTemplate = `<!DOCTYPE html>
       initMermaidDiagrams();
     }
 
+    // 100% Bulletproof Direct SVG Vector Download with stylesheet inlining
     function saveSvgAsSvg(svgElement, fileName) {
       try {
         const svgClone = svgElement.cloneNode(true);
@@ -1592,6 +1244,7 @@ const htmlTemplate = `<!DOCTYPE html>
         svgClone.setAttribute("width", width);
         svgClone.setAttribute("height", height);
 
+        // Find and inline all styles matching mermaid
         let mermaidStyles = "";
         try {
           const sheets = document.styleSheets;
@@ -1602,7 +1255,7 @@ const htmlTemplate = `<!DOCTYPE html>
                 const nodeText = sheet.ownerNode.textContent || "";
                 const nodeId = sheet.ownerNode.id || "";
                 if (nodeId.startsWith("mermaid") || nodeText.includes(".mermaid") || nodeId.includes("mermaid")) {
-                  mermaidStyles += nodeText + "\n";
+                  mermaidStyles += nodeText + "\\n";
                 }
               }
             } catch (e) {}
@@ -1638,6 +1291,7 @@ const htmlTemplate = `<!DOCTYPE html>
       }
     }
 
+    // High compatibility PNG exporter utilizing html2canvas directly on the .mermaid container
     function saveSvgAsPng(mermaidDiv, fileName) {
       try {
         const btnContainer = mermaidDiv.querySelector("div");
@@ -1646,15 +1300,20 @@ const htmlTemplate = `<!DOCTYPE html>
         }
         
         html2canvas(mermaidDiv, {
-          scale: 3,
+          scale: 3, // HD Quality
           useCORS: true,
           backgroundColor: "#FFFFFF",
           logging: false,
           onclone: function(clonedDoc) {
+            // Force light mode inside the clone to ensure high-contrast colors
             clonedDoc.body.classList.remove("dark-mode");
+            
+            // Render all dynamic elements like mermaid SVG containers at 100% visibility
             clonedDoc.querySelectorAll(".mermaid, pre, .table-container, .alert-box").forEach(el => {
               el.style.contentVisibility = "visible";
             });
+
+            // Hide download buttons completely in the clone
             const clonedBtnContainer = clonedDoc.querySelector(".mermaid div");
             if (clonedBtnContainer) {
               clonedBtnContainer.style.display = "none";
@@ -1695,6 +1354,7 @@ const htmlTemplate = `<!DOCTYPE html>
       }
     }
 
+    // Fallback using direct Image drawing if html2canvas fails
     function fallbackSaveSvgAsPng(svgElement, fileName) {
       try {
         const svgClone = svgElement.cloneNode(true);
@@ -1715,7 +1375,7 @@ const htmlTemplate = `<!DOCTYPE html>
                 const nodeText = sheet.ownerNode.textContent || "";
                 const nodeId = sheet.ownerNode.id || "";
                 if (nodeId.startsWith("mermaid") || nodeText.includes(".mermaid") || nodeId.includes("mermaid")) {
-                  mermaidStyles += nodeText + "\n";
+                  mermaidStyles += nodeText + "\\n";
                 }
               }
             } catch (e) {}
@@ -1764,6 +1424,7 @@ const htmlTemplate = `<!DOCTYPE html>
         image.onerror = (err) => {
           console.error("Failed canvas rendering fallback", err);
           saveSvgAsSvg(svgElement, fileName.replace('.png', '.svg'));
+          alert("⚠️ เบราว์เซอร์ของคุณจำกัดสิทธิ์ความปลอดภัยในเครื่อง ระบบจึงสลับไปดาวน์โหลดไฟล์เป็นเวกเตอร์ SVG คมชัดสูงให้แทน ซึ่งนำไปใช้วางในเล่มวิจัยได้ดีเช่นกันครับ!");
         };
         
         image.src = blobURL;
@@ -1772,166 +1433,60 @@ const htmlTemplate = `<!DOCTYPE html>
         saveSvgAsSvg(svgElement, fileName.replace('.png', '.svg'));
       }
     }
+
   </script>
 
   <script>
-    // Global Section Registry
-    let sectionList = []; // { id, title, tab, index, element }
-    let activeSectionId = "";
-    let isContinuousMode = false;
-    let activeTabId = 1;
-
-    // Helper to extract section number
-    function getSectionNumber(text) {
-      const cleanText = text.replace(/^§/, "").trim();
-      const match = cleanText.match(/^(\d+)/);
-      return match ? parseInt(match[1], 10) : null;
-    }
-
-    // Assign Tab ID based on section number and title
-    function getTabForSection(sectionId, h2Text) {
-      if (sectionId === "sec-cover") return 1;
-      
-      const num = getSectionNumber(h2Text);
-      if (num !== null) {
-        if (num >= 1 && num <= 19) return 1;
-        if (num >= 20 && num <= 34) return 2;
-        if (num >= 35 && num <= 44) return 3;
-        if (num >= 45) return 4;
-      }
-      
-      if (h2Text.includes("เล่มโครงงาน") || h2Text.includes("วิทยานิพนธ์") || h2Text.includes("ตัวเลขหัวข้อ")) {
-        return 5;
-      }
-      
-      return 1;
-    }
-
-    // Dynamic Content Partitioning & Navigation Setup
+    // Build floating TOC sidebar dynamically from h2 and h3 elements and keep them synchronized
     document.addEventListener("DOMContentLoaded", function() {
-      const content = document.getElementById("compiledContent");
-      const children = Array.from(content.children);
-      content.innerHTML = ""; // Clear raw markdown content wrapper
-
-      // Create an intro cover section for anything before the first H2
-      const coverSection = document.createElement("section");
-      coverSection.className = "manual-section";
-      coverSection.id = "sec-cover";
-      content.appendChild(coverSection);
-      let currentSection = coverSection;
-
-      children.forEach((child) => {
-        if (child.tagName === "H2" || child.tagName === "h2") {
-          // Determine section ID
-          let secId = child.id;
-          if (!secId) {
-            const num = getSectionNumber(child.textContent);
-            secId = num !== null ? "sec-" + num : "sec-gen-" + Math.random().toString(36).substring(2, 6);
-            child.id = secId;
-          }
-
-          currentSection = document.createElement("section");
-          currentSection.className = "manual-section";
-          currentSection.id = secId;
-          content.appendChild(currentSection);
-        }
-        currentSection.appendChild(child);
-      });
-
-      // Remove coverSection if empty
-      if (coverSection.children.length === 0) {
-        coverSection.remove();
-      }
-
-      // Initialize Section Meta List
-      const sections = document.querySelectorAll(".manual-section");
-      sections.forEach((sec, idx) => {
-        const h2 = sec.querySelector("h2");
-        const h2Text = h2 ? h2.textContent.trim() : (sec.id === "sec-cover" ? "บทนำ / รายการหัวข้อ" : "ส่วนย่อย");
-        const tabId = getTabForSection(sec.id, h2Text);
-        
-        sec.setAttribute("data-tab", tabId);
-        sectionList.push({
-          id: sec.id,
-          title: h2Text,
-          tab: tabId,
-          index: idx,
-          element: sec
-        });
-      });
-
-      // Build Sidebar TOC dynamically
-      buildSidebarTOC();
-
-      // Initialize code copy buttons
-      initCodeCopyButtons();
-
-      // Load initial state based on URL Hash, or default to the first section
-      let initialSecId = window.location.hash.substring(1);
-      const initialSec = sectionList.find(s => s.id === initialSecId);
-      
-      if (initialSec) {
-        activeTabId = initialSec.tab;
-        activeSectionId = initialSec.id;
-      } else {
-        activeTabId = 1;
-        activeSectionId = sectionList[0] ? sectionList[0].id : "";
-      }
-
-      // Set initial UI state
-      selectTab(activeTabId, false);
-      switchSection(activeSectionId, false);
-      updateTabSlider();
-
-      // Handle keyboard navigation
-      document.addEventListener("keydown", function(e) {
-        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-        if (e.key === "ArrowLeft") {
-          navigateToPrevSection();
-        } else if (e.key === "ArrowRight") {
-          navigateToNextSection();
-        }
-      });
-    });
-
-    // Resize observer to update sliding pill slider on size changes
-    window.addEventListener("resize", updateTabSlider);
-
-    // Dynamic Sliding pill highlight
-    function updateTabSlider() {
-      const activeTabBtn = document.querySelectorAll(".tab-btn")[activeTabId - 1];
-      const slider = document.getElementById("tabsSliderPill");
-      if (activeTabBtn && slider) {
-        slider.style.transform = "translateX(" + (activeTabBtn.offsetLeft - 4) + "px)";
-        slider.style.width = activeTabBtn.offsetWidth + "px";
-      }
-    }
-
-    // Build sidebar hierarchy groups
-    function buildSidebarTOC() {
+      const headers = document.querySelectorAll("#compiledContent h2, #compiledContent h3");
       const tocMenu = document.getElementById("tocMenu");
-      tocMenu.innerHTML = "";
+      const sidebar = document.getElementById("appSidebar");
 
+      // Unified Accordion Helper using CSS Grid trick (no max-height, no scrollHeight needed)
+      // Toggles .collapsed on the .toc-group-list-wrapper div for smooth height:auto animation
+      function expandGroup(groupId) {
+        document.querySelectorAll(".toc-group-list-wrapper").forEach(wrapper => {
+          const header = wrapper.previousElementSibling;
+          const ul = wrapper.querySelector(".toc-group-list");
+          const isTarget = ul && ul.id === groupId;
+          if (isTarget) {
+            wrapper.classList.remove("collapsed");
+            if (header) {
+              const arrow = header.querySelector(".toc-group-arrow");
+              if (arrow) arrow.classList.remove("collapsed");
+            }
+          } else {
+            wrapper.classList.add("collapsed");
+            if (header) {
+              const arrow = header.querySelector(".toc-group-arrow");
+              if (arrow) arrow.classList.add("collapsed");
+            }
+          }
+        });
+      }
+
+      // Define standard groups
       const groups = [
-        { id: "group-1", title: "📘 ภาคหลัก (1-19)", range: [1, 19], tab: 1 },
-        { id: "group-2", title: "🔬 ภาคผนวก 1 (20-34)", range: [20, 34], tab: 2 },
-        { id: "group-3", title: "⚙️ ภาควิศวกร (35-44)", range: [35, 44], tab: 3 },
-        { id: "group-4", title: "🎯 เจาะลึกพิเศษ (45+)", range: [45, 999], tab: 4 },
-        { id: "group-5", title: "📚 เล่มโครงงาน & สรุป", range: null, tab: 5 }
+        { id: "group-1", title: "📘 ภาคหลัก (1-19)", range: [1, 19] },
+        { id: "group-2", title: "🔬 ภาคผนวกเชิงลึก (20-34)", range: [20, 34] },
+        { id: "group-3", title: "⚙️ ภาคผนวกระดับวิศวกร (35-44)", range: [35, 44] },
+        { id: "group-4", title: "🎯 ภาคเจาะลึกขั้นสูง (45-73)", range: [45, 999] }
       ];
 
+      // Create group HTML containers inside tocMenu
       const groupLists = {};
-      
       groups.forEach(g => {
         const groupLi = document.createElement("li");
         groupLi.className = "toc-group-item";
-        groupLi.setAttribute("data-tab-group", g.tab);
 
+        // Group Header (Collapsible)
         const headerDiv = document.createElement("div");
         headerDiv.className = "toc-group-header";
-        headerDiv.innerHTML = "<span>" + g.title + "</span><span class=\"toc-group-arrow collapsed\">▼</span>";
+        headerDiv.innerHTML = '<span>' + g.title + '</span><span class="toc-group-arrow collapsed">▼</span>';
         headerDiv.dataset.groupId = g.id;
 
+        // Group Sub-menu UL (items live inside wrapper for grid trick)
         const wrapper = document.createElement("div");
         wrapper.className = "toc-group-list-wrapper collapsed";
 
@@ -1940,6 +1495,7 @@ const htmlTemplate = `<!DOCTYPE html>
         subUl.id = g.id;
         wrapper.appendChild(subUl);
 
+        // Toggle click handler using expandGroup accordion
         headerDiv.addEventListener("click", () => {
           const isCollapsed = wrapper.classList.contains("collapsed");
           if (isCollapsed) {
@@ -1957,493 +1513,127 @@ const htmlTemplate = `<!DOCTYPE html>
         groupLists[g.id] = subUl;
       });
 
-      // Populate sidebar list with H2 headers and H3 child headers
-      sectionList.forEach((sec) => {
-        const parentUl = getSidebarGroupForSection(sec, groupLists);
-        if (!parentUl) return;
+      // Helper to parse section number
+      function getSectionNumber(text) {
+        const cleanText = text.replace(/^§/, "").trim();
+        const match = cleanText.match(/^(\\d+)/);
+        if (match) {
+          return parseInt(match[1], 10);
+        }
+        return null;
+      }
 
-        // 1. Chapter Main Link (H2)
+      let currentGroupId = null;
+
+      headers.forEach((h, index) => {
+        const text = h.textContent.trim();
+
+        // 1. Skip Table of Contents section headings to prevent duplication
+        if (text === "สารบัญ" || 
+            text.includes("ภาคหลัก (1-19)") || 
+            text.includes("ภาคผนวกเชิงลึก (20-34)") || 
+            text.includes("ภาคผนวกระดับวิศวกร (35-44)") || 
+            text.includes("ภาคเจาะลึกขั้นสูง")) {
+          return;
+        }
+
+        if (!h.id) {
+          h.id = "sec-auto-" + index;
+        }
+
+        // 2. Identify the group for H2 headings
+        if (h.tagName === "H2" || h.tagName === "h2") {
+          const sectionNum = getSectionNumber(text);
+          if (sectionNum !== null) {
+            const foundGroup = groups.find(g => sectionNum >= g.range[0] && sectionNum <= g.range[1]);
+            if (foundGroup) {
+              currentGroupId = foundGroup.id;
+            } else {
+              currentGroupId = null;
+            }
+          } else {
+            currentGroupId = null;
+          }
+        }
+
+        const targetList = currentGroupId ? groupLists[currentGroupId] : null;
+        if (!targetList && h.tagName !== "H2") {
+          return;
+        }
+
         const li = document.createElement("li");
         const a = document.createElement("a");
-        a.href = "#" + sec.id;
-        a.id = "toc-link-" + sec.id;
-        a.title = sec.title;
-        a.textContent = sec.title;
-        
+        a.href = "#" + h.id;
+        a.id = "toc-link-" + h.id;
+        a.title = text;
+        a.textContent = text;
+
+        if (h.tagName === "H3" || h.tagName === "h3") {
+          a.classList.add("toc-h3");
+        }
+
         a.addEventListener("click", (e) => {
           e.preventDefault();
-          switchSection(sec.id);
+
+          // Smooth scroll to target header
+          const target = document.getElementById(h.id);
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          // Update URL hash directly on click without jumping
+          history.pushState(null, null, "#" + h.id);
+
+          // Highlight active link immediately
+          document.querySelectorAll("#tocMenu a").forEach(link => link.classList.remove("active"));
+          a.classList.add("active");
+
+          // On mobile, close the sidebar after clicking
           if (window.innerWidth <= 1024) {
             toggleSidebar();
           }
         });
 
         li.appendChild(a);
-        parentUl.appendChild(li);
-
-        // 2. Child Sections (H3) inside this manual-section div
-        const h3Headers = sec.element.querySelectorAll("h3");
-        h3Headers.forEach((h3, subIdx) => {
-          if (!h3.id) {
-            h3.id = sec.id + "-sub-" + subIdx;
-          }
-          const subLi = document.createElement("li");
-          const subA = document.createElement("a");
-          subA.href = "#" + h3.id;
-          subA.id = "toc-link-" + h3.id;
-          subA.className = "toc-h3";
-          subA.title = h3.textContent.trim();
-          subA.textContent = h3.textContent.trim();
-
-          subA.addEventListener("click", (e) => {
-            e.preventDefault();
-            // Ensure parent section is active
-            if (activeSectionId !== sec.id) {
-              switchSection(sec.id, false);
-            }
-            // Wait slightly for animation render if section was inactive, then scroll to H3
-            setTimeout(() => {
-              const targetH3 = document.getElementById(h3.id);
-              if (targetH3) {
-                const offset = targetH3.getBoundingClientRect().top + window.scrollY - 100;
-                window.scrollTo({ top: Math.max(0, offset), behavior: "smooth" });
-              }
-              history.pushState(null, null, "#" + h3.id);
-            }, activeSectionId === sec.id ? 0 : 250);
-
-            if (window.innerWidth <= 1024) {
-              toggleSidebar();
-            }
-          });
-
-          subLi.appendChild(subA);
-          parentUl.appendChild(subLi);
-        });
+        if (targetList) {
+          targetList.appendChild(li);
+        } else if (text.includes("สำหรับนำไปจัดทำเล่มโครงงาน")) {
+          // Place the thesis book section at the very top of the sidebar above other groups
+          tocMenu.insertBefore(li, tocMenu.firstChild);
+        } else {
+          tocMenu.appendChild(li);
+        }
       });
-    }
 
-    function getSidebarGroupForSection(sec, groupLists) {
-      if (sec.id === "sec-cover") {
-        return groupLists["group-1"]; // Put cover intro in group 1
-      }
+      // Create action buttons for exporting specific sections (Attached to both h2 headings AND "กลับสารบัญ" paragraph blocks)
       
-      const num = getSectionNumber(sec.title);
-      if (num !== null) {
-        if (num >= 1 && num <= 19) return groupLists["group-1"];
-        if (num >= 20 && num <= 34) return groupLists["group-2"];
-        if (num >= 35 && num <= 44) return groupLists["group-3"];
-        if (num >= 45) return groupLists["group-4"];
-      }
-      return groupLists["group-5"];
-    }
-
-    function expandGroup(groupId) {
-      document.querySelectorAll(".toc-group-list-wrapper").forEach(wrapper => {
-        const header = wrapper.previousElementSibling;
-        const ul = wrapper.querySelector(".toc-group-list");
-        const isTarget = ul && ul.id === groupId;
-        
-        if (isTarget) {
-          wrapper.classList.remove("collapsed");
-          if (header) {
-            const arrow = header.querySelector(".toc-group-arrow");
-            if (arrow) arrow.classList.remove("collapsed");
-          }
-        } else {
-          wrapper.classList.add("collapsed");
-          if (header) {
-            const arrow = header.querySelector(".toc-group-arrow");
-            if (arrow) arrow.classList.add("collapsed");
-          }
-        }
-      });
-    }
-
-    // Select Main tab and filter sidebar groups
-    window.selectTab = function(tabId, changeSection = true) {
-      activeTabId = tabId;
-      
-      // Update Tab buttons styles
-      const tabBtns = document.querySelectorAll(".tab-btn");
-      tabBtns.forEach((btn, idx) => {
-        if (idx === tabId - 1) {
-          btn.classList.add("active");
-        } else {
-          btn.classList.remove("active");
-        }
-      });
-
-      updateTabSlider();
-
-      // In tab-based reading: filter sidebar TOC groups
-      // Collapse groups and hide them if they are not in the selected tab
-      document.querySelectorAll(".toc-group-item").forEach(item => {
-        const grpTab = parseInt(item.getAttribute("data-tab-group"), 10);
-        if (grpTab === tabId) {
-          item.style.display = "block";
-          const wrapper = item.querySelector(".toc-group-list-wrapper");
-          if (wrapper) {
-            wrapper.classList.remove("collapsed");
-            const arrow = item.querySelector(".toc-group-arrow");
-            if (arrow) arrow.classList.remove("collapsed");
-          }
-        } else {
-          item.style.display = "none";
-        }
-      });
-
-      // Switch to the first section of this tab
-      if (changeSection) {
-        const firstSectionOfTab = sectionList.find(s => s.tab === tabId);
-        if (firstSectionOfTab) {
-          switchSection(firstSectionOfTab.id);
-        }
-      }
-    };
-
-    // Switch reading chapters smoothly
-    window.switchSection = function(sectionId, smoothScroll = true) {
-      const sectionMeta = sectionList.find(s => s.id === sectionId);
-      if (!sectionMeta) return;
-
-      const oldSectionId = activeSectionId;
-      activeSectionId = sectionId;
-
-      // Handle Tab mismatch if link clicked from external area (e.g. search result)
-      if (sectionMeta.tab !== activeTabId) {
-        selectTab(sectionMeta.tab, false);
-      }
-
-      if (!isContinuousMode) {
-        // --- 📖 Page-by-Page transition logic ---
-        const activeSecEl = document.querySelector(".manual-section.active");
-        
-        if (activeSecEl && activeSecEl.id !== sectionId) {
-          // Fade-out animation for active section
-          activeSecEl.style.opacity = "0";
-          activeSecEl.style.transform = "translateY(6px)";
-          
-          setTimeout(() => {
-            activeSecEl.classList.remove("active");
-            activeSecEl.style.display = "none";
-
-            // Trigger Fade-in for target section
-            renderTargetSection(sectionMeta.element, smoothScroll);
-          }, 150); // Timeout matched to CSS 0.2s duration
-        } else {
-          renderTargetSection(sectionMeta.element, smoothScroll);
-        }
-      } else {
-        // --- 📖 Continuous Scroll mode logic ---
-        const targetEl = document.getElementById(sectionId);
-        if (targetEl && smoothScroll) {
-          const offset = targetEl.getBoundingClientRect().top + window.scrollY - 120;
-          window.scrollTo({ top: Math.max(0, offset), behavior: "smooth" });
-        }
-        highlightSidebar(sectionId);
-        updateProgressBar(sectionId);
-      }
-
-      // Sync active state in browser URL history
-      if (history.pushState && window.location.hash !== "#" + sectionId) {
-        history.pushState(null, null, "#" + sectionId);
-      }
-    };
-
-    function renderTargetSection(el, smoothScroll) {
-      el.style.display = "block";
-      el.offsetHeight; // Force DOM layout engine recalculation
-      el.classList.add("active");
-      el.style.opacity = "1";
-      el.style.transform = "translateY(0)";
-
-      if (smoothScroll) {
-        // Scroll to card top smoothly to prevent jumpiness
-        const card = document.getElementById("compiledContentCard");
-        if (card) {
-          const offset = card.getBoundingClientRect().top + window.scrollY - 100;
-          window.scrollTo({ top: Math.max(0, offset), behavior: "smooth" });
-        }
-      }
-
-      highlightSidebar(activeSectionId);
-      updateProgressBar(activeSectionId);
-      updateNavButtons(activeSectionId);
-    }
-
-    function highlightSidebar(secId) {
-      document.querySelectorAll("#tocMenu a").forEach(link => {
-        if (link.id === "toc-link-" + secId) {
-          link.classList.add("active");
-          
-          // Auto center sidebar scroll if item is out of bounds
-          const sidebar = document.getElementById("appSidebar");
-          const tocMenu = document.getElementById("tocMenu");
-          if (sidebar && !sidebar.matches(':hover')) {
-            requestAnimationFrame(() => {
-              const linkRect = link.getBoundingClientRect();
-              const menuRect = tocMenu.getBoundingClientRect();
-              if (linkRect.top < menuRect.top || linkRect.bottom > menuRect.bottom) {
-                const linkOffset = link.offsetTop - tocMenu.offsetTop;
-                const targetScroll = linkOffset - (tocMenu.clientHeight / 2) + (link.clientHeight / 2);
-                tocMenu.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
-              }
-            });
-          }
-        } else {
-          link.classList.remove("active");
-        }
-      });
-    }
-
-    // Update Top Reading Progress bar
-    function updateProgressBar(secId) {
-      const idx = sectionList.findIndex(s => s.id === secId);
-      if (idx === -1) return;
-      const progress = ((idx + 1) / sectionList.length) * 100;
-      document.getElementById("readingProgressBar").style.width = progress + "%";
-    }
-
-    // Render Prev/Next button links
-    function updateNavButtons(secId) {
-      const idx = sectionList.findIndex(s => s.id === secId);
-      const prevBtn = document.getElementById("btnPrevSection");
-      const nextBtn = document.getElementById("btnNextSection");
-      const prevTitle = document.getElementById("prevSectionTitle");
-      const nextTitle = document.getElementById("nextSectionTitle");
-
-      if (idx > 0) {
-        prevBtn.classList.remove("disabled");
-        const prevSec = sectionList[idx - 1];
-        prevBtn.onclick = () => switchSection(prevSec.id);
-        prevTitle.textContent = prevSec.title;
-      } else {
-        prevBtn.classList.add("disabled");
-        prevTitle.textContent = "ไม่มีหน้าก่อนหน้า";
-      }
-
-      if (idx < sectionList.length - 1) {
-        nextBtn.classList.remove("disabled");
-        const nextSec = sectionList[idx + 1];
-        nextBtn.onclick = () => switchSection(nextSec.id);
-        nextTitle.textContent = nextSec.title;
-      } else {
-        nextBtn.classList.add("disabled");
-        nextTitle.textContent = "สิ้นสุดเล่มคู่มือ";
-      }
-    }
-
-    window.navigateToPrevSection = function() {
-      const idx = sectionList.findIndex(s => s.id === activeSectionId);
-      if (idx > 0) {
-        switchSection(sectionList[idx - 1].id);
-      }
-    };
-
-    window.navigateToNextSection = function() {
-      const idx = sectionList.findIndex(s => s.id === activeSectionId);
-      if (idx < sectionList.length - 1) {
-        switchSection(sectionList[idx + 1].id);
-      }
-    };
-
-    // Toggle Reading Modes: Continuous vs Chapter Page
-    window.toggleReadingMode = function() {
-      isContinuousMode = !isContinuousMode;
-      const textSpan = document.getElementById("readingModeText");
-      const navPanel = document.getElementById("manualNavPanel");
-      const tabContainer = document.getElementById("tabsContainer");
-
-      if (isContinuousMode) {
-        textSpan.textContent = "โหมดอ่านต่อเนื่อง";
-        navPanel.style.display = "none";
-        tabContainer.style.display = "none";
-
-        // Show all sections at once for vertical scroll
-        document.querySelectorAll(".manual-section").forEach(sec => {
-          sec.style.display = "block";
-          sec.style.opacity = "1";
-          sec.style.transform = "none";
-          sec.classList.add("active");
-        });
-
-        // Show all sidebar TOC groups
-        document.querySelectorAll(".toc-group-item").forEach(item => {
-          item.style.display = "block";
-          const wrapper = item.querySelector(".toc-group-list-wrapper");
-          if (wrapper) wrapper.classList.add("collapsed");
-        });
-
-        // Scroll to active section element
-        const activeEl = document.getElementById(activeSectionId);
-        if (activeEl) {
-          activeEl.scrollIntoView({ behavior: "smooth" });
-        }
-      } else {
-        textSpan.textContent = "โหมดแยกตอน";
-        navPanel.style.display = "flex";
-        tabContainer.style.display = "flex";
-
-        // Filter TOC groups again based on tab
-        selectTab(activeTabId, false);
-
-        // Hide all sections except active section
-        document.querySelectorAll(".manual-section").forEach(sec => {
-          if (sec.id === activeSectionId) {
-            sec.style.display = "block";
-            sec.style.opacity = "1";
-            sec.classList.add("active");
-          } else {
-            sec.style.display = "none";
-            sec.style.opacity = "0";
-            sec.classList.remove("active");
-          }
-        });
-
-        switchSection(activeSectionId);
-      }
-    };
-
-    // Advanced search listener updates
-    const searchInput = document.getElementById("searchInput");
-    searchInput.addEventListener("input", function(e) {
-      const query = e.target.value.toLowerCase().trim();
-      
-      if (query === "") {
-        // Reset sidebar groups filter based on current active tab
-        selectTab(activeTabId, false);
-        document.querySelectorAll(".toc-group-list li").forEach(li => li.style.display = "");
-        return;
-      }
-
-      // Expand all groups and show matches
-      document.querySelectorAll(".toc-group-list-wrapper").forEach(wrapper => {
-        const list = wrapper.querySelector(".toc-group-list");
-        if (!list) return;
-        let hasMatch = false;
-        
-        list.querySelectorAll("li").forEach(li => {
-          const text = li.textContent.toLowerCase();
-          if (text.includes(query)) {
-            li.style.display = "block";
-            hasMatch = true;
-          } else {
-            li.style.display = "none";
-          }
-        });
-
-        const groupItem = wrapper.closest(".toc-group-item");
-        const header = wrapper.previousElementSibling;
-        if (hasMatch) {
-          wrapper.classList.remove("collapsed");
-          if (header) {
-            header.querySelector(".toc-group-arrow").classList.remove("collapsed");
-            header.style.display = "flex";
-          }
-          if (groupItem) groupItem.style.display = "block";
-        } else {
-          wrapper.classList.add("collapsed");
-          if (header) {
-            header.querySelector(".toc-group-arrow").classList.add("collapsed");
-            header.style.display = "none";
-          }
-          if (groupItem) groupItem.style.display = "none";
-        }
-      });
-    });
-
-    // Dark Mode Toggle
-    window.toggleDarkMode = function() {
-      document.body.classList.toggle("dark-mode");
-      const isDark = document.body.classList.contains("dark-mode");
-      document.getElementById("themeText").textContent = isDark ? "โหมดสว่าง" : "โหมดมืด";
-    };
-
-    // Scroll to Top Handler
-    const btnBackToTop = document.getElementById("btnBackToTop");
-    window.onscroll = function() {
-      if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
-        btnBackToTop.classList.add("visible");
-      } else {
-        btnBackToTop.classList.remove("visible");
-      }
-    };
-
-    window.scrollToTop = function() {
-      if (isContinuousMode) {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        const card = document.getElementById("compiledContentCard");
-        if (card) {
-          const offset = card.getBoundingClientRect().top + window.scrollY - 100;
-          window.scrollTo({ top: Math.max(0, offset), behavior: 'smooth' });
-        }
-      }
-    };
-
-    window.toggleSidebar = function() {
-      const sidebar = document.getElementById("appSidebar");
-      const overlay = document.getElementById("sidebarOverlay");
-      sidebar.classList.toggle("active");
-      overlay.classList.toggle("active");
-    };
-
-    // Dynamic Copy code triggers for pre-blocks
-    function initCodeCopyButtons() {
-      document.querySelectorAll("pre").forEach((pre, idx) => {
-        if (pre.querySelector(".language-mermaid") || pre.classList.contains("mermaid")) return;
-
-        // Wrap pre block
-        const wrapper = document.createElement("div");
-        wrapper.className = "code-block-wrapper";
-        pre.parentNode.insertBefore(wrapper, pre);
-        wrapper.appendChild(pre);
-
-        // Append Copy button
-        const copyBtn = document.createElement("button");
-        copyBtn.className = "btn-copy-code";
-        copyBtn.innerHTML = "📋 คัดลอก";
-        
-        copyBtn.addEventListener("click", () => {
-          const rawCode = pre.textContent.trim();
-          navigator.clipboard.writeText(rawCode).then(() => {
-            copyBtn.innerHTML = "✅ คัดลอกแล้ว!";
-            setTimeout(() => {
-              copyBtn.innerHTML = "📋 คัดลอก";
-            }, 2000);
-          }).catch(err => {
-            console.error("Copy code block failed", err);
-          });
-        });
-
-        wrapper.appendChild(copyBtn);
-      });
-    }
-  </script>
-
-  <!-- Section Actions Export Scripts -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const headers = document.querySelectorAll("#compiledContent h2");
-
+      // 1. Helper to gather all sibling elements belonging to a specific h2 section
       function getSectionElements(h2Element) {
         const elements = [];
         let next = h2Element.nextElementSibling;
+        
+        // Loop and collect until we hit the next h2 or a horizontal rule that finishes the section
         while (next && next.tagName !== "H2") {
+          // If we hit a horizontal rule or กลับสารบัญ, we can include it but stop after if it marks the end
           elements.push(next);
-          if (next.tagName === "HR") break;
+          if (next.tagName === "HR") {
+            break;
+          }
           next = next.nextElementSibling;
         }
         return elements;
       }
 
+      // 2. Main export logic for a section
       window.exportSection = function(headerId, format) {
         const header = document.getElementById(headerId);
         if (!header) return;
 
+        // Create a temporary container to style and isolate the section beautifully
         const tempContainer = document.createElement("div");
         tempContainer.className = "compiled-export-temp";
         
+        // Create a wrapper container that is placed behind the page content (z-index -99999) with opacity 1 so html2canvas can capture it with full contrast and no clipping bugs!
         const hiddenWrapper = document.createElement("div");
         hiddenWrapper.className = "compiled-export-wrapper";
         hiddenWrapper.style.position = "absolute";
@@ -2451,12 +1641,13 @@ const htmlTemplate = `<!DOCTYPE html>
         hiddenWrapper.style.left = "0";
         hiddenWrapper.style.width = "850px";
         hiddenWrapper.style.height = "auto";
-        hiddenWrapper.style.opacity = "1";
-        hiddenWrapper.style.visibility = "visible";
+        hiddenWrapper.style.opacity = "1"; // Solid opacity for perfect capture!
+        hiddenWrapper.style.visibility = "visible"; // Fully visible for rendering engine
         hiddenWrapper.style.pointerEvents = "none";
-        hiddenWrapper.style.zIndex = "-99999";
+        hiddenWrapper.style.zIndex = "-99999"; // Sent underneath the solid body background
         document.body.appendChild(hiddenWrapper);
 
+        // Copy the header (without the action button panel)
         const headerClone = header.cloneNode(true);
         const actionsPanel = headerClone.querySelector(".section-actions");
         if (actionsPanel) {
@@ -2464,18 +1655,24 @@ const htmlTemplate = `<!DOCTYPE html>
         }
         tempContainer.appendChild(headerClone);
 
+        // Copy all elements belonging to this section
         const sectionElements = getSectionElements(header);
         sectionElements.forEach(el => {
+          // Skip export buttons and กลับสารบัญ links to keep the export completely clean
           if (el.classList.contains("section-actions") || el.innerHTML.includes("กลับสารบัญ")) {
             return;
           }
           
+          // Clone element and ensure lazy-loaded mermaid blocks have their rendered SVG ready
           const clone = el.cloneNode(true);
+          
+          // Correct check to see if el itself is the mermaid div or contains it
           const originalMermaidSvg = el.classList.contains("mermaid") ? el.querySelector("svg") : el.querySelector(".mermaid svg");
           const cloneMermaidTarget = clone.classList.contains("mermaid") ? clone : clone.querySelector(".mermaid");
           
           if (originalMermaidSvg && cloneMermaidTarget) {
             cloneMermaidTarget.innerHTML = originalMermaidSvg.outerHTML;
+            // Force clean presentation inside cloned target (no download panels)
             cloneMermaidTarget.style.paddingTop = "0px";
             cloneMermaidTarget.style.position = "relative";
           }
@@ -2483,16 +1680,19 @@ const htmlTemplate = `<!DOCTYPE html>
           tempContainer.appendChild(clone);
         });
 
-        tempContainer.style.background = "#FFFFFF";
-        tempContainer.style.color = "#1E293B";
+        // Styles to make the export document look premium and academic
+        tempContainer.style.background = "#FFFFFF"; // Keep background clean white for printing
+        tempContainer.style.color = "#1E293B"; // Keep text dark for high readability print
         tempContainer.style.padding = "40px";
         tempContainer.style.fontFamily = "'Sarabun', sans-serif";
         tempContainer.style.borderRadius = "12px";
-        tempContainer.style.width = "800px";
+        tempContainer.style.width = "800px"; // standard rendering width
         tempContainer.style.boxSizing = "border-box";
         
+        // Append tempContainer to the hiddenWrapper
         hiddenWrapper.appendChild(tempContainer);
 
+        // Extract clean filename PURELY from the h2 text (ignoring child nodes like buttons entirely!)
         let cleanTitle = "";
         for (let i = 0; i < header.childNodes.length; i++) {
           const node = header.childNodes[i];
@@ -2500,18 +1700,22 @@ const htmlTemplate = `<!DOCTYPE html>
             cleanTitle += node.textContent;
           }
         }
-        cleanTitle = cleanTitle.trim().replace(/[\\/\\\\?%*:|\"\u003c\u003e\\s]/g, "_").substring(0, 80);
+        cleanTitle = cleanTitle.trim().replace(/[\\/\\\\?%*:|\"\u003c\u003e\\s]/g, \"_\").substring(0, 80);
         if (!cleanTitle) {
           cleanTitle = "Section_" + headerId;
         }
 
+        // Common html2canvas rendering options
         const canvasOptions = {
-          scale: 2,
+          scale: 2, // HD Quality
           useCORS: true,
           backgroundColor: "#FFFFFF",
           logging: false,
           onclone: function(clonedDoc) {
+            // Strip dark-mode from the cloned document to guarantee a clean print look
             clonedDoc.body.classList.remove("dark-mode");
+            
+            // Force wrapper opacity and visibility to 1 inside the clone!
             const clonedWrapper = clonedDoc.querySelector(".compiled-export-wrapper");
             if (clonedWrapper) {
               clonedWrapper.style.opacity = "1";
@@ -2528,8 +1732,11 @@ const htmlTemplate = `<!DOCTYPE html>
               clonedTemp.style.visibility = "visible";
             }
 
+            // Force content-visibility: visible for offscreen sections
             clonedDoc.querySelectorAll(".mermaid, pre, .table-container, .alert-box").forEach(el => {
               el.style.contentVisibility = "visible";
+              
+              // Hide any download button containers inside cloned mermaid blocks
               const btnGroup = el.querySelector("div");
               if (btnGroup) {
                 btnGroup.style.display = "none";
@@ -2552,23 +1759,28 @@ const htmlTemplate = `<!DOCTYPE html>
                 throw new Error("jsPDF library not loaded");
               }
 
+              // Create PDF document
               const pdf = new jsPDFClass('p', 'mm', 'a4');
-              const margin = 15;
+              const margin = 15; // 15mm margin
               const pageWidth = 210;
               const pageHeight = 297;
-              const printableWidth = pageWidth - (2 * margin);
-              const printableHeight = pageHeight - (2 * margin);
+              const printableWidth = pageWidth - (2 * margin); // 180mm
+              const printableHeight = pageHeight - (2 * margin); // 267mm
 
+              // Calculate PDF image dimensions
               const imgWidth = printableWidth;
               const imgHeight = (canvas.height * imgWidth) / canvas.width;
+              
               const imgData = canvas.toDataURL('image/jpeg', 1.0);
               
               let heightLeft = imgHeight;
               let position = margin;
 
+              // Add first page
               pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
               heightLeft -= printableHeight;
 
+              // Add subsequent pages if content exceeds A4 page height
               while (heightLeft > 0) {
                 position = heightLeft - imgHeight + margin;
                 pdf.addPage();
@@ -2617,19 +1829,19 @@ const htmlTemplate = `<!DOCTYPE html>
         }
       };
 
-      // Append Export section actions dynamically
+      // 3. Append export button panel next to each h2 header
       headers.forEach(h => {
         const actionSpan = document.createElement("span");
         actionSpan.className = "section-actions";
         
         const btnPdf = document.createElement("button");
         btnPdf.className = "btn-section-export";
-        btnPdf.innerHTML = "📄 เซฟ PDF ส่วนนี้";
+        btnPdf.innerHTML = "📄 บันทึกเฉพาะส่วนนี้ (PDF)";
         btnPdf.onclick = () => window.exportSection(h.id, 'pdf');
         
         const btnPng = document.createElement("button");
         btnPng.className = "btn-section-export";
-        btnPng.innerHTML = "🖼️ เซฟรูป";
+        btnPng.innerHTML = "🖼️ บันทึกเฉพาะส่วนนี้ (PNG)";
         btnPng.onclick = () => window.exportSection(h.id, 'png');
         
         actionSpan.appendChild(btnPdf);
@@ -2637,10 +1849,11 @@ const htmlTemplate = `<!DOCTYPE html>
         h.appendChild(actionSpan);
       });
 
-      // Align กลับสารบัญ links and append export buttons
+      // 4. Find all "กลับสารบัญ" links and prepend premium export buttons next to them!
       const paragraphs = document.querySelectorAll("#compiledContent p");
       paragraphs.forEach(p => {
         if (p.innerHTML.includes("กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน") || p.innerHTML.includes("กลับสารบัญ")) {
+          // Find the active h2 section this paragraph belongs to by searching upwards
           let prev = p.previousElementSibling;
           let parentHeaderId = null;
           while (prev) {
@@ -2652,33 +1865,208 @@ const htmlTemplate = `<!DOCTYPE html>
           }
 
           if (parentHeaderId) {
+            // Style the paragraph block to be beautifully aligned
             p.style.display = "flex";
             p.style.alignItems = "center";
             p.style.justifyContent = "flex-end";
             p.style.gap = "12px";
             p.style.margin = "20px 0";
 
+            // Create buttons container
             const inlineActions = document.createElement("span");
             inlineActions.style.display = "inline-flex";
             inlineActions.style.gap = "8px";
 
             const btnPdf = document.createElement("button");
             btnPdf.className = "btn-section-export";
-            btnPdf.innerHTML = "📄 เซฟ PDF ส่วนนี้";
+            btnPdf.innerHTML = "📄 บันทึกเฉพาะส่วนนี้ (PDF)";
             btnPdf.onclick = () => window.exportSection(parentHeaderId, 'pdf');
 
             const btnPng = document.createElement("button");
             btnPng.className = "btn-section-export";
-            btnPng.innerHTML = "🖼️ เซฟรูป";
+            btnPng.innerHTML = "🖼️ บันทึกเฉพาะส่วนนี้ (PNG)";
             btnPng.onclick = () => window.exportSection(parentHeaderId, 'png');
 
             inlineActions.appendChild(btnPdf);
             inlineActions.appendChild(btnPng);
+
+            // Prepend actions before the actual กลับสารบัญ link
             p.insertBefore(inlineActions, p.firstChild);
           }
         }
       });
+
+      // Synchronize Sidebar scroll with content scroll (Bulletproof Throttled Scroll Spy & Unified Accordion)
+      let activeHeaderId = "";
+
+      function updateActiveState(activeId) {
+        // 1. Highlight in sidebar
+        const tocLinks = document.querySelectorAll("#tocMenu a");
+        tocLinks.forEach(link => {
+          if (link.id === "toc-link-" + activeId) {
+            link.classList.add("active");
+
+            // Expand parent group dynamically and collapse all others!
+            const parentUl = link.closest(".toc-group-list");
+            if (parentUl) {
+              expandGroup(parentUl.id);
+            }
+
+            // Auto-scroll sidebar if active item is out of view, but only if the user is not hovering/interacting with it
+            if (!sidebar.matches(':hover')) {
+              // Use requestAnimationFrame to wait for accordion expand animation before scrolling
+              requestAnimationFrame(() => {
+                const linkRect = link.getBoundingClientRect();
+                const menuRect = tocMenu.getBoundingClientRect();
+                if (linkRect.top < menuRect.top || linkRect.bottom > menuRect.bottom) {
+                  // Scroll within tocMenu itself (not the page)
+                  const linkOffsetInMenu = link.offsetTop - tocMenu.offsetTop;
+                  const targetScroll = linkOffsetInMenu - (tocMenu.clientHeight / 2) + (link.clientHeight / 2);
+                  tocMenu.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+                }
+              });
+            }
+          } else {
+            link.classList.remove("active");
+          }
+        });
+
+        // 2. Change URL dynamically
+        if (history.pushState && window.location.hash !== "#" + activeId) {
+          history.pushState(null, null, "#" + activeId);
+        }
+      }
+
+      function updateScrollSpy() {
+        let activeHeader = null;
+        for (let i = 0; i < headers.length; i++) {
+          const rect = headers[i].getBoundingClientRect();
+          // Trigger when header top is at or above 150px from top of viewport
+          if (rect.top <= 150) {
+            activeHeader = headers[i];
+          } else {
+            break;
+          }
+        }
+        if (activeHeader && activeHeader.id && activeHeaderId !== activeHeader.id) {
+          activeHeaderId = activeHeader.id;
+          updateActiveState(activeHeader.id);
+        }
+      }
+
+      // Throttle scroll listener using requestAnimationFrame for premium 60fps performance
+      let scrollTimeout;
+      window.addEventListener("scroll", () => {
+        if (scrollTimeout) {
+          window.cancelAnimationFrame(scrollTimeout);
+        }
+        scrollTimeout = window.requestAnimationFrame(updateScrollSpy);
+      }, { passive: true });
+
+      // Run once on load to set initial active state
+      updateScrollSpy();
     });
+
+    // Mobile Sidebar toggle function
+    function toggleSidebar() {
+      const sidebar = document.getElementById("appSidebar");
+      const overlay = document.getElementById("sidebarOverlay");
+      sidebar.classList.toggle("active");
+      overlay.classList.toggle("active");
+    }
+
+    // Advanced search inside Sidebar with collapsible group support
+    const searchInput = document.getElementById("searchInput");
+    searchInput.addEventListener("input", function(e) {
+      const query = e.target.value.toLowerCase().trim();
+      
+      // If query is empty, collapse all groups except the one containing the active link
+      if (query === "") {
+        document.querySelectorAll(".toc-group-list-wrapper").forEach(wrapper => {
+          const ul = wrapper.querySelector(".toc-group-list");
+          const header = wrapper.previousElementSibling;
+          if (ul && ul.querySelector("a.active")) {
+            wrapper.classList.remove("collapsed");
+            if (header) {
+              header.querySelector(".toc-group-arrow").classList.remove("collapsed");
+              header.style.display = "flex";
+            }
+          } else {
+            wrapper.classList.add("collapsed");
+            if (header) {
+              header.querySelector(".toc-group-arrow").classList.add("collapsed");
+              header.style.display = "flex";
+            }
+          }
+        });
+        document.querySelectorAll(".toc-group-list li").forEach(li => li.style.display = "");
+        document.querySelectorAll(".toc-group-item").forEach(item => item.style.display = "");
+        return;
+      }
+
+      // If search query exists, match links and expand parents dynamically
+      document.querySelectorAll(".toc-group-list-wrapper").forEach(wrapper => {
+        const list = wrapper.querySelector(".toc-group-list");
+        if (!list) return;
+        let hasMatch = false;
+        list.querySelectorAll("li").forEach(li => {
+          const text = li.textContent.toLowerCase();
+          if (text.includes(query)) {
+            li.style.display = "block";
+            hasMatch = true;
+          } else {
+            li.style.display = "none";
+          }
+        });
+
+        const groupItem = wrapper.closest(".toc-group-item");
+        const header = wrapper.previousElementSibling;
+        if (hasMatch) {
+          wrapper.classList.remove("collapsed");
+          if (header) {
+            header.querySelector(".toc-group-arrow").classList.remove("collapsed");
+            header.style.display = "flex";
+          }
+          if (groupItem) groupItem.style.display = "block";
+        } else {
+          wrapper.classList.add("collapsed");
+          if (header) {
+            header.querySelector(".toc-group-arrow").classList.add("collapsed");
+            header.style.display = "none";
+          }
+          if (groupItem) groupItem.style.display = "none";
+        }
+      });
+    });
+
+    // Dark Mode Toggle
+    function toggleDarkMode() {
+      document.body.classList.toggle("dark-mode");
+      const isDark = document.body.classList.contains("dark-mode");
+      document.getElementById("themeText").textContent = isDark ? "โหมดสว่าง" : "โหมดมืด";
+    }
+
+    // Scroll to Top
+    const btnBackToTop = document.getElementById("btnBackToTop");
+    window.onscroll = function() {
+      if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+        btnBackToTop.classList.add("visible");
+      } else {
+        btnBackToTop.classList.remove("visible");
+      }
+    };
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Clear hash on back to top click
+      if (history.pushState) {
+        history.pushState(null, null, ' ');
+      } else {
+        window.location.hash = '';
+      }
+      // Remove active states in sidebar
+      document.querySelectorAll("#tocMenu a").forEach(link => link.classList.remove("active"));
+    }
   </script>
 </body>
 </html>`;
