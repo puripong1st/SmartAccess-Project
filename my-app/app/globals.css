@@ -204,7 +204,7 @@ button, a, [role="button"], input, select, textarea, label {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   background: var(--bg-primary);
   border: 1px solid var(--border);
 }
@@ -268,7 +268,7 @@ button, a, [role="button"], input, select, textarea, label {
   position: absolute;
   top: 3px;
   left: 3px;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -277,7 +277,7 @@ button, a, [role="button"], input, select, textarea, label {
 }
 
 .hover-card {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .hover-card:hover {
   transform: translateY(-4px);
@@ -694,7 +694,7 @@ button, a, [role="button"], input, select, textarea, label {
   display: flex;
   align-items: center;
   gap: 12px;
-  animation: fadeInUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   max-width: 400px;
 }
 
@@ -758,7 +758,7 @@ button, a, [role="button"], input, select, textarea, label {
   to { transform: scale(1); opacity: 1; }
 }
 .animate-scale-in {
-  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* ── Sidebar Responsive Drawer ── */
@@ -849,16 +849,16 @@ button, a, [role="button"], input, select, textarea, label {
 /* ── Icon Hover Spin and Button Easing Micro-animations ── */
 .hover-spin:hover svg, .hover-spin:hover {
   transform: rotate(8deg) scale(1.04);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hover-spin svg, .hover-spin {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Premium Button Interactions */
 .btn-primary, .btn-secondary, .btn-danger, .btn-ghost {
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .btn-primary:hover:not(:disabled), .btn-secondary:hover:not(:disabled), .btn-danger:hover:not(:disabled), .btn-ghost:hover:not(:disabled) {
@@ -1283,7 +1283,7 @@ button, a, [role="button"], input, select, textarea, label {
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .filter-tab-btn:hover {

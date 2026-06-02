@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 14:43:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 14:48:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1065,6 +1065,7 @@
 <li><a href="#sec-73-19">73.19 โครงสร้างแถบควบคุมสารบัญนำทางพลวัตแบบประสานสัญจรร่วมกัน</a></li>
 <li><a href="#sec-73-30">73.30 การปรับปรุงการแสดงผลแบบสัญจรและแถบควบคุมแบบตอบสนองบนสมาร์ตโฟนและ iPad (Responsive UI/UX iPad and Mobile Admin Dashboard Overhaul)</a></li>
 <li><a href="#sec-73-47">73.47 การปรับปรุงระดับความปลอดภัยและการเข้าถึงของปุ่มสวิตช์ควบคุมห้องเรียน (SmartAccess Classroom Toggle Switches UI/UX Accessibility &amp; Focus Restoration Overhaul)</a></li>
+<li><a href="#sec-73-48">73.48 การทดแทนแอนิเมชันแบบเด้งเป็นแบบไหลลื่นพรีเมียม (SmartAccess Bounce-to-Exponential Smooth Animation Transition Overhaul)</a></li>
 </ul>
 <hr>
 <h3>📕 บทที่ 4: ผลการดำเนินงานและการทดสอบระบบ (Results &amp; Evaluation)</h3>
@@ -17624,19 +17625,61 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 </tr>
 </thead>
 <tbody><tr>
-<td>1</td>
-<td><code>my-app/app/admin/dashboard/rooms/page.tsx</code></td>
-<td><strong>[MODIFY]</strong></td>
-<td>ย้ายการประกาศ <code>Toggle</code> สวิตช์ขึ้นไปเป็น Top-level component ป้องกันบั๊ก unmount ปล่อยโฟกัสหลุด</td>
-</tr>
-<tr>
 <td>2</td>
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดแผนการแก้ไขเชิงลึกด้านการเข้าถึงสากลของสวิตช์ควบคุมในระบบแดชบอร์ด (§73.47)</td>
 </tr>
 </tbody></table>
-<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+<hr>
+<p><a id="sec-73-48"></a></p>
+<h3>73.48 การทดแทนแอนิเมชันแบบเด้งเป็นแบบไหลลื่นพรีเมียม (SmartAccess Bounce-to-Exponential Smooth Animation Transition Overhaul)</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 2 มิถุนายน 2026 (14:48 น. ICT)</p>
+<p>ตรวจพบความไม่เหมาะสมในการใช้องค์ประกอบเชิงภาพลักษณ์แบบเคลื่อนไหว (Motion Design) และดำเนินการแทนที่ระบบแอนิเมชันแบบเด้ง (Bounce/Elastic Easing) ทั้งระบบด้วยระบบวิถีการโค้งแอนิเมชันที่สุขุมและพรีเมียมยิ่งขึ้น:</p>
+<h4>73.48.1 ปัญหาทางวิชวลของแอนิเมชันแบบเด้งเดิม (Bouncy Easing Visual Noise &amp; Motion Sensitivity)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ในไฟล์การตกแต่งระบบหลัก <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/globals.css">globals.css</a> มีการใช้งานแอนิเมชันแบบเด้งผ่านฟังก์ชัน <code>cubic-bezier(0.34, 1.56, 0.64, 1)</code> รวม 9 จุดหลัก ซึ่งรวมถึงส่วนติดต่อผู้ใช้ที่สำคัญ เช่น:<ul>
+<li>ตัวสไลด์ปุ่มเปิด-ปิด (<code>.audio-toggle-slider</code> และ <code>.audio-toggle-icon-wrap</code>)</li>
+<li>การ์ดที่มีการเปลี่ยนผ่านเมื่อมีปฏิสัมพันธ์ (<code>.hover-card</code> และ <code>.filter-tab-btn</code>)</li>
+<li>โครงสร้างปุ่มกดระบบหลักทั้งหมด (<code>.btn-primary</code>, <code>.btn-secondary</code>, <code>.btn-danger</code>, <code>.btn-ghost</code>)</li>
+<li>กล่องข้อความแจ้งเตือน (<code>.toast</code> และการ์ดแอนิเมชันสเกลเข้า <code>.animate-scale-in</code>)</li>
+</ul>
+</li>
+<li><strong>ผลกระทบเชิง UX:</strong> แอนิเมชันแบบเด้งนี้มีการขยับตัวที่เกินขีดจำกัด 100% (ล้นเกินมิติปกติแล้วดีดกลับ) ทำให้ความรู้สึกโดยรวมของซอฟต์แวร์ดูฉูดฉาด ไม่มีความน่าเชื่อถือทางวิทยาการ (ดูเหมือน UI ของเล่นเด็กแทนที่จะเป็นระบบรักษาความปลอดภัยระดับองค์กร) และที่สำคัญอาจกระตุ้นการตอบสนองทางสุขภาพที่ไม่พึงประสงค์สำหรับกลุ่มผู้ใช้งานที่มีภาวะอ่อนไหวต่อการเคลื่อนไหวบนหน้าจอ</li>
+</ul>
+<h4>73.48.2 การพัฒนาสู่ระดับพรีเมียมด้วย Exponential Smooth Curve (Ease-Out Expo Transition)</h4>
+<ul>
+<li><strong>การแก้ไขสไตล์ชีท:</strong> <ul>
+<li>ทำการค้นหาและเข้าเขียนทับค่าพารามิเตอร์แอนิเมชันทั้งหมด 9 จุดใน <code>globals.css</code> โดยแปลงเป็น <strong>Exponential Smooth Curve (<code>cubic-bezier(0.16, 1, 0.3, 1)</code>)</strong></li>
+<li>สูตรโค้งนี้จะสั่งการขยับตัวเริ่มแรกอย่างรวดเร็วฉับไวสะท้อนถึงการป้อนคำสั่งของผู้ใช้ แล้วค่อย ๆ หน่วงความเร็วชะลอตัวลงอย่างนุ่มนวลเป็นธรรมชาติเลียนแบบวัตถุทางฟิสิกส์จริง (Deceleration without bounce)</li>
+<li>ผลลัพธ์หลังแก้ไขทำให้แผงควบคุมผู้ดูแลระบบแสดงผลได้อย่างลื่นไหล รวดเร็ว สมราคาซอฟต์แวร์เกรดพรีเมียม และมอบความสบายตาต่อการมองเห็นสูงสุด</li>
+</ul>
+</li>
+</ul>
+<h4>73.48.3 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>แทนที่แอนิเมชันแบบเด้ง (cubic-bezier 0.34) ด้วยแบบไหลลื่น Exponential (cubic-bezier 0.16) ทั้งระบบรวม 9 จุดหลัก</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดแผนการแก้ไขทาง Motion Design และเปลี่ยนผ่านแอนิเมชันเป็นแบบพรีเมียม (§73.48)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
       </article>
     </main>
   </div>
