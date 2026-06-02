@@ -418,8 +418,9 @@ export default function RoomsPage() {
               const testRes = testResults[roomItem.room];
               const isOnline = liveDev ? liveDev.online : testRes?.online || false;
 
+              const isExpanded = expandedRoomSettings.has(roomItem.room);
               return (
-                <article className="room-config-card" key={`room-tab-${idx}`}>
+                <article className={`room-config-card ${isExpanded ? "expanded" : ""}`} key={`room-tab-${idx}`}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                     <span style={{ width: 42, height: 42, borderRadius: 8, background: "var(--smartaccess-purple-pale)", color: "var(--smartaccess-purple-dark)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>
@@ -496,23 +497,31 @@ export default function RoomsPage() {
                   {expandedRoomSettings.has(roomItem.room) && (() => {
                     const cfg = roomConfigs[roomItem.room] ?? defaultRoomConfig();
                     const activeDays = cfg.auto_approve_days ? cfg.auto_approve_days.split(",").map(Number).filter(n => !isNaN(n)) : [];
-                    const dayDefs = [{ val: 1, label: "จ.", fullName: "จันทร์", color: "#EAB308" }, { val: 2, label: "อ.", fullName: "อังคาร", color: "#EC4899" }, { val: 3, label: "พ.", fullName: "พุธ", color: "#10B981" }, { val: 4, label: "พฤ.", fullName: "พฤหัสบดี", color: "#F97316" }, { val: 5, label: "ศ.", fullName: "ศุกร์", color: "#3B82F6" }, { val: 6, label: "ส.", fullName: "เสาร์", color: "#8B5CF6" }, { val: 0, label: "อา.", fullName: "อาทิตย์", color: "#EF4444" }];
+                    const dayDefs = [
+                      { val: 1, label: "จันทร์", fullName: "จันทร์", color: "#EAB308" },
+                      { val: 2, label: "อังคาร", fullName: "อังคาร", color: "#EC4899" },
+                      { val: 3, label: "พุธ", fullName: "พุธ", color: "#10B981" },
+                      { val: 4, label: "พฤหัสฯ", fullName: "พฤหัสบดี", color: "#F97316" },
+                      { val: 5, label: "ศุกร์", fullName: "ศุกร์", color: "#3B82F6" },
+                      { val: 6, label: "เสาร์", fullName: "เสาร์", color: "#8B5CF6" },
+                      { val: 0, label: "อาทิตย์", fullName: "อาทิตย์", color: "#EF4444" }
+                    ];
                      return (
                        <div
                          className="animate-fade-in"
                          style={{
-                           marginTop: 10,
-                           padding: 18,
-                           background: "rgba(124, 58, 237, 0.02)",
-                           border: "1px solid var(--border-medium)",
-                           borderRadius: 12,
+                           marginTop: 14,
+                           padding: 20,
+                           background: "rgba(124, 58, 237, 0.01)",
+                           border: "1px solid var(--border)",
+                           borderRadius: 14,
                            display: "grid",
                            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                           gap: 20
+                           gap: 24
                          }}
                        >
                          {/* Column 1: Approval & Automation */}
-                         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                              <div>
                                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
@@ -533,7 +542,7 @@ export default function RoomsPage() {
                              <Toggle on={cfg.auto_approve_enabled} onToggle={() => setRoomConfig(roomItem.room, { auto_approve_enabled: !cfg.auto_approve_enabled })} label="เข้าห้องอัตโนมัติไม่ต้องรออนุมัติ" />
                            </div>
 
-                           <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 12, background: "rgba(255, 255, 255, 0.02)", borderRadius: 10, border: "1px solid var(--border-medium)" }}>
+                           <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: 12, background: "var(--bg-primary)", borderRadius: 10, border: "1px solid var(--border)" }}>
                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                                <div>
                                  <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 4 }}>
@@ -567,7 +576,7 @@ export default function RoomsPage() {
                          </div>
 
                          {/* Column 2: ESP32 Security & Time Schedule */}
-                         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                              <label style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 5 }}>
                                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -605,7 +614,7 @@ export default function RoomsPage() {
 
                            <div>
                              <label style={{ display: "block", fontSize: 11.5, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 8 }}>วันเปิดให้บริการอัตโนมัติ</label>
-                             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                                {dayDefs.map(day => {
                                  const isOn = activeDays.includes(day.val);
                                  return (
@@ -621,10 +630,10 @@ export default function RoomsPage() {
                                      aria-label={`วัน${day.fullName}`}
                                      className="smartaccess-day-btn"
                                      style={{
-                                       padding: "5px 10px",
-                                       borderRadius: 14,
+                                       padding: "6px 12px",
+                                       borderRadius: 12,
                                        border: isOn ? `1.5px solid ${day.color}` : "1.5px solid var(--border)",
-                                       background: isOn ? `${day.color}15` : "transparent",
+                                       background: isOn ? `${day.color}12` : "transparent",
                                        color: isOn ? "var(--text-primary)" : "var(--text-secondary)",
                                        fontSize: 11.5,
                                        fontWeight: isOn ? 700 : 500,

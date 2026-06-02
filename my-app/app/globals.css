@@ -888,6 +888,16 @@ button, a, [role="button"], input, select, textarea, label {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.room-config-card.expanded {
+  grid-column: 1 / -1; /* Span full row or 2 columns dynamically to avoid visual crowding */
+}
+
+@media (min-width: 900px) {
+  .room-config-card.expanded {
+    grid-column: span 2;
+  }
+}
+
 .room-config-card::before {
   content: '';
   position: absolute;
@@ -901,6 +911,11 @@ button, a, [role="button"], input, select, textarea, label {
   transform: translateY(-4px) scale(1.01);
   box-shadow: var(--shadow-lg);
   border-color: rgba(124, 58, 237, 0.25);
+}
+
+.room-config-card.expanded:hover {
+  transform: translateY(-2px); /* Soften hover shift when expanded so layout doesn't bounce under cursor */
+  box-shadow: var(--shadow-lg);
 }
 
 /* Premium Pulsing Status Dot */

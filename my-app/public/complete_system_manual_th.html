@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 14:48:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 14:54:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1066,6 +1066,7 @@
 <li><a href="#sec-73-30">73.30 การปรับปรุงการแสดงผลแบบสัญจรและแถบควบคุมแบบตอบสนองบนสมาร์ตโฟนและ iPad (Responsive UI/UX iPad and Mobile Admin Dashboard Overhaul)</a></li>
 <li><a href="#sec-73-47">73.47 การปรับปรุงระดับความปลอดภัยและการเข้าถึงของปุ่มสวิตช์ควบคุมห้องเรียน (SmartAccess Classroom Toggle Switches UI/UX Accessibility &amp; Focus Restoration Overhaul)</a></li>
 <li><a href="#sec-73-48">73.48 การทดแทนแอนิเมชันแบบเด้งเป็นแบบไหลลื่นพรีเมียม (SmartAccess Bounce-to-Exponential Smooth Animation Transition Overhaul)</a></li>
+<li><a href="#sec-73-49">73.49 การขยายและยกระดับแผงตั้งค่าห้องเรียนสำหรับแอดมินเป็นสองคอลัมน์ (SmartAccess Classroom Settings Two-Column Responsive Grid Overhaul)</a></li>
 </ul>
 <hr>
 <h3>📕 บทที่ 4: ผลการดำเนินงานและการทดสอบระบบ (Results &amp; Evaluation)</h3>
@@ -17679,7 +17680,64 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>บันทึกรายละเอียดแผนการแก้ไขทาง Motion Design และเปลี่ยนผ่านแอนิเมชันเป็นแบบพรีเมียม (§73.48)</td>
 </tr>
 </tbody></table>
-<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-49"></a></p>
+<h3>73.49 การขยายและยกระดับแผงตั้งค่าห้องเรียนสำหรับแอดมินเป็นสองคอลัมน์ (SmartAccess Classroom Settings Two-Column Responsive Grid Overhaul)</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 2 มิถุนายน 2026 (14:54 น. ICT)</p>
+<p>แผงควบคุมระบบทำการปรับปรุงโครงสร้างการแสดงผล (Visual Layout and Information Architecture) ของแผงตั้งค่าบริการห้องเรียนรายบุคคล (ESP32 Room Settings Panel) ในหน้าจอแอดมิน เพื่อลดระดับความแน่นของการวางตัวเลือก และแก้ไขปัญหาข้อมูลซ้อนทับกันมากเกินไป (Visual Congestion &amp; High Cognitive Load) โดยมีรายละเอียดดังนี้:</p>
+<h4>73.49.1 ปัญหาการซ้อนข้อมูลและความแออัด (Grid Layout Bottleneck &amp; Nested Card Spacing)</h4>
+<ul>
+<li><strong>ปัญหาเลย์เอาต์เดิม:</strong> ในระบบการ์ดห้อง <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/rooms/page.tsx">rooms/page.tsx</a> ตัวเลือกสำหรับเปิดบริการอัตโนมัติ, การกรอกฟอร์มอัตโนมัติ (Auto-fill Options), โหมดซ่อนรหัสนักศึกษาบนหน้าจอ ESP32 ตามกฎหมาย PDPA, ตัวเลือกกรอกเวลา และปุ่มเลือกวันในสัปดาห์ 7 วัน ถูกจัดวางแบบแนวตั้งซ้อนกันภายในแผง Accordion ขนาดเล็กที่มีขนาดจำกัด ส่งผลให้กล่องควบคุมต่าง ๆ เบียดกันอย่างรุนแรงเมื่อมีหน้าจอความละเอียดต่ำ</li>
+<li><strong>ปัญหาทางความเข้าใจ (Usability &amp; Accessibility Flags):</strong> ปุ่มเลือกวันในสัปดาห์เดิมแสดงอักษรย่อเพียงตัวอักษรเดียว (จ., อ., พ., พฤ., ศ., ส., อา.) ซึ่งอาจทำให้ผู้ดูแลสับสนเมื่อต้องตั้งค่าตารางเวลา และขอบเขตการควบคุมชั้นขอบกล่อง (Nested Borders) มีการสะท้อนสีที่มีความต่างกันสูงเกินไปจนเกิดคลื่นรบกวนทางสายตา (Visual Clutter)</li>
+</ul>
+<h4>73.49.2 การอัปเดตและขยายพื้นที่ Grid แบบไดนามิก (Dynamic Row Spanning &amp; Softer Visual Hierarchy)</h4>
+<ul>
+<li><strong>การขยายการ์ดสองคอลัมน์:</strong><ul>
+<li>เพิ่ม Class <code>.expanded</code> และสไตล์คิวรี่มัลติคอลัมน์ <code>.room-config-card.expanded { grid-column: span 2; }</code> ในไฟล์สไตล์หลัก <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/globals.css">globals.css</a> ส่งผลให้เมื่อกดเปิดแผงตั้งค่าห้องใด ๆ การ์ดห้องนั้นจะทำการยืดความกว้างขยายเป็น 2 ช่องในตารางกริดคอมพิวเตอร์โดยอัตโนมัติ ทำให้มีพื้นที่แสดงผลเพิ่มขึ้นเป็นเท่าตัว</li>
+<li>ปิดแอนิเมชัน Hover Translate ดึงขึ้นสำหรับการ์ดสถานะเปิดขยายเพื่อความมั่นคงของเคอร์เซอร์เมาส์ในระหว่างป้อนข้อมูลในฟอร์ม</li>
+</ul>
+</li>
+<li><strong>การปรับปรุงสุนทรียภาพและการปฏิสัมพันธ์ (Aesthetics &amp; Form Clarity):</strong><ul>
+<li>จัดแผงตั้งค่าเป็น <strong>สองคอลัมน์ตอบสนอง (Two-Column Responsive Grid)</strong> แบ่งข้อมูลชัดเจน:<ul>
+<li><strong>คอลัมน์ที่ 1 (ซ้าย):</strong> อนุมัติสิทธิ์เข้าห้องอัตโนมัติ และระบบช่วยเติมประวัติฟอร์ม (Auto-fill Options)</li>
+<li><strong>คอลัมน์ที่ 2 (ขวา):</strong> ความปลอดภัยของรหัสนักศึกษาบนหน้าจอ IoT ตาม PDPA และเวลาให้บริการ</li>
+</ul>
+</li>
+<li>ลดทอนความทึบของเส้นขอบกล่องย่อยและปรับสีพื้นหลังให้อ่อนลง <code>rgba(124, 58, 237, 0.01)</code> ร่วมกับการใช้ <code>var(--border)</code> เพื่อไม่ให้เกิดกล่องซ้อนกล่องที่ดูรกหูรกตา</li>
+<li>เปลี่ยนปุ่มย่อวันในสัปดาห์ให้เป็นชื่อเต็มชัดเจน: <strong>จันทร์, อังคาร, พุธ, พฤหัสฯ, ศุกร์, เสาร์, อาทิตย์</strong> เพื่อความถูกต้องในการใช้งานระดับสูงสุด</li>
+</ul>
+</li>
+</ul>
+<h4>73.49.3 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/globals.css</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อิมพลิเมนต์กฎการยืดขนาดคอลัมน์ <code>.expanded</code> และการปรับปรุงทรานซิชันช่วงการขยายการ์ดห้อง</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/rooms/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับเปลี่ยน Class ของการ์ดแบบไดนามิก และยกเครื่องเลย์เอาต์แผงหีบเพลงการตั้งค่าระบบใหม่ทั้งหมด</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดแผนการแก้ไขทางโครงสร้างการวางสัญลักษณ์และข้อมูลของแดชบอร์ดรายห้อง (§73.49)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
       </article>
     </main>
   </div>
