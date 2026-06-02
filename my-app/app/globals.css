@@ -983,6 +983,13 @@ button, a, [role="button"], input, select, textarea, label {
   }
 }
 
+@media (min-width: 1025px) {
+  .smartaccess-table-container {
+    overflow: visible !important;
+  }
+}
+
+
 
 /* ──────────────────────────────────────────────────────────────
    ศูนย์ตั้งค่าการแจ้งเตือน (Notification Settings) — Responsive helpers

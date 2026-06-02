@@ -143,7 +143,11 @@ export default function AllPage() {
   }, []);
 
   React.useEffect(() => {
-    const handleOutsideClick = () => setActiveMenuId(null);
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest(".smartaccess-actions-wrapper")) return;
+      setActiveMenuId(null);
+    };
     document.addEventListener("click", handleOutsideClick);
     return () => document.removeEventListener("click", handleOutsideClick);
   }, []);
@@ -378,7 +382,7 @@ export default function AllPage() {
                          )}
                       </td>
                       <td style={{ padding: "12px 14px", textAlign: "right", position: "relative" }}>
-                        <div style={{ display: "inline-block", position: "relative" }}>
+                        <div className="smartaccess-actions-wrapper" style={{ display: "inline-block", position: "relative" }}>
                           <button
                             type="button"
                             onClick={(e) => {
