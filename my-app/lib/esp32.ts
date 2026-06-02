@@ -219,17 +219,17 @@ export async function getESP32Status(roomCode?: string): Promise<{
   }
 
   // ─── [IoT Cloud Polling Heartbeat Fallback] ───
-  // เช็คจากประวัติการดึงข้อมูลล่าสุด (Heartbeat) ของห้องนั้นๆ ในฐานข้อมูลแทน
+  // เช็คจากประวัติการดึงข้อมูลล่าสุด (Heartbeat) ของห้องนั้นๆ ในฐานข้อมูลแทน (ตาราง esp32_heartbeats)
   try {
     const pool = getPool();
     const { rows } = await pool.query(
-      "SELECT setting_value FROM system_settings WHERE setting_key = $1",
-      [`room_last_seen_${sanitizedRoom}`]
+      "SELECT last_seen FROM esp32_heartbeats WHERE room_code = $1",
+      [sanitizedRoom]
     );
-    const settings = rows as { setting_value: string }[];
-    if (settings.length > 0) {
-      const lastSeenStr = settings[0].setting_value;
-      const lastSeen = new Date(lastSeenStr).getTime();
+    const heartbeats = rows as { last_seen: string | Date }[];
+    if (heartbeats.length > 0) {
+      const lastSeenVal = heartbeats[0].last_seen;
+      const lastSeen = new Date(lastSeenVal).getTime();
       const now = new Date().getTime();
       const diffSeconds = (now - lastSeen) / 1000;
       

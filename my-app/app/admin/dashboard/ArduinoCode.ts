@@ -1349,16 +1349,30 @@ void loop() {
           const char *requested_room = doc["requested_room"];
 
           String qrText = "";
-          if (active_token && register_url && requested_room) {
-            String regUrl = String(register_url);
-            int idx = regUrl.indexOf("/?room=");
-            String baseUrl = "";
-            if (idx != -1) {
-              baseUrl = regUrl.substring(0, idx);
+          if (active_token) {
+            String baseUrl = "https://project-sigma-ivory-21.vercel.app";
+            String currentRoom = String(room_code);
+            
+            if (register_url) {
+              String regUrl = String(register_url);
+              int idx = regUrl.indexOf("/?room=");
+              if (idx != -1) {
+                baseUrl = regUrl.substring(0, idx);
+              }
             } else {
-              baseUrl = "https://project-sigma-ivory-21.vercel.app";
+              // Fallback: extract base URL from server_url
+              String sUrl = String(server_url);
+              int apiIdx = sUrl.indexOf("/api/");
+              if (apiIdx != -1) {
+                baseUrl = sUrl.substring(0, apiIdx);
+              }
             }
-            qrText = baseUrl + "/?scan=" + String(active_token) + "&room=" + String(requested_room);
+            
+            if (requested_room) {
+              currentRoom = String(requested_room);
+            }
+            
+            qrText = baseUrl + "/?scan=" + String(active_token) + "&room=" + currentRoom;
           }
 
           DBGF("Door command: %s | Queue: %d\\n", door_trigger ? door_trigger : "NULL", pending_count);

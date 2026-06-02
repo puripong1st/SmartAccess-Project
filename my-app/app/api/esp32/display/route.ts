@@ -307,6 +307,8 @@ export async function GET(req: NextRequest) {
     const payload = isSlim
       ? {
           active_token: activeToken,
+          register_url: `${appUrl}/?room=${room}`,
+          requested_room: room,
           pending_count: pendingCount,
           last_approved: lastStudent
             ? {
