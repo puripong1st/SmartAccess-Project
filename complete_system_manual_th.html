@@ -17489,7 +17489,11 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <li><strong>การสร้างฟังก์ชันรวมศูนย์สำหรับสร้าง Headers ความปลอดภัย (<code>addZeroTrustHeaders</code>):</strong><br>เพิ่มฟังก์ชันช่วยงาน <code>addZeroTrustHeaders</code> เข้าไปในส่วนของเฟิร์มแวร์ ESP32 และส่วนโค้ดสร้างโค้ดอัตโนมัติ ซึ่งฟังก์ชันนี้จะรับผิดชอบการสร้าง <code>x-device-id</code> (ในรูปแบบ <code>esp32_[ROOM_CODE]</code>), <code>x-nonce</code> (แฮชพลวัต 16 หลักจากตัวสร้างตัวเลขสุ่มแบบฮาร์ดแวร์ <code>esp_random()</code>), <code>x-timestamp</code> (เวลาปัจจุบันตามเซิร์ฟเวอร์), และทำการลงนาม <code>x-hmac-signature</code> แบบ Payload-Inclusive HMAC V2.0 ผูกร่วมกับ API Key ที่ได้รับการ Derived มาจาก KDF ของห้องนั้น ๆ</li>
 <li><strong>การปรับใช้ในการดึงข้อมูล (Polling Request) และการซิงก์ข้อมูลนักศึกษา (Sync Student Cache):</strong><br>ปรับปรุงคำสั่ง HTTP GET ในลูปหลักของบอร์ด ESP32 และกระบวนการดึงข้อมูลรายชื่อนักศึกษาใน <code>syncStudentCache</code> ให้ทำลายระบบ V1 ดั้งเดิมออก และส่งผ่านฟังก์ชัน <code>addZeroTrustHeaders</code> แทน ส่งผลให้การยืนยันสิทธิ์ Zero-Trust V2.0 ประสบความสำเร็จ 100% ทันที</li>
 <li><strong>การพัฒนาสถาปัตยกรรมทางเลือกสำหรับการสร้างคีย์ QR (QR Target URL Construction Fallback):</strong><br>แก้ไขตรรกะในเฟิร์มแวร์เมื่อเซิร์ฟเวอร์ส่งชุดข้อมูลคำตอบแบบย่อ (Slim Payload: ซึ่งไม่มีตัวแปร <code>register_url</code> และ <code>requested_room</code>) โดยกำหนดให้บอร์ดประเมินดึงชื่อห้องจากค่าตัวแปรในบอร์ด และทำการสกัดแยกเอา Base URL (เช่น <code>https://project-sigma-ivory-21.vercel.app</code> หรือ <code>http://localhost:3000</code>) ออกมาจากตัวแปร <code>server_url</code> หลัก เพื่อนำมาประกอบร่วมกับ <code>active_token</code> สร้าง QR Target URL ขึ้นมาวาดบนหน้าจอได้อย่างสมบูรณ์ ป้องกันหน้าจอค้างอยู่ที่สถานะ <code>Loading QR...</code></li>
-<li><strong>การแก้ไขตารางข้อมูลสัญญาณชีพเชื่อมต่อ (Heartbeat Database Mapping Fix):</strong><br>แก้ไขระบบตรวจสอบสถานะของห้องเรียน ( getESP32Status ใน <code>my-app/lib/esp32.ts</code> ) เนื่องจากระบบดั้งเดิมทำการตรวจสอบสัญญาณชีพของบอร์ดโดยการเรียกดูจากตาราง <code>system_settings</code> ( คีย์ <code>room_last_seen_${room}</code> ) แต่ส่วนขยายระบบ Edge API ได้ย้ายการอัปเดตไปที่ตาราง <code>esp32_heartbeats</code> แทน ส่งผลให้สถานะบนเว็บไซต์รายงานเป็น <code>OFFLINE</code> ตลอดเวลาแม้บอร์ดจะเชื่อมต่อจริง ได้ทำการแก้ไขคิวรีในเซิร์ฟเวอร์ให้อ่านจากตาราง <code>esp32_heartbeats</code> อย่างถูกต้องเพื่อให้แดชบอร์ดรายงานสถานะบอร์ดเป็น <code>ONLINE</code> ทันทีที่บอร์ดเริ่มส่งข้อมูล</li>
+<li><strong>การแก้ไขตารางข้อมูลสัญญาณชีพเชื่อมต่อและความคลาดเคลื่อนของเวลา (Heartbeat Database Mapping &amp; Timezone Drift Fix):</strong><ul>
+<li>แก้ไขระบบตรวจสอบสถานะของห้องเรียน ( getESP32Status ใน <code>my-app/lib/esp32.ts</code> ) เนื่องจากระบบดั้งเดิมทำการตรวจสอบสัญญาณชีพของบอร์ดโดยการเรียกดูจากตาราง <code>system_settings</code> ( คีย์ <code>room_last_seen_${room}</code> ) แต่ส่วนขยายระบบ Edge API ได้ย้ายการอัปเดตไปที่ตาราง <code>esp32_heartbeats</code> แทน จึงเปลี่ยนมาอ่านจากตาราง <code>esp32_heartbeats</code></li>
+<li>แก้ปัญหาระบบแสดงสถานะเป็น <code>OFFLINE</code> ตลอดเวลาบนเซิร์ฟเวอร์โลคอลไทย (UTC+7) ซึ่งเกิดจากความขัดแย้งในการแปลงเขตเวลาของตารางประเภท <code>TIMESTAMP</code> ที่ไม่มีเขตเวลากำกับ (node-postgres ตีความเป็นเวลาท้องถิ่น ทำให้ค่าติดลบไป 7 ชั่วโมงหรือ 25,200 วินาที เกินขีดจำกัดออนไลน์ 120 วินาที) โดยอัปเกรดคำสั่งคิวรีให้ใช้ดึงผ่าน <strong><code>EXTRACT(EPOCH FROM last_seen)</code></strong> ซึ่งเป็นมาตรฐานวิเคราะห์สัญจรแบบสากล ทำให้คำนวณผลต่างเวลาได้อย่างแม่นยำระดับวินาทีตรงกัน 100% ทั้งบน Local Dev และ Vercel Production</li>
+</ul>
+</li>
 </ol>
 <h4>73.45.3 ตารางสรุปไฟล์แก้ไข</h4>
 <table>
@@ -17517,19 +17521,19 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>3</td>
 <td><code>my-app/app/api/esp32/display/route.ts</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>ผนวกตัวแปร <code>register_url</code> และ <code>requested_room</code> กลับคืนใน Payload ของ Slim Mode เพื่อรองรับการทำงานกับเฟิร์มแวร์เวอร์ชันเก่าโดยตรง</td>
+<td>ผนวกตัวแปร <code>register_url</code> และ <code>requested_room</code> กลับคืน in Payload ของ Slim Mode เพื่อรองรับการทำงานกับเฟิร์มแวร์เวอร์ชันเก่าโดยตรง</td>
 </tr>
 <tr>
 <td>4</td>
 <td><code>my-app/lib/esp32.ts</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>แก้ไขคิวรีตรวจสอบสถานะออนไลน์ (<code>getESP32Status</code>) ให้อ่านเวลาจากตาราง <code>esp32_heartbeats</code> เพื่อความสอดคล้องกัน</td>
+<td>แก้ไขคิวรีสถานะเชื่อมต่อ (<code>getESP32Status</code>) ให้ดึงข้อมูลผ่าน Epoch วินาที เพื่อแก้ไขปัญหาบั๊ก Timezone (UTC+7) บนโลคอลเซิร์ฟเวอร์</td>
 </tr>
 <tr>
 <td>5</td>
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
-<td>บันทึกรายละเอียดการทำงานและแก้ไขเรื่องเฟิร์มแวร์เพื่อความเข้ากันได้กับระบบ Zero-Trust V2.0, ระบบ QR Fallback และการแก้สถานะห้องออฟไลน์ (§73.45)</td>
+<td>บันทึกรายละเอียดการทำงานและแก้ไขเรื่องเฟิร์มแวร์เพื่อความเข้ากันได้กับระบบ Zero-Trust V2.0, ระบบ QR Fallback และการแก้สถานะห้องออฟไลน์จากการคำนวณ Timezone (§73.45)</td>
 </tr>
 </tbody></table>
 <hr>

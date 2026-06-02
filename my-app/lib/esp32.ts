@@ -220,17 +220,18 @@ export async function getESP32Status(roomCode?: string): Promise<{
 
   // ─── [IoT Cloud Polling Heartbeat Fallback] ───
   // เช็คจากประวัติการดึงข้อมูลล่าสุด (Heartbeat) ของห้องนั้นๆ ในฐานข้อมูลแทน (ตาราง esp32_heartbeats)
+  // ใช้ EXTRACT(EPOCH FROM last_seen) เพื่อกันปัญหานำเข้า timezone ผิดพลาดบนเซิร์ฟเวอร์โลคอล (เช่น UTC+7)
   try {
     const pool = getPool();
     const { rows } = await pool.query(
-      "SELECT last_seen FROM esp32_heartbeats WHERE room_code = $1",
+      "SELECT EXTRACT(EPOCH FROM last_seen) as last_seen_epoch FROM esp32_heartbeats WHERE room_code = $1",
       [sanitizedRoom]
     );
-    const heartbeats = rows as { last_seen: string | Date }[];
+    const heartbeats = rows as { last_seen_epoch: string | number }[];
     if (heartbeats.length > 0) {
-      const lastSeenVal = heartbeats[0].last_seen;
-      const lastSeen = new Date(lastSeenVal).getTime();
-      const now = new Date().getTime();
+      const epoch = Number(heartbeats[0].last_seen_epoch);
+      const lastSeen = epoch * 1000;
+      const now = Date.now();
       const diffSeconds = (now - lastSeen) / 1000;
       
       // ถ้าบอร์ดเพิ่ง Heartbeat มาไม่เกิน 120 วินาที ถือว่าออนไลน์
