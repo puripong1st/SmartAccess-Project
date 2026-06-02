@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-02 14:57:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-02 15:02:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -127,6 +127,7 @@
 - [73.48 การทดแทนแอนิเมชันแบบเด้งเป็นแบบไหลลื่นพรีเมียม (SmartAccess Bounce-to-Exponential Smooth Animation Transition Overhaul)](#sec-73-48)
 - [73.49 การขยายและยกระดับแผงตั้งค่าห้องเรียนสำหรับแอดมินเป็นสองคอลัมน์ (SmartAccess Classroom Settings Two-Column Responsive Grid Overhaul)](#sec-73-49)
 - [73.50 การจัดกลุ่มปุ่มการจัดการทำรายการในตารางประวัติเป็นเมนูสามจุด (SmartAccess Student Directory Table Actions Dropdown Menu Overhaul)](#sec-73-50)
+- [73.51 การปรับปรุงแผงคัดลอกโค้ดบอร์ดคอนโทรลเลอร์และการจัดระเบียบตารางประวัติเพิ่มเติม (SmartAccess Controller Code Panel Copying Feedback & Access Log Column Optimization)](#sec-73-51)
 
 ---
 
@@ -11978,6 +11979,41 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 |---|---|---|---|
 | 1 | `my-app/app/admin/dashboard/all/page.tsx` | **[MODIFY]** | นำเข้า MoreVertical, เพิ่มระบบ Outside Click Listener และย้าย Actions ในตาราง Desktop เข้าสู่ Popover |
 | 2 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดแผนการแก้ไขทางสถาปัตยกรรมแถบจัดการ Actions ในตารางทำเนียบสิทธิ์ (§73.50) |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+---
+
+<a id="sec-73-51"></a>
+### 73.51 การปรับปรุงแผงคัดลอกโค้ดบอร์ดคอนโทรลเลอร์และการจัดระเบียบตารางประวัติเพิ่มเติม (SmartAccess Controller Code Panel Copying Feedback & Access Log Column Optimization)
+
+**วันที่ดำเนินการ:** 2 มิถุนายน 2026 (15:02 น. ICT)
+
+ระบบทำการขัดเกลาและปรับปรุงรายละเอียดด้านปฏิสัมพันธ์ผู้ใช้ (Micro-interactions) และการจัดสัดส่วนตารางบันทึกการสัญจรทางคอมพิวเตอร์เพิ่มเติม เพื่อรองรับการใช้งานระดับอุตสาหกรรมอย่างสมบูรณ์แบบดังต่อไปนี้:
+
+#### 73.51.1 ปรับปรุงปุ่มคัดลอกโค้ดเฟิร์มแวร์บอร์ด (Arduino Code Panel Copying Feedback)
+- **ปัญหาเดิม:** ในหน้าจอคู่มือแผงตั้งค่าการทำงานบอร์ดจำลองและบอร์ดจริง ([layout.tsx](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/layout.tsx)) ปุ่ม "คัดลอก config.h" และ "คัดลอก esp32.ino" เดิมใช้ค่าสีขาวบาง ๆ และโปร่งแสงมากเกินไป (`rgba(255,255,255,0.08)`) ทำให้มองเห็นและระบุได้ยากบนพื้นหลังสีน้ำเงินเข้มของกล่องโค้ด `#0F172A` อีกทั้งหลังคลิกแล้วไม่มีการบอกสถานะที่ชัดเจน
+- **การแก้ไขและเพิ่มปฏิสัมพันธ์:**
+  - เพิ่มความเข้มพื้นหลังและกรอบของปุ่มเป็น `rgba(255,255,255,0.16)` เพื่อเพิ่มความเปรียบต่างเชิงสายตา (Color Contrast)
+  - ติดตั้งตัวแปรสถานะ Local State `copiedConfig` และ `copiedEsp32`
+  - เมื่อผู้ใช้กดปุ่มคัดลอก ระบบจะทำการเปลี่ยนรูปแบบเป็นสถานะสำเร็จโดยเปลี่ยนปุ่มเป็นสีเขียวพาสเทลโปร่งแสง `rgba(16, 185, 129, 0.2)` กรอบสีเขียว `rgba(16, 185, 129, 0.4)` สีตัวอักษร `#10B981` และเปลี่ยนป้ายข้อความเป็น **"✅ คัดลอกเรียบร้อย!"** เป็นเวลา 2 วินาที ก่อนจะเปลี่ยนกลับคืน ช่วยสร้าง Micro-interaction ที่ชัดเจนและลดความคลุมเครือ
+
+#### 73.51.2 การปรับปรุงความสมบูรณ์และควบคุมความกว้างตารางประวัติระบบ (Access Log Table Layout Optimization)
+- **ปัญหาเดิม:** คอลัมน์ข้อมูลเพิ่มเติมหรือบันทึกประวัติจราจรในตารางเดสก์ท็อป ([all/page.tsx](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/all/page.tsx)) ไม่มีการระบุความกว้างสูงสุด ส่งผลให้หากมีแถวบันทึกความปลอดภัยที่มีความยาวของข้อมูลบอร์ดหรือข้อผิดพลาดระบบยืดขยายมากเกินไป จะส่งผลให้โครงสร้างตารางขยายตัวกว้างผิดปกติและเสียสัดส่วนสมมาตร
+- **การแก้ไข:**
+  - กำหนดความกว้างสูงสุดของคอลัมน์บันทึกข้อมูลเพิ่มเติมให้คงที่ที่ `maxWidth: 360` และเปิดคุณสมบัติ `wordBreak: "break-word"` เพื่อให้แน่ใจว่าตัวหนังสือยาว ๆ จะหักตกบรรทัดอย่างเป็นระเบียบ ไม่เบียดดันโครงสร้างตารางหลัก
+  - ติดตั้งคำอธิบายเพิ่มเติมเมื่อเอาเมาส์ชี้สัมผัส (Tooltip title) ไปยังส่วนข้อมูล IP Address และ User Agent โดยระบุเต็มรูปแบบ เช่น `title={\`IP Address: \${log.ip_address}\`}` และ `title={\`User Agent: \${log.user_agent}\`}` เพื่อให้แอดมินสามารถดูข้อมูลทางเทคนิคฉบับเต็มได้อย่างสะดวก
+
+#### 73.51.3 ปรับปรุงมิติการนำทางด้วยคีย์บอร์ดของวันเปิดบริการ (Keyboard Focus Navigation for Day Selection)
+- **การแก้ไข:** ทำการถอดรูปแบบ inline style `outline: "none"` ออกจากปุ่มกดเลือกวันสัปดาห์ในหน้าบริการรายห้อง ([rooms/page.tsx](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/rooms/page.tsx)) เพื่อให้ระบบโฟกัสแป้นพิมพ์ (Keyboard Focus Ring) สามารถทำงานร่วมกับคลาสสำเร็จรูปของดีไซน์ระบบ `.smartaccess-day-btn:focus-visible` ใน globals.css ได้อย่างถูกต้องสมบูรณ์แบบ สนับสนุนการเข้าถึงสากล (Sam)
+
+#### 73.51.4 ตารางสรุปไฟล์แก้ไข
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | เพิ่มสถานะ `copiedConfig`/`copiedEsp32` และทำปุ่มคัดลอกให้มีคอนทราสต์สูงขึ้นและเปลี่ยนสถานะเป็นสีเขียวสำเร็จ |
+| 2 | `my-app/app/admin/dashboard/all/page.tsx` | **[MODIFY]** | ควบคุมความกว้างคอลัมน์ประวัติความปลอดภัย `maxWidth: 360` พร้อมติด Tooltips บนข้อมูลสัญจร |
+| 3 | `my-app/app/admin/dashboard/rooms/page.tsx` | **[MODIFY]** | นำคำสั่ง `outline: "none"` ออกเพื่อให้คีย์บอร์ดสามารถเข้าถึงวงแหวนโฟกัสการตั้งวันได้ปลอดภัย |
+| 4 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดแผนการแก้ไขทาง Micro-interactions และความสมมาตรทางวิชวลประวัติระบบ (§73.51) |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 

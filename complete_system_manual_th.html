@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 14:57:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 15:02:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1068,6 +1068,7 @@
 <li><a href="#sec-73-48">73.48 การทดแทนแอนิเมชันแบบเด้งเป็นแบบไหลลื่นพรีเมียม (SmartAccess Bounce-to-Exponential Smooth Animation Transition Overhaul)</a></li>
 <li><a href="#sec-73-49">73.49 การขยายและยกระดับแผงตั้งค่าห้องเรียนสำหรับแอดมินเป็นสองคอลัมน์ (SmartAccess Classroom Settings Two-Column Responsive Grid Overhaul)</a></li>
 <li><a href="#sec-73-50">73.50 การจัดกลุ่มปุ่มการจัดการทำรายการในตารางประวัติเป็นเมนูสามจุด (SmartAccess Student Directory Table Actions Dropdown Menu Overhaul)</a></li>
+<li><a href="#sec-73-51">73.51 การปรับปรุงแผงคัดลอกโค้ดบอร์ดคอนโทรลเลอร์และการจัดระเบียบตารางประวัติเพิ่มเติม (SmartAccess Controller Code Panel Copying Feedback &amp; Access Log Column Optimization)</a></li>
 </ul>
 <hr>
 <h3>📕 บทที่ 4: ผลการดำเนินงานและการทดสอบระบบ (Results &amp; Evaluation)</h3>
@@ -17780,6 +17781,69 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดแผนการแก้ไขทางสถาปัตยกรรมแถบจัดการ Actions ในตารางทำเนียบสิทธิ์ (§73.50)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-51"></a></p>
+<h3>73.51 การปรับปรุงแผงคัดลอกโค้ดบอร์ดคอนโทรลเลอร์และการจัดระเบียบตารางประวัติเพิ่มเติม (SmartAccess Controller Code Panel Copying Feedback &amp; Access Log Column Optimization)</h3>
+<p><strong>วันที่ดำเนินการ:</strong> 2 มิถุนายน 2026 (15:02 น. ICT)</p>
+<p>ระบบทำการขัดเกลาและปรับปรุงรายละเอียดด้านปฏิสัมพันธ์ผู้ใช้ (Micro-interactions) และการจัดสัดส่วนตารางบันทึกการสัญจรทางคอมพิวเตอร์เพิ่มเติม เพื่อรองรับการใช้งานระดับอุตสาหกรรมอย่างสมบูรณ์แบบดังต่อไปนี้:</p>
+<h4>73.51.1 ปรับปรุงปุ่มคัดลอกโค้ดเฟิร์มแวร์บอร์ด (Arduino Code Panel Copying Feedback)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ในหน้าจอคู่มือแผงตั้งค่าการทำงานบอร์ดจำลองและบอร์ดจริง (<a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/layout.tsx">layout.tsx</a>) ปุ่ม &quot;คัดลอก config.h&quot; และ &quot;คัดลอก esp32.ino&quot; เดิมใช้ค่าสีขาวบาง ๆ และโปร่งแสงมากเกินไป (<code>rgba(255,255,255,0.08)</code>) ทำให้มองเห็นและระบุได้ยากบนพื้นหลังสีน้ำเงินเข้มของกล่องโค้ด <code>#0F172A</code> อีกทั้งหลังคลิกแล้วไม่มีการบอกสถานะที่ชัดเจน</li>
+<li><strong>การแก้ไขและเพิ่มปฏิสัมพันธ์:</strong><ul>
+<li>เพิ่มความเข้มพื้นหลังและกรอบของปุ่มเป็น <code>rgba(255,255,255,0.16)</code> เพื่อเพิ่มความเปรียบต่างเชิงสายตา (Color Contrast)</li>
+<li>ติดตั้งตัวแปรสถานะ Local State <code>copiedConfig</code> และ <code>copiedEsp32</code></li>
+<li>เมื่อผู้ใช้กดปุ่มคัดลอก ระบบจะทำการเปลี่ยนรูปแบบเป็นสถานะสำเร็จโดยเปลี่ยนปุ่มเป็นสีเขียวพาสเทลโปร่งแสง <code>rgba(16, 185, 129, 0.2)</code> กรอบสีเขียว <code>rgba(16, 185, 129, 0.4)</code> สีตัวอักษร <code>#10B981</code> และเปลี่ยนป้ายข้อความเป็น <strong>&quot;✅ คัดลอกเรียบร้อย!&quot;</strong> เป็นเวลา 2 วินาที ก่อนจะเปลี่ยนกลับคืน ช่วยสร้าง Micro-interaction ที่ชัดเจนและลดความคลุมเครือ</li>
+</ul>
+</li>
+</ul>
+<h4>73.51.2 การปรับปรุงความสมบูรณ์และควบคุมความกว้างตารางประวัติระบบ (Access Log Table Layout Optimization)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> คอลัมน์ข้อมูลเพิ่มเติมหรือบันทึกประวัติจราจรในตารางเดสก์ท็อป (<a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/all/page.tsx">all/page.tsx</a>) ไม่มีการระบุความกว้างสูงสุด ส่งผลให้หากมีแถวบันทึกความปลอดภัยที่มีความยาวของข้อมูลบอร์ดหรือข้อผิดพลาดระบบยืดขยายมากเกินไป จะส่งผลให้โครงสร้างตารางขยายตัวกว้างผิดปกติและเสียสัดส่วนสมมาตร</li>
+<li><strong>การแก้ไข:</strong><ul>
+<li>กำหนดความกว้างสูงสุดของคอลัมน์บันทึกข้อมูลเพิ่มเติมให้คงที่ที่ <code>maxWidth: 360</code> และเปิดคุณสมบัติ <code>wordBreak: &quot;break-word&quot;</code> เพื่อให้แน่ใจว่าตัวหนังสือยาว ๆ จะหักตกบรรทัดอย่างเป็นระเบียบ ไม่เบียดดันโครงสร้างตารางหลัก</li>
+<li>ติดตั้งคำอธิบายเพิ่มเติมเมื่อเอาเมาส์ชี้สัมผัส (Tooltip title) ไปยังส่วนข้อมูล IP Address และ User Agent โดยระบุเต็มรูปแบบ เช่น <code>title={\</code>IP Address: ${log.ip_address}`}<code>และ</code>title={`User Agent: ${log.user_agent}`}` เพื่อให้แอดมินสามารถดูข้อมูลทางเทคนิคฉบับเต็มได้อย่างสะดวก</li>
+</ul>
+</li>
+</ul>
+<h4>73.51.3 ปรับปรุงมิติการนำทางด้วยคีย์บอร์ดของวันเปิดบริการ (Keyboard Focus Navigation for Day Selection)</h4>
+<ul>
+<li><strong>การแก้ไข:</strong> ทำการถอดรูปแบบ inline style <code>outline: &quot;none&quot;</code> ออกจากปุ่มกดเลือกวันสัปดาห์ในหน้าบริการรายห้อง (<a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/rooms/page.tsx">rooms/page.tsx</a>) เพื่อให้ระบบโฟกัสแป้นพิมพ์ (Keyboard Focus Ring) สามารถทำงานร่วมกับคลาสสำเร็จรูปของดีไซน์ระบบ <code>.smartaccess-day-btn:focus-visible</code> ใน globals.css ได้อย่างถูกต้องสมบูรณ์แบบ สนับสนุนการเข้าถึงสากล (Sam)</li>
+</ul>
+<h4>73.51.4 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/admin/dashboard/layout.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่มสถานะ <code>copiedConfig</code>/<code>copiedEsp32</code> และทำปุ่มคัดลอกให้มีคอนทราสต์สูงขึ้นและเปลี่ยนสถานะเป็นสีเขียวสำเร็จ</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/all/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ควบคุมความกว้างคอลัมน์ประวัติความปลอดภัย <code>maxWidth: 360</code> พร้อมติด Tooltips บนข้อมูลสัญจร</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>my-app/app/admin/dashboard/rooms/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>นำคำสั่ง <code>outline: &quot;none&quot;</code> ออกเพื่อให้คีย์บอร์ดสามารถเข้าถึงวงแหวนโฟกัสการตั้งวันได้ปลอดภัย</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดแผนการแก้ไขทาง Micro-interactions และความสมมาตรทางวิชวลประวัติระบบ (§73.51)</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

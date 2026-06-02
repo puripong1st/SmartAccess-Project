@@ -739,7 +739,7 @@ export default function AllPage() {
                             <span style={{ color: "var(--text-muted)" }}>-</span>
                           )}
                         </td>
-                        <td style={{ padding: "14px" }}>
+                        <td style={{ padding: "14px", maxWidth: 360, wordBreak: "break-word" }}>
                           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                             {isRejectedUser && log.esp32_response && (
                               <div style={{ color: "#EF4444", fontWeight: 700, fontSize: "11px", display: "flex", gap: 4, alignItems: "center" }}>
@@ -749,8 +749,8 @@ export default function AllPage() {
                             {renderLogNotes(log.notes)}
                             {(log.ip_address || log.user_agent) && (
                               <div style={{ fontSize: 10.5, color: "var(--text-muted)", marginTop: 4, display: "flex", flexWrap: "wrap", gap: 8 }}>
-                                {log.ip_address && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Globe size={12} /> IP: {log.ip_address}</span>}
-                                {log.user_agent && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Laptop size={12} /> {formatDeviceFromUA(log.user_agent)}</span>}
+                                {log.ip_address && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title={`IP Address: ${log.ip_address}`}><Globe size={12} /> IP: {log.ip_address}</span>}
+                                {log.user_agent && <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }} title={`User Agent: ${log.user_agent}`}><Laptop size={12} /> {formatDeviceFromUA(log.user_agent)}</span>}
                               </div>
                             )}
                           </div>

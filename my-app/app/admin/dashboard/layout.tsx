@@ -397,6 +397,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
   // ช่องทางแจ้งเตือนที่กำลังตั้งค่าใน room modal (segmented selector)
   const [roomNotifyChannel, setRoomNotifyChannel] = useState<"discord" | "telegram" | "line">("discord");
+  const [copiedConfig, setCopiedConfig] = useState(false);
+  const [copiedEsp32, setCopiedEsp32] = useState(false);
 
   // ตามคำขอ: คงสถานะล็อกอินแบบ PWA จนกว่าจะกด Logout เอง
   // จึงปิด idle auto-logout (เดิมเตะออกหลังไม่มีกิจกรรม 15 นาที) — handlers เป็น no-op
@@ -1223,6 +1225,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                           const codeElement = document.getElementById("arduino-config-block");
                           if (codeElement) {
                             copyToClipboard(codeElement.textContent || "");
+                            setCopiedConfig(true);
+                            setTimeout(() => setCopiedConfig(false), 2000);
                           }
                         }}
                         className="smartaccess-copy-btn"
@@ -1234,16 +1238,16 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                           borderRadius: 8,
                           fontSize: 11,
                           fontWeight: 800,
-                          background: "rgba(255,255,255,0.08)",
-                          border: "1px solid rgba(255,255,255,0.15)",
-                          color: "#E2E8F0",
+                          background: copiedConfig ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.16)",
+                          border: copiedConfig ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(255, 255, 255, 0.3)",
+                          color: copiedConfig ? "#10B981" : "#F1F5F9",
                           cursor: "pointer",
                           zIndex: 10,
                           transition: "all 0.15s ease",
                           outline: "none"
                         }}
                       >
-                        📋 คัดลอก config.h
+                        {copiedConfig ? "✅ คัดลอกเรียบร้อย!" : "📋 คัดลอก config.h"}
                       </button>
                       <pre
                         id="arduino-config-block"
@@ -1281,6 +1285,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                           const codeElement = document.getElementById("arduino-code-block");
                           if (codeElement) {
                             copyToClipboard(codeElement.textContent || "");
+                            setCopiedEsp32(true);
+                            setTimeout(() => setCopiedEsp32(false), 2000);
                           }
                         }}
                         className="smartaccess-copy-btn"
@@ -1292,16 +1298,16 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                           borderRadius: 8,
                           fontSize: 11,
                           fontWeight: 800,
-                          background: "rgba(255,255,255,0.08)",
-                          border: "1px solid rgba(255,255,255,0.15)",
-                          color: "#E2E8F0",
+                          background: copiedEsp32 ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.16)",
+                          border: copiedEsp32 ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(255, 255, 255, 0.3)",
+                          color: copiedEsp32 ? "#10B981" : "#F1F5F9",
                           cursor: "pointer",
                           zIndex: 10,
                           transition: "all 0.15s ease",
                           outline: "none"
                         }}
                       >
-                        📋 คัดลอก esp32.ino
+                        {copiedEsp32 ? "✅ คัดลอกเรียบร้อย!" : "📋 คัดลอก esp32.ino"}
                       </button>
                       <pre
                         id="arduino-code-block"

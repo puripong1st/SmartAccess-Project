@@ -638,8 +638,7 @@ export default function RoomsPage() {
                                        fontSize: 11.5,
                                        fontWeight: isOn ? 700 : 500,
                                        cursor: "pointer",
-                                       transition: "all 0.15s ease",
-                                       outline: "none"
+                                       transition: "all 0.15s ease"
                                      }}
                                    >
                                      {day.label}
