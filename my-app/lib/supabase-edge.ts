@@ -67,11 +67,19 @@ export async function sbUpdate(
   const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
   Object.entries(filters).forEach(([k, v]) => url.searchParams.set(k, `eq.${v}`));
 
-  fetch(url.toString(), {
-    method: "PATCH",
-    headers: BASE_HEADERS,
-    body: JSON.stringify(data),
-  }).catch((e) => console.error("[supabase-edge] update error:", e));
+  try {
+    const res = await fetch(url.toString(), {
+      method: "PATCH",
+      headers: BASE_HEADERS,
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`[supabase-edge] update failed for ${table}: ${res.status} ${res.statusText} - ${errText}`);
+    }
+  } catch (e) {
+    console.error("[supabase-edge] update error:", e);
+  }
 }
 
 /** UPSERT a row (INSERT … ON CONFLICT DO UPDATE) */
@@ -82,11 +90,19 @@ export async function sbUpsert(
 ): Promise<void> {
   const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
 
-  fetch(url.toString(), {
-    method: "POST",
-    headers: { ...BASE_HEADERS, Prefer: `resolution=merge-duplicates,return=minimal` },
-    body: JSON.stringify(data),
-  }).catch((e) => console.error("[supabase-edge] upsert error:", e));
+  try {
+    const res = await fetch(url.toString(), {
+      method: "POST",
+      headers: { ...BASE_HEADERS, Prefer: `resolution=merge-duplicates,return=minimal` },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`[supabase-edge] upsert failed for ${table}: ${res.status} ${res.statusText} - ${errText}`);
+    }
+  } catch (e) {
+    console.error("[supabase-edge] upsert error:", e);
+  }
   void onConflict; // PostgREST handles via unique constraint automatically
 }
 

@@ -280,14 +280,14 @@ export async function GET(req: NextRequest) {
     }
     const updateAvailable = clientVer !== serverVer;
 
-    // ─── Heartbeat (fire-and-forget, throttled) ───────────────────────────
+    // ─── Heartbeat (awaited, throttled) ───────────────────────────
     // ESP32 poll ทุก ~2s แต่การเช็ค online ใช้ความละเอียดระดับนาที จึงเขียน
     // DB ได้สูงสุดครั้งละ 30s/ห้อง (ใช้ KV marker) — ลด write หนัก ๆ บน Supabase
     const hbKey = `hb:${room}`;
     const hbRecent = await cacheGet<number>(hbKey);
     if (!hbRecent) {
       await cacheSet(hbKey, Date.now(), 30);
-      sbUpsert("esp32_heartbeats", {
+      await sbUpsert("esp32_heartbeats", {
         room_code: room,
         last_seen: new Date().toISOString(),
         status: 'online'
