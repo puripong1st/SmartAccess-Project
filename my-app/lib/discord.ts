@@ -17,7 +17,8 @@ export type DiscordEventType =
   | "admin_modified"
   | "pdf_exported"
   | "security_alert"
-  | "system_summary";
+  | "system_summary"
+  | "exit_button_pressed";
 
 export interface DiscordEmbed {
   title: string;
@@ -112,7 +113,7 @@ export function notifyCategory(eventType: DiscordEventType): {
   ) {
     return { central: "approve", room: "approve" };
   }
-  if (eventType === "esp32_offline" || eventType === "security_alert") return { central: "logs", room: "logs" };
+  if (eventType === "esp32_offline" || eventType === "security_alert" || eventType === "exit_button_pressed") return { central: "logs", room: "logs" };
   // admin_login / admin_logout / admin_login_failed / firmware_* / system_summary
   return { central: "admin_audit", room: "logs" };
 }
@@ -442,6 +443,22 @@ export function buildEventMessage(
           { name: "⏰ เวลา", value: now, inline: false },
         ],
         footer: { text: "SmartAccess Security Alert" },
+        timestamp: new Date().toISOString(),
+      };
+      break;
+    }
+
+    case "exit_button_pressed": {
+      embed = {
+        title: "🚪 มีคนกดปุ่มออกจากห้อง",
+        description: "มีการกดปุ่ม Exit Button เพื่อเปิดประตูออกจากห้องเรียน",
+        color: COLORS.info,
+        fields: [
+          { name: "🚪 ห้องเรียน", value: data.room || "-", inline: true },
+          { name: "🌐 IP Address บอร์ด", value: `\`${data.ip || "ไม่ทราบ"}\``, inline: true },
+          { name: "⏰ เวลา", value: now, inline: false },
+        ],
+        footer: { text: "ระบบ SmartAccess Door Access" },
         timestamp: new Date().toISOString(),
       };
       break;

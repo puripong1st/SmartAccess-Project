@@ -160,6 +160,7 @@ bool localServerStarted = false;
 #define LED_WIFI 14   // WiFi Status LED (GPIO 14)
 #define LED_REJECT 26 // Reject LED (GPIO 26)
 #define BUZZER_PIN 27 // Buzzer (GPIO 27)
+#define EXIT_BUTTON_PIN 13 // Exit Button (GPIO 13)
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
@@ -1202,6 +1203,7 @@ void setup() {
   pinMode(LED_WIFI, OUTPUT);
   pinMode(LED_REJECT, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(EXIT_BUTTON_PIN, INPUT_PULLUP);
 
   digitalWrite(RELAY_PIN, LOW); // Default locked
   digitalWrite(LED_WIFI, LOW);
@@ -1280,6 +1282,37 @@ void setup() {
 }
 
 void loop() {
+  // Check physical exit button (Active-LOW or Active-HIGH depending on module spec)
+  // Most modules output LOW when pressed. If active-HIGH sensor, change to == HIGH.
+  if (digitalRead(EXIT_BUTTON_PIN) == LOW) {
+    triggerDoorOpenInstant("EXIT BUTTON", "PHYSICAL BUTTON");
+
+#ifndef WOKWI_SIM
+    if (WiFi.status() == WL_CONNECTED && !is_offline_mode) {
+      HTTPClient http;
+      String exitUrl = String(server_url) + "&action=exit_button";
+      static WiFiClientSecure exitSecureClient;
+      exitSecureClient.setInsecure();
+      http.begin(exitSecureClient, exitUrl);
+      addZeroTrustHeaders(http, "/api/esp32/display");
+      int httpCode = http.POST("");
+      if (httpCode > 0) {
+        Serial.print("[INFO] Exit button notification response: ");
+        Serial.println(httpCode);
+      } else {
+        Serial.print("[ERROR] Exit button notification failed: ");
+        Serial.println(http.errorToString(httpCode));
+      }
+      http.end();
+    }
+#endif
+
+    // Wait until the button is released to prevent repeated triggers
+    while (digitalRead(EXIT_BUTTON_PIN) == LOW) {
+      delay(50);
+    }
+  }
+
   handleLocalValidation();
 
 #ifndef WOKWI_SIM

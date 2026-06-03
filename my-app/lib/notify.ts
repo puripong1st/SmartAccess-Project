@@ -168,12 +168,24 @@ export async function sendNotification(eventType: DiscordEventType, data: Notify
   // ผล Discord อยู่ index 0
   const discordResult = results[0];
 
-  // PWA Push → ส่งแจ้งเตือน push ไปยังผู้ดูแลระบบสำหรับเหตุการณ์ด้านความปลอดภัย
+  // PWA Push → ส่งแจ้งเตือน push ไปยังผู้ดูแลระบบสำหรับเหตุการณ์ด้านความปลอดภัยและการใช้ปุ่มออกห้อง
   if (eventType === "security_alert") {
     notifyAdminSecurityAlert(
       data.alertTitle || "แจ้งเตือนความปลอดภัย",
       data.alertDetail || data.reason || "ตรวจพบเหตุการณ์ที่ควรตรวจสอบ"
     ).catch((err) => console.error("[Notify] Security push failed:", err));
+  } else if (eventType === "exit_button_pressed") {
+    const timeString = new Date().toLocaleTimeString("th-TH", {
+      timeZone: "Asia/Bangkok",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+    notifyAdminSecurityAlert(
+      "มีคนกดปุ่มออกจากห้อง",
+      `ห้องเรียน: ${room || "-"}\n🌐 IP: ${data.ip || "ไม่ทราบ"}\n⏰ เวลา: ${timeString} น.`
+    ).catch((err) => console.error("[Notify] Exit button PWA push failed:", err));
   }
 
   return discordResult.status === "fulfilled" ? discordResult.value : false;

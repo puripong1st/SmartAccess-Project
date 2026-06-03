@@ -13767,6 +13767,13 @@ if (decoded.role === &quot;door_operator&quot;) {
 <td align="left"><code>admin_audit</code></td>
 <td align="left"><code>warning</code></td>
 </tr>
+<tr>
+<td align="left"><code>exit_button_pressed</code></td>
+<td align="left"><code>room</code>, <code>ip</code></td>
+<td align="left">🔵 Blue (0x3498db)</td>
+<td align="left"><code>logs_webhook</code></td>
+<td align="left"><code>info</code> (ระบบบันทึกความเคลื่อนไหว)</td>
+</tr>
 </tbody></table>
 <blockquote>
 <p>🔑 หมายเหตุทางปฏิบัติ: ต้องตั้งค่าตัวแปรสภาพแวดล้อม <code>CRON_SECRET</code> (ความยาวมากกว่า 32 ตัวอักษร) บนคอนโซล Vercel เพื่อความปลอดภัยสูงสุดในการทริกเกอร์ Cron API ในแต่ละวัน</p>
@@ -14751,7 +14758,7 @@ RETURNING count, reset_time;
     TG --> SET
     LINE --> SET
 </div>
-<p><strong>ประเภทเหตุการณ์ (DiscordEventType) ทั้งหมด 16 ชนิด:</strong> <code>student_registered</code>, <code>student_approved</code>, <code>student_rejected</code>, <code>door_opened</code>, <code>door_failed</code>, <code>esp32_offline</code>, <code>admin_login</code>, <code>admin_logout</code>, <code>admin_login_failed</code>, <code>firmware_deployed</code>, <code>firmware_ota_triggered</code>, <code>settings_updated</code>, <code>admin_modified</code>, <code>pdf_exported</code>, <code>security_alert</code>, <code>system_summary</code></p>
+<p><strong>ประเภทเหตุการณ์ (DiscordEventType) ทั้งหมด 17 ชนิด:</strong> <code>student_registered</code>, <code>student_approved</code>, <code>student_rejected</code>, <code>door_opened</code>, <code>door_failed</code>, <code>esp32_offline</code>, <code>admin_login</code>, <code>admin_logout</code>, <code>admin_login_failed</code>, <code>firmware_deployed</code>, <code>firmware_ota_triggered</code>, <code>settings_updated</code>, <code>admin_modified</code>, <code>pdf_exported</code>, <code>security_alert</code>, <code>system_summary</code>, <code>exit_button_pressed</code></p>
 <p><strong>การ routing (notifyCategory):</strong> event ถูกแมปเป็นหมวด <code>register</code> / <code>approve</code> / <code>logs</code> / <code>admin_audit</code> แล้วเลือก webhook/chat โดยลำดับ <strong>per-room override → central fallback</strong> เช่น Discord ใช้ <code>room_webhook_approve_{room}</code> ก่อน แล้วค่อย <code>discord_webhook_approve</code> ส่วน Telegram ใช้ <code>room_telegram_{cat}_{room}</code> → <code>telegram_chat_{cat}</code> (Telegram chat รองรับรูปแบบ <code>chatId:threadId</code> สำหรับ topic/forum) ทุก token/chat id เก็บเป็น row ใน <code>system_settings</code> จึงไม่ต้องสร้างคอลัมน์หรือตารางใหม่</p>
 <p><strong>โครงสร้าง payload Discord:</strong> ส่ง <code>{ username, avatar_url, embeds: [embed] }</code> โดย embed มี title/description/color/fields/footer/timestamp — สีตามหมวด (info=ฟ้า, success=เขียว, warning=ส้ม, error=แดง, purple=ม่วง) และ audit log webhook ส่งสำเนาเพิ่มพร้อม content tag <code>[SYSTEM LOG]</code></p>
 <h3>73.13 ระบบ OTA Firmware ผ่านคลาวด์ (HTTPS Over-The-Air)</h3>

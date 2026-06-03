@@ -381,6 +381,29 @@ export async function POST(req: NextRequest) {
   const sec = await verifyEdgeSecurity(req, "/api/esp32/display");
   if (!sec.allowed) return sec.error!;
   try {
+    const { searchParams } = new URL(req.url);
+    const action = searchParams.get("action");
+    const room = (searchParams.get("room") || "default").trim();
+    const ip = req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() || "unknown";
+
+    if (action === "exit_button") {
+      const host = req.headers.get("host") || "localhost:3000";
+      const proto = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`;
+
+      // Call internal API asynchronously
+      fetch(`${appUrl}/api/esp32/display/notify-exit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal": process.env.JWT_SECRET || "",
+        },
+        body: JSON.stringify({ room, ip }),
+      }).catch((err) => console.error("[ESP32 Display POST] Internal fetch failed:", err));
+
+      return NextResponse.json({ received: true, action: "exit_button" }, { headers: CORS });
+    }
+
     const body = await req.json();
     console.log("[ESP32] status POST:", body);
     return NextResponse.json({ received: true, server_time: new Date().toISOString() }, { headers: CORS });

@@ -9315,6 +9315,7 @@ flowchart TD
 | `admin_login_failed` | `adminUsername`, `ip`, `userAgent`, `reason` | 🟡 Orange (0xf39c12) | `admin_audit` | `warning` |
 | `pdf_exported` | `adminName`, `adminRole`, `ip`, `reason` | 🟢 Green (0x2ecc71) | `admin_audit` | `info` |
 | `settings_updated` | `adminName`, `ip`, `reason` | 🟡 Orange (0xf39c12) | `admin_audit` | `warning` |
+| `exit_button_pressed` | `room`, `ip` | 🔵 Blue (0x3498db) | `logs_webhook` | `info` (ระบบบันทึกความเคลื่อนไหว) |
 
 > 🔑 หมายเหตุทางปฏิบัติ: ต้องตั้งค่าตัวแปรสภาพแวดล้อม `CRON_SECRET` (ความยาวมากกว่า 32 ตัวอักษร) บนคอนโซล Vercel เพื่อความปลอดภัยสูงสุดในการทริกเกอร์ Cron API ในแต่ละวัน
 
@@ -9929,7 +9930,7 @@ flowchart LR
     LINE --> SET
 ```
 
-**ประเภทเหตุการณ์ (DiscordEventType) ทั้งหมด 16 ชนิด:** `student_registered`, `student_approved`, `student_rejected`, `door_opened`, `door_failed`, `esp32_offline`, `admin_login`, `admin_logout`, `admin_login_failed`, `firmware_deployed`, `firmware_ota_triggered`, `settings_updated`, `admin_modified`, `pdf_exported`, `security_alert`, `system_summary`
+**ประเภทเหตุการณ์ (DiscordEventType) ทั้งหมด 17 ชนิด:** `student_registered`, `student_approved`, `student_rejected`, `door_opened`, `door_failed`, `esp32_offline`, `admin_login`, `admin_logout`, `admin_login_failed`, `firmware_deployed`, `firmware_ota_triggered`, `settings_updated`, `admin_modified`, `pdf_exported`, `security_alert`, `system_summary`, `exit_button_pressed`
 
 **การ routing (notifyCategory):** event ถูกแมปเป็นหมวด `register` / `approve` / `logs` / `admin_audit` แล้วเลือก webhook/chat โดยลำดับ **per-room override → central fallback** เช่น Discord ใช้ `room_webhook_approve_{room}` ก่อน แล้วค่อย `discord_webhook_approve` ส่วน Telegram ใช้ `room_telegram_{cat}_{room}` → `telegram_chat_{cat}` (Telegram chat รองรับรูปแบบ `chatId:threadId` สำหรับ topic/forum) ทุก token/chat id เก็บเป็น row ใน `system_settings` จึงไม่ต้องสร้างคอลัมน์หรือตารางใหม่
 
