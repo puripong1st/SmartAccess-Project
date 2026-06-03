@@ -113,7 +113,7 @@ async function edgeRateLimit(req: NextRequest): Promise<boolean> {
     const key = `rl:esp32display:${ip}`;
     const cached = await cacheGet<number>(key);
     const count = (cached ?? 0) + 1;
-    if (count > 120) return false; // 120 req/min max per IP
+    if (count > 360) return false; // 360 req/min max per IP (6 requests/sec)
     await cacheSet(key, count, 60);
     return true;
   } catch {
