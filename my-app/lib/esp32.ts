@@ -220,17 +220,16 @@ export async function getESP32Status(roomCode?: string): Promise<{
 
   // ─── [IoT Cloud Polling Heartbeat Fallback] ───
   // เช็คจากประวัติการดึงข้อมูลล่าสุด (Heartbeat) ของห้องนั้นๆ ในฐานข้อมูลแทน (ตาราง esp32_heartbeats)
-  // ใช้ EXTRACT(EPOCH FROM last_seen) เพื่อกันปัญหานำเข้า timezone ผิดพลาดบนเซิร์ฟเวอร์โลคอล (เช่น UTC+7)
+  // ดึงค่า timestamp ตรงๆ แล้วให้ Node.js/pg ทำการแปลงเป็น Date เพื่อความแม่นยำและไม่ขึ้นกับ timezone ของเครื่อง
   try {
     const pool = getPool();
     const { rows } = await pool.query(
-      "SELECT EXTRACT(EPOCH FROM last_seen) as last_seen_epoch FROM esp32_heartbeats WHERE room_code = $1",
+      "SELECT last_seen FROM esp32_heartbeats WHERE room_code = $1",
       [sanitizedRoom]
     );
-    const heartbeats = rows as { last_seen_epoch: string | number }[];
+    const heartbeats = rows as { last_seen: string | Date }[];
     if (heartbeats.length > 0) {
-      const epoch = Number(heartbeats[0].last_seen_epoch);
-      const lastSeen = epoch * 1000;
+      const lastSeen = new Date(heartbeats[0].last_seen).getTime();
       const now = Date.now();
       const diffSeconds = (now - lastSeen) / 1000;
       

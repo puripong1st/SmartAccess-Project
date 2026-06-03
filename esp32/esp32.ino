@@ -1,19 +1,14 @@
 /*
   ==============================================================
   SmartAccess Door Access Controller - Firmware for ESP32
-  ห้องปฏิบัติการเรียนการสอน: Classroom CE-402
-  โหมด: Wokwi Simulator
+  ห้องปฏิบัติการเรียนการสอน: Classroom A-401
+  โหมด: Physical ESP32 Board
   ระบบรองรับการรันผ่านคลาวด์ Vercel (HTTPS WiFiClientSecure)
   ==============================================================
 */
-#define WOKWI_SIM // Wokwi Simulator mode — NEVER deploy to production with this
-                  // defined!
-// 💡 สำหรับจำลองบน Wokwi Web อย่าลืมสร้างแท็บ libraries.txt และระบุ:
-// Adafruit GFX Library
-// Adafruit ILI9341
-// ArduinoJson@6.21.3
-// QRCode
-#define DEBUG_MODE false // ⚠️ Set true for development ONLY
+// #define WOKWI_SIM  // Uncomment ONLY when running in Wokwi Simulator — NEVER
+// in production!
+#define DEBUG_MODE true // ⚠️ Set true for development ONLY
 
 #if DEBUG_MODE
 #define DBG(x) Serial.println(x)
@@ -451,9 +446,6 @@ void performHTTPSOTA() {
 
   httpUpdate.rebootOnUpdate(true);
   httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-  httpUpdate.addHeader("x-esp32-version", CURRENT_VERSION);
-  httpUpdate.addHeader("Authorization",
-                       "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
   // แนบ callback แสดง progress bar
   httpUpdate.onProgress(onOTAProgress);
 
@@ -463,7 +455,10 @@ void performHTTPSOTA() {
   tft.setTextSize(1);
   tft.println("Downloading firmware...");
 
-  t_httpUpdate_return ret = httpUpdate.update(secureClient, FIRMWARE_URL);
+  t_httpUpdate_return ret = httpUpdate.update(secureClient, FIRMWARE_URL, "", [](HTTPClient *http) {
+    http->addHeader("x-esp32-version", CURRENT_VERSION);
+    http->addHeader("Authorization", "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
+  });
   if (ret == HTTP_UPDATE_FAILED) {
     tft.fillScreen(ILI9341_BLACK);
     tft.setTextColor(ILI9341_RED);
@@ -787,6 +782,11 @@ void handleLocalValidation() {
         break;
     }
   }
+  // Read remaining body bytes (e.g. POST form data)
+  delay(15);
+  while (client.available()) {
+    req += (char)client.read();
+  }
   if (req.indexOf("POST /door/open") != -1) {
     // ─── [Real-Time HTTP Push opening from Next.js (Online Mode)] ───
     client.println("HTTP/1.1 200 OK");
@@ -884,7 +884,12 @@ void handleLocalValidation() {
       int endIdx = req.indexOf(" ", pinIdx);
       if (endIdx == -1)
         endIdx = req.indexOf("\r", pinIdx);
+      if (endIdx == -1)
+        endIdx = req.indexOf("&", pinIdx);
+      if (endIdx == -1)
+        endIdx = req.length();
       String enteredPin = req.substring(pinIdx + 4, endIdx);
+      enteredPin.trim();
       if (secureCompare(enteredPin.c_str(), cached_offline_pin.c_str())) {
         client.println("HTTP/1.1 200 OK");
         client.println("Content-Type: text/html; charset=utf-8");
@@ -899,6 +904,12 @@ void handleLocalValidation() {
         client.println();
         client.println("<h1>ACCESS DENIED</h1><p>Invalid PIN.</p>");
       }
+    } else {
+      client.println("HTTP/1.1 400 Bad Request");
+      client.println("Content-Type: text/html; charset=utf-8");
+      client.println("Connection: close");
+      client.println();
+      client.println("<h1>Bad Request</h1><p>Missing PIN parameter.</p>");
     }
   } else {
     client.println("HTTP/1.1 200 OK");
@@ -1101,7 +1112,8 @@ void setup() {
   tft.setTextSize(1);
   tft.setTextColor(tft.color565(156, 163, 175));
   tft.setCursor(40, 140);
-  tft.print("SSID Virtual Router: Wokwi-GUEST");
+  tft.print("SSID: ");
+  tft.print(ssid);
 
   DBG("Connecting to Wi-Fi...");
   WiFi.begin(ssid, password);
@@ -1137,6 +1149,8 @@ void setup() {
   }
 
   ip_address_str = WiFi.localIP().toString();
+  Serial.print("[INFO] ESP32 IP Address: ");
+  Serial.println(ip_address_str);
 
   tone(BUZZER_PIN, 1200, 150);
   delay(180);
@@ -1214,6 +1228,8 @@ void loop() {
 
       HTTPClient http;
       String pollUrl = String(server_url) + "&slim=true";
+      Serial.print("[INFO] Polling URL: ");
+      Serial.println(pollUrl);
       if (pollUrl.startsWith("https://")) {
 #ifdef WOKWI_SIM
         static WiFiClientSecure simClient;
@@ -1221,7 +1237,7 @@ void loop() {
         http.begin(simClient, pollUrl);
 #else
         if (!tlsClientInitialized) {
-          persistentTlsClient.setCACert(root_ca_cert);
+          persistentTlsClient.setInsecure();
           tlsClientInitialized = true;
         }
         http.setReuse(true);
@@ -1238,6 +1254,8 @@ void loop() {
       }
 
       int httpCode = http.GET();
+      Serial.print("[INFO] Polling result code: ");
+      Serial.println(httpCode);
 
       if (httpCode == 304) {
         idleCycles++;
@@ -1422,7 +1440,7 @@ void loop() {
         }
       } else {
         Serial.println("[ERROR] Connection failed");
-        DBGF("HTTP Error: %d\n", httpCode);
+        Serial.printf("HTTP Error: %d\n", httpCode);
         api_fail_count++;
         if (api_fail_count >= 5) {
           if (!is_offline_mode) {
