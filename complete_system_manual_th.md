@@ -222,7 +222,7 @@
 3. ESP32 พร้อมจอ ILI9341, relay, LED และ buzzer สำหรับแสดง QR และสั่งปลดล็อกประตู
 4. Discord Webhook สำหรับแจ้งเตือนการลงทะเบียน, การอนุมัติ, การเปิดประตู และเหตุการณ์ระบบ
 
-แนวคิดสำคัญของระบบปัจจุบันคือ ESP32 ไม่ได้รอรับคำสั่งแบบ local server เป็นหลัก แต่ใช้การ polling ขึ้นไปถามเว็บทุก 2 วินาทีที่ `/api/esp32/display?room=...` ถ้า server มีคำสั่ง `door_trigger: "open"` บอร์ดจะเปิด relay เพื่อปลดล็อกประตู แล้ว server จะเปลี่ยนคำสั่งในฐานข้อมูลเป็น consumed เพื่อไม่ให้เปิดซ้ำ
+แนวคิดสำคัญของระบบปัจจุบันคือ บอร์ด ESP32 จะเชื่อมต่อกับโบรกเกอร์ MQTT (HiveMQ Cloud) ด้วยโปรโตคอล TLS แบบ Secure (พอร์ต 8883) ตลอดเวลาเพื่อรับคำสั่งปลดล็อกเรียลไทม์ (Real-Time Push) ทันทีที่แอดมินกดอนุมัติ (<100ms) และในขณะเดียวกันบอร์ดจะใช้การ Polling (HTTP GET) ขึ้นไปถามเว็บเป็นระยะที่ `/api/esp32/display?room=...` เพื่อซิงค์คิวค้าง, โทเคน QR ล่าสุด และประวัติผู้ได้รับการอนุมัติล่าสุด รวมถึงทำหน้าที่เป็นช่องทางสำรอง (Fallback) หากการเชื่อมต่อ MQTT ขัดข้อง
 
 ### ภาพที่ 1: สถาปัตยกรรมรวม
 
@@ -233,8 +233,9 @@ flowchart TD
     Admin["Admin Dashboard"] -->|"อนุมัติ / ปฏิเสธ / เปิดประตู"| NextServer
     NextServer -->|"อ่าน/เขียนข้อมูล"| DB[("PostgreSQL")]
     NextServer -->|"ส่งแจ้งเตือน"| Discord["Discord Webhook"]
-    ESP32["ESP32 ห้อง CE-401/CE-402"] -->|"GET /api/esp32/display<br/>ทุก 2 วินาที"| NextServer
-    NextServer -->|"JSON: QR, pending_count,<br/>door_trigger"| ESP32
+    NextServer -->|"Publish 'unlock' (WebSockets 8884)"| MQTT["HiveMQ Cloud Broker"]
+    MQTT -->|"Push 'unlock' (Secure TLS 8883)"| ESP32["ESP32 ห้อง CE-401/CE-402"]
+    ESP32 -->|"GET /api/esp32/display (ซิงค์สถานะ/Fallback)"| NextServer
     ESP32 -->|"ควบคุม GPIO 12"| Relay["Relay Module"]
     Relay --> Lock["กลอนแม่เหล็ก / ชุดจำลองประตู"]
 ```
@@ -247,10 +248,11 @@ sequenceDiagram
     participant E as ESP32
     participant W as Next.js
     participant D as PostgreSQL
+    participant M as HiveMQ Cloud
     participant A as Admin
     participant R as Relay/Lock
 
-    E->>W: ขอข้อมูลหน้าจอและ QR token
+    E->>W: ขอข้อมูลหน้าจอและ QR token (Polling)
     W->>D: getOrCreateActiveQRToken(room)
     W-->>E: active_token, QR URL, pending_count
     S->>E: สแกน QR ที่จอ
@@ -261,10 +263,9 @@ sequenceDiagram
     W->>D: บันทึก students + access_logs
     A->>W: กดอนุมัติ
     W->>D: UPDATE students = approved
-    W->>D: ตั้ง room_cmd_CE-401 = unlock
-    E->>W: polling รอบถัดไป
-    W-->>E: door_trigger = open
-    E->>R: GPIO12 HIGH 5 วินาที
+    W->>M: Publish "unlock" (wss:// port 8884)
+    M->>E: Push "unlock" (mqtts:// port 8883)
+    E->>R: GPIO12 HIGH 5 วินาที (ปลดล็อกทันที)
     R-->>S: ประตูปลดล็อก
 ```
 
@@ -2724,6 +2725,16 @@ T+4100    | resetCache → loop() ปกติ
 | `DISCORD_WEBHOOK_URL` | ทางเลือก | ✅ `api/system/status` | webhook กลาง (ปัจจุบันแนะนำตั้งผ่านแท็บ "ตั้งค่าระบบ" แทน — **ไม่มีใน `.env.local`**) |
 | `NEXT_PUBLIC_APP_URL` | ทางเลือก | ✅ `api/esp32/display` | ใช้สร้าง register URL ใน QR (ปัจจุบัน**ไม่มีใน `.env.local`** — ใช้ค่า default ในโค้ด) |
 
+#### กลุ่ม 6 — MQTT Broker (ระบบเรียลไทม์)
+
+| ตัวแปร | จำเป็น | โค้ดอ่าน? | คำอธิบาย |
+|--------|--------|-----------|-----------|
+| `MQTT_BROKER_HOST` | ✅ | ✅ `lib/mqtt.ts` | ที่อยู่โฮสต์ของ MQTT Broker (เช่น HiveMQ Cloud หรือโบรกเกอร์อื่น) |
+| `MQTT_PORT` | ✅ | ✅ `lib/mqtt.ts` | พอร์ตสำหรับการเชื่อมต่อ WebSockets (wss://) ส่วนใหญ่ใช้ `8884` หรือ `8084` |
+| `MQTT_PATH` | ✅ | ✅ `lib/mqtt.ts` | พาร์ทสำหรับ WebSockets connection ส่วนใหญ่ใช้ `/mqtt` |
+| `MQTT_USERNAME` | ✅ | ✅ `lib/mqtt.ts` | ชื่อผู้ใช้ในการยืนยันตัวตนสำหรับสิทธิ์การ Publish/Subscribe |
+| `MQTT_PASSWORD` | ✅ | ✅ `lib/mqtt.ts` | รหัสผ่านในการเข้าใช้งาน MQTT Broker |
+
 > **กฎเหล็ก**: ใน production ต้องตั้ง `ALLOW_DEV_SEED=false` และ `JWT_SECRET`/`QR_SIGNING_KEY`/`ESP32_API_KEY` ต้องเป็นค่าสุ่ม ≥ 32 ตัวอักษร แยกกันคนละชุด
 >
 > **เรื่อง notification**: token/id ของ Telegram & LINE **ไม่ใช่ env** — ตั้งผ่านแท็บ "ตั้งค่าระบบ" บนเว็บ (เก็บใน `system_settings`)
@@ -2971,21 +2982,20 @@ sequenceDiagram
 
 **2 วินาที = sweet spot** ระหว่าง responsiveness กับ resource
 
-### 44.3 เหตุผลที่ 2 — ไม่มี Push Notification (WebSocket/MQTT/SSE)
+### 44.3 เหตุผลที่ 2 — การยกระดับสู่ระบบเรียลไทม์ด้วย MQTT (HiveMQ Cloud + WebSockets)
 
-ทำไมไม่ใช้ push เลยล่ะ? เพราะ:
+ในการออกแบบเฟสแรก ระบบเลือกใช้ Polling เนื่องจาก Vercel Serverless Function ไม่รองรับการเชื่อมต่อค้างไว้แบบ Long-lived TCP (เช่น raw WebSocket หรือ SSE) และ ESP32 มักติดตั้งอยู่ภายใต้ NAT/Firewall ของสถาบันการศึกษาทำให้ฝั่งเซิร์ฟเวอร์ยิงเรียกตรง (HTTP Webhook) ไม่ได้
 
-| ทางเลือก | ปัญหาในระบบนี้ |
-|----------|----------------|
-| **WebSocket** | Vercel Serverless function ทำงานสูงสุด 10 วินาที — เปิด connection ค้างไม่ได้ |
-| **Server-Sent Events (SSE)** | เหมือนกัน — Serverless ไม่เหมาะ long-lived |
-| **MQTT** | ต้องเปิด broker (เช่น HiveMQ) เสียค่าใช้จ่ายเพิ่ม + ESP32 ต้องต่อ 2 protocol |
-| **Firebase Cloud Messaging** | ESP32 library FCM ใช้ยาก, มีข้อจำกัด credential |
-| **Webhook ตรงไป ESP32** | ESP32 อยู่หลัง NAT มหาวิทยาลัย — server เรียกตรงไม่ได้ |
+อย่างไรก็ดี ในเวอร์ชันปัจจุบันได้มีการยกระดับสถาปัตยกรรมสู่ **Real-Time Push Notification** โดยการผนวกรวมบริการโบรกเกอร์ระดับคลาวด์ภายนอก (**HiveMQ Cloud**) ซึ่งแก้ข้อจำกัดดังกล่าวได้สมบูรณ์:
 
-> สรุป: **architecture บังคับ** ให้เลือก polling เพราะระบบ deploy บน Vercel + ESP32 อยู่หลัง firewall
+| โปรโตคอล / ช่องทาง | วิธีการทำงานและการแก้ปัญหา |
+|-------------------|-------------------------|
+| **ฝั่งบอร์ดควบคุม (ESP32)** | เชื่อมต่อแบบ Secure TCP TLS (พอร์ต 8883) ค้างไว้กับ HiveMQ Cloud (มี Keep-Alive) ทำให้รับคำสั่งได้ทันทีโดยไม่ถูกบล็อกด้วย Firewall ขาเข้า เนื่องจากเป็นการต่อออกภายนอก (Outbound) |
+| **ฝั่งเซิร์ฟเวอร์ (Next.js/Vercel)** | เนื่องจาก Serverless ไม่สามารถถือ TCP connection ค้างไว้ได้ Next.js จึงเชื่อมต่อผ่าน **WebSockets over TLS (wss:// พอร์ต 8884)** ยิงสั่งการเฉพาะกิจ (One-off publish) ไปที่ HiveMQ Cloud เมื่อแอดมินกดอนุมัติ แล้วปิดการเชื่อมต่อทันที ทำให้ใช้งานบน Serverless ได้อย่างสมบูรณ์ |
 
-### 44.4 เหตุผลที่ 3 — TLS Handshake แพง
+> สรุป: การใช้ **HiveMQ Cloud MQTT Broker (WSS 8884 -> MQTTS 8883)** ทำให้ระบบเปลี่ยนสถานะได้แบบเรียลไทม์ (<100ms) โดยไม่มีข้อจำกัดเรื่อง Serverless Timeout หรือ Firewall มหาวิทยาลัยบล็อกพอร์ตอีกต่อไป
+
+### 44.4 เหตุผลที่ 3 — TLS Handshake แพง (สำหรับช่องทาง Polling)
 
 ทุกครั้งที่ ESP32 เปิด HTTPS ใหม่ ต้องผ่าน:
 
