@@ -889,13 +889,7 @@ button, a, [role="button"], input, select, textarea, label {
 }
 
 .room-config-card.expanded {
-  grid-column: 1 / -1; /* Span full row or 2 columns dynamically to avoid visual crowding */
-}
-
-@media (min-width: 900px) {
-  .room-config-card.expanded {
-    grid-column: span 2;
-  }
+  grid-column: 1 / -1; /* Always span the entire row when expanded to ensure a clean, unfragmented layout */
 }
 
 .room-config-card::before {
