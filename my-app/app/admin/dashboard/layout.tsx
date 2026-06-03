@@ -797,6 +797,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
           gap: 14px;
+          align-items: start;
         }
         .room-config-card {
           background: var(--bg-secondary);

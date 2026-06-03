@@ -875,6 +875,7 @@ button, a, [role="button"], input, select, textarea, label {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
+  align-items: start;
 }
 
 .room-config-card {
