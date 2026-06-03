@@ -511,13 +511,14 @@ export default function RoomsPage() {
                          className="animate-fade-in"
                          style={{
                            marginTop: 14,
-                           padding: 20,
-                           background: "rgba(124, 58, 237, 0.01)",
+                           padding: "20px 16px",
+                           background: "rgba(0, 0, 0, 0.12)",
                            border: "1px solid var(--border)",
                            borderRadius: 14,
                            display: "grid",
-                           gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                           gap: 24
+                           gridTemplateColumns: "1fr",
+                           gap: 20,
+                           boxShadow: "inset 0 2px 6px rgba(0, 0, 0, 0.15)"
                          }}
                        >
                          {/* Column 1: Approval & Automation */}
