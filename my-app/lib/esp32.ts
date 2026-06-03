@@ -10,6 +10,7 @@
 //   getESP32Status skips LAN ping for private IPs on cloud environments
 
 import { getSystemSettings, getPool } from "./db";
+import { publishMqttMessage } from "./mqtt";
 
 const ESP32_IP   = process.env.ESP32_IP   || "192.168.1.100";
 const ESP32_PORT = process.env.ESP32_PORT || "80";
@@ -159,6 +160,18 @@ export async function openDoor(studentId?: string, roomCode?: string): Promise<E
       timestamp: new Date().toISOString(),
     };
   }
+
+  // ─── [Real-Time MQTT Push] ───
+  // ส่งคำสั่งเปิดประตูทันทีไปยังตัวแปร MQTT Broker (แบบเบื้องหลังเพื่อไม่ให้สลัดตัวอัปเดตช้า)
+  const topic = `smartaccess/rooms/${sanitizedRoom}/command`;
+  const payload = JSON.stringify({
+    action: "unlock",
+    name: studentId ? `ID: ${studentId}` : "VERIFIED MEMBER",
+    student_id: studentId || "ONLINE STUDENT",
+  });
+  publishMqttMessage(topic, payload).catch((err) =>
+    console.error("[MQTT Push] Direct publish error:", err)
+  );
 
 
 

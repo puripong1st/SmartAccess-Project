@@ -26,6 +26,7 @@
 #include <HTTPClient.h>
 #ifndef WOKWI_SIM
 #include <HTTPUpdate.h> // สำหรับระบบดึงข้อมูลอัปเดต HTTPS OTA (เฉพาะบอร์ดจริง)
+#include <PubSubClient.h>
 #endif
 // หมายเหตุ: WiFiServer ถูกประกาศมาแล้วใน WiFi.h จึงไม่ต้อง include เพิ่ม
 #include <SPI.h>
@@ -69,8 +70,8 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 // ─── Adaptive Polling ────────────────────────────────────────────────────────
 // เร่งความเร็ว polling เมื่อตรวจพบกิจกรรม ชะลอลงเมื่อ idle ประหยัด API call
 const unsigned long POLL_FAST = 200;    // ms — มีคำสั่งรอ / เพิ่งปลดล็อก
-const unsigned long POLL_NORMAL = 1000; // ms — ทำงานปกติ
-const unsigned long POLL_SLOW = 5000;   // ms — idle ต่อเนื่อง 5 รอบ
+const unsigned long POLL_NORMAL = 750;  // ms — ทำงานปกติ
+const unsigned long POLL_SLOW = 3000;   // ms — idle ต่อเนื่อง 5 รอบ
 unsigned long currentPollDelay = POLL_NORMAL;
 int idleCycles = 0;   // นับรอบที่ไม่มีกิจกรรม
 String lastEtag = ""; // ETag จาก server สำหรับ 304 check
@@ -339,6 +340,9 @@ void drawRejectedScreen() {
 #ifndef WOKWI_SIM
 WiFiClientSecure persistentTlsClient;
 bool tlsClientInitialized = false;
+WiFiClientSecure mqttTlsClient;
+PubSubClient mqttClient(mqttTlsClient);
+unsigned long lastMqttRetry = 0;
 #endif
 
 // ─── Offline Mode Configurations & Helper Functions (Prompt 18) ─────────────
@@ -767,6 +771,75 @@ void triggerDoorOpenOffline(const String &grant) {
   last_active_token = "FORCE_REDRAW";
 }
 
+void triggerDoorOpenInstant(String name, String studentId) {
+  Serial.println("[INFO] Door unlocked via MQTT/Real-time");
+  drawScanningScreen();
+  tone(BUZZER_PIN, 1500, 100);
+  delay(300);
+
+  drawUnlockedScreen(name, studentId);
+  digitalWrite(RELAY_PIN, HIGH);
+
+  tone(BUZZER_PIN, 1000, 150);
+  delay(180);
+  tone(BUZZER_PIN, 1500, 150);
+  delay(180);
+  tone(BUZZER_PIN, 2000, 300);
+
+  int stepSize = 320 / 38;
+  for (int i = 0; i < 38; i++) {
+    tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
+    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+    delay(100);
+  }
+
+  digitalWrite(RELAY_PIN, LOW);
+  Serial.println("[INFO] Door locked");
+  tone(BUZZER_PIN, 800, 250);
+
+  last_queue_count = -1;
+  last_approved_name = "FORCE_REDRAW";
+  last_active_token = "FORCE_REDRAW";
+}
+
+#ifndef WOKWI_SIM
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("[MQTT] Message arrived on topic: ");
+  Serial.println(topic);
+  
+  String msg = "";
+  for (unsigned int i = 0; i < length; i++) {
+    msg += (char)payload[i];
+  }
+  Serial.print("[MQTT] Payload: ");
+  Serial.println(msg);
+
+  StaticJsonDocument<256> doc;
+  DeserializationError err = deserializeJson(doc, msg);
+  
+  String action = "";
+  String name = "VERIFIED MEMBER";
+  String studentId = "ONLINE STUDENT";
+  
+  if (!err) {
+    action = doc["action"].as<String>();
+    if (doc.containsKey("name")) {
+      name = doc["name"].as<String>();
+    }
+    if (doc.containsKey("student_id")) {
+      studentId = doc["student_id"].as<String>();
+    }
+  } else {
+    action = msg;
+  }
+
+  if (action == "unlock") {
+    triggerDoorOpenInstant(name, studentId);
+  }
+}
+#endif
+
+
 void handleLocalValidation() {
   WiFiClient client = localServer.available();
   if (!client)
@@ -1158,11 +1231,40 @@ void setup() {
 
   startLocalServer();
 
+#ifndef WOKWI_SIM
+  // Configure secure MQTT client
+  mqttTlsClient.setInsecure(); // Bypass SSL verification for HiveMQ Cloud
+  mqttClient.setServer(mqtt_server, mqtt_port);
+  mqttClient.setCallback(mqttCallback);
+#endif
+
   drawMainScreen(0, "", "12:00:00", "");
 }
 
 void loop() {
   handleLocalValidation();
+
+#ifndef WOKWI_SIM
+  if (WiFi.status() == WL_CONNECTED && !is_offline_mode) {
+    if (!mqttClient.connected()) {
+      unsigned long now = millis();
+      if (now - lastMqttRetry > 15000) { // Try to reconnect every 15 seconds
+        lastMqttRetry = now;
+        Serial.println("[MQTT] Connecting to MQTT Broker...");
+        String clientId = "SmartAccessClient_" + String(ESP.getEfuseMac(), HEX);
+        if (mqttClient.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+          Serial.println("[MQTT] Connected to MQTT Broker!");
+          mqttClient.subscribe(mqtt_topic_cmd);
+        } else {
+          Serial.print("[MQTT] Connection failed, rc=");
+          Serial.println(mqttClient.state());
+        }
+      }
+    } else {
+      mqttClient.loop();
+    }
+  }
+#endif
 
   if (is_offline_mode) {
     bool hasCache = SPIFFS.exists(cache_students_file);

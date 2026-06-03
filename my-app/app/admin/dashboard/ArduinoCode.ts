@@ -7,6 +7,16 @@ const char *password = "";`
     : `const char *ssid     = "YOUR_WIFI_SSID";      // ← แก้เป็นชื่อ Wi-Fi จริง
 const char *password = "YOUR_WIFI_PASSWORD"; // ← แก้เป็นรหัส Wi-Fi จริง`;
 
+  const mqttBlock = mode === "wokwi"
+    ? `// MQTT Broker Configuration (ไม่รองรับบน Wokwi Simulator)`
+    : `// --- MQTT Broker Configuration ---
+// ใช้บริการของ HiveMQ Cloud (Free Tier) หรือโบรกเกอร์อื่นผ่าน TLS พอร์ต 8883
+const char *mqtt_server    = "YOUR_MQTT_BROKER_HOST.s1.eu.hivemq.cloud"; // ← แก้เป็น Broker URL ของคุณ
+const int mqtt_port        = 8883;
+const char *mqtt_user      = "YOUR_MQTT_USERNAME";                      // ← แก้เป็น Username ของคุณ
+const char *mqtt_pass      = "YOUR_MQTT_PASSWORD";                      // ← แก้เป็น Password ของคุณ
+const char *mqtt_topic_cmd = "smartaccess/rooms/${roomCode}/command";`;
+
   const certBlock = mode === "wokwi"
     ? `// Wokwi Simulator — ไม่ต้องใช้ CA Certificate (setInsecure() ถูกใช้แทน)
 // สำหรับบอร์ดจริงให้เปลี่ยนโหมดเป็น Physical ESP32 เพื่อดู CA Cert`
@@ -60,6 +70,8 @@ const char *root_ca_cert =
 // --- WiFi Configuration ---
 ${wifiBlock}
 
+${mqttBlock}
+
 // --- IoT Cloud Server Configuration ---
 const char *server_url = "${origin}/api/esp32/display?room=${roomCode}";
 const char *room_code  = "${roomCode}";
@@ -110,6 +122,7 @@ ${wokwiDefine}
 #include <HTTPClient.h>
 #ifndef WOKWI_SIM
 #include <HTTPUpdate.h> // สำหรับระบบดึงข้อมูลอัปเดต HTTPS OTA (เฉพาะบอร์ดจริง)
+#include <PubSubClient.h>
 #endif
 // หมายเหตุ: WiFiServer ถูกประกาศมาแล้วใน WiFi.h จึงไม่ต้อง include เพิ่ม
 #include <SPI.h>
@@ -423,6 +436,9 @@ void drawRejectedScreen() {
 #ifndef WOKWI_SIM
 WiFiClientSecure persistentTlsClient;
 bool tlsClientInitialized = false;
+WiFiClientSecure mqttTlsClient;
+PubSubClient mqttClient(mqttTlsClient);
+unsigned long lastMqttRetry = 0;
 #endif
 
 // ─── Offline Mode Configurations & Helper Functions (Prompt 18) ─────────────
@@ -833,6 +849,74 @@ void triggerDoorOpenOffline(const String& grant) {
   last_active_token = "FORCE_REDRAW";
 }
 
+void triggerDoorOpenInstant(String name, String studentId) {
+  Serial.println("[INFO] Door unlocked via MQTT/Real-time");
+  drawScanningScreen();
+  tone(BUZZER_PIN, 1500, 100);
+  delay(300);
+
+  drawUnlockedScreen(name, studentId);
+  digitalWrite(RELAY_PIN, HIGH);
+
+  tone(BUZZER_PIN, 1000, 150);
+  delay(180);
+  tone(BUZZER_PIN, 1500, 150);
+  delay(180);
+  tone(BUZZER_PIN, 2000, 300);
+
+  int stepSize = 320 / 38;
+  for (int i = 0; i < 38; i++) {
+    tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
+    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+    delay(100);
+  }
+
+  digitalWrite(RELAY_PIN, LOW);
+  Serial.println("[INFO] Door locked");
+  tone(BUZZER_PIN, 800, 250);
+
+  last_queue_count = -1;
+  last_approved_name = "FORCE_REDRAW";
+  last_active_token = "FORCE_REDRAW";
+}
+
+#ifndef WOKWI_SIM
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("[MQTT] Message arrived on topic: ");
+  Serial.println(topic);
+  
+  String msg = "";
+  for (unsigned int i = 0; i < length; i++) {
+    msg += (char)payload[i];
+  }
+  Serial.print("[MQTT] Payload: ");
+  Serial.println(msg);
+
+  StaticJsonDocument<256> doc;
+  DeserializationError err = deserializeJson(doc, msg);
+  
+  String action = "";
+  String name = "VERIFIED MEMBER";
+  String studentId = "ONLINE STUDENT";
+  
+  if (!err) {
+    action = doc["action"].as<String>();
+    if (doc.containsKey("name")) {
+      name = doc["name"].as<String>();
+    }
+    if (doc.containsKey("student_id")) {
+      studentId = doc["student_id"].as<String>();
+    }
+  } else {
+    action = msg;
+  }
+
+  if (action == "unlock") {
+    triggerDoorOpenInstant(name, studentId);
+  }
+}
+#endif
+
 void handleLocalValidation() {
   WiFiClient client = localServer.available();
   if (!client) return;
@@ -1185,11 +1269,40 @@ void setup() {
 
   startLocalServer();
 
+#ifndef WOKWI_SIM
+  // Configure secure MQTT client
+  mqttTlsClient.setInsecure(); // Bypass SSL verification for HiveMQ Cloud
+  mqttClient.setServer(mqtt_server, mqtt_port);
+  mqttClient.setCallback(mqttCallback);
+#endif
+
   drawMainScreen(0, "", "12:00:00", "");
 }
 
 void loop() {
   handleLocalValidation();
+
+#ifndef WOKWI_SIM
+  if (WiFi.status() == WL_CONNECTED && !is_offline_mode) {
+    if (!mqttClient.connected()) {
+      unsigned long now = millis();
+      if (now - lastMqttRetry > 15000) { // Try to reconnect every 15 seconds
+        lastMqttRetry = now;
+        Serial.println("[MQTT] Connecting to MQTT Broker...");
+        String clientId = "SmartAccessClient_" + String(ESP.getEfuseMac(), HEX);
+        if (mqttClient.connect(clientId.c_str(), mqtt_user, mqtt_pass)) {
+          Serial.println("[MQTT] Connected to MQTT Broker!");
+          mqttClient.subscribe(mqtt_topic_cmd);
+        } else {
+          Serial.print("[MQTT] Connection failed, rc=");
+          Serial.println(mqttClient.state());
+        }
+      }
+    } else {
+      mqttClient.loop();
+    }
+  }
+#endif
 
   if (is_offline_mode) {
     bool hasCache = SPIFFS.exists(cache_students_file);
