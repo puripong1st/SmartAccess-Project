@@ -889,7 +889,13 @@ button, a, [role="button"], input, select, textarea, label {
 }
 
 .room-config-card.expanded {
-  /* Inherit natural grid placement to prevent structural jumping, keeping the 3-column grid structure intact */
+  /* Inherit natural grid placement on small/medium screens to prevent vertical layout issues */
+}
+
+@media (min-width: 1025px) {
+  .room-config-card.expanded {
+    grid-column: 1 / -1; /* Stretch across the entire row on desktop to provide plenty of room for settings fields */
+  }
 }
 
 .room-config-card::before {
