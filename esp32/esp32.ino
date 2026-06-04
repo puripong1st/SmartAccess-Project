@@ -1252,7 +1252,15 @@ void setup() {
 void loop() {
   // Check door sensor open-state warning
   // MC-38 outputs HIGH when door is open (magnet away), LOW when closed (magnet close)
-  if (digitalRead(DOOR_SENSOR_PIN) == HIGH) {
+  int doorState = digitalRead(DOOR_SENSOR_PIN);
+  
+  static unsigned long lastDebugPrint = 0;
+  if (millis() - lastDebugPrint > 2000) {
+    lastDebugPrint = millis();
+    Serial.printf("[DEBUG] Door Sensor Pin %d State: %d, Open Time: %lu\n", DOOR_SENSOR_PIN, doorState, doorOpenStartTime);
+  }
+
+  if (doorState == HIGH) {
     if (doorOpenStartTime == 0) {
       doorOpenStartTime = millis();
     } else if (millis() - doorOpenStartTime > 10000) { // 10 seconds warning threshold
@@ -1386,8 +1394,8 @@ void loop() {
 
       HTTPClient http;
       String pollUrl = String(server_url) + "&slim=true";
-      Serial.print("[INFO] Polling URL: ");
-      Serial.println(pollUrl);
+      //Serial.print("[INFO] Polling URL: ");
+      //Serial.println(pollUrl);
       if (pollUrl.startsWith("https://")) {
 #ifdef WOKWI_SIM
         static WiFiClientSecure simClient;
@@ -1412,8 +1420,8 @@ void loop() {
       }
 
       int httpCode = http.GET();
-      Serial.print("[INFO] Polling result code: ");
-      Serial.println(httpCode);
+      //Serial.print("[INFO] Polling result code: ");
+      //Serial.println(httpCode);
 
       if (httpCode == 304) {
         idleCycles++;

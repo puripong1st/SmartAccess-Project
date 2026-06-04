@@ -1293,8 +1293,9 @@ const htmlTemplate = `<!DOCTYPE html>
 
     // High compatibility PNG exporter utilizing html2canvas directly on the .mermaid container
     function saveSvgAsPng(mermaidDiv, fileName) {
+      let btnContainer = null;
       try {
-        const btnContainer = mermaidDiv.querySelector("div");
+        btnContainer = mermaidDiv.querySelector("div");
         if (btnContainer) {
           btnContainer.style.visibility = "hidden";
         }
@@ -1744,6 +1745,14 @@ const htmlTemplate = `<!DOCTYPE html>
             });
           }
         };
+
+        if (typeof html2canvas === 'undefined') {
+          alert("⚠️ ไลบรารี html2canvas ยังโหลดไม่เสร็จหรือถูกบล็อก กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
+          if (hiddenWrapper && hiddenWrapper.parentNode) {
+            hiddenWrapper.parentNode.removeChild(hiddenWrapper);
+          }
+          return;
+        }
 
         if (format === 'pdf') {
           html2canvas(tempContainer, canvasOptions).then(canvas => {
