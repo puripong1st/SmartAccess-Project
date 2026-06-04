@@ -946,7 +946,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-02 15:02:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-04 10:25:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -13767,6 +13767,13 @@ if (decoded.role === &quot;door_operator&quot;) {
 <td align="left"><code>admin_audit</code></td>
 <td align="left"><code>warning</code></td>
 </tr>
+<tr>
+<td align="left"><code>exit_button_pressed</code></td>
+<td align="left"><code>room</code>, <code>ip</code></td>
+<td align="left">🔵 Blue (0x3498db)</td>
+<td align="left"><code>logs_webhook</code></td>
+<td align="left"><code>info</code> (ระบบบันทึกความเคลื่อนไหว)</td>
+</tr>
 </tbody></table>
 <blockquote>
 <p>🔑 หมายเหตุทางปฏิบัติ: ต้องตั้งค่าตัวแปรสภาพแวดล้อม <code>CRON_SECRET</code> (ความยาวมากกว่า 32 ตัวอักษร) บนคอนโซล Vercel เพื่อความปลอดภัยสูงสุดในการทริกเกอร์ Cron API ในแต่ละวัน</p>
@@ -14751,7 +14758,7 @@ RETURNING count, reset_time;
     TG --> SET
     LINE --> SET
 </div>
-<p><strong>ประเภทเหตุการณ์ (DiscordEventType) ทั้งหมด 16 ชนิด:</strong> <code>student_registered</code>, <code>student_approved</code>, <code>student_rejected</code>, <code>door_opened</code>, <code>door_failed</code>, <code>esp32_offline</code>, <code>admin_login</code>, <code>admin_logout</code>, <code>admin_login_failed</code>, <code>firmware_deployed</code>, <code>firmware_ota_triggered</code>, <code>settings_updated</code>, <code>admin_modified</code>, <code>pdf_exported</code>, <code>security_alert</code>, <code>system_summary</code></p>
+<p><strong>ประเภทเหตุการณ์ (DiscordEventType) ทั้งหมด 17 ชนิด:</strong> <code>student_registered</code>, <code>student_approved</code>, <code>student_rejected</code>, <code>door_opened</code>, <code>door_failed</code>, <code>esp32_offline</code>, <code>admin_login</code>, <code>admin_logout</code>, <code>admin_login_failed</code>, <code>firmware_deployed</code>, <code>firmware_ota_triggered</code>, <code>settings_updated</code>, <code>admin_modified</code>, <code>pdf_exported</code>, <code>security_alert</code>, <code>system_summary</code>, <code>exit_button_pressed</code></p>
 <p><strong>การ routing (notifyCategory):</strong> event ถูกแมปเป็นหมวด <code>register</code> / <code>approve</code> / <code>logs</code> / <code>admin_audit</code> แล้วเลือก webhook/chat โดยลำดับ <strong>per-room override → central fallback</strong> เช่น Discord ใช้ <code>room_webhook_approve_{room}</code> ก่อน แล้วค่อย <code>discord_webhook_approve</code> ส่วน Telegram ใช้ <code>room_telegram_{cat}_{room}</code> → <code>telegram_chat_{cat}</code> (Telegram chat รองรับรูปแบบ <code>chatId:threadId</code> สำหรับ topic/forum) ทุก token/chat id เก็บเป็น row ใน <code>system_settings</code> จึงไม่ต้องสร้างคอลัมน์หรือตารางใหม่</p>
 <p><strong>โครงสร้าง payload Discord:</strong> ส่ง <code>{ username, avatar_url, embeds: [embed] }</code> โดย embed มี title/description/color/fields/footer/timestamp — สีตามหมวด (info=ฟ้า, success=เขียว, warning=ส้ม, error=แดง, purple=ม่วง) และ audit log webhook ส่งสำเนาเพิ่มพร้อม content tag <code>[SYSTEM LOG]</code></p>
 <h3>73.13 ระบบ OTA Firmware ผ่านคลาวด์ (HTTPS Over-The-Air)</h3>
@@ -17877,7 +17884,65 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td>บันทึกรายละเอียดแผนการแก้ไขทาง Micro-interactions และความสมมาตรทางวิชวลประวัติระบบ (§73.51)</td>
 </tr>
 </tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-71-58"></a></p>
+<h2>71.58 แก้ไขปัญหาการเปิดประตูซ้ำเมื่ออนุมัติผ่านเว็บ (MQTT &amp; HTTP Polling Deduplication)</h2>
+<p><strong>วันที่ดำเนินการ:</strong> 4 มิถุนายน 2569</p>
+<h4>71.58.1 สาเหตุของปัญหา (Root Cause Analysis)</h4>
+<p>ตรวจพบปัญหาบอร์ด ESP32 ปลดล็อกประตูซ้ำ 2–3 รอบเมื่อแอดมินกดอนุมัติ (Approve) สิทธิ์เข้าห้องเรียนจากหน้าเว็บแดชบอร์ด โดยมีสาเหตุเชิงลึกมาจากสถาปัตยกรรมขนานของโปรโตคอลการรับคำสั่ง (Coexisting Protocols Race Condition):</p>
+<ol>
+<li><strong>การทำงานขนานกัน (Dual-path Commands):</strong> เมื่อกดอนุมัติสิทธิ์ Next.js Server จะสั่งเปิดประตูสองทางพร้อมกัน:<ul>
+<li>สัญญาณที่ 1: ส่งคำสั่ง <code>&quot;unlock&quot;</code> ผ่าน MQTT (HiveMQ Cloud Broker) ในลักษณะ Real-time Push</li>
+<li>สัญญาณที่ 2: เขียนคำสั่ง <code>room_cmd_&lt;room&gt; = &quot;unlock&quot;</code> ลงในฐานข้อมูลคลาวด์ (<code>system_settings</code>) เพื่อเป็นระบบสำรอง (HTTP Polling Fallback)</li>
+</ul>
+</li>
+<li><strong>การเปิดรอบที่ 1 (MQTT Route):</strong> บอร์ดได้รับคำสั่งผ่าน MQTT (พอร์ต 8883) ในเสี้ยววินาที จึงเรียก <code>triggerDoorOpenInstant</code> เพื่อปลดล็อกประตูทันที และเข้าสู่กระบวนการดีเลย์นับถอยหลังแสดงผลบนหน้าจอ TFT (ใช้เวลาบล็อกลูป 3.8 วินาที)</li>
+<li><strong>การเปิดรอบที่ 2 (HTTP Polling Route):</strong> หลังจากบอร์ดทำงานบล็อกลูป 3.8 วินาทีเสร็จสิ้นและล็อกประตูแล้ว บอร์ดจะกลับมาทำงานในลูปหลัก <code>loop()</code> และยิงคำขอ Polling (<code>GET /api/esp32/display</code>) ขึ้นไปยังเว็บเนื่องจากตัวจับเวลา Polling ครบกำหนด<ul>
+<li>คลาวด์ Edge API ได้รับคำขอและอ่านคีย์ <code>room_cmd_&lt;room&gt;</code> ใน DB ที่ยังคงเป็นค่า <code>&quot;unlock&quot;</code> (เพราะบอร์ดเพิ่งหลุดจากบล็อกลูปมาทำการ Poll เป็นครั้งแรกนับจากเกิดการกดอนุมัติ) </li>
+<li>Edge API จึงส่งคืนคำสั่ง <code>door_trigger = &quot;open&quot;</code> และยิงคำสั่ง PATCH เพื่อล้างคีย์ใน DB เป็น <code>&quot;consumed&quot;</code></li>
+<li>เนื่องจากบอร์ดรับค่า <code>door_trigger = &quot;open&quot;</code> โดยที่สถานะดั้งเดิม <code>last_door_trigger</code> ของบอร์ดก่อนหน้านั้นคือกึ่งว่างงาน (<code>&quot;idle&quot;</code>) บอร์ดจึงสั่งปลดล็อกประตูใหม่อีกครั้งรอบที่ 2</li>
+</ul>
+</li>
+<li><strong>ความน่าจะเป็นของการเปิดรอบที่ 3:</strong> หากฐานข้อมูล Supabase ปรับสถานะ <code>&quot;consumed&quot;</code> ช้า หรือ KV Cache ของ Next.js ในรอบถัดไปยังคงอ้างอิงค่า <code>&quot;unlock&quot;</code> เก่า บอร์ดที่ส่งคำขอ Poll ในรอบถัดไปอาจได้รับคำสั่งเปิดซ้ำเป็นรอบที่ 3</li>
+</ol>
+<h4>71.58.2 สถาปัตยกรรมการแก้ไขและล้างการดักจับซ้ำ (Edge-Triggered Deduplication Implementation)</h4>
+<p>เพื่อแก้ปัญหานี้อย่างถาวรโดยยังคงรักษาความสามารถการใช้งานโปรโตคอลคู่ (Real-time MQTT + Fallback Polling) ไว้เพื่อเสถียรภาพสูงสุด ระบบได้เพิ่มกลไก <strong>Deduplication State Tracking</strong> ภายในบอร์ดคอนโทรลเลอร์:</p>
+<ol>
+<li><strong>การผูกสถานะดักจับ (Global State Integration):</strong> กำหนดให้บอร์ดบันทึกสถานะการปลดล็อก <code>last_door_trigger = &quot;open&quot;</code> ทันทีที่ระบบฮาร์ดแวร์ทำงานปลดล็อกไม่ว่าจะผ่านทางช่องทางใดก็ตาม (MQTT Real-time, Offline QR/PIN Validation หรือ Local HTTP POST Command)</li>
+<li><strong>การตรวจสอบเงื่อนไขแบบ Edge-Triggered:</strong> เมื่อบอร์ดทำการ Polling ด้วย HTTP และได้รับคำตอบจากเซิร์ฟเวอร์ บอร์ดจะทำการตรวจสอบขอบขาขึ้น (<code>isOpenCmd &amp;&amp; last_door_trigger != &quot;open&quot;</code>) หากสถานะการปลดล็อกล่าสุดถูกรับรู้และทำงานไปแล้วผ่าน MQTT ตัวระบบ Polling จะข้ามการสั่งปลดล็อกประตูตัวรีเลย์โดยอัตโนมัติ และปล่อยให้ Edge API ดำเนินการล้างสถานะฐานข้อมูลเงียบ ๆ ในรอบสัญจรนั้น</li>
+<li><strong>การเปลี่ยนผ่านสถานะกลับสู่ปกติ:</strong> เมื่อเซิร์ฟเวอร์เปลี่ยนสถานะ <code>room_cmd</code> ในฐานข้อมูลเป็น <code>&quot;consumed&quot;</code> และส่งค่า <code>door_trigger = &quot;idle&quot;</code> ในรอบ Polling ถัดไป ตัวบอร์ดจะล้างสถานะ <code>last_door_trigger = &quot;idle&quot;</code> เพื่อพร้อมตอบสนองต่อคำสั่งปลดล็อกระลอกถัดไปได้อย่างปลอดภัย</li>
+</ol>
+<h4>71.58.3 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>esp32/esp32.ino</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อัปเกรดฟังก์ชัน <code>triggerDoorOpenInstant</code>, <code>triggerDoorOpenOffline</code> และ local HTTP Server ให้เซ็ต <code>last_door_trigger = &quot;open&quot;</code> ทันทีเมื่อเปิด เพื่อทำลายการเบิ้ลของ Polling Fallback</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อัปเดตเทมเพลตในฟังก์ชัน <code>getArduinoCode</code> ให้เพิ่ม <code>last_door_trigger = &quot;open&quot;</code> ให้สอดคล้องกัน เพื่อไม่ให้โค้ดที่แอดมินคัดลอกจากแดชบอร์ดมีบั๊กตัวเดิมกลับมา</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดของปัญหารวมถึงวิธีการแก้ไขและตารางสรุปการเปลี่ยนแปลง §71.58</td>
+</tr>
+</tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
       </article>
     </main>
   </div>

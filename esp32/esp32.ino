@@ -740,6 +740,7 @@ void triggerDoorOpenOffline(const String &grant) {
 
   Serial.println("[INFO] Door unlocked");
   DBG("🔓 OFFLINE ACCESS GRANTED! Opening door...");
+  last_door_trigger = "open";
 
   drawScanningScreen();
   tone(BUZZER_PIN, 1500, 100);
@@ -774,6 +775,7 @@ void triggerDoorOpenOffline(const String &grant) {
 
 void triggerDoorOpenInstant(String name, String studentId) {
   Serial.println("[INFO] Door unlocked via MQTT/Real-time");
+  last_door_trigger = "open";
   drawScanningScreen();
   tone(BUZZER_PIN, 1500, 100);
   delay(300);
@@ -892,6 +894,7 @@ void handleLocalValidation() {
 
     Serial.println("[INFO] Real-time Door unlocked via HTTP Push");
     DBG("🔓 REAL-TIME ACCESS GRANTED! Opening door...");
+    last_door_trigger = "open";
 
     drawScanningScreen();
     tone(BUZZER_PIN, 1500, 100);
