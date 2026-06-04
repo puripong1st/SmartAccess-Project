@@ -16,9 +16,9 @@
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"></noscript>
   
-  <!-- Modern HTML2Canvas & jsPDF for high-fidelity single section exports -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Modern HTML2Canvas & jsPDF for high-fidelity single section exports (with fallback paths) -->
+  <script src="/html2canvas.min.js" onerror="this.onerror=null; this.src='html2canvas.min.js'; this.onerror=function(){ this.onerror=null; this.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; this.onerror=function(){ this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'; } }"></script>
+  <script src="/jspdf.umd.min.js" onerror="this.onerror=null; this.src='jspdf.umd.min.js'; this.onerror=function(){ this.onerror=null; this.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; this.onerror=function(){ this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'; } }"></script>
   
   <style>
     :root {
@@ -941,6 +941,9 @@
         </button>
         <button class="btn-tool" onclick="window.print()">
           🖨️ บันทึกเป็น PDF / สั่งพิมพ์
+        </button>
+        <button class="btn-tool" onclick="downloadAllDiagrams(this)" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; border: none; font-weight: 700; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);">
+          📦 ดาวน์โหลดรูปไดอะแกรมทั้งหมด (ZIP)
         </button>
       </div>
 
@@ -18010,6 +18013,251 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
   </script>
 
   <script>
+    // Global fallback dependency loader for reliable runtime script loading
+    window.loadDependency = function(name, callback) {
+      if (name === 'html2canvas' && typeof window.html2canvas === 'function') {
+        return callback(true);
+      }
+      if (name === 'jspdf' && ((window.jspdf && window.jspdf.jsPDF) || window.jsPDF)) {
+        return callback(true);
+      }
+      if (name === 'jszip' && typeof window.JSZip === 'function') {
+        return callback(true);
+      }
+
+      var urls = [];
+      if (name === 'html2canvas') {
+        urls = [
+          '/html2canvas.min.js',
+          'html2canvas.min.js',
+          'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+          'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+          'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
+        ];
+      } else if (name === 'jspdf') {
+        urls = [
+          '/jspdf.umd.min.js',
+          'jspdf.umd.min.js',
+          'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+          'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
+          'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js'
+        ];
+      } else if (name === 'jszip') {
+        urls = [
+          'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+          'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+          'https://unpkg.com/jszip@3.10.1/dist/jszip.min.js'
+        ];
+      }
+
+      var index = 0;
+      function tryNext() {
+        if (index >= urls.length) {
+          callback(false);
+          return;
+        }
+        var url = urls[index++];
+        if (url.startsWith('/') && window.location.protocol === 'file:') {
+          tryNext();
+          return;
+        }
+        var script = document.createElement('script');
+        script.src = url;
+        script.onload = function() {
+          if (name === 'html2canvas' && typeof window.html2canvas === 'function') {
+            callback(true);
+          } else if (name === 'jspdf' && ((window.jspdf && window.jspdf.jsPDF) || window.jsPDF)) {
+            callback(true);
+          } else if (name === 'jszip' && typeof window.JSZip === 'function') {
+            callback(true);
+          } else {
+            tryNext();
+          }
+        };
+        script.onerror = function() {
+          tryNext();
+        };
+        document.head.appendChild(script);
+      }
+      tryNext();
+    };
+
+    // Pre-trigger async preloading of html2canvas and jspdf
+    setTimeout(function() {
+      window.loadDependency('html2canvas', function(){});
+      window.loadDependency('jspdf', function(){});
+    }, 1000);
+
+    // Force rendering of all lazy-loaded diagrams
+    async function forceRenderAllDiagrams() {
+      const mermaidDivs = document.querySelectorAll(".mermaid");
+      const unrendered = [];
+      mermaidDivs.forEach(div => {
+        if (div.querySelector(".mermaid-loader-skeleton")) {
+          unrendered.push(div);
+        }
+      });
+
+      if (unrendered.length === 0) return;
+
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+
+      for (let i = 0; i < unrendered.length; i++) {
+        const div = unrendered[i];
+        const rawCode = div.getAttribute("data-mermaid-code");
+        const diagramIndex = div.getAttribute("data-index");
+        const skeleton = div.querySelector(".mermaid-loader-skeleton");
+        
+        div.textContent = rawCode;
+        try {
+          await window.mermaid.run({ nodes: [div] });
+          if (skeleton && skeleton.parentNode === div) {
+            div.removeChild(skeleton);
+          }
+          const svg = div.querySelector("svg");
+          if (svg) {
+            div.style.position = "relative";
+            div.style.paddingTop = "54px";
+            injectDownloadButtons(div, svg, diagramIndex);
+          }
+        } catch (err) {
+          console.error("Error force-rendering diagram " + diagramIndex + ":", err);
+        }
+      }
+    }
+
+    // Bulk export all diagrams as a ZIP bundle
+    function downloadAllDiagrams(btn) {
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = "⏳ กำลังโหลดโปรแกรมบีบอัด (ZIP)...";
+
+      window.loadDependency('jszip', async function(hasJsZip) {
+        if (!hasJsZip) {
+          alert("⚠️ ไม่สามารถโหลดไลบรารีสำหรับสร้างไฟล์ ZIP ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          return;
+        }
+
+        btn.innerHTML = "⏳ กำลังโหลดไดอะแกรมทั้งหมด...";
+        await forceRenderAllDiagrams();
+
+        window.loadDependency('html2canvas', async function(hasHtml2Canvas) {
+          const zip = new JSZip();
+          const folder = zip.folder("smartaccess_diagrams");
+          
+          const mermaidDivs = document.querySelectorAll(".mermaid");
+          let processed = 0;
+          const total = mermaidDivs.length;
+
+          // Create dynamic premium progress modal
+          const progressOverlay = document.createElement("div");
+          progressOverlay.style.position = "fixed";
+          progressOverlay.style.top = "0";
+          progressOverlay.style.left = "0";
+          progressOverlay.style.width = "100%";
+          progressOverlay.style.height = "100%";
+          progressOverlay.style.backgroundColor = "rgba(15, 23, 42, 0.85)";
+          progressOverlay.style.zIndex = "99999";
+          progressOverlay.style.display = "flex";
+          progressOverlay.style.flexDirection = "column";
+          progressOverlay.style.alignItems = "center";
+          progressOverlay.style.justifyContent = "center";
+          progressOverlay.style.color = "white";
+          progressOverlay.style.fontFamily = "Sarabun, sans-serif";
+          progressOverlay.innerHTML = `
+            <div style="background: #1E293B; padding: 35px; border-radius: 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid #334155; max-width: 420px; width: 90%;">
+              <div style="width: 48px; height: 48px; border: 4px solid #334155; border-top: 4px solid #7C3AED; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto;"></div>
+              <h3 style="margin: 0 0 10px 0; font-size: 18px; color: #F1F5F9;">กำลังส่งออกไดอะแกรมทั้งหมด</h3>
+              <p id="bulk-progress-text" style="color: #94A3B8; font-size: 14px; margin: 0 0 15px 0;">กำลังเริ่มขั้นตอนการแปลงรูปภาพ...</p>
+              <div style="width: 100%; background: #334155; height: 8px; border-radius: 4px; overflow: hidden;">
+                <div id="bulk-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%); transition: width 0.1s;"></div>
+              </div>
+            </div>
+            <style>
+              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            </style>
+          `;
+          document.body.appendChild(progressOverlay);
+
+          const progressText = document.getElementById("bulk-progress-text");
+          const progressBar = document.getElementById("bulk-progress-bar");
+
+          for (let i = 0; i < mermaidDivs.length; i++) {
+            const div = mermaidDivs[i];
+            const index = div.getAttribute("data-index") || (i + 1);
+            progressText.innerText = `กำลังบันทึกรูปที่ ${index} จากทั้งหมด ${total} รูป (PNG)...`;
+            progressBar.style.width = `${(i / total) * 100}%`;
+
+            await new Promise(resolve => setTimeout(resolve, 30));
+
+            const btnContainer = div.querySelector("div");
+            if (btnContainer) btnContainer.style.visibility = "hidden";
+
+            let imgData = null;
+            let fileName = `smartaccess_diagram_${index}.png`;
+
+            if (hasHtml2Canvas) {
+              try {
+                const canvas = await html2canvas(div, {
+                  scale: 2.5,
+                  useCORS: true,
+                  backgroundColor: "#FFFFFF",
+                  logging: false,
+                  onclone: function(clonedDoc) {
+                    clonedDoc.body.classList.remove("dark-mode");
+                    clonedDoc.querySelectorAll(".mermaid, pre, .table-container, .alert-box").forEach(function(el) {
+                      el.style.contentVisibility = "visible";
+                    });
+                    const cb = clonedDoc.querySelector(".mermaid div");
+                    if (cb) cb.style.display = "none";
+                  }
+                });
+                const pngURL = canvas.toDataURL("image/png");
+                imgData = pngURL.split(',')[1];
+              } catch (err) {
+                console.warn("html2canvas failed in bulk, using SVG path:", err);
+              }
+            }
+
+            if (btnContainer) btnContainer.style.visibility = "visible";
+
+            if (imgData) {
+              folder.file(fileName, imgData, { base64: true });
+            } else {
+              const svgElement = div.querySelector("svg");
+              if (svgElement) {
+                const prepared = prepareSvgClone(svgElement);
+                const svgString = new XMLSerializer().serializeToString(prepared.clone);
+                folder.file(`smartaccess_diagram_${index}.svg`, svgString);
+              }
+            }
+          }
+
+          progressText.innerText = "กำลังสร้างและรวบรวมไฟล์ ZIP...";
+          progressBar.style.width = "100%";
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          try {
+            const content = await zip.generateAsync({ type: "blob" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(content);
+            link.download = "smartaccess_all_diagrams.zip";
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+          } catch (e) {
+            alert("เกิดข้อผิดพลาดในการสร้างไฟล์ ZIP: " + e.message);
+          } finally {
+            document.body.removeChild(progressOverlay);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+        });
+      });
+    }
 
     // Reusable function to inject download triggers
     function injectDownloadButtons(div, svg, index) {
@@ -18805,12 +19053,12 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
         const btnPdf = document.createElement("button");
         btnPdf.className = "btn-section-export";
         btnPdf.innerHTML = "📄 บันทึกเฉพาะส่วนนี้ (PDF)";
-        btnPdf.onclick = () => window.exportSection(h.id, 'pdf');
+        btnPdf.onclick = (e) => window.exportSection(h.id, 'pdf', e.currentTarget);
         
         const btnPng = document.createElement("button");
         btnPng.className = "btn-section-export";
         btnPng.innerHTML = "🖼️ บันทึกเฉพาะส่วนนี้ (PNG)";
-        btnPng.onclick = () => window.exportSection(h.id, 'png');
+        btnPng.onclick = (e) => window.exportSection(h.id, 'png', e.currentTarget);
         
         actionSpan.appendChild(btnPdf);
         actionSpan.appendChild(btnPng);
@@ -18848,12 +19096,12 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
             const btnPdf = document.createElement("button");
             btnPdf.className = "btn-section-export";
             btnPdf.innerHTML = "📄 บันทึกเฉพาะส่วนนี้ (PDF)";
-            btnPdf.onclick = () => window.exportSection(parentHeaderId, 'pdf');
+            btnPdf.onclick = (e) => window.exportSection(parentHeaderId, 'pdf', e.currentTarget);
 
             const btnPng = document.createElement("button");
             btnPng.className = "btn-section-export";
             btnPng.innerHTML = "🖼️ บันทึกเฉพาะส่วนนี้ (PNG)";
-            btnPng.onclick = () => window.exportSection(parentHeaderId, 'png');
+            btnPng.onclick = (e) => window.exportSection(parentHeaderId, 'png', e.currentTarget);
 
             inlineActions.appendChild(btnPdf);
             inlineActions.appendChild(btnPng);
