@@ -17889,28 +17889,41 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <h2>71.58 แก้ไขปัญหาการเปิดประตูซ้ำเมื่ออนุมัติผ่านเว็บ (MQTT &amp; HTTP Polling Deduplication)</h2>
 <p><strong>วันที่ดำเนินการ:</strong> 4 มิถุนายน 2569</p>
 <h4>71.58.1 สาเหตุของปัญหา (Root Cause Analysis)</h4>
-<p>ตรวจพบปัญหาบอร์ด ESP32 ปลดล็อกประตูซ้ำ 2–3 รอบเมื่อแอดมินกดอนุมัติ (Approve) สิทธิ์เข้าห้องเรียนจากหน้าเว็บแดชบอร์ด โดยมีสาเหตุเชิงลึกมาจากสถาปัตยกรรมขนานของโปรโตคอลการรับคำสั่ง (Coexisting Protocols Race Condition):</p>
+<p>ตรวจพบปัญหาบอร์ด ESP32 ปลดล็อกประตูซ้ำ 2–3 รอบเมื่อแอดมินกดอนุมัติ (Approve) สิทธิ์เข้าห้องเรียนจากหน้าเว็บแดชบอร์ด โดยมีสาเหตุเชิงลึกมาจากตรรกะการเก็บแคชฝั่งเซิร์ฟเวอร์ร่วมกับสถาปัตยกรรมขนานของโปรโตคอลการรับคำสั่ง (Coexisting Protocols &amp; Cache Race Condition):</p>
 <ol>
-<li><strong>การทำงานขนานกัน (Dual-path Commands):</strong> เมื่อกดอนุมัติสิทธิ์ Next.js Server จะสั่งเปิดประตูสองทางพร้อมกัน:<ul>
-<li>สัญญาณที่ 1: ส่งคำสั่ง <code>&quot;unlock&quot;</code> ผ่าน MQTT (HiveMQ Cloud Broker) ในลักษณะ Real-time Push</li>
-<li>สัญญาณที่ 2: เขียนคำสั่ง <code>room_cmd_&lt;room&gt; = &quot;unlock&quot;</code> ลงในฐานข้อมูลคลาวด์ (<code>system_settings</code>) เพื่อเป็นระบบสำรอง (HTTP Polling Fallback)</li>
+<li><strong>การสั่งการสองช่องทางขนานกัน (Dual-path Commands):</strong> Next.js Server สั่งเปิดประตูพร้อมกันสองทาง:<ul>
+<li>สัญญาณที่ 1: ส่งคำสั่ง <code>&quot;unlock&quot;</code> ผ่าน MQTT (HiveMQ Cloud Broker) แบบ Real-time Push</li>
+<li>สัญญาณที่ 2: เขียนคำสั่ง <code>room_cmd_&lt;room&gt; = &quot;unlock&quot;</code> ลงในฐานข้อมูล Supabase (<code>system_settings</code>) เพื่อเป็นช่องทางสำรอง (HTTP Polling Fallback)</li>
 </ul>
 </li>
-<li><strong>การเปิดรอบที่ 1 (MQTT Route):</strong> บอร์ดได้รับคำสั่งผ่าน MQTT (พอร์ต 8883) ในเสี้ยววินาที จึงเรียก <code>triggerDoorOpenInstant</code> เพื่อปลดล็อกประตูทันที และเข้าสู่กระบวนการดีเลย์นับถอยหลังแสดงผลบนหน้าจอ TFT (ใช้เวลาบล็อกลูป 3.8 วินาที)</li>
-<li><strong>การเปิดรอบที่ 2 (HTTP Polling Route):</strong> หลังจากบอร์ดทำงานบล็อกลูป 3.8 วินาทีเสร็จสิ้นและล็อกประตูแล้ว บอร์ดจะกลับมาทำงานในลูปหลัก <code>loop()</code> และยิงคำขอ Polling (<code>GET /api/esp32/display</code>) ขึ้นไปยังเว็บเนื่องจากตัวจับเวลา Polling ครบกำหนด<ul>
-<li>คลาวด์ Edge API ได้รับคำขอและอ่านคีย์ <code>room_cmd_&lt;room&gt;</code> ใน DB ที่ยังคงเป็นค่า <code>&quot;unlock&quot;</code> (เพราะบอร์ดเพิ่งหลุดจากบล็อกลูปมาทำการ Poll เป็นครั้งแรกนับจากเกิดการกดอนุมัติ) </li>
-<li>Edge API จึงส่งคืนคำสั่ง <code>door_trigger = &quot;open&quot;</code> และยิงคำสั่ง PATCH เพื่อล้างคีย์ใน DB เป็น <code>&quot;consumed&quot;</code></li>
-<li>เนื่องจากบอร์ดรับค่า <code>door_trigger = &quot;open&quot;</code> โดยที่สถานะดั้งเดิม <code>last_door_trigger</code> ของบอร์ดก่อนหน้านั้นคือกึ่งว่างงาน (<code>&quot;idle&quot;</code>) บอร์ดจึงสั่งปลดล็อกประตูใหม่อีกครั้งรอบที่ 2</li>
+<li><strong>การทำงานของบอร์ดในรอบแรก (MQTT Trigger):</strong> บอร์ดได้รับสัญญาณผ่าน MQTT และปลดล็อกประตูทันที (รอบที่ 1) บอร์ดจะทำแอนิเมชันนับถอยหลัง (บล็อกลูป 3.8 วินาที) โดยในเฟิร์มแวร์รุ่นแก้ไขแรกได้ตั้งสถานะ <code>last_door_trigger = &quot;open&quot;</code></li>
+<li><strong>ปัญหาบั๊กแคชลอยลำ (Stale settings cache):</strong> <ul>
+<li>เซิร์ฟเวอร์ Next.js มีการประยุกต์ใช้แคช Vercel KV (Redis) ในคีย์ <code>system_settings:all</code> เป็นเวลา 15 วินาที เพื่อลดภาระการคิวรีฐานข้อมูลโดยตรง</li>
+<li>ทว่า ฟังก์ชัน <code>openDoor</code> ใน <code>my-app/lib/esp32.ts</code> มีการเขียนค่าลงในตาราง DB ของ Supabase โดยตรง แต่<strong>ไม่มีการสั่งล้างแคช (Cache Invalidation)</strong></li>
+<li>ส่งผลให้ใน 15 วินาทีแรกหลังจากอนุมัติ การส่ง HTTP Polling จากบอร์ดขึ้นไปถามที่เซิร์ฟเวอร์จะยังคงดึงค่าข้อมูลจากระบบแคชเดิม ซึ่งมีค่าของตัวแปร <code>room_cmd_&lt;room&gt;</code> เป็น <code>&quot;consumed&quot;</code> หรือ <code>&quot;idle&quot;</code> ส่งผลให้เซิร์ฟเวอร์ตอบบอร์ดกลับไปด้วยคำสั่ง <code>door_trigger = &quot;idle&quot;</code></li>
+<li>เมื่อบอร์ดเห็นผลลัพธ์ Polling รอบแรก ๆ เป็น <code>&quot;idle&quot;</code> ตรรกะของบอร์ดจะทำการรีเซ็ตตัวแปรสถานะ <code>last_door_trigger = &quot;idle&quot;</code> คืนกลับไปทันที</li>
 </ul>
 </li>
-<li><strong>ความน่าจะเป็นของการเปิดรอบที่ 3:</strong> หากฐานข้อมูล Supabase ปรับสถานะ <code>&quot;consumed&quot;</code> ช้า หรือ KV Cache ของ Next.js ในรอบถัดไปยังคงอ้างอิงค่า <code>&quot;unlock&quot;</code> เก่า บอร์ดที่ส่งคำขอ Poll ในรอบถัดไปอาจได้รับคำสั่งเปิดซ้ำเป็นรอบที่ 3</li>
+<li><strong>การทริกเกอร์เปิดซ้ำรอบที่ 2 (Cache Expiration Trigger):</strong> <ul>
+<li>เมื่อเวลาผ่านไปครบ 15 วินาที แคชลอยลำหมดอายุ (KV Cache Expired)</li>
+<li>การส่ง HTTP Polling รอบถัดไปของบอร์ดจะทำให้เซิร์ฟเวอร์ยิงคิวรีลงฐานข้อมูลจริง และไปเจอคีย์ใน DB ที่ยังค้างอยู่ในสถานะ <code>&quot;unlock&quot;</code> (ซึ่งยังไม่เคยถูก consume เลยเพราะ 15 วินาทีก่อนหน้าดึงจากแคชตลอด)</li>
+<li>เซิร์ฟเวอร์จึงเปลี่ยนค่าใน DB เป็น <code>&quot;consumed&quot;</code> และส่งคำสั่ง <code>door_trigger = &quot;open&quot;</code> กลับไปให้บอร์ด</li>
+<li>บอร์ดได้รับ <code>door_trigger = &quot;open&quot;</code> ในขณะที่ตัวแปรสถานะในบอร์ดถูกรีเซ็ตเป็น <code>&quot;idle&quot;</code> ไปแล้วก่อนหน้านี้ บอร์ดจึงสั่งปลดล็อกประตูซ้ำรอบที่ 2 (และ 3) เสมอ</li>
+</ul>
+</li>
 </ol>
-<h4>71.58.2 สถาปัตยกรรมการแก้ไขและล้างการดักจับซ้ำ (Edge-Triggered Deduplication Implementation)</h4>
-<p>เพื่อแก้ปัญหานี้อย่างถาวรโดยยังคงรักษาความสามารถการใช้งานโปรโตคอลคู่ (Real-time MQTT + Fallback Polling) ไว้เพื่อเสถียรภาพสูงสุด ระบบได้เพิ่มกลไก <strong>Deduplication State Tracking</strong> ภายในบอร์ดคอนโทรลเลอร์:</p>
+<h4>71.58.2 สถาปัตยกรรมการแก้ไขและล้างการดักจับซ้ำ (Edge-Triggered Deduplication &amp; Cache Invalidation Implementation)</h4>
+<p>เพื่อแก้ไขปัญหานี้ให้เบ็ดเสร็จสมบูรณ์ทั้งระบบ ได้มีการพัฒนาการแก้ไขสองมิติควบคู่กัน:</p>
 <ol>
-<li><strong>การผูกสถานะดักจับ (Global State Integration):</strong> กำหนดให้บอร์ดบันทึกสถานะการปลดล็อก <code>last_door_trigger = &quot;open&quot;</code> ทันทีที่ระบบฮาร์ดแวร์ทำงานปลดล็อกไม่ว่าจะผ่านทางช่องทางใดก็ตาม (MQTT Real-time, Offline QR/PIN Validation หรือ Local HTTP POST Command)</li>
-<li><strong>การตรวจสอบเงื่อนไขแบบ Edge-Triggered:</strong> เมื่อบอร์ดทำการ Polling ด้วย HTTP และได้รับคำตอบจากเซิร์ฟเวอร์ บอร์ดจะทำการตรวจสอบขอบขาขึ้น (<code>isOpenCmd &amp;&amp; last_door_trigger != &quot;open&quot;</code>) หากสถานะการปลดล็อกล่าสุดถูกรับรู้และทำงานไปแล้วผ่าน MQTT ตัวระบบ Polling จะข้ามการสั่งปลดล็อกประตูตัวรีเลย์โดยอัตโนมัติ และปล่อยให้ Edge API ดำเนินการล้างสถานะฐานข้อมูลเงียบ ๆ ในรอบสัญจรนั้น</li>
-<li><strong>การเปลี่ยนผ่านสถานะกลับสู่ปกติ:</strong> เมื่อเซิร์ฟเวอร์เปลี่ยนสถานะ <code>room_cmd</code> ในฐานข้อมูลเป็น <code>&quot;consumed&quot;</code> และส่งค่า <code>door_trigger = &quot;idle&quot;</code> ในรอบ Polling ถัดไป ตัวบอร์ดจะล้างสถานะ <code>last_door_trigger = &quot;idle&quot;</code> เพื่อพร้อมตอบสนองต่อคำสั่งปลดล็อกระลอกถัดไปได้อย่างปลอดภัย</li>
+<li><strong>การล้างแคชฝั่งเซิร์ฟเวอร์ทันทีเมื่อมีการปลดล็อก (Active Cache Invalidation):</strong><ul>
+<li>อัปเกรดฟังก์ชัน <code>openDoor</code> ใน <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/lib/esp32.ts">my-app/lib/esp32.ts</a> ให้เรียกใช้ฟังก์ชัน <code>clearSystemSettingsCache()</code> จากโมดูล <code>lib/db.ts</code> ทันทีหลังจากเขียนคิวเปิดประตู <code>&quot;unlock&quot;</code> ลงฐานข้อมูลเสร็จสิ้น</li>
+<li>การเรียกใช้ฟังก์ชันนี้จะบังคับล้างแคชทั้งใน in-memory ของเซิร์ฟเวอร์และแคช Vercel KV (Redis) โดยทันที ทำให้การ Polling รอบแรกสุดของบอร์ด (หลังหลุดจากบล็อกลูป 3.8 วินาที) สามารถอ่านค่า <code>&quot;unlock&quot;</code> จริงจากฐานข้อมูลและตอบกลับคำสั่ง <code>door_trigger = &quot;open&quot;</code> เพื่อให้บอร์ด consume และล้างค่าเป็น <code>&quot;consumed&quot;</code> ในฐานข้อมูลทันที</li>
+</ul>
+</li>
+<li><strong>การผูกสถานะดักจับฝั่งบอร์ด (Global State Integration):</strong><ul>
+<li>ตรึงตรรกะในเฟิร์มแวร์ <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/esp32/esp32.ino">esp32/esp32.ino</a> และ <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts">my-app/app/admin/dashboard/ArduinoCode.ts</a> ในจุดรับการปลดล็อก (MQTT, Offline QR/PIN, Local HTTP POST) ให้เก็บสถานะ <code>last_door_trigger = &quot;open&quot;</code> เพื่อให้ตรรกะ Edge-triggered ทำงานข้ามการเปิดซ้ำเมื่อตรวจพบคำสั่ง <code>&quot;open&quot;</code> ที่เซิร์ฟเวอร์ตอบกลับมาล้างสถานะ</li>
+</ul>
+</li>
 </ol>
 <h4>71.58.3 ตารางสรุปไฟล์แก้ไข</h4>
 <table>
@@ -17930,12 +17943,18 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 </tr>
 <tr>
 <td>2</td>
+<td><code>my-app/lib/esp32.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>นำเข้าและเรียกใช้งาน <code>clearSystemSettingsCache()</code> ภายหลังการเขียนคำสั่งปลดล็อกประตูลงใน DB เพื่อล้างแคช Vercel KV ทันที ป้องกันปัญหาระบบตอบกลับคำสั่งล่าช้าจนเกิดการเปิดซ้ำ</td>
+</tr>
+<tr>
+<td>3</td>
 <td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>อัปเดตเทมเพลตในฟังก์ชัน <code>getArduinoCode</code> ให้เพิ่ม <code>last_door_trigger = &quot;open&quot;</code> ให้สอดคล้องกัน เพื่อไม่ให้โค้ดที่แอดมินคัดลอกจากแดชบอร์ดมีบั๊กตัวเดิมกลับมา</td>
 </tr>
 <tr>
-<td>3</td>
+<td>4</td>
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดของปัญหารวมถึงวิธีการแก้ไขและตารางสรุปการเปลี่ยนแปลง §71.58</td>

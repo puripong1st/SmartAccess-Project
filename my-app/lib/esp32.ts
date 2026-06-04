@@ -9,7 +9,7 @@
 //   LAN direct-connect is attempted in background (non-blocking fire-and-forget)
 //   getESP32Status skips LAN ping for private IPs on cloud environments
 
-import { getSystemSettings, getPool } from "./db";
+import { getSystemSettings, getPool, clearSystemSettingsCache } from "./db";
 import { publishMqttMessage } from "./mqtt";
 
 const ESP32_IP   = process.env.ESP32_IP   || "192.168.1.100";
@@ -146,7 +146,8 @@ export async function openDoor(studentId?: string, roomCode?: string): Promise<E
        ON CONFLICT (setting_key) DO UPDATE SET setting_value = $3, updated_at = CURRENT_TIMESTAMP`,
       [`room_cmd_${sanitizedRoom}`, "unlock", "unlock"]
     );
-    console.log(`[IoT Cloud] Command 'unlock' queued in DB for room: ${sanitizedRoom}`);
+    clearSystemSettingsCache();
+    console.log(`[IoT Cloud] Command 'unlock' queued in DB and cache invalidated for room: ${sanitizedRoom}`);
   } catch (dbErr) {
     console.error("[IoT Cloud] Failed to queue unlock command in DB system_settings:", dbErr);
   }
