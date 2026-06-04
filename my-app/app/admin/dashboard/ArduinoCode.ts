@@ -161,6 +161,7 @@ bool localServerStarted = false;
 #define LED_REJECT 26 // Reject LED (GPIO 26)
 #define BUZZER_PIN 27 // Buzzer (GPIO 27)
 #define EXIT_BUTTON_PIN 13 // Exit Button (GPIO 13)
+#define DOOR_SENSOR_PIN 32 // Magnetic Door Sensor (GPIO 32)
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
@@ -184,6 +185,7 @@ String ip_address_str = "0.0.0.0";
 // Edge-trigger กันเปิดประตูซ้ำ: เปิดเฉพาะตอนคำสั่งเปลี่ยนจาก idle→open เท่านั้น
 // ป้องกันบอร์ดวนหน้า ACCESS GRANTED ไม่จบ หากเซิร์ฟเวอร์ส่ง "open" ค้างมาหลายรอบ
 String last_door_trigger = "idle";
+unsigned long doorOpenStartTime = 0; // Timestamp when door sensor detected open state
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
 void drawQRCode(const String& qrText, int startX, int startY, int boxSize) {
@@ -1207,6 +1209,7 @@ void setup() {
   pinMode(LED_REJECT, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(EXIT_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(DOOR_SENSOR_PIN, INPUT_PULLUP);
 
   digitalWrite(RELAY_PIN, LOW); // Default locked
   digitalWrite(LED_WIFI, LOW);
@@ -1285,6 +1288,23 @@ void setup() {
 }
 
 void loop() {
+  // Check door sensor open-state warning
+  // MC-38 outputs HIGH when door is open (magnet away), LOW when closed (magnet close)
+  if (digitalRead(DOOR_SENSOR_PIN) == HIGH) {
+    if (doorOpenStartTime == 0) {
+      doorOpenStartTime = millis();
+    } else if (millis() - doorOpenStartTime > 10000) { // 10 seconds warning threshold
+      static unsigned long lastAlertBeep = 0;
+      if (millis() - lastAlertBeep > 500) {
+        lastAlertBeep = millis();
+        tone(BUZZER_PIN, 2000, 200); // Play 2000Hz alert beep for 200ms
+        Serial.println("[WARNING] Door open for too long!");
+      }
+    }
+  } else {
+    doorOpenStartTime = 0; // Reset
+  }
+
   // Check physical exit button (Active-LOW or Active-HIGH depending on module spec)
   // Most modules output LOW when pressed. If active-HIGH sensor, change to == HIGH.
   if (digitalRead(EXIT_BUTTON_PIN) == LOW) {
