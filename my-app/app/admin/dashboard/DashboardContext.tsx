@@ -855,33 +855,73 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, fetchAdmins]);
 
-  // Real-time EventSource SSE subscription
+  // Real-time EventSource SSE subscription with robust polling fallback
   useEffect(() => {
     if (!user) return;
 
     fetchPending();
     fetchLogs();
 
-    const es = new EventSource("/api/sse");
+    let es: EventSource | null = null;
+    let fallbackInterval: NodeJS.Timeout | null = null;
+    let isCleanedUp = false;
 
     const applySnapshot = (data: { pending: Student[]; logs: AccessLog[] }) => {
+      if (isCleanedUp) return;
       if (Array.isArray(data.pending)) setPending(data.pending);
       if (Array.isArray(data.logs)) setLogs(data.logs);
     };
 
-    es.addEventListener("snapshot", (e: MessageEvent) => {
-      try { applySnapshot(JSON.parse(e.data)); } catch { /* ignore */ }
-    });
-    es.addEventListener("update", (e: MessageEvent) => {
-      try { applySnapshot(JSON.parse(e.data)); } catch { /* ignore */ }
-    });
-    es.onerror = () => {
-      es.close();
-      const iv = setInterval(() => { fetchPending(); fetchLogs(); }, 15000);
-      return () => clearInterval(iv);
+    const startFallbackPolling = () => {
+      if (fallbackInterval || isCleanedUp) return;
+      // Fast fallback polling (every 3 seconds) for a real-time experience when SSE is unstable/fails
+      fallbackInterval = setInterval(async () => {
+        if (!isCleanedUp) {
+          await Promise.all([fetchPending(), fetchLogs()]);
+        }
+      }, 3000);
     };
 
-    return () => es.close();
+    try {
+      es = new EventSource("/api/sse");
+
+      es.addEventListener("snapshot", (e: MessageEvent) => {
+        try {
+          applySnapshot(JSON.parse(e.data));
+        } catch (err) {
+          console.error("Failed to parse SSE snapshot:", err);
+        }
+      });
+
+      es.addEventListener("update", (e: MessageEvent) => {
+        try {
+          applySnapshot(JSON.parse(e.data));
+        } catch (err) {
+          console.error("Failed to parse SSE update:", err);
+        }
+      });
+
+      es.onerror = () => {
+        if (es) {
+          es.close();
+          es = null;
+        }
+        startFallbackPolling();
+      };
+    } catch (err) {
+      console.error("Failed to initialize SSE EventSource:", err);
+      startFallbackPolling();
+    }
+
+    return () => {
+      isCleanedUp = true;
+      if (es) {
+        es.close();
+      }
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+      }
+    };
   }, [user, fetchPending, fetchLogs]);
 
   // Polling states

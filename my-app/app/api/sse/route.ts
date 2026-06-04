@@ -9,9 +9,8 @@ export const dynamic = "force-dynamic";
 // reconnects cleanly instead of the platform killing it mid-flight.
 export const maxDuration = 60;
 
-// Poll DB every 8s (was 3s) — cuts query volume ~60% per open tab while
-// staying near-real-time for approving pending requests on free Supabase.
-const POLL_INTERVAL_MS = 8000;
+// Poll DB every 3s — ensures real-time updates for approving pending requests
+const POLL_INTERVAL_MS = 3000;
 // Close the stream just before maxDuration so the EventSource reconnects.
 const STREAM_LIFETIME_MS = 50_000;
 
