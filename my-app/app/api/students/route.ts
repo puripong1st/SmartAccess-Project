@@ -10,6 +10,7 @@ import { consumeOfflineGrant, consumeQRToken } from "@/lib/qr";
 import { rateLimit } from "@/lib/rate-limit";
 import crypto from "crypto";
 import { getClientIp } from "@/lib/client-ip";
+import { logEvent } from "@/lib/access-log";
 
 function sanitizeString(str: any): string {
   if (typeof str !== "string") return "";
@@ -256,16 +257,18 @@ export async function POST(req: NextRequest) {
           [sanitizedTitle, sanitizedFirstName, sanitizedLastName, yearNum, sanitizedFaculty, sanitizedBranch, newBypassToken, sanitizedRequestedRoom, existingStudent.id]
         );
 
-        runBackground(pool.query(
-          `INSERT INTO access_logs (student_id, action, notes, esp32_response, room_code) VALUES ($1, $2, $3, $4, $5)`,
-          [
-            existingStudent.id,
-            esp32Result.success ? "door_opened" : "door_failed",
-            "อนุมัติเข้าห้องและเปิดประตูอัตโนมัติในช่วงเวลาให้บริการ (Auto-Approve)",
-            esp32Result.message,
-            sanitizedRequestedRoom
-          ]
-        ), "auto-approve existing access log");
+        runBackground(logEvent({
+          action: "approved",
+          studentId: existingStudent.id,
+          room: sanitizedRequestedRoom,
+          esp32Response: esp32Result.message,
+          notes: esp32Result.success 
+            ? "อนุมัติเข้าห้องและเปิดประตูอัตโนมัติในช่วงเวลาให้บริการ (Auto-Approve)"
+            : `อนุมัติเข้าห้องอัตโนมัติแต่ประตูไม่เปิด (Auto-Approve): ${esp32Result.message}`,
+          method: "auto_approve",
+          severity: esp32Result.success ? "info" : "warning",
+          ip,
+        }), "auto-approve existing access log");
 
         await sendDiscordNotification(esp32Result.success ? "student_approved" : "door_failed", {
           studentName: `${sanitizedTitle}${sanitizedFirstName} ${sanitizedLastName}`,
@@ -359,16 +362,18 @@ export async function POST(req: NextRequest) {
 
       const esp32Result = await openDoor(sanitizedStudentId, sanitizedRequestedRoom);
 
-      runBackground(pool.query(
-        `INSERT INTO access_logs (student_id, action, notes, esp32_response, room_code) VALUES ($1, $2, $3, $4, $5)`,
-        [
-          insertId,
-          esp32Result.success ? "door_opened" : "door_failed",
-          "ลงทะเบียนสำเร็จและได้รับการอนุมัติเข้าห้องอัตโนมัติ (Auto-Approve)",
-          esp32Result.message,
-          sanitizedRequestedRoom
-        ]
-      ), "auto-approve new access log");
+      runBackground(logEvent({
+        action: "approved",
+        studentId: insertId,
+        room: sanitizedRequestedRoom,
+        esp32Response: esp32Result.message,
+        notes: esp32Result.success
+          ? "ลงทะเบียนสำเร็จและได้รับการอนุมัติเข้าห้องอัตโนมัติ (Auto-Approve)"
+          : `ลงทะเบียนสำเร็จและอนุมัติอัตโนมัติแต่ประตูไม่เปิด (Auto-Approve): ${esp32Result.message}`,
+        method: "auto_approve",
+        severity: esp32Result.success ? "info" : "warning",
+        ip,
+      }), "auto-approve new access log");
 
       await sendDiscordNotification(esp32Result.success ? "student_approved" : "door_failed", {
         studentName: `${sanitizedTitle}${sanitizedFirstName} ${sanitizedLastName}`,

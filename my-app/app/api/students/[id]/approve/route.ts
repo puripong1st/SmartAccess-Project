@@ -93,14 +93,14 @@ export async function POST(
 
     const { ip, userAgent } = getRequestContext(req);
     runBackground(logEvent({
-      action: esp32Result.success ? "door_opened" : "door_failed",
+      action: "approved",
       studentId,
       performedBy: admin.id,
       room: student.requested_room,
       ip,
       userAgent,
       esp32Response: esp32Result.message,
-      notes: `อนุมัติโดย: ${admin.full_name}`,
+      notes: esp32Result.success ? `อนุมัติโดย: ${admin.full_name}` : `อนุมัติสำเร็จแต่ประตูไม่เปิด: ${esp32Result.message} | โดย: ${admin.full_name}`,
       method: "admin_approve",
       severity: esp32Result.success ? "info" : "warning",
     }), "access log");
