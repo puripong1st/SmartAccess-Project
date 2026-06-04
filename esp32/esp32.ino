@@ -8,7 +8,7 @@
 */
 // #define WOKWI_SIM  // Uncomment ONLY when running in Wokwi Simulator — NEVER
 // in production!
-#define DEBUG_MODE true // ⚠️ Set true for development ONLY
+#define DEBUG_MODE false // ⚠️ Set true for development ONLY
 
 #if DEBUG_MODE
 #define DBG(x) Serial.println(x)
