@@ -719,10 +719,70 @@ const htmlTemplate = `<!DOCTYPE html>
 
     pre code {
       background-color: transparent !important;
-      color: #E2E8F0 !important; /* Bright text for dark background */
       padding: 0 !important;
       border-radius: 0;
       word-break: normal;
+    }
+
+    /* 💻 PREMIUM VS CODE DARK+ THEME FOR PRISM.JS TOKENS */
+    .token.comment,
+    .token.prolog,
+    .token.doctype,
+    .token.cdata {
+      color: #6A9955 !important; /* VS Code Green Comments */
+      font-style: italic;
+    }
+
+    .token.punctuation {
+      color: #D4D4D4 !important; /* VS Code Gray braces/punctuations */
+    }
+
+    .token.property,
+    .token.tag,
+    .token.boolean,
+    .token.number,
+    .token.constant,
+    .token.symbol,
+    .token.deleted {
+      color: #B5CEA8 !important; /* VS Code Light Green numbers/booleans */
+    }
+
+    .token.selector,
+    .token.attr-name,
+    .token.string,
+    .token.char,
+    .token.builtin,
+    .token.inserted {
+      color: #CE9178 !important; /* VS Code Salmon strings */
+    }
+
+    .token.operator,
+    .token.entity,
+    .token.url {
+      color: #D4D4D4 !important; /* Operators */
+    }
+
+    .token.atrule,
+    .token.attr-value,
+    .token.keyword {
+      color: #569CD6 !important; /* VS Code Blue keywords */
+      font-weight: 700 !important;
+    }
+
+    .token.function,
+    .token.class-name {
+      color: #DCDCAA !important; /* VS Code Yellow functions */
+    }
+
+    .token.regex,
+    .token.important,
+    .token.variable {
+      color: #9CDCFE !important; /* VS Code Light Blue variables */
+    }
+
+    /* Fallback for plain text inside code windows */
+    .code-window code {
+      color: #D4D4D4;
     }
 
     /* Mermaid Diagrams Styling */
