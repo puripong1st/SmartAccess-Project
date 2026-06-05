@@ -13,11 +13,6 @@ interface PushNotificationManagerProps {
 
 export default function PushNotificationManager({ studentDbId, inline = false }: PushNotificationManagerProps) {
   const pathname = usePathname();
-
-  // ปิดการทำงานระบบแจ้งเตือนพุชทั้งหมดในฝั่งผู้ใช้ทั่วไป (ทำงานเฉพาะฝั่ง /admin แอดมินเท่านั้น)
-  if (!pathname || !pathname.startsWith('/admin')) {
-    return null;
-  }
   const [supported, setSupported] = useState<boolean | null>(null);
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [loading, setLoading] = useState<boolean>(false);
@@ -26,7 +21,9 @@ export default function PushNotificationManager({ studentDbId, inline = false }:
   const [pushBlocked, setPushBlocked] = useState<boolean>(false);
   // iOS ต้องเพิ่มลงหน้าโฮม (standalone) ก่อนถึงจะรับ Web Push ได้ (ข้อกำหนดของ Apple ตั้งแต่ iOS 16.4)
   const [iosNeedsInstall, setIosNeedsInstall] = useState<boolean>(false);
+
   useEffect(() => {
+    if (!pathname || !pathname.startsWith('/admin')) return;
     if (typeof window === 'undefined') return;
 
     // ตรวจ iOS/iPadOS (iPadOS รายงานตัวเป็น Mac จึงเช็ค touch ร่วมและป้องกันการสับสนบน macOS เดสก์ท็อป)
@@ -229,6 +226,11 @@ export default function PushNotificationManager({ studentDbId, inline = false }:
       setLoading(false);
     }
   };
+
+  // ปิดการทำงานระบบแจ้งเตือนพุชทั้งหมดในฝั่งผู้ใช้ทั่วไป (ทำงานเฉพาะฝั่ง /admin แอดมินเท่านั้น)
+  if (!pathname || !pathname.startsWith('/admin')) {
+    return null;
+  }
 
   // iPhone/iPad บน Safari (ยังไม่เพิ่มลงหน้าโฮม) — แนะนำให้ติดตั้งเป็นแอปก่อน
   if (iosNeedsInstall) {

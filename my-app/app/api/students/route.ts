@@ -278,7 +278,17 @@ export async function POST(req: NextRequest) {
           room: sanitizedRequestedRoom,
         }).catch((err) => console.error("[AutoApprove Existing Notification] failed:", err));
 
-        return NextResponse.json({
+        const session = {
+          id: existingStudent.id,
+          student_id: existingStudent.student_id,
+          bypass_token: newBypassToken,
+          timestamp: new Date().toISOString(),
+          title: sanitizedTitle,
+          first_name: sanitizedFirstName,
+          last_name: sanitizedLastName,
+          requested_room: sanitizedRequestedRoom,
+        };
+        const response = NextResponse.json({
           success: true,
           message: "ยินดีต้อนรับ! ระบบได้อนุมัติสิทธิ์เข้าห้องเรียนและสั่งเปิดประตูให้ท่านอัตโนมัติเรียบร้อยแล้ว",
           id: existingStudent.id,
@@ -289,6 +299,12 @@ export async function POST(req: NextRequest) {
           bypass_token: newBypassToken,
           status: "approved"
         }, { status: 200 });
+        response.cookies.set("smartaccess_user_session", JSON.stringify(session), {
+          path: "/",
+          maxAge: 300,
+          sameSite: "lax"
+        });
+        return response;
 
       } else {
         // Outside working hours: reset to pending and wait for admin approval
@@ -383,13 +399,29 @@ export async function POST(req: NextRequest) {
         room: sanitizedRequestedRoom,
       }).catch((err) => console.error("[AutoApprove New Notification] failed:", err));
 
-      return NextResponse.json({
+      const session = {
+        id: insertId,
+        student_id: sanitizedStudentId,
+        bypass_token: bypassToken,
+        timestamp: new Date().toISOString(),
+        title: sanitizedTitle,
+        first_name: sanitizedFirstName,
+        last_name: sanitizedLastName,
+        requested_room: sanitizedRequestedRoom,
+      };
+      const response = NextResponse.json({
         success: true,
         message: "ลงทะเบียนและอนุมัติสำเร็จ ประตูปลดล็อกแล้วในช่วงเวลาให้บริการอัตโนมัติ!",
         id: insertId,
         bypass_token: bypassToken,
         status: "approved"
       }, { status: 201 });
+      response.cookies.set("smartaccess_user_session", JSON.stringify(session), {
+        path: "/",
+        maxAge: 300,
+        sameSite: "lax"
+      });
+      return response;
 
     } else {
       // New student - outside working hours: request pending normally

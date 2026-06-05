@@ -514,7 +514,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const r = await fetch("/api/system/settings");
+      const r = await fetch(`/api/system/settings?t=${Date.now()}`, { cache: "no-store" });
       if (r.ok) {
         const data = await r.json();
         if (data.settings) {

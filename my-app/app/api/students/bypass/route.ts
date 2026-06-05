@@ -151,11 +151,27 @@ export async function POST(req: NextRequest) {
       ).catch((err) => console.error("[Bypass PWA Notification] failed:", err));
     }
 
-    return NextResponse.json({
+    const session = {
+      id: student.id,
+      student_id: student.student_id,
+      bypass_token: student.bypass_token,
+      timestamp: new Date().toISOString(),
+      title: student.title,
+      first_name: student.first_name,
+      last_name: student.last_name,
+      requested_room: room,
+    };
+    const response = NextResponse.json({
       success: esp32Result.success,
       message: "ปลดล็อกประตูผ่านระบบ Bypass 5 นาทีสำเร็จ",
       esp32: esp32Result,
     });
+    response.cookies.set("smartaccess_user_session", JSON.stringify(session), {
+      path: "/",
+      maxAge: 300,
+      sameSite: "lax"
+    });
+    return response;
   } catch (error) {
     console.error("[Bypass Route] error:", error);
     return NextResponse.json({ error: "เกิดข้อผิดพลาดในการตรวจสอบ Bypass" }, { status: 500 });

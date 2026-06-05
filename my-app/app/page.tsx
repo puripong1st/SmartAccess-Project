@@ -632,38 +632,103 @@ function RegistrationPageInner() {
     if (authChecked.current) return;
     authChecked.current = true;
 
-    const verifyToken = async () => {
-      try {
-        const res = await fetch("/api/esp32/qr/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: scanToken, room }),
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
+    // Check module-level memory cache to defeat StrictMode re-mount execution race
+    if (typeof window !== "undefined") {
+      const globalAny = window as any;
+      if (!globalAny.__smartaccess_inflight) {
+        globalAny.__smartaccess_inflight = {};
+      }
+      if (!globalAny.__smartaccess_verified) {
+        globalAny.__smartaccess_verified = {};
+      }
+
+      const verifiedCache = globalAny.__smartaccess_verified[scanToken];
+      if (verifiedCache) {
+        if (verifiedCache.success) {
           try {
-            // QR timer bug fix: save scan timestamp so timer continues on page reload
             sessionStorage.setItem(`smartaccess_qr_verified_${room}`, String(Date.now()));
-            if (data.offline_grant) {
-              sessionStorage.setItem(`smartaccess_offline_grant_${room}`, data.offline_grant);
+            if (verifiedCache.offline_grant) {
+              sessionStorage.setItem(`smartaccess_offline_grant_${room}`, verifiedCache.offline_grant);
             }
           } catch {}
-          if (data.offline_grant) {
-            setOfflineGrant(data.offline_grant);
+          if (verifiedCache.offline_grant) {
+            setOfflineGrant(verifiedCache.offline_grant);
           }
           setTimeLeft(120);
           setQrAuthorized(true);
         } else {
           setQrAuthorized(false);
-          setBlockedMessage(data.error || "รหัส QR Code นี้หมดอายุ หรือถูกใช้งานโดยผู้อื่นไปแล้ว");
+          setBlockedMessage(verifiedCache.error || "รหัส QR Code นี้หมดอายุ หรือถูกใช้งานโดยผู้อื่นไปแล้ว");
         }
-      } catch {
-        setQrAuthorized(false);
-        setBlockedMessage("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์เพื่อตรวจสอบสิทธิ์สแกน");
+        return;
       }
-    };
 
-    verifyToken();
+      if (globalAny.__smartaccess_inflight[scanToken]) {
+        globalAny.__smartaccess_inflight[scanToken].then((verifiedCache: any) => {
+          if (verifiedCache.success) {
+            try {
+              sessionStorage.setItem(`smartaccess_qr_verified_${room}`, String(Date.now()));
+              if (verifiedCache.offline_grant) {
+                sessionStorage.setItem(`smartaccess_offline_grant_${room}`, verifiedCache.offline_grant);
+              }
+            } catch {}
+            if (verifiedCache.offline_grant) {
+              setOfflineGrant(verifiedCache.offline_grant);
+            }
+            setTimeLeft(120);
+            setQrAuthorized(true);
+          } else {
+            setQrAuthorized(false);
+            setBlockedMessage(verifiedCache.error || "รหัส QR Code นี้หมดอายุ หรือถูกใช้งานโดยผู้อื่นไปแล้ว");
+          }
+        });
+        return;
+      }
+
+      const verifyPromise = (async () => {
+        try {
+          const res = await fetch("/api/esp32/qr/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: scanToken, room }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            const result = { success: true, offline_grant: data.offline_grant };
+            globalAny.__smartaccess_verified[scanToken] = result;
+            return result;
+          } else {
+            const result = { success: false, error: data.error };
+            globalAny.__smartaccess_verified[scanToken] = result;
+            return result;
+          }
+        } catch {
+          const result = { success: false, error: "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์เพื่อตรวจสอบสิทธิ์สแกน" };
+          return result;
+        }
+      })();
+
+      globalAny.__smartaccess_inflight[scanToken] = verifyPromise;
+      verifyPromise.then((verifiedCache: any) => {
+        delete globalAny.__smartaccess_inflight[scanToken];
+        if (verifiedCache.success) {
+          try {
+            sessionStorage.setItem(`smartaccess_qr_verified_${room}`, String(Date.now()));
+            if (verifiedCache.offline_grant) {
+              sessionStorage.setItem(`smartaccess_offline_grant_${room}`, verifiedCache.offline_grant);
+            }
+          } catch {}
+          if (verifiedCache.offline_grant) {
+            setOfflineGrant(verifiedCache.offline_grant);
+          }
+          setTimeLeft(120);
+          setQrAuthorized(true);
+        } else {
+          setQrAuthorized(false);
+          setBlockedMessage(verifiedCache.error || "รหัส QR Code นี้หมดอายุ หรือถูกใช้งานโดยผู้อื่นไปแล้ว");
+        }
+      });
+    }
   }, [searchParams, room]);
 
   // ─── [Client-Side Session Expiration Timer] ───
@@ -901,9 +966,6 @@ function RegistrationPageInner() {
       const data = await res.json();
       if (res.ok && data.success) {
         setBypassState("success");
-        // Auto-clear bypass tokens after successful use — token is consumed, no reuse possible
-        sessionStorage.removeItem("smartaccess_temp_bypass_token");
-        localStorage.removeItem("smartaccess_user_session");
         // We do NOT renew the timestamp so that the 5-minute session is strictly from the original approval time
       } else {
         localStorage.removeItem("smartaccess_user_session");

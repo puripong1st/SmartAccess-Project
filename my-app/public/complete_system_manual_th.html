@@ -949,7 +949,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-05 21:19:08 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-05 22:00:35 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -17885,6 +17885,75 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดแผนการแก้ไขทาง Micro-interactions และความสมมาตรทางวิชวลประวัติระบบ (§73.51)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<p><a id="sec-73-52"></a></p>
+<h2>73.52 อัปเดตและแก้ไขปัญหาจุดบกพร่องสัญจรผู้ใช้ (System Webhooks, Bypass &amp; Bruteforce Protection Fixes)</h2>
+<p><strong>วันที่ดำเนินการ:</strong> 5 มิถุนายน 2026 (22:00 น. ICT)</p>
+<p>ระบบทำการปรับปรุงและแก้ไขจุดบกพร่องของไหลขั้นตอนการใช้งานผู้ใช้ (User Flows) ทั้งหมด 4 ส่วนสำคัญ เพื่อความถูกต้องของข้อมูล ความน่าเชื่อถือของระบบป้องกันการล็อกอิน และความลื่นไหลของการเข้าใช้ห้องเรียนดังต่อไปนี้:</p>
+<h4>73.52.1 การบันทึกและแสดงผล Discord Webhooks บนหน้าตั้งค่าอย่างยั่งยืน</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> เมื่อผู้ดูแลระบบทำการแก้ไขหรืออัปเดต Discord Webhook URL ใหม่ในหน้าตั้งค่าการแจ้งเตือนเตือนภัย และบันทึกข้อมูลแล้ว เมื่อย้อนกลับเข้ามาใหม่ ค่าที่แสดงยังคงกลับไปเป็นค่าเดิมหรือค่าเริ่มต้น เนื่องจากฝั่งหน้าจอเว็บมีการแคชข้อมูลการส่งสืบค้น (GET request API Cache) ของ Next.js Client </li>
+<li><strong>การแก้ไข:</strong> <ul>
+<li>ปรับปรุงการสืบค้นข้อมูลในหน้า <code>SettingsPage</code> โดยทำการอัปเดตการดึงข้อมูล <code>fetchSettings</code> ใน <code>DashboardContext.tsx</code> ให้เพิ่มตัวแปรตัดแคช <code>?t=${Date.now()}</code> ร่วมกับการตั้งค่า <code>{ cache: &quot;no-store&quot; }</code> เพื่อให้เซิร์ฟเวอร์ดึงข้อมูลจากตารางดาต้าเบสโดยตรงแบบเรียลไทม์เสมอ</li>
+<li>เพิ่มหน้าจอส่วนแสดงผลและการโต้ตอบให้ปลอดภัยและดึงข้อมูลมาแสดงผลได้อย่างแม่นยำหลังบันทึกเสร็จสิ้น</li>
+</ul>
+</li>
+</ul>
+<h4>73.52.2 ระบบตรวจสอบและจำกัดการเข้าใช้งานซ้ำอย่างรวดเร็ว (5-Minutes Bypass Persistence)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> นักศึกษาที่ผ่านการอนุมัติสิทธิ์เข้าห้องแล้ว เมื่อเดินออกไปนอกห้องปฏิบัติการชั่วคราวและสแกน QR Code เพื่อกลับเข้ามาใหม่ภายในเวลา 5 นาที (Bypass Window) จะเจอกับข้อความแสดงข้อผิดพลาด &quot;ไม่สามารถเข้าใช้งานได้&quot; (QR Code ถูกสแกนไปแล้วหรือหมดอายุ) เนื่องจากระบบฝั่ง Client ทำการเรียกล้างประวัติเซสชัน <code>localStorage.removeItem(&quot;smartaccess_user_session&quot;)</code> ทันทีหลังจากส่งคำสั่งปลดล็อก Bypass สำเร็จ</li>
+<li><strong>การแก้ไข:</strong> <ul>
+<li>นำคำสั่งการล้างเซสชันออกจากฟังก์ชัน <code>triggerBypass</code> บนหน้าจอลงทะเบียนหลัก (<code>app/page.tsx</code>) ทำให้เซสชันการยืนยันตนคงอยู่ในอุปกรณ์ของนักศึกษาจนครบกำหนด 5 นาทีอย่างถูกต้อง ทำให้นักศึกษาสามารถเดินเข้า-ออกผ่านระบบ Bypass ได้ไม่จำกัดครั้งภายในหน้าต่างเวลาที่กำหนด</li>
+<li>บันทึกการส่งค่า <code>smartaccess_user_session</code> ลงในคุ้กกี้ของเบราว์เซอร์เพื่อให้ฝั่งเซิร์ฟเวอร์สามารถตรวจสอบเซสชันได้อย่างต่อเนื่อง</li>
+</ul>
+</li>
+</ul>
+<h4>73.52.3 การป้องกันสภาวะการแข่งขันสแกนซ้ำซ้อนในโหมดเข้มงวด (StrictMode Deduplication)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ในโหมดการพัฒนาที่เปิดใช้งาน React StrictMode หรือสภาวะเครือข่ายที่มีการกระตุ้น (Remount) คอมโพเนนต์ซ้ำอย่างรวดเร็ว โทเคน QR Code จะถูกส่งไปประมวลผลที่ API <code>/api/esp32/qr/verify</code> สองรอบพร้อมกัน ทำให้รอบที่สองล้มเหลวและทริกเกอร์หน้าจอเข้าใช้งานไม่ได้</li>
+<li><strong>การแก้ไข:</strong> <ul>
+<li>ติดตั้งหน่วยความจำระดับโกลบอลแคชในขอบเขต Module Scope (<code>window.__smartaccess_inflight</code> และ <code>window.__smartaccess_verified</code>) เพื่อเก็บสถานะของคำขอตรวจสอบโทเคน QR Code ที่กำลังทำงานและที่เสร็จสิ้นแล้ว ทำให้การ Remount รอบที่สองดึงผลลัพธ์จากแคชความจำทันทีโดยไม่ต้องส่งคำขอไปเคลียร์สถานะ Token ซ้ำที่เซิร์ฟเวอร์</li>
+</ul>
+</li>
+</ul>
+<h4>73.52.4 ระบบตรวจจับและระงับการบุกรุกบัญชีผู้ดูแลระบบ (Bruteforce Lockout Counter)</h4>
+<ul>
+<li><strong>ปัญหาเดิม:</strong> ผู้ใช้งานระบบสามารถเดารหัสผ่านหน้าผู้ดูแลระบบ (<code>/admin/login</code>) ได้ซ้ำหลายรอบโดยไม่มีระบบจำกัดอัตราความถี่หรือการระงับการใช้งานแสดงผลให้เห็นอย่างเด่นชัด</li>
+<li><strong>การแก้ไข:</strong> <ul>
+<li>พัฒนาโครงสร้างตรวจสอบ Brute-force บนหลังบ้าน <code>/api/auth/login</code> โดยบันทึกความพยายามที่ผิดพลาดลงตาราง <code>rate_limits</code> ด้วยคีย์รูปแบบ <code>lockout:username</code> </li>
+<li>หากบัญชีผู้ใช้ถูกเดารหัสผ่านผิดพลาดติดต่อกันครบ 5 ครั้ง ระบบจะทำการระงับการล็อกอิน (Lockout) บัญชีผู้ใช้นั้นเป็นเวลา 5 นาทีทันที และส่งการตอบกลับเป็น HTTP Status <code>429</code> พร้อมข้อความแจ้งเตือนสีแดงในหน้าล็อกอินอย่างเด่นชัด</li>
+</ul>
+</li>
+</ul>
+<h4>73.52.5 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>my-app/app/page.tsx</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ผูกสถานะ global cache ตรวจจับโทเคน QR และปลดบล็อกการทำลายตัวแปร Bypass Session</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/api/auth/login/route.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ติดตั้งระบบ Lockout บัญชีที่ล็อกอินรหัสผ่านผิดพลาดครบ 5 ครั้งและตอบกลับด้วยสถานะ 429</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดแผนการแก้ไขทางความปลอดภัยและปรับปรุง flow สัญจร (§73.52)</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>

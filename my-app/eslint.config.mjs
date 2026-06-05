@@ -32,6 +32,9 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "scratch_*.js",
+    "public/html2canvas.min.js",
+    "public/jspdf.umd.min.js",
+    "scratch/**",
   ]),
 ]);
 

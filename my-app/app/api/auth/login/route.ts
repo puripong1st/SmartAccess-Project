@@ -60,6 +60,26 @@ export async function POST(req: NextRequest) {
     }
 
     const pool = getPool();
+    const userLockoutKey = `lockout:${String(username).trim().toLowerCase()}`;
+
+    // Check if user is locked out
+    const { rows: lockoutRows } = await pool.query(
+      "SELECT count, reset_time FROM rate_limits WHERE key = $1",
+      [userLockoutKey]
+    );
+
+    if (lockoutRows.length > 0) {
+      const currentLock = lockoutRows[0];
+      const now = Date.now();
+      if (now < Number(currentLock.reset_time) && currentLock.count >= 5) {
+        const remainingTime = Math.ceil((Number(currentLock.reset_time) - now) / 1000);
+        return NextResponse.json(
+          { error: `บัญชีผู้ใช้ถูกระงับชั่วคราวเนื่องจากรหัสผ่านผิดพลาดเกินกำหนด กรุณาลองใหม่ในอีก ${remainingTime} วินาที (Rate Limit Lockout)` },
+          { status: 429 }
+        );
+      }
+    }
+
     const { rows } = await pool.query(
       "SELECT * FROM admin_users WHERE username = $1 AND is_active = true",
       [username]
@@ -67,6 +87,19 @@ export async function POST(req: NextRequest) {
 
     const admins = rows as AdminRow[];
     if (admins.length === 0) {
+      // Increment lockout even for non-existent users to prevent user enumeration without rate limit
+      const now = Date.now();
+      const defaultResetTime = now + 5 * 60 * 1000; // 5 minutes lockout
+      await pool.query(
+        `INSERT INTO rate_limits (key, count, reset_time)
+         VALUES ($1, 1, $2)
+         ON CONFLICT (key)
+         DO UPDATE SET
+           count = CASE WHEN $3 < rate_limits.reset_time THEN rate_limits.count + 1 ELSE 1 END,
+           reset_time = CASE WHEN $3 < rate_limits.reset_time THEN rate_limits.reset_time ELSE $4 END`,
+        [userLockoutKey, defaultResetTime, now, defaultResetTime]
+      );
+
       // Fire-and-forget: failed login alert (unknown username)
       await sendDiscordNotification("admin_login_failed", {
         adminUsername: String(username).substring(0, 30),
@@ -88,6 +121,19 @@ export async function POST(req: NextRequest) {
     const admin = admins[0];
     const valid = await bcrypt.compare(password, admin.password_hash);
     if (!valid) {
+      // Increment lockout counter on wrong password
+      const now = Date.now();
+      const defaultResetTime = now + 5 * 60 * 1000; // 5 minutes lockout
+      await pool.query(
+        `INSERT INTO rate_limits (key, count, reset_time)
+         VALUES ($1, 1, $2)
+         ON CONFLICT (key)
+         DO UPDATE SET
+           count = CASE WHEN $3 < rate_limits.reset_time THEN rate_limits.count + 1 ELSE 1 END,
+           reset_time = CASE WHEN $3 < rate_limits.reset_time THEN rate_limits.reset_time ELSE $4 END`,
+        [userLockoutKey, defaultResetTime, now, defaultResetTime]
+      );
+
       // Fire-and-forget: failed login alert (wrong password)
       await sendDiscordNotification("admin_login_failed", {
         adminUsername: admin.username,
@@ -108,6 +154,9 @@ export async function POST(req: NextRequest) {
       });
       return NextResponse.json({ error: "username หรือ password ไม่ถูกต้อง" }, { status: 401 });
     }
+
+    // Clear lockout on successful login
+    await pool.query("DELETE FROM rate_limits WHERE key = $1", [userLockoutKey]).catch(() => {});
 
     const token = signToken({
       id: admin.id,
