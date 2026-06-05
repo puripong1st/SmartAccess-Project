@@ -21,6 +21,152 @@ marked.setOptions({
   mangle: false
 });
 
+// SERVER-SIDE HIGH-FIDELITY SYNTAX HIGHLIGHTER (Guarantees colors load instantly, even offline/file://)
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function highlightCodeServerSide(code, lang) {
+  lang = lang.toLowerCase();
+  
+  // Decode HTML entities that marked might have encoded
+  let raw = code
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'");
+
+  if (lang === 'env') {
+    let lines = raw.split('\n');
+    let highlightedLines = lines.map(line => {
+      if (line.trim().startsWith('#')) {
+        return `<span class="token comment">${escapeHtml(line)}</span>`;
+      }
+      let eqIdx = line.indexOf('=');
+      if (eqIdx !== -1) {
+        let key = line.substring(0, eqIdx);
+        let val = line.substring(eqIdx + 1);
+        return `<span class="token attr-name">${escapeHtml(key)}</span><span class="token operator">=</span><span class="token string">${escapeHtml(val)}</span>`;
+      }
+      return escapeHtml(line);
+    });
+    return highlightedLines.join('\n');
+  }
+
+  if (lang === 'json') {
+    // High-fidelity JSON regex highlighter
+    return raw.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+      var cls = 'number';
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) {
+          cls = 'attr-name';
+        } else {
+          cls = 'string';
+        }
+      } else if (/true|false/.test(match)) {
+        cls = 'boolean';
+      } else if (/null/.test(match)) {
+        cls = 'keyword';
+      }
+      return '<span class="token ' + cls + '">' + escapeHtml(match) + '</span>';
+    });
+  }
+
+  // Keywords definitions
+  const cppKeywords = /\b(if|else|for|while|do|switch|case|break|continue|return|void|int|float|double|char|bool|long|short|unsigned|signed|const|static|extern|class|struct|union|enum|public|private|protected|virtual|override|#include|#define|#ifndef|#endif|#ifdef|volatile|true|false|HIGH|LOW|CONNECTED|WL_CONNECTED|INPUT|OUTPUT)\b/g;
+  const jsKeywords = /\b(const|let|var|function|return|if|else|for|while|do|switch|case|break|continue|class|extends|new|this|super|import|export|default|from|as|async|await|try|catch|finally|throw|typeof|instanceof|in|of|null|undefined|true|false|NextResponse)\b/g;
+  const sqlKeywords = /\b(SELECT|INSERT|UPDATE|DELETE|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|ON|AND|OR|NOT|IN|LIKE|IS|NULL|ORDER\s+BY|GROUP\s+BY|LIMIT|OFFSET|INTO|VALUES|SET|CREATE\s+TABLE|IF\s+NOT\s+EXISTS|PRIMARY\s+KEY|SERIAL|TIMESTAMPTZ|TIMESTAMP|VARCHAR|BOOLEAN|INTEGER|TEXT|REFERENCES|UNIQUE|ON\s+CONFLICT|DO\s+UPDATE|RETURNING|NOW|WITH|AS)\b/gi;
+
+  let rules = [];
+  
+  if (lang === 'cpp' || lang === 'ino') {
+    rules = [
+      { type: 'comment', regex: /(\/\/.*|\/\*[\s\S]*?\*\/)/g },
+      { type: 'string', regex: /("(?:\\.|[^\\"])*"|'(?:\\.|[^\\'])*')/g },
+      { type: 'keyword', regex: cppKeywords },
+      { type: 'function', regex: /\b(\w+)(?=\s*\()/g },
+      { type: 'number', regex: /\b(0x[0-9a-fA-F]+|\d+)\b/g },
+      { type: 'operator', regex: /([+\-*/%=<>!&|^~]+)/g }
+    ];
+  } else if (lang === 'ts' || lang === 'typescript' || lang === 'tsx' || lang === 'js' || lang === 'javascript') {
+    rules = [
+      { type: 'comment', regex: /(\/\/.*|\/\*[\s\S]*?\*\/)/g },
+      { type: 'string', regex: /("(?:\\.|[^\\"])*"|'(?:\\.|[^\\'])*'|`(?:\\.|[^\\`])*`)/g },
+      { type: 'keyword', regex: jsKeywords },
+      { type: 'function', regex: /\b(\w+)(?=\s*\()/g },
+      { type: 'number', regex: /\b(\d+)\b/g },
+      { type: 'operator', regex: /([+\-*/%=<>!&|^~?:]+)/g }
+    ];
+  } else if (lang === 'sql') {
+    rules = [
+      { type: 'comment', regex: /(--.*|\/\*[\s\S]*?\*\/)/g },
+      { type: 'string', regex: /('(?:''|[^'])*')/g },
+      { type: 'keyword', regex: sqlKeywords },
+      { type: 'number', regex: /\b(\d+)\b/g },
+      { type: 'operator', regex: /([=<>!+\-*/%]+)/g }
+    ];
+  } else if (lang === 'bash' || lang === 'sh') {
+    rules = [
+      { type: 'comment', regex: /(#.*)/g },
+      { type: 'string', regex: /("(?:\\.|[^\\"])*"|'(?:\\.|[^\\'])*')/g },
+      { type: 'keyword', regex: /\b(cd|npm|git|run|dev|build|install|node|test|vitest)\b/g },
+      { type: 'operator', regex: /(&&|\||;|<<|>>|>|<)/g }
+    ];
+  }
+
+  if (rules.length === 0) {
+    return escapeHtml(raw);
+  }
+
+  let text = raw;
+  let matches = [];
+  
+  rules.forEach(rule => {
+    let match;
+    rule.regex.lastIndex = 0;
+    while ((match = rule.regex.exec(text)) !== null) {
+      matches.push({
+        index: match.index,
+        length: match[0].length,
+        text: match[0],
+        type: rule.type
+      });
+    }
+  });
+
+  matches.sort((a, b) => {
+    if (a.index !== b.index) return a.index - b.index;
+    return b.length - a.length;
+  });
+
+  let filteredMatches = [];
+  let lastIndex = 0;
+  for (let i = 0; i < matches.length; i++) {
+    let m = matches[i];
+    if (m.index >= lastIndex) {
+      filteredMatches.push(m);
+      lastIndex = m.index + m.length;
+    }
+  }
+
+  let result = '';
+  let currentIndex = 0;
+  filteredMatches.forEach(m => {
+    result += escapeHtml(text.substring(currentIndex, m.index));
+    result += `<span class="token ${m.type}">${escapeHtml(m.text)}</span>`;
+    currentIndex = m.index + m.length;
+  });
+  result += escapeHtml(text.substring(currentIndex));
+  return result;
+}
+
+
 const mdPath = path.join(__dirname, '..', '..', 'complete_system_manual_th.md');
 const htmlOutputPathRoot = path.join(__dirname, '..', '..', 'complete_system_manual_th.html');
 const htmlOutputPathPublic = path.join(__dirname, '..', 'public', 'complete_system_manual_th.html');
@@ -156,24 +302,8 @@ rawHtmlContent = rawHtmlContent.replace(codeBlockRegex, (match, initialLang, cod
   if (displayLang === 'TS') displayLang = 'TS';
   if (displayLang === 'TSX') displayLang = 'TSX';
 
-  // 4. CUSTOM HIGHLIGHTING FOR .ENV FILES
-  let highlightedCode = code;
-  if (lang.toLowerCase() === 'env') {
-    let rawLines = decodedCode.split('\n');
-    let highlightedLines = rawLines.map(line => {
-      if (line.trim().startsWith('#')) {
-        return `<span class="token comment">${line}</span>`;
-      }
-      let eqIdx = line.indexOf('=');
-      if (eqIdx !== -1) {
-        let key = line.substring(0, eqIdx);
-        let val = line.substring(eqIdx + 1);
-        return `<span class="token attr-name">${key}</span><span class="token operator">=</span><span class="token string">${val}</span>`;
-      }
-      return line;
-    });
-    highlightedCode = highlightedLines.join('\n');
-  }
+  // 4. SERVER-SIDE STATIC SYNTAX HIGHLIGHTING (VS Code style colors)
+  let highlightedCode = highlightCodeServerSide(decodedCode, lang);
 
   // 5. RENDER THE GORGEOUS WINDOW
   return `<div class="code-window">
