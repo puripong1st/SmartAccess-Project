@@ -1751,7 +1751,7 @@ GET /api/export/pdf?id=&lt;student_id&gt;
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">const char *ssid = &quot;ชื่อ Wi-Fi&quot;;
 const char *password = &quot;รหัสผ่าน Wi-Fi&quot;;
@@ -3751,7 +3751,7 @@ Buck 5V GND ----------- ESP32 GND
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">HTTPClient http;
 WiFiClientSecure *client = new WiFiClientSecure;
@@ -3782,7 +3782,7 @@ int code = http.GET();
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">tone(BUZZER_PIN, 1000, 100); delay(120);
 tone(BUZZER_PIN, 1500, 100); delay(120);
@@ -3916,7 +3916,7 @@ return NextResponse.json({...})                                    // ตอบ 
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">-- Atomic token consume (กัน race condition)
@@ -4139,10 +4139,10 @@ RETURNING count;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">note.txt</div>
-      <div class="code-lang-badge">TEXT</div>
+      <div class="code-title">query.sql</div>
+      <div class="code-lang-badge">SQL</div>
     </div>
-    <pre class="line-numbers"><code class="language-text">function getOrCreateActiveQRToken(roomCode):
+    <pre class="line-numbers"><code class="language-sql">function getOrCreateActiveQRToken(roomCode):
     // ลบ token หมดอายุของห้องนี้
     DELETE FROM dynamic_qr_tokens
     WHERE room_code = roomCode AND expires_at &lt; NOW()
@@ -4171,10 +4171,10 @@ RETURNING count;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">note.txt</div>
-      <div class="code-lang-badge">TEXT</div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">C++</div>
     </div>
-    <pre class="line-numbers"><code class="language-text">loop():
+    <pre class="line-numbers"><code class="language-cpp">loop():
     if WiFi.status() != CONNECTED:
         blink LED_WIFI
         WiFi.reconnect()
@@ -4215,10 +4215,10 @@ RETURNING count;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">note.txt</div>
-      <div class="code-lang-badge">TEXT</div>
+      <div class="code-title">query.sql</div>
+      <div class="code-lang-badge">SQL</div>
     </div>
-    <pre class="line-numbers"><code class="language-text">POST /api/auth/login:
+    <pre class="line-numbers"><code class="language-sql">POST /api/auth/login:
     ip = getClientIp(req)
     rateLimit(key=&quot;login:&quot; + ip, max=5, window=60s)  // ถ้าเกิน → 429
 
@@ -4592,7 +4592,7 @@ CREATE INDEX IF NOT EXISTS idx_schedule_room       ON room_schedules (room_code,
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">-- admin owner คนแรก (password_hash = bcrypt cost 12 ของรหัสผ่านจริง — สร้างด้วยสคริปต์ฝั่ง Node อย่าใส่ plaintext)
@@ -4803,10 +4803,10 @@ ON CONFLICT (setting_key) DO NOTHING;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">note.txt</div>
-      <div class="code-lang-badge">TEXT</div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">C++</div>
     </div>
-    <pre class="line-numbers"><code class="language-text">millis()  | event
+    <pre class="line-numbers"><code class="language-cpp">millis()  | event
 ----------+----------------------------------------------------
 T+0       | digitalWrite(RELAY, HIGH)
 T+0..3800 | countdown bar (UI), เสียง 1000→1500→2000 Hz
@@ -5469,7 +5469,7 @@ T+4100    | resetCache → loop() ปกติ
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">// ถ้าข้อมูลไม่เปลี่ยน → update เฉพาะนาฬิกา
 if (queueCount == last_queue_count
@@ -5503,7 +5503,7 @@ drawMainScreen(...);  // ~250-400ms
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">StaticJsonDocument&lt;768&gt; doc;
 DeserializationError err = deserializeJson(doc, http.getStream());
@@ -5814,7 +5814,7 @@ DeserializationError err = deserializeJson(doc, http.getStream());
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">-- รหัสที่ใช้จริง — ทำได้บน PostgreSQL ใน 1 query
@@ -5834,7 +5834,7 @@ RETURNING id, room_code;        -- ← postgreSQL (เดิมคือ MySQL) 
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">-- Rate limit แบบ atomic — postgreSQL (เดิมคือ MySQL) ทำได้แต่ syntax ยุ่งยากกว่า
@@ -6282,7 +6282,7 @@ let settingsCache: { data: SettingsMap; expiresAt: number } | null = null;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">INSERT INTO system_settings (setting_key, setting_value)
@@ -6402,7 +6402,7 @@ return admin.rows[0] ?? null;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">UPDATE dynamic_qr_tokens
@@ -6485,7 +6485,7 @@ try {
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">INSERT INTO rate_limits (key, count, window_start)
@@ -7309,11 +7309,11 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">note.txt</div>
-      <div class="code-lang-badge">TEXT</div>
+      <div class="code-title">.env.local</div>
+      <div class="code-lang-badge">ENV</div>
     </div>
-    <pre class="line-numbers"><code class="language-text">HMAC-SHA256(
-  base64url(header) + &quot;.&quot; + base64url(payload),
+    <pre class="line-numbers"><code class="language-env">HMAC-SHA256(
+  base64url(header) + "." + base64url(payload),
   JWT_SECRET
 ) → 32 bytes → base64url
 </code></pre>
@@ -7667,7 +7667,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">void setup() {
   pinMode(RELAY_PIN, OUTPUT);
@@ -7986,7 +7986,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">http.addHeader(&quot;Connection&quot;, &quot;keep-alive&quot;);
 // ArduinoHTTPClient ใช้ TCP socket เดิมถ้าไม่ปิด
@@ -8148,7 +8148,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">EXPLAIN ANALYZE
@@ -8186,7 +8186,7 @@ Execution Time: 0.118 ms
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">EXPLAIN ANALYZE
@@ -8224,7 +8224,7 @@ Execution Time: 0.302 ms
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">EXPLAIN ANALYZE
@@ -8383,10 +8383,10 @@ const data = await db.query(`
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">note.txt</div>
-      <div class="code-lang-badge">TEXT</div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
     </div>
-    <pre class="line-numbers"><code class="language-text">Vercel function: เปิด-ปิด connection ทุก request
+    <pre class="line-numbers"><code class="language-ts">Vercel function: เปิด-ปิด connection ทุก request
 ถ้าไม่ pool: 100 concurrent users = 100 PostgreSQL connections
 PostgreSQL free tier: 60 connection max
 → 41 users ได้รับ &quot;too many connections&quot; error
@@ -8496,7 +8496,7 @@ await db.query(&#39;COMMIT&#39;);
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">-- คนที่ 1
@@ -8519,7 +8519,7 @@ RETURNING *;  -- รอ lock → หลังคน 1 commit → is_consumed=TRU
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">INSERT INTO rate_limits ... ON CONFLICT DO UPDATE SET count=count+1
@@ -8604,7 +8604,7 @@ RETURNING *;  -- รอ lock → หลังคน 1 commit → is_consumed=TRU
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">page.tsx</div>
+      <div class="code-title">__tests__/api/auth.test.ts</div>
       <div class="code-lang-badge">TS</div>
     </div>
     <pre class="line-numbers"><code class="language-ts">// __tests__/api/auth.test.ts
@@ -8828,10 +8828,10 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">note.txt</div>
-      <div class="code-lang-badge">TEXT</div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
     </div>
-    <pre class="line-numbers"><code class="language-text">Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
+    <pre class="line-numbers"><code class="language-ts">Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
 1 บอร์ด ESP32 poll 2s = 1.3M invocation/เดือน → เกิน free!
 
 จริง ๆ:
@@ -8906,7 +8906,7 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.css</div>
+      <div class="code-title">app/globals.css</div>
       <div class="code-lang-badge">CSS</div>
     </div>
     <pre class="line-numbers"><code class="language-css">/* app/globals.css */
@@ -8976,7 +8976,7 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.css</div>
+      <div class="code-title">styles.css</div>
       <div class="code-lang-badge">CSS</div>
     </div>
     <pre class="line-numbers"><code class="language-css">--smartaccess-purple: #7C3AED;   /* SmartAccess main */
@@ -9080,7 +9080,7 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">page.tsx</div>
+      <div class="code-title">app/layout.tsx</div>
       <div class="code-lang-badge">TSX</div>
     </div>
     <pre class="line-numbers"><code class="language-tsx">// app/layout.tsx
@@ -9509,7 +9509,7 @@ voltage    ────┐                     ┌───┐
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">UPDATE system_settings 
@@ -10910,7 +10910,7 @@ C = 100nF, 400V (X7R ceramic)
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.yaml</div>
+      <div class="code-title">config.yml</div>
       <div class="code-lang-badge">YAML</div>
     </div>
     <pre class="line-numbers"><code class="language-yaml">requestBody:
@@ -10944,7 +10944,7 @@ responses:
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.yaml</div>
+      <div class="code-title">config.yml</div>
       <div class="code-lang-badge">YAML</div>
     </div>
     <pre class="line-numbers"><code class="language-yaml">headers:
@@ -11220,7 +11220,7 @@ feature/qr-rotation ──┴──●──┘
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.yaml</div>
+      <div class="code-title">.github/workflows/ci.yml</div>
       <div class="code-lang-badge">YAML</div>
     </div>
     <pre class="line-numbers"><code class="language-yaml"># .github/workflows/ci.yml
@@ -11394,7 +11394,7 @@ jobs:
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.markdown</div>
+      <div class="code-title">README.md</div>
       <div class="code-lang-badge">MARKDOWN</div>
     </div>
     <pre class="line-numbers"><code class="language-markdown"># Incident Report — [YYYY-MM-DD]
@@ -12618,7 +12618,7 @@ function withdrawConsent() {
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.markdown</div>
+      <div class="code-title">README.md</div>
       <div class="code-lang-badge">MARKDOWN</div>
     </div>
     <pre class="line-numbers"><code class="language-markdown">0. ข้อมูลผู้ควบคุมข้อมูล (Data Controller)  ← P06
@@ -12681,7 +12681,7 @@ function withdrawConsent() {
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.markdown</div>
+      <div class="code-title">README.md</div>
       <div class="code-lang-badge">MARKDOWN</div>
     </div>
     <pre class="line-numbers"><code class="language-markdown">0. คำนิยาม (Definitions)  ← T06
@@ -13102,7 +13102,7 @@ COMMENT ON TABLE consent_records IS
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">SELECT consent_uuid, version, necessary, functional, analytics, marketing, action, created_at
@@ -13737,7 +13737,7 @@ onClick={(e) =&gt; { if (e.target === e.currentTarget) setIsModalOpen(false); }}
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">-- ดู consent ทั้งหมดของ IP ตัวเอง (hash ก่อน)
@@ -13906,7 +13906,7 @@ SELECT version, COUNT(*) FROM consent_records GROUP BY version;
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">#include &lt;WiFi.h&gt;
 #include &lt;HTTPClient.h&gt;
@@ -14120,7 +14120,7 @@ export async function GET(req: Request) {
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">#include &lt;WiFi.h&gt;
 #include &lt;WebServer.h&gt;
@@ -14442,7 +14442,7 @@ KV_REST_API_READ_ONLY_TOKEN
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">#ifndef WOKWI_SIM
 WiFiClientSecure persistentTlsClient;
@@ -14860,7 +14860,7 @@ bool tlsClientInitialized = false;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">WITH expired AS (
@@ -14960,7 +14960,7 @@ SELECT id, first_name, last_name, student_id, requested_room FROM expired
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">// ตัวอย่างการสร้างลายเซ็นบน C++ Firmware สำหรับบอร์ด ESP32
 String timestamp = String(timeClient.getEpochTime());
@@ -15051,7 +15051,7 @@ if (decoded.role === &quot;door_operator&quot;) {
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">UPDATE students
@@ -15634,7 +15634,7 @@ if (decoded.role === &quot;door_operator&quot;) {
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
 </code></pre>
@@ -16355,7 +16355,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">INSERT INTO rate_limits (key, count, reset_time) VALUES ($1, 1, $2)
@@ -16545,7 +16545,7 @@ RETURNING count, reset_time;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">schema.sql</div>
+      <div class="code-title">query.sql</div>
       <div class="code-lang-badge">SQL</div>
     </div>
     <pre class="line-numbers"><code class="language-sql">WITH expired AS (
@@ -16861,7 +16861,7 @@ RETURNING count, reset_time;
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.css</div>
+      <div class="code-title">styles.css</div>
       <div class="code-lang-badge">CSS</div>
     </div>
     <pre class="line-numbers"><code class="language-css">.toc-group-list {
@@ -18204,7 +18204,7 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
         <span class="dot yellow"></span>
         <span class="dot green"></span>
       </div>
-      <div class="code-title">code.css</div>
+      <div class="code-title">styles.css</div>
       <div class="code-lang-badge">CSS</div>
     </div>
     <pre class="line-numbers"><code class="language-css">.mobile-card-grid-container {
@@ -18723,7 +18723,7 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
         <span class="dot green"></span>
       </div>
       <div class="code-title">esp32.ino</div>
-      <div class="code-lang-badge">CPP</div>
+      <div class="code-lang-badge">C++</div>
     </div>
     <pre class="line-numbers"><code class="language-cpp">if (enteredPin == cached_offline_pin)
 </code></pre>

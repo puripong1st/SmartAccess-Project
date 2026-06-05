@@ -61,44 +61,109 @@ rawHtmlContent = rawHtmlContent.replace(mermaidRegex, (match, code) => {
 // This captures standard pre-code blocks (with optional language classes), resolves filenames/badges,
 // and does high-fidelity inline syntax highlighting for .env files which Prism lacks.
 const codeBlockRegex = /<pre><code(?: class="language-(\w+)")?>([\s\S]*?)<\/code><\/pre>/g;
-rawHtmlContent = rawHtmlContent.replace(codeBlockRegex, (match, lang, code) => {
-  lang = lang || 'text';
-  const langMap = {
-    'env': '.env.local',
-    'bash': 'terminal',
-    'sh': 'terminal',
-    'cpp': 'esp32.ino',
-    'ino': 'esp32.ino',
-    'json': 'package.json',
-    'javascript': 'app.js',
-    'js': 'app.js',
-    'typescript': 'page.tsx',
-    'ts': 'page.tsx',
-    'tsx': 'page.tsx',
-    'text': 'note.txt',
-    'sql': 'schema.sql'
-  };
+rawHtmlContent = rawHtmlContent.replace(codeBlockRegex, (match, initialLang, code) => {
+  let lang = initialLang || 'text';
+  let decodedCode = code
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'");
 
-  let filename = langMap[lang.toLowerCase()] || `code.${lang}`;
+  // 1. DYNAMIC HEURISTIC LANGUAGE DETECTION (For untagged or generic text blocks)
+  if (lang === 'text' || !initialLang) {
+    if (decodedCode.includes('CREATE TABLE') || decodedCode.includes('INSERT INTO') || decodedCode.includes('SELECT * FROM')) {
+      lang = 'sql';
+    } else if (decodedCode.includes('loop()') || decodedCode.includes('WiFi.status()') || decodedCode.includes('digitalWrite(') || decodedCode.includes('#include')) {
+      lang = 'cpp';
+    } else if (decodedCode.includes('function') || decodedCode.includes('import ') || decodedCode.includes('NextResponse')) {
+      lang = 'ts';
+    } else if (decodedCode.includes('POSTGRES_URL') || decodedCode.includes('JWT_SECRET') || decodedCode.includes('ESP32_API_KEY')) {
+      lang = 'env';
+    } else if (decodedCode.includes('dependencies') && decodedCode.includes('scripts')) {
+      lang = 'json';
+    }
+  }
+
+  // 2. FILENAME RESOLUTION FROM FIRST LINE COMMENT
+  let filename = '';
+  let lines = decodedCode.split('\n');
+  
+  // Look at the first 3 lines for a filename comment (e.g. // lib/db.ts or # .env.local)
+  for (let idx = 0; idx < Math.min(3, lines.length); idx++) {
+    let rawLine = lines[idx].trim();
+    let commentMatch = rawLine.match(/^(?:\/\/\/|\/\/|#|\/\*)\s*([\w\-_\.\/]+(?:\.\w+)?)\s*(?:\*\/)?$/i);
+    if (commentMatch && commentMatch[1]) {
+      let candidate = commentMatch[1].trim();
+      if (candidate.includes('.') || candidate.includes('/') || candidate.toLowerCase() === 'terminal') {
+        filename = candidate;
+        break;
+      }
+    }
+  }
+
+  // 3. FALLBACK FILENAME RESOLUTION BASED ON DETECTED LANGUAGE & CONTENT
+  if (!filename) {
+    const langMap = {
+      'env': '.env.local',
+      'bash': 'terminal',
+      'sh': 'terminal',
+      'cpp': 'esp32.ino',
+      'ino': 'esp32.ino',
+      'json': 'package.json',
+      'javascript': 'app.js',
+      'js': 'app.js',
+      'typescript': 'page.tsx',
+      'ts': 'page.tsx',
+      'tsx': 'page.tsx',
+      'text': 'note.txt',
+      'sql': 'schema.sql',
+      'css': 'styles.css',
+      'yaml': 'config.yml',
+      'yml': 'config.yml',
+      'markdown': 'README.md',
+      'md': 'README.md'
+    };
+    
+    filename = langMap[lang.toLowerCase()] || `code.${lang}`;
+
+    // Contents adjustments
+    if (lang === 'cpp' || lang === 'ino') {
+      if (decodedCode.includes('config.h') || decodedCode.includes('WIFI_SSID')) {
+        filename = 'config.h';
+      } else if (decodedCode.includes('loop()') || decodedCode.includes('setup()')) {
+        filename = 'esp32.ino';
+      }
+    } else if (lang === 'sql') {
+      if (decodedCode.includes('CREATE TABLE')) {
+        filename = 'schema.sql';
+      } else {
+        filename = 'query.sql';
+      }
+    } else if (lang === 'ts' || lang === 'typescript' || lang === 'tsx') {
+      if (decodedCode.includes('NextResponse') || decodedCode.includes('import')) {
+        if (decodedCode.includes('export default')) {
+          filename = 'route.ts';
+        } else {
+          filename = 'page.tsx';
+        }
+      }
+    }
+  }
+
   let displayLang = lang.toUpperCase();
+  if (displayLang === 'CPP' || displayLang === 'INO') displayLang = 'C++';
+  if (displayLang === 'TS') displayLang = 'TS';
+  if (displayLang === 'TSX') displayLang = 'TSX';
 
-  // Custom high-fidelity highlight for .env files since Prism.js doesn't highlight them
+  // 4. CUSTOM HIGHLIGHTING FOR .ENV FILES
   let highlightedCode = code;
   if (lang.toLowerCase() === 'env') {
-    let decoded = code
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#039;/g, "'");
-
-    let lines = decoded.split('\n');
-    let highlightedLines = lines.map(line => {
-      // Comments
+    let rawLines = decodedCode.split('\n');
+    let highlightedLines = rawLines.map(line => {
       if (line.trim().startsWith('#')) {
         return `<span class="token comment">${line}</span>`;
       }
-      // KEY=VALUE
       let eqIdx = line.indexOf('=');
       if (eqIdx !== -1) {
         let key = line.substring(0, eqIdx);
@@ -110,6 +175,7 @@ rawHtmlContent = rawHtmlContent.replace(codeBlockRegex, (match, lang, code) => {
     highlightedCode = highlightedLines.join('\n');
   }
 
+  // 5. RENDER THE GORGEOUS WINDOW
   return `<div class="code-window">
     <div class="code-header">
       <div class="code-dots">
