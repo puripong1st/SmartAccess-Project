@@ -21337,41 +21337,72 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
         return;
       }
 
-      // Hide actions during capture using onclone
-      var options = {
-        scale: 2, // HD quality
-        useCORS: true,
-        backgroundColor: null, // Transparent background so the rounded corners look perfect!
-        logging: false,
-        onclone: function(clonedDoc) {
-          // Find the cloned code-window element actions and hide them
-          clonedDoc.querySelectorAll(".code-save-btn").forEach(function(el) {
-            el.style.display = "none";
-          });
-          
-          // Force line wraps in code
-          clonedDoc.querySelectorAll("pre, code").forEach(function(el) {
-            el.style.whiteSpace = "pre-wrap";
-            el.style.wordBreak = "break-word";
-            el.style.overflowWrap = "break-word";
-          });
-        }
-      };
+      // Clone the code-window into an off-screen container with ALL overflow/height
+      // constraints removed so html2canvas captures the FULL code block content.
+      var clone = codeWindowElement.cloneNode(true);
 
-      html2canvas(codeWindowElement, options).then(function(canvas) {
-        try {
-          var link = document.createElement("a");
-          link.href = canvas.toDataURL("image/png");
-          link.download = (fileName || "code_block").replace(/.[^/.]+$/, "") + ".png";
-          link.click();
-        } catch (err) {
-          console.error("Code PNG export download error:", err);
-          alert("ไม่สามารถดาวน์โหลดไฟล์รูปภาพได้");
-        }
-      }).catch(function(err) {
-        console.error("Code PNG export failed:", err);
-        alert("ไม่สามารถบันทึกไฟล์รูปภาพ code ได้");
+      // Strip save buttons from clone
+      clone.querySelectorAll(".code-save-btn").forEach(function(btn) {
+        btn.parentNode.removeChild(btn);
       });
+
+      // Remove overflow clipping on the code-window itself
+      clone.style.overflow = "visible";
+      clone.style.maxHeight = "none";
+      clone.style.height = "auto";
+
+      // Remove overflow clipping on pre/code inside
+      clone.querySelectorAll("pre, code").forEach(function(el) {
+        el.style.overflow = "visible";
+        el.style.overflowX = "visible";
+        el.style.overflowY = "visible";
+        el.style.maxHeight = "none";
+        el.style.height = "auto";
+        el.style.whiteSpace = "pre-wrap";
+        el.style.wordBreak = "break-word";
+        el.style.overflowWrap = "break-word";
+      });
+
+      // Create an off-screen wrapper that html2canvas can render at full size
+      var wrapper = document.createElement("div");
+      wrapper.style.position = "absolute";
+      wrapper.style.top = "0";
+      wrapper.style.left = "0";
+      wrapper.style.width = Math.max(codeWindowElement.scrollWidth, codeWindowElement.offsetWidth, 800) + "px";
+      wrapper.style.height = "auto";
+      wrapper.style.overflow = "visible";
+      wrapper.style.zIndex = "-99999";
+      wrapper.style.pointerEvents = "none";
+      wrapper.style.opacity = "1";
+      wrapper.style.visibility = "visible";
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      // Small delay to let the browser lay out the clone fully
+      setTimeout(function() {
+        html2canvas(clone, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false
+        }).then(function(canvas) {
+          // Clean up wrapper
+          if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+          try {
+            var link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = (fileName || "code_block").replace(/.[^/.]+$/, "") + ".png";
+            link.click();
+          } catch (err) {
+            console.error("Code PNG export download error:", err);
+            alert("ไม่สามารถดาวน์โหลดไฟล์รูปภาพได้");
+          }
+        }).catch(function(err) {
+          if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper);
+          console.error("Code PNG export failed:", err);
+          alert("ไม่สามารถบันทึกไฟล์รูปภาพ code ได้");
+        });
+      }, 100);
     };
 
   </script>
@@ -21713,6 +21744,17 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
               el.style.whiteSpace = "pre-wrap";
               el.style.wordBreak = "break-word";
               el.style.overflowWrap = "break-word";
+              el.style.overflow = "visible";
+              el.style.overflowX = "visible";
+              el.style.maxHeight = "none";
+              el.style.height = "auto";
+            });
+
+            // Remove overflow:hidden from code-window containers so content is never clipped
+            clonedDoc.querySelectorAll(".code-window").forEach(el => {
+              el.style.overflow = "visible";
+              el.style.maxHeight = "none";
+              el.style.height = "auto";
             });
           }
         };
