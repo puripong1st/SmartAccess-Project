@@ -1036,32 +1036,32 @@ const htmlTemplate = `<!DOCTYPE html>
       htmlLabels: true, // Render text via HTML foreignObject for perfect Thai font wrap and zero overlap!
       fontFamily: "'Sarabun', sans-serif",
       themeVariables: {
-        // Cohesive Premium Purple Harmony Palette (Perfect for printed reports)
-        primaryColor: '#F3E8FF',       // Soft purple background (purple-100)
-        primaryTextColor: '#1E293B',   // Slate-800 text
-        primaryBorderColor: '#C084FC',  // Purple-400 border
-        lineColor: '#64748B',          // Slate-500 arrows
-        secondaryColor: '#FCE7F3',     // Soft pink for alternative paths (pink-100)
-        tertiaryColor: '#ECFDF5',      // Soft green (emerald-50)
+        // High-Contrast Academic Standard (Black & White / Thesis guidelines)
+        primaryColor: '#FFFFFF',       // Clean white background for nodes
+        primaryTextColor: '#000000',   // Pure black text
+        primaryBorderColor: '#000000',  // Black border (1px/2px standard)
+        lineColor: '#000000',          // Pure black lines & arrows
+        secondaryColor: '#F3F4F6',     // Light gray for alternative/secondary paths
+        tertiaryColor: '#FFFFFF',      // White for tertiary elements
         
         // Sequence Diagrams styling
-        actorBkg: '#F3E8FF',
-        actorBorder: '#C084FC',
-        actorTextColor: '#1E293B',
-        actorLineColor: '#94A3B8',
-        signalColor: '#475569',
-        signalTextColor: '#1E293B',
-        labelBoxBkgColor: '#F3E8FF',
-        labelBoxBorderColor: '#C084FC',
-        labelTextColor: '#1E293B',
-        noteBkgColor: '#FEF3C7',       // Soft amber background for notes (amber-100)
-        noteBorderColor: '#FCD34D',    // Amber-300 border
-        noteTextColor: '#78350F',      // Amber-900 text
+        actorBkg: '#FFFFFF',
+        actorBorder: '#000000',
+        actorTextColor: '#000000',
+        actorLineColor: '#000000',
+        signalColor: '#000000',
+        signalTextColor: '#000000',
+        labelBoxBkgColor: '#FFFFFF',
+        labelBoxBorderColor: '#000000',
+        labelTextColor: '#000000',
+        noteBkgColor: '#F9FAFB',       // Very light gray for notes
+        noteBorderColor: '#000000',
+        noteTextColor: '#000000',
         
         // State Diagrams styling
-        stateBkg: '#F3E8FF',
-        stateBorder: '#C084FC',
-        labelColor: '#1E293B'
+        stateBkg: '#FFFFFF',
+        stateBorder: '#000000',
+        labelColor: '#000000'
       },
       flowchart: {
         useMaxWidth: false, // CRITICAL: Disable auto-scaling down to microscopic size! Allows scrollbar instead.
