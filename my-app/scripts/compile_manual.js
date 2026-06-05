@@ -40,7 +40,8 @@ function highlightCodeServerSide(code, lang) {
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'");
+    .replace(/&#039;/g, "'")
+    .replace(/&#39;/g, "'");
 
   if (lang === 'env') {
     let lines = raw.split('\n');
@@ -214,16 +215,17 @@ rawHtmlContent = rawHtmlContent.replace(codeBlockRegex, (match, initialLang, cod
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'");
+    .replace(/&#039;/g, "'")
+    .replace(/&#39;/g, "'");
 
   // 1. DYNAMIC HEURISTIC LANGUAGE DETECTION (For untagged or generic text blocks)
   if (lang === 'text' || !initialLang) {
-    if (decodedCode.includes('CREATE TABLE') || decodedCode.includes('INSERT INTO') || decodedCode.includes('SELECT * FROM')) {
+    if (decodedCode.includes('function') || decodedCode.includes('import ') || decodedCode.includes('NextResponse') || decodedCode.includes('jwt.sign') || decodedCode.includes('POST /api/') || decodedCode.includes('const ') || decodedCode.includes('await ') || decodedCode.includes('db.')) {
+      lang = 'ts';
+    } else if (decodedCode.includes('CREATE TABLE') || decodedCode.includes('INSERT INTO') || decodedCode.includes('SELECT * FROM') || decodedCode.includes('DELETE FROM') || decodedCode.includes('UPDATE ')) {
       lang = 'sql';
     } else if (decodedCode.includes('loop()') || decodedCode.includes('WiFi.status()') || decodedCode.includes('digitalWrite(') || decodedCode.includes('#include')) {
       lang = 'cpp';
-    } else if (decodedCode.includes('function') || decodedCode.includes('import ') || decodedCode.includes('NextResponse')) {
-      lang = 'ts';
     } else if (decodedCode.includes('POSTGRES_URL') || decodedCode.includes('JWT_SECRET') || decodedCode.includes('ESP32_API_KEY')) {
       lang = 'env';
     } else if (decodedCode.includes('dependencies') && decodedCode.includes('scripts')) {
@@ -287,7 +289,11 @@ rawHtmlContent = rawHtmlContent.replace(codeBlockRegex, (match, initialLang, cod
         filename = 'query.sql';
       }
     } else if (lang === 'ts' || lang === 'typescript' || lang === 'tsx') {
-      if (decodedCode.includes('NextResponse') || decodedCode.includes('import')) {
+      if (decodedCode.includes('getOrCreateActiveQRToken') || decodedCode.includes('generateActiveQRToken') || decodedCode.includes('dynamic_qr_tokens')) {
+        filename = 'qr.ts';
+      } else if (decodedCode.includes('/api/auth/')) {
+        filename = 'route.ts';
+      } else if (decodedCode.includes('NextResponse') || decodedCode.includes('import')) {
         if (decodedCode.includes('export default')) {
           filename = 'route.ts';
         } else {
@@ -314,7 +320,10 @@ rawHtmlContent = rawHtmlContent.replace(codeBlockRegex, (match, initialLang, cod
         <span class="dot green"></span>
       </div>
       <div class="code-title">${filename}</div>
-      <div class="code-lang-badge">${displayLang}</div>
+      <div class="code-actions">
+        <button class="code-save-btn" onclick="window.saveCodeAsPng(this.closest('.code-window'), '${filename.replace(/'/g, "\\'")}')">🖼️ เซฟรูป</button>
+        <div class="code-lang-badge">${displayLang}</div>
+      </div>
     </div>
     <pre class="line-numbers"><code class="language-${lang}">${highlightedCode}</code></pre>
   </div>`;
@@ -803,6 +812,36 @@ const htmlTemplate = `<!DOCTYPE html>
     body.dark-mode .code-lang-badge {
       background-color: rgba(139, 92, 246, 0.15);
       color: #A78BFA;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .code-save-btn {
+      background: linear-gradient(135deg, #7C3AED 0%, #4C1D95 100%);
+      color: white !important;
+      border: none;
+      font-size: 10px;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      line-height: 1.2;
+    }
+
+    .code-save-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      background: linear-gradient(135deg, #8B5CF6 0%, #5B21B6 100%);
     }
 
     /* Adjust pre inside window to remove margins and shadows */
@@ -2118,6 +2157,49 @@ const htmlTemplate = `<!DOCTYPE html>
       }
     }
 
+    window.saveCodeAsPng = function(codeWindowElement, fileName) {
+      if (typeof html2canvas === 'undefined') {
+        alert("⚠️ ไลบรารี html2canvas ยังโหลดไม่เสร็จหรือถูกบล็อก กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
+        return;
+      }
+
+      // Hide actions during capture using onclone
+      var options = {
+        scale: 2, // HD quality
+        useCORS: true,
+        backgroundColor: null, // Transparent background so the rounded corners look perfect!
+        logging: false,
+        onclone: function(clonedDoc) {
+          // Find the cloned code-window element actions and hide them
+          clonedDoc.querySelectorAll(".code-save-btn").forEach(function(el) {
+            el.style.display = "none";
+          });
+          
+          // Force line wraps in code
+          clonedDoc.querySelectorAll("pre, code").forEach(function(el) {
+            el.style.whiteSpace = "pre-wrap";
+            el.style.wordBreak = "break-word";
+            el.style.overflowWrap = "break-word";
+          });
+        }
+      };
+
+      html2canvas(codeWindowElement, options).then(function(canvas) {
+        try {
+          var link = document.createElement("a");
+          link.href = canvas.toDataURL("image/png");
+          link.download = (fileName || "code_block").replace(/\.[^/.]+$/, "") + ".png";
+          link.click();
+        } catch (err) {
+          console.error("Code PNG export download error:", err);
+          alert("ไม่สามารถดาวน์โหลดไฟล์รูปภาพได้");
+        }
+      }).catch(function(err) {
+        console.error("Code PNG export failed:", err);
+        alert("ไม่สามารถบันทึกไฟล์รูปภาพ code ได้");
+      });
+    };
+
   </script>
 
   <script>
@@ -2337,16 +2419,30 @@ const htmlTemplate = `<!DOCTYPE html>
         hiddenWrapper.style.zIndex = "-99999"; // Sent underneath the solid body background
         document.body.appendChild(hiddenWrapper);
 
-        // Copy the header (without the action button panel)
-        const headerClone = header.cloneNode(true);
-        const actionsPanel = headerClone.querySelector(".section-actions");
-        if (actionsPanel) {
-          headerClone.removeChild(actionsPanel);
-        }
-        tempContainer.appendChild(headerClone);
-
         // Copy all elements belonging to this section
         const sectionElements = getSectionElements(header);
+
+        // Check if this section contains "assets" like code-window, mermaid diagrams, or tables
+        // If it's a PNG export of a section with these assets, we omit the header clone so they get only the asset!
+        const hasAsset = sectionElements.some(el => 
+          el.classList.contains("code-window") || 
+          el.classList.contains("mermaid") || 
+          el.querySelector(".code-window") || 
+          el.querySelector(".mermaid") ||
+          el.classList.contains("table-container") ||
+          el.querySelector("table")
+        );
+
+        if (format !== 'png' || !hasAsset) {
+          // Copy the header (without the action button panel)
+          const headerClone = header.cloneNode(true);
+          const actionsPanel = headerClone.querySelector(".section-actions");
+          if (actionsPanel) {
+            headerClone.removeChild(actionsPanel);
+          }
+          tempContainer.appendChild(headerClone);
+        }
+
         sectionElements.forEach(el => {
           // Skip export buttons and กลับสารบัญ links to keep the export completely clean
           if (el.classList.contains("section-actions") || el.innerHTML.includes("กลับสารบัญ") || el.classList.contains("btn-section-export")) {
@@ -2357,7 +2453,7 @@ const htmlTemplate = `<!DOCTYPE html>
           const clone = el.cloneNode(true);
           
           // Clean up any nested action buttons inside the cloned element
-          clone.querySelectorAll(".section-actions, .btn-section-export").forEach(btn => {
+          clone.querySelectorAll(".section-actions, .btn-section-export, .code-save-btn").forEach(btn => {
             btn.parentNode.removeChild(btn);
           });
           
