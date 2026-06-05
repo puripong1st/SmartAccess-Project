@@ -2291,14 +2291,20 @@ const htmlTemplate = `<!DOCTYPE html>
 
       // Create action buttons for exporting specific sections (Attached to both h2 headings AND "กลับสารบัญ" paragraph blocks)
       
-      // 1. Helper to gather all sibling elements belonging to a specific h2 section
-      function getSectionElements(h2Element) {
+      // 1. Helper to gather all sibling elements belonging to a specific h2 or h3 section
+      function getSectionElements(headerElement) {
         const elements = [];
-        let next = h2Element.nextElementSibling;
+        let next = headerElement.nextElementSibling;
+        const startTag = headerElement.tagName; // "H2" or "H3"
         
-        // Loop and collect until we hit the next h2 or a horizontal rule that finishes the section
-        while (next && next.tagName !== "H2") {
-          // If we hit a horizontal rule or กลับสารบัญ, we can include it but stop after if it marks the end
+        // Loop and collect until we hit another header of the same or higher level
+        while (next) {
+          if (startTag === "H3" && (next.tagName === "H2" || next.tagName === "H3")) {
+            break;
+          }
+          if (startTag === "H2" && next.tagName === "H2") {
+            break;
+          }
           elements.push(next);
           if (next.tagName === "HR") {
             break;
@@ -2343,12 +2349,17 @@ const htmlTemplate = `<!DOCTYPE html>
         const sectionElements = getSectionElements(header);
         sectionElements.forEach(el => {
           // Skip export buttons and กลับสารบัญ links to keep the export completely clean
-          if (el.classList.contains("section-actions") || el.innerHTML.includes("กลับสารบัญ")) {
+          if (el.classList.contains("section-actions") || el.innerHTML.includes("กลับสารบัญ") || el.classList.contains("btn-section-export")) {
             return;
           }
           
           // Clone element and ensure lazy-loaded mermaid blocks have their rendered SVG ready
           const clone = el.cloneNode(true);
+          
+          // Clean up any nested action buttons inside the cloned element
+          clone.querySelectorAll(".section-actions, .btn-section-export").forEach(btn => {
+            btn.parentNode.removeChild(btn);
+          });
           
           // Correct check to see if el itself is the mermaid div or contains it
           const originalMermaidSvg = el.classList.contains("mermaid") ? el.querySelector("svg") : el.querySelector(".mermaid svg");
@@ -2425,6 +2436,13 @@ const htmlTemplate = `<!DOCTYPE html>
               if (btnGroup) {
                 btnGroup.style.display = "none";
               }
+            });
+
+            // Force code blocks inside the cloned document to wrap lines so they are never truncated!
+            clonedDoc.querySelectorAll(".code-window pre, .code-window code, pre, code").forEach(el => {
+              el.style.whiteSpace = "pre-wrap";
+              el.style.wordBreak = "break-word";
+              el.style.overflowWrap = "break-word";
             });
           }
         };
