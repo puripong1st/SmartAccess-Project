@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-04 10:25:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-05 21:19:08 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -750,7 +750,7 @@ ESP32_WOKWI_URL=http://localhost:8180
 ### ภาพที่ 3: วงจรจำลองใน Wokwi
 
 ```mermaid
-flowchart LR
+flowchart TD
     ESP["ESP32 DevKit"]
     TFT["ILI9341 TFT"]
     RELAY["Relay Module"]
@@ -804,7 +804,7 @@ flowchart LR
 Magnetic lock ทั่วไปจะล็อกเมื่อมีไฟ 12V และปลดล็อกเมื่อไฟถูกตัด ดังนั้นต้องใช้ขา NC ของ relay
 
 ```mermaid
-flowchart LR
+flowchart TD
     PSU12["+12V Power Supply"]
     GND12["12V GND"]
     Buck["Buck 12V to 5V"]
@@ -834,7 +834,7 @@ flowchart LR
 ถ้าอุปกรณ์ปลดล็อกเมื่อได้รับไฟ 12V ให้ใช้ขา NO
 
 ```mermaid
-flowchart LR
+flowchart TD
     PSU12["+12V Power Supply"]
     GND12["12V GND"]
     ESP["ESP32"]
@@ -1723,7 +1723,7 @@ sequenceDiagram
 
 ### 23.1 แท็บ "คิวรอตรวจสอบ" (Pending Queue)
 ```mermaid
-flowchart LR
+flowchart TD
     A["fetchPending() ทุก 10 วินาที"] --> B{มี pending ใหม่?}
     B -->|ใช่| C["playSoftChime() เสียงแจ้งเตือน"]
     B -->|ไม่| D[ไม่ทำอะไร]
@@ -1919,7 +1919,7 @@ return NextResponse.json({...})                                    // ตอบ 
 ## 27. Supabase ทำอะไรในระบบนี้ (เจาะลึก)
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph Supabase
         PG[("PostgreSQL 15<br/>+ pgBouncer pool")]
         AUTH["Supabase Auth (ไม่ได้ใช้)"]
@@ -2030,7 +2030,7 @@ flowchart TB
 ## 29. เปรียบเทียบ: ทำไมบางส่วนเร็ว / บางส่วนช้า
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph FAST["🚀 ส่วนที่เร็ว"]
         F1["โหลดหน้าเว็บแรก<br/>~80-150ms"]
         F2["JWT verify<br/>~1ms (HS256 in-memory)"]
@@ -2795,7 +2795,7 @@ flowchart TD
 
 ### 39.1 จุดที่ต้องเฝ้าดู
 ```mermaid
-flowchart LR
+flowchart TD
     M1["Vercel Logs<br/>ดู API errors"] --> ALERT["Alert"]
     M2["Supabase Dashboard<br/>ดู query slow, connection"] --> ALERT
     M3["Discord channel<br/>รับ event realtime"] --> ALERT
@@ -2934,7 +2934,7 @@ Total: ~800ms
 ### 44.1 ภาพรวม Pipeline ความหน่วงทั้งหมด
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["เหตุการณ์เกิด<br/>(แอดมินกด approve)"] --> B["เขียน DB<br/>~20ms"]
     B --> C["รอ ESP32 poll ครั้งถัดไป<br/>0–2000ms"]
     C --> D["TLS handshake<br/>+ HTTP request<br/>~200–400ms"]
@@ -3084,7 +3084,7 @@ DeserializationError err = deserializeJson(doc, http.getStream());
 ### 44.8 เหตุผลที่ 7 — Network Variance (ที่ควบคุมไม่ได้)
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["ESP32"] -->|"Wi-Fi"| B["AP มหาวิทยาลัย"]
     B -->|"backbone"| C["ISP"]
     C -->|"BGP"| D["Vercel Edge<br/>(Singapore)"]
@@ -3311,7 +3311,7 @@ Supabase PostgreSQL (Singapore, free tier):
 #### 45.3.3 ที่มาของการต่างกัน: Network Geography
 
 ```mermaid
-flowchart LR
+flowchart TD
     User["ผู้ใช้ในประเทศไทย"] -->|"~10ms"| ISP["TRUE/AIS/3BB"]
     ISP -->|"~30ms"| VercelSG["Vercel<br/>Singapore"]
     VercelSG -->|"~80ms"| Mumbai[("postgreSQL (เดิมคือ MySQL)@Aiven<br/>Mumbai, India")]
@@ -3594,7 +3594,7 @@ RETURNING count;
 ### 46.6 `lib/discord.ts` (367 บรรทัด) — Event Routing
 
 ```mermaid
-flowchart LR
+flowchart TD
     EV["Event<br/>(student_approved, door_opened, ...)"] --> ROUTE{เลือก webhook}
     ROUTE -->|"per-room"| W1["discord_webhook_CE-401"]
     ROUTE -->|"global"| W2["DISCORD_WEBHOOK_URL env"]
@@ -3867,7 +3867,7 @@ const filtered = students.filter(s => {
 5. **Code generator** — สร้างไฟล์ `config.h` + `.ino` ตามห้อง
 
 ```mermaid
-flowchart LR
+flowchart TD
     USER["Admin คลิกห้อง CE-401"] --> PANEL["เปิด panel ขวา"]
     PANEL --> A["fetch /api/esp32/status?room=CE-401"]
     A --> B["แสดง IP / last_seen / heartbeat"]
@@ -4376,7 +4376,7 @@ GPIO 3.3V → LED ภายใน → photons → phototransistor → switch tra
 ### 52.3 ทำไมต้องมี Flyback Diode
 
 ```mermaid
-flowchart LR
+flowchart TD
     V5["+5V"] -->|"+"| COIL["Relay Coil<br/>(inductor)"]
     COIL -->|"-"| Q["Transistor<br/>(in module)"]
     Q --> GND["GND"]
@@ -4473,7 +4473,7 @@ void setup() {
 ### 53.3 Battery Backup (UPS) — ถ้าจะใส่
 
 ```mermaid
-flowchart LR
+flowchart TD
     AC["AC 220V"] --> ADAPTER["Adapter 12V"] --> SWITCH["DC Switch"]
     BAT["12V 7Ah SLA"] --> SWITCH
     SWITCH --> SYSTEM["ระบบ"]
@@ -4635,7 +4635,7 @@ ESP32 ในยุโรป → return IP ใน Frankfurt
 ### 56.2 CDN Routing — Anycast
 
 ```mermaid
-flowchart LR
+flowchart TD
     USER["User in Bangkok"] --> ROUTER["Internet"]
     ROUTER -->|"BGP route ใกล้สุด"| SG["Vercel Edge SG"]
     USER2["User in London"] --> ROUTER2["Internet"]
@@ -4676,7 +4676,7 @@ flowchart LR
 ### 57.1 NAT Behavior
 
 ```mermaid
-flowchart LR
+flowchart TD
     ESP["ESP32<br/>192.168.1.50:random"] -->|"outbound"| NAT["NAT Router"]
     NAT -->|"public IP:translated port"| INET["Internet"]
     INET --> SRV["Server"]
@@ -6037,7 +6037,7 @@ my-app/
 #### 71.24.4 Trust Boundaries Diagram
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph PUB["🌐 Public Internet (Untrusted)"]
         BROWSER["Browser นักศึกษา"]
         ATTACKER["Attacker"]
@@ -6078,7 +6078,7 @@ DFD เป็นเครื่องมือมาตรฐานที่ส�
 #### 71.25.1 Level 0 — Context Diagram
 
 ```mermaid
-flowchart LR
+flowchart TD
     S["นักศึกษา<br/>(Data Subject)"]
     A["แอดมิน<br/>(Data Processor)"]
     SYS(("ระบบควบคุม<br/>ประตู SmartAccess"))
@@ -6621,7 +6621,7 @@ jobs:
 #### 71.32.1 6 ขั้นตอน NIST IR Lifecycle
 
 ```mermaid
-flowchart LR
+flowchart TD
     PRE["1.Preparation<br/>Playbook + Contact"] --> DET["2.Detection<br/>Discord alert"]
     DET --> ANA["3.Analysis<br/>severity classify"]
     ANA --> CON["4.Containment<br/>kill switch"]
@@ -9919,7 +9919,7 @@ WITH expired AS (
 `lib/notify.ts` เป็น dispatcher รวมศูนย์: สร้าง embed เพียงครั้งเดียวด้วย `buildEventMessage()` (`lib/discord.ts`) แล้วกระจายไปทุกช่องที่ตั้งค่าไว้แบบขนาน (`Promise.allSettled`) — Telegram ส่ง HTML, LINE ส่ง plain text (แปลงจาก embed ด้วย `formatPlainText`)
 
 ```mermaid
-flowchart LR
+flowchart TD
     EV["เหตุการณ์ (login, door_opened...)"] --> BUILD["buildEventMessage() สร้าง embed"]
     BUILD --> CAT["notifyCategory() register/approve/logs/admin_audit"]
     CAT --> DISC["sendDiscordChannels (target + audit log)"]

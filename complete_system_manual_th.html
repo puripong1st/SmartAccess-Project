@@ -949,7 +949,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-04 10:25:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-05 21:19:08 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1733,7 +1733,7 @@ ESP32_WOKWI_URL=http://localhost:8180
 </tr>
 </tbody></table>
 <h3>ภาพที่ 3: วงจรจำลองใน Wokwi</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     ESP["ESP32 DevKit"]
     TFT["ILI9341 TFT"]
     RELAY["Relay Module"]
@@ -1811,7 +1811,7 @@ ESP32_WOKWI_URL=http://localhost:8180
 </tbody></table>
 <h3>9.2 แบบ A: Magnetic lock แบบ fail-safe</h3>
 <p>Magnetic lock ทั่วไปจะล็อกเมื่อมีไฟ 12V และปลดล็อกเมื่อไฟถูกตัด ดังนั้นต้องใช้ขา NC ของ relay</p>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     PSU12["+12V Power Supply"]
     GND12["12V GND"]
     Buck["Buck 12V to 5V"]
@@ -1837,7 +1837,7 @@ ESP32_WOKWI_URL=http://localhost:8180
 </ul>
 <h3>9.3 แบบ B: Electric strike หรือ solenoid ที่จ่ายไฟเพื่อปลดล็อก</h3>
 <p>ถ้าอุปกรณ์ปลดล็อกเมื่อได้รับไฟ 12V ให้ใช้ขา NO</p>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     PSU12["+12V Power Supply"]
     GND12["12V GND"]
     ESP["ESP32"]
@@ -3399,7 +3399,7 @@ Buck 5V GND ----------- ESP32 GND
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-23"></a></p>
 <h2>23. หน้าจอ Admin — เจาะลึกทุก Tab พร้อมเหตุผลที่ออกแบบแบบนี้</h2>
 <h3>23.1 แท็บ &quot;คิวรอตรวจสอบ&quot; (Pending Queue)</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     A["fetchPending() ทุก 10 วินาที"] --> B{มี pending ใหม่?}
     B -->|ใช่| C["playSoftChime() เสียงแจ้งเตือน"]
     B -->|ไม่| D[ไม่ทำอะไร]
@@ -3569,7 +3569,7 @@ return NextResponse.json({...})                                    // ตอบ 
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-27"></a></p>
 <h2>27. Supabase ทำอะไรในระบบนี้ (เจาะลึก)</h2>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     subgraph Supabase
         PG[("PostgreSQL 15<br/>+ pgBouncer pool")]
         AUTH["Supabase Auth (ไม่ได้ใช้)"]
@@ -3710,7 +3710,7 @@ RETURNING count;
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-29"></a></p>
 <h2>29. เปรียบเทียบ: ทำไมบางส่วนเร็ว / บางส่วนช้า</h2>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     subgraph FAST["🚀 ส่วนที่เร็ว"]
         F1["โหลดหน้าเว็บแรก<br/>~80-150ms"]
         F2["JWT verify<br/>~1ms (HS256 in-memory)"]
@@ -4753,7 +4753,7 @@ T+4100    | resetCache → loop() ปกติ
      อยู่ในตำแหน่งที่ถูกต้องแล้วในภาค §71 ด้านล่าง — เดิมเคยมีสำเนาซ้ำตรงนี้ ได้ลบออกเพื่อแก้ลำดับหัวข้อ --><p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-39"></a></p>
 <h2>39. Monitoring &amp; Observability</h2>
 <h3>39.1 จุดที่ต้องเฝ้าดู</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     M1["Vercel Logs<br/>ดู API errors"] --> ALERT["Alert"]
     M2["Supabase Dashboard<br/>ดู query slow, connection"] --> ALERT
     M3["Discord channel<br/>รับ event realtime"] --> ALERT
@@ -4959,7 +4959,7 @@ T+4100    | resetCache → loop() ปกติ
 <h2>44. ทำไมหน้าจอ TFT บน ESP32 จึงเปลี่ยนสถานะ &quot;ช้า&quot; ไม่เรียลไทม์</h2>
 <p>นี่เป็นคำถามที่สำคัญมาก และคำตอบมีหลายชั้นซ้อนกัน — ความ &quot;ช้า&quot; ที่เห็นเกิดจาก <strong>ผลรวมของ 8 ปัจจัยทางวิศวกรรม</strong> ที่ตั้งใจออกแบบไว้แบบนี้ ไม่ใช่ความผิดพลาด</p>
 <h3>44.1 ภาพรวม Pipeline ความหน่วงทั้งหมด</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     A["เหตุการณ์เกิด<br/>(แอดมินกด approve)"] --> B["เขียน DB<br/>~20ms"]
     B --> C["รอ ESP32 poll ครั้งถัดไป<br/>0–2000ms"]
     C --> D["TLS handshake<br/>+ HTTP request<br/>~200–400ms"]
@@ -5102,7 +5102,7 @@ DeserializationError err = deserializeJson(doc, http.getStream());
 <li>JSON อ่านง่าย ผู้ดูแลคนต่อมาแก้ได้</li>
 </ul>
 <h3>44.8 เหตุผลที่ 7 — Network Variance (ที่ควบคุมไม่ได้)</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     A["ESP32"] -->|"Wi-Fi"| B["AP มหาวิทยาลัย"]
     B -->|"backbone"| C["ISP"]
     C -->|"BGP"| D["Vercel Edge<br/>(Singapore)"]
@@ -5441,7 +5441,7 @@ Supabase PostgreSQL (Singapore, free tier):
 </code></pre>
 <p><strong>ผลลัพธ์</strong>: API response p95 ลดจาก <strong>480ms → 110ms</strong> (เร็วขึ้น 4 เท่า)</p>
 <h4>45.3.3 ที่มาของการต่างกัน: Network Geography</h4>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     User["ผู้ใช้ในประเทศไทย"] -->|"~10ms"| ISP["TRUE/AIS/3BB"]
     ISP -->|"~30ms"| VercelSG["Vercel<br/>Singapore"]
     VercelSG -->|"~80ms"| Mumbai[("postgreSQL (เดิมคือ MySQL)@Aiven<br/>Mumbai, India")]
@@ -5942,7 +5942,7 @@ RETURNING count;
 <li>❌ ใช้ DB resource สำหรับ rate-limit (ถ้า scale สูงควรย้าย)</li>
 </ul>
 <h3>46.6 <code>lib/discord.ts</code> (367 บรรทัด) — Event Routing</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     EV["Event<br/>(student_approved, door_opened, ...)"] --> ROUTE{เลือก webhook}
     ROUTE -->|"per-room"| W1["discord_webhook_CE-401"]
     ROUTE -->|"global"| W2["DISCORD_WEBHOOK_URL env"]
@@ -6199,7 +6199,7 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 <li><strong>Panel รายละเอียด</strong> — IP, last_seen, webhook URL, ตัวอย่าง config.h</li>
 <li><strong>Code generator</strong> — สร้างไฟล์ <code>config.h</code> + <code>.ino</code> ตามห้อง</li>
 </ol>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     USER["Admin คลิกห้อง CE-401"] --> PANEL["เปิด panel ขวา"]
     PANEL --> A["fetch /api/esp32/status?room=CE-401"]
     A --> B["แสดง IP / last_seen / heartbeat"]
@@ -6707,7 +6707,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 <li>spike ไม่ข้ามมา ESP32</li>
 </ul>
 <h3>52.3 ทำไมต้องมี Flyback Diode</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     V5["+5V"] -->|"+"| COIL["Relay Coil<br/>(inductor)"]
     COIL -->|"-"| Q["Transistor<br/>(in module)"]
     Q --> GND["GND"]
@@ -6891,7 +6891,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 <li>ถ้า adapter จ่ายไม่ได้ → voltage drop → ESP32 brown-out reset</li>
 </ul>
 <h3>53.3 Battery Backup (UPS) — ถ้าจะใส่</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     AC["AC 220V"] --> ADAPTER["Adapter 12V"] --> SWITCH["DC Switch"]
     BAT["12V 7Ah SLA"] --> SWITCH
     SWITCH --> SYSTEM["ระบบ"]
@@ -7086,7 +7086,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 </code></pre>
 <p><strong>Geo-DNS</strong>: ESP32 ในไทย → return IP ใน Singapore (~30ms RTT)<br>ESP32 ในยุโรป → return IP ใน Frankfurt</p>
 <h3>56.2 CDN Routing — Anycast</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     USER["User in Bangkok"] --> ROUTER["Internet"]
     ROUTER -->|"BGP route ใกล้สุด"| SG["Vercel Edge SG"]
     USER2["User in London"] --> ROUTER2["Internet"]
@@ -7145,7 +7145,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 <p><a id="sec-57"></a></p>
 <h2>57. NAT / Firewall — ทำไม ESP32 push ไม่ได้</h2>
 <h3>57.1 NAT Behavior</h3>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     ESP["ESP32<br/>192.168.1.50:random"] -->|"outbound"| NAT["NAT Router"]
     NAT -->|"public IP:translated port"| INET["Internet"]
     INET --> SRV["Server"]
@@ -8984,7 +8984,7 @@ INITIAL_ADMIN_FULL_NAME=System Main Administrator
 </tbody></table>
 <p><strong>สรุป:</strong> ภัยที่ต้องเฝ้าระวังสูงสุดคือ Tailgating (ต้องแก้ด้วย hardware: turnstile/sensor) และ secret leakage (ต้องแก้ด้วย rotation policy + Vault)</p>
 <h4>71.24.4 Trust Boundaries Diagram</h4>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     subgraph PUB["🌐 Public Internet (Untrusted)"]
         BROWSER["Browser นักศึกษา"]
         ATTACKER["Attacker"]
@@ -9017,7 +9017,7 @@ INITIAL_ADMIN_FULL_NAME=System Main Administrator
 <h3>71.25 Data Flow Diagram (DFD) ระดับ 0/1/2 — สำหรับ PDPA DPIA</h3>
 <p>DFD เป็นเครื่องมือมาตรฐานที่สำนักงาน กคส. (สคส.) แนะนำใช้ใน Data Protection Impact Assessment (PDPA ม.37)</p>
 <h4>71.25.1 Level 0 — Context Diagram</h4>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     S["นักศึกษา<br/>(Data Subject)"]
     A["แอดมิน<br/>(Data Processor)"]
     SYS(("ระบบควบคุม<br/>ประตู SmartAccess"))
@@ -9959,7 +9959,7 @@ jobs:
 <p><a id="sec-71-32"></a></p>
 <h3>71.32 Incident Response Plan (NIST 800-61) + แบบฟอร์มแจ้ง สคส.</h3>
 <h4>71.32.1 6 ขั้นตอน NIST IR Lifecycle</h4>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     PRE["1.Preparation<br/>Playbook + Contact"] --> DET["2.Detection<br/>Discord alert"]
     DET --> ANA["3.Analysis<br/>severity classify"]
     ANA --> CON["4.Containment<br/>kill switch"]
@@ -14751,7 +14751,7 @@ RETURNING count, reset_time;
 </code></pre>
 <h3>73.12 สถาปัตยกรรมการแจ้งเตือนหลายช่องทาง (Discord + Telegram + LINE)</h3>
 <p><code>lib/notify.ts</code> เป็น dispatcher รวมศูนย์: สร้าง embed เพียงครั้งเดียวด้วย <code>buildEventMessage()</code> (<code>lib/discord.ts</code>) แล้วกระจายไปทุกช่องที่ตั้งค่าไว้แบบขนาน (<code>Promise.allSettled</code>) — Telegram ส่ง HTML, LINE ส่ง plain text (แปลงจาก embed ด้วย <code>formatPlainText</code>)</p>
-<div class="mermaid">flowchart LR
+<div class="mermaid">flowchart TD
     EV["เหตุการณ์ (login, door_opened...)"] --> BUILD["buildEventMessage() สร้าง embed"]
     BUILD --> CAT["notifyCategory() register/approve/logs/admin_audit"]
     CAT --> DISC["sendDiscordChannels (target + audit log)"]
@@ -17982,32 +17982,57 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" defer></script>
 
-  <!-- Mermaid.js for Dynamic Diagrams (Standard CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script>
     mermaid.initialize({
       startOnLoad: false, // CRITICAL: Stop auto-rendering to prevent mobile CPU freezing!
-      theme: 'default',
+      theme: 'base',
       securityLevel: 'loose',
       htmlLabels: true, // Render text via HTML foreignObject for perfect Thai font wrap and zero overlap!
-      // CRITICAL FIX: บังคับให้ Mermaid วัดความกว้างข้อความด้วยฟอนต์ Sarabun ตัวจริง
-      // (เดิม Mermaid วัดด้วยฟอนต์ fallback ก่อนฟอนต์ไทยโหลดเสร็จ ทำให้กล่องเล็กเกินจนตัวอักษรไทยถูกตัด)
       fontFamily: "'Sarabun', sans-serif",
+      themeVariables: {
+        // Cohesive Premium Purple Harmony Palette (Perfect for printed reports)
+        primaryColor: '#F3E8FF',       // Soft purple background (purple-100)
+        primaryTextColor: '#1E293B',   // Slate-800 text
+        primaryBorderColor: '#C084FC',  // Purple-400 border
+        lineColor: '#64748B',          // Slate-500 arrows
+        secondaryColor: '#FCE7F3',     // Soft pink for alternative paths (pink-100)
+        tertiaryColor: '#ECFDF5',      // Soft green (emerald-50)
+        
+        // Sequence Diagrams styling
+        actorBkg: '#F3E8FF',
+        actorBorder: '#C084FC',
+        actorTextColor: '#1E293B',
+        actorLineColor: '#94A3B8',
+        signalColor: '#475569',
+        signalTextColor: '#1E293B',
+        labelBoxBkgColor: '#F3E8FF',
+        labelBoxBorderColor: '#C084FC',
+        labelTextColor: '#1E293B',
+        noteBkgColor: '#FEF3C7',       // Soft amber background for notes (amber-100)
+        noteBorderColor: '#FCD34D',    // Amber-300 border
+        noteTextColor: '#78350F',      // Amber-900 text
+        
+        // State Diagrams styling
+        stateBkg: '#F3E8FF',
+        stateBorder: '#C084FC',
+        labelColor: '#1E293B'
+      },
       flowchart: {
-        useMaxWidth: true,
+        useMaxWidth: false, // CRITICAL: Disable auto-scaling down to microscopic size! Allows scrollbar instead.
         htmlLabels: true,
-        nodeSpacing: 80, // Significantly increase horizontal space between nodes (default is 40)
-        rankSpacing: 85, // Significantly increase vertical space between ranks (default is 50)
-        padding: 18, // เพิ่มระยะขอบในกล่อง node ให้ตัวอักษรไทยมีที่หายใจ ไม่ถูกตัด
-        curve: 'basis'  // Make lines smooth and curved, avoiding sharp overlapping zigzags!
+        nodeSpacing: 100, // horizontal node spacing
+        rankSpacing: 95,  // vertical rank spacing
+        padding: 22,      // space inside nodes to keep Thai characters clean
+        curve: 'basis'    // smooth curves
       },
       sequence: {
-        actorMargin: 90, // Increase horizontal gap between actors
-        messageMargin: 50, // Increase vertical space between messages
-        boxMargin: 18,
-        noteMargin: 16,
+        actorMargin: 120, // space between participants
+        messageMargin: 65, // vertical message spacing
+        boxMargin: 22,
+        noteMargin: 20,
         wrap: true,
-        width: 175 // กว้างขึ้นต่อกล่องข้อความ กันตัวอักษรไทยล้น
+        width: 185
       }
     });
   </script>

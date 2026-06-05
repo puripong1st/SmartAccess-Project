@@ -1027,32 +1027,57 @@ const htmlTemplate = `<!DOCTYPE html>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" defer></script>
 
-  <!-- Mermaid.js for Dynamic Diagrams (Standard CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script>
     mermaid.initialize({
       startOnLoad: false, // CRITICAL: Stop auto-rendering to prevent mobile CPU freezing!
-      theme: 'default',
+      theme: 'base',
       securityLevel: 'loose',
       htmlLabels: true, // Render text via HTML foreignObject for perfect Thai font wrap and zero overlap!
-      // CRITICAL FIX: บังคับให้ Mermaid วัดความกว้างข้อความด้วยฟอนต์ Sarabun ตัวจริง
-      // (เดิม Mermaid วัดด้วยฟอนต์ fallback ก่อนฟอนต์ไทยโหลดเสร็จ ทำให้กล่องเล็กเกินจนตัวอักษรไทยถูกตัด)
       fontFamily: "'Sarabun', sans-serif",
+      themeVariables: {
+        // Cohesive Premium Purple Harmony Palette (Perfect for printed reports)
+        primaryColor: '#F3E8FF',       // Soft purple background (purple-100)
+        primaryTextColor: '#1E293B',   // Slate-800 text
+        primaryBorderColor: '#C084FC',  // Purple-400 border
+        lineColor: '#64748B',          // Slate-500 arrows
+        secondaryColor: '#FCE7F3',     // Soft pink for alternative paths (pink-100)
+        tertiaryColor: '#ECFDF5',      // Soft green (emerald-50)
+        
+        // Sequence Diagrams styling
+        actorBkg: '#F3E8FF',
+        actorBorder: '#C084FC',
+        actorTextColor: '#1E293B',
+        actorLineColor: '#94A3B8',
+        signalColor: '#475569',
+        signalTextColor: '#1E293B',
+        labelBoxBkgColor: '#F3E8FF',
+        labelBoxBorderColor: '#C084FC',
+        labelTextColor: '#1E293B',
+        noteBkgColor: '#FEF3C7',       // Soft amber background for notes (amber-100)
+        noteBorderColor: '#FCD34D',    // Amber-300 border
+        noteTextColor: '#78350F',      // Amber-900 text
+        
+        // State Diagrams styling
+        stateBkg: '#F3E8FF',
+        stateBorder: '#C084FC',
+        labelColor: '#1E293B'
+      },
       flowchart: {
-        useMaxWidth: true,
+        useMaxWidth: false, // CRITICAL: Disable auto-scaling down to microscopic size! Allows scrollbar instead.
         htmlLabels: true,
-        nodeSpacing: 80, // Significantly increase horizontal space between nodes (default is 40)
-        rankSpacing: 85, // Significantly increase vertical space between ranks (default is 50)
-        padding: 18, // เพิ่มระยะขอบในกล่อง node ให้ตัวอักษรไทยมีที่หายใจ ไม่ถูกตัด
-        curve: 'basis'  // Make lines smooth and curved, avoiding sharp overlapping zigzags!
+        nodeSpacing: 100, // horizontal node spacing
+        rankSpacing: 95,  // vertical rank spacing
+        padding: 22,      // space inside nodes to keep Thai characters clean
+        curve: 'basis'    // smooth curves
       },
       sequence: {
-        actorMargin: 90, // Increase horizontal gap between actors
-        messageMargin: 50, // Increase vertical space between messages
-        boxMargin: 18,
-        noteMargin: 16,
+        actorMargin: 120, // space between participants
+        messageMargin: 65, // vertical message spacing
+        boxMargin: 22,
+        noteMargin: 20,
         wrap: true,
-        width: 175 // กว้างขึ้นต่อกล่องข้อความ กันตัวอักษรไทยล้น
+        width: 185
       }
     });
   </script>
