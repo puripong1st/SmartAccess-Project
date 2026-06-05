@@ -407,6 +407,89 @@
       background-color: rgba(124, 58, 237, 0.02);
     }
 
+    /* Code Windows - CodeImage.dev style (Aesthetic academic-friendly code frames) */
+    .code-window {
+      background-color: #0F172A; /* Slate-900 background */
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin: 28px 0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.dark-mode .code-window {
+      background-color: #0B0F19;
+      border-color: #334155;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #1E293B; /* Slate-800 header */
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+    }
+
+    body.dark-mode .code-header {
+      background-color: #111827;
+      border-color: #1F2937;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .code-dots .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .code-dots .dot.red { background-color: #EF4444; }
+    .code-dots .dot.yellow { background-color: #F59E0B; }
+    .code-dots .dot.green { background-color: #10B981; }
+
+    .code-title {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+
+    body.dark-mode .code-title {
+      color: #64748B;
+    }
+
+    .code-lang-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background-color: rgba(124, 58, 237, 0.1);
+      color: #C084FC; /* Light purple */
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    body.dark-mode .code-lang-badge {
+      background-color: rgba(139, 92, 246, 0.15);
+      color: #A78BFA;
+    }
+
+    /* Adjust pre inside window to remove margins and shadows */
+    .code-window pre {
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background-color: transparent !important;
+      padding: 16px 20px !important;
+    }
+
     /* Code Blocks - STRICT READABILITY FIX */
     pre {
       background-color: var(--code-bg) !important;
@@ -1206,7 +1289,17 @@
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-2"></a></p>
 <h2>2. โครงสร้างไฟล์สำคัญ</h2>
-<pre><code class="language-text">Project/
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Project/
   my-app/
     app/
       page.tsx                         หน้าเว็บลงทะเบียนของนักศึกษา
@@ -1242,71 +1335,138 @@
     diagram.json                       วงจร Wokwi
     wokwi.toml                         ตั้งค่า Wokwi simulator
 </code></pre>
+  </div>
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-3"></a></p>
 <h2>3. การติดตั้งและรันเว็บ</h2>
 <h3>3.1 เตรียม Node.js และ package</h3>
 <p>เข้าไปที่โฟลเดอร์เว็บ</p>
-<pre><code class="language-bash">cd my-app
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">terminal</div>
+      <div class="code-lang-badge">BASH</div>
+    </div>
+    <pre class="line-numbers"><code class="language-bash">cd my-app
 npm install
 </code></pre>
+  </div>
 <p>รัน dev server</p>
-<pre><code class="language-bash">npm run dev
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">terminal</div>
+      <div class="code-lang-badge">BASH</div>
+    </div>
+    <pre class="line-numbers"><code class="language-bash">npm run dev
 </code></pre>
+  </div>
 <p>เปิดเว็บ</p>
-<pre><code class="language-text">https://smartaccess-project.vercel.app
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">https://smartaccess-project.vercel.app
 </code></pre>
+  </div>
 <p>หน้า Admin</p>
-<pre><code class="language-text">https://smartaccess-project.vercel.app/admin/login
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">https://smartaccess-project.vercel.app/admin/login
 </code></pre>
+  </div>
 <p>หน้าจำลอง ESP32</p>
-<pre><code class="language-text">https://smartaccess-project.vercel.app/esp32-preview
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">https://smartaccess-project.vercel.app/esp32-preview
 </code></pre>
+  </div>
 <div class="alert-box alert-note"><strong>NOTE:</strong> ลิงก์ด้านบนเป็นเว็บไซต์จำลองบนโปรดักชันหลัก (Production URL) สำหรับรันใช้งานจริง ส่วนกรณีที่รันระบบทดสอบภายในเครื่องนักพัฒนา (Local Development) สามารถเข้าใช้งานผ่าน `http://localhost:3000`, `http://localhost:3000/admin/login` และ `http://localhost:3000/esp32-preview` ตามลำดับ
 </div><h3>3.2 ตัวแปรสภาพแวดล้อมที่ควรตั้งค่า</h3>
 <p>สร้างไฟล์ <code>my-app/.env.local</code></p>
-<pre><code class="language-env"># ── ฐานข้อมูล (PostgreSQL / Supabase Connection) ──
-# ใช้ Connection String หลัก (PgBouncer pooler พอร์ต 6543)
-POSTGRES_URL=&quot;postgres://postgres.&lt;ref&gt;:&lt;password&gt;@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&quot;
-# หรือใช้แบบแยกพารามิเตอร์ (db.ts จะอ่านแบบแยกนี้เป็น fallback หากไม่มี POSTGRES_URL)
-POSTGRES_HOST=db.supabase.co
-POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your-db-password
-POSTGRES_DATABASE=postgres
-# ขนาด pool สูงสุดที่เชื่อมต่อ (ค่าเริ่มต้นคือ 5)
-POSTGRES_POOL_MAX=5
-# PEM Certificate สำหรับการเชื่อมต่อแบบเข้ารหัส TLS (ทางเลือก)
-SUPABASE_CA_CERT=
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">.env.local</div>
+      <div class="code-lang-badge">ENV</div>
+    </div>
+    <pre class="line-numbers"><code class="language-env"><span class="token comment"># ── ฐานข้อมูล (PostgreSQL / Supabase Connection) ──</span>
+<span class="token comment"># ใช้ Connection String หลัก (PgBouncer pooler พอร์ต 6543)</span>
+<span class="token attr-name">POSTGRES_URL</span><span class="token operator">=</span><span class="token string">"postgres://postgres.<ref>:<password>@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require"</span>
+<span class="token comment"># หรือใช้แบบแยกพารามิเตอร์ (db.ts จะอ่านแบบแยกนี้เป็น fallback หากไม่มี POSTGRES_URL)</span>
+<span class="token attr-name">POSTGRES_HOST</span><span class="token operator">=</span><span class="token string">db.supabase.co</span>
+<span class="token attr-name">POSTGRES_PORT</span><span class="token operator">=</span><span class="token string">5432</span>
+<span class="token attr-name">POSTGRES_USER</span><span class="token operator">=</span><span class="token string">postgres</span>
+<span class="token attr-name">POSTGRES_PASSWORD</span><span class="token operator">=</span><span class="token string">your-db-password</span>
+<span class="token attr-name">POSTGRES_DATABASE</span><span class="token operator">=</span><span class="token string">postgres</span>
+<span class="token comment"># ขนาด pool สูงสุดที่เชื่อมต่อ (ค่าเริ่มต้นคือ 5)</span>
+<span class="token attr-name">POSTGRES_POOL_MAX</span><span class="token operator">=</span><span class="token string">5</span>
+<span class="token comment"># PEM Certificate สำหรับการเชื่อมต่อแบบเข้ารหัส TLS (ทางเลือก)</span>
+<span class="token attr-name">SUPABASE_CA_CERT</span><span class="token operator">=</span><span class="token string"></span>
 
-# ── ความปลอดภัย &amp; รหัสลับ (Secrets - บังคับตั้งค่า แอปจะ throw ทันทีถ้าไม่ใส่) ──
-# รหัสลับสำหรับ JWT Session (สุ่มใหม่ ≥ 32 ตัวอักษร)
-JWT_SECRET=change-this-to-a-long-random-secret
-# รหัสลับในการถอด/ถอดสิทธิ์ผ่านคิวอาร์ (สุ่มใหม่ ≥ 32 ตัวอักษร บังคับตั้งเพื่อกันระบบ throw)
-QR_SIGNING_KEY=change-this-to-another-long-random-secret
-# กุญแจ API IoT ของบอร์ดประตู (ต้องตรงกับ api_key ใน config.h ของบอร์ด)
-ESP32_API_KEY=change-this-to-the-same-key-in-config-h
+<span class="token comment"># ── ความปลอดภัย & รหัสลับ (Secrets - บังคับตั้งค่า แอปจะ throw ทันทีถ้าไม่ใส่) ──</span>
+<span class="token comment"># รหัสลับสำหรับ JWT Session (สุ่มใหม่ ≥ 32 ตัวอักษร)</span>
+<span class="token attr-name">JWT_SECRET</span><span class="token operator">=</span><span class="token string">change-this-to-a-long-random-secret</span>
+<span class="token comment"># รหัสลับในการถอด/ถอดสิทธิ์ผ่านคิวอาร์ (สุ่มใหม่ ≥ 32 ตัวอักษร บังคับตั้งเพื่อกันระบบ throw)</span>
+<span class="token attr-name">QR_SIGNING_KEY</span><span class="token operator">=</span><span class="token string">change-this-to-another-long-random-secret</span>
+<span class="token comment"># กุญแจ API IoT ของบอร์ดประตู (ต้องตรงกับ api_key ใน config.h ของบอร์ด)</span>
+<span class="token attr-name">ESP32_API_KEY</span><span class="token operator">=</span><span class="token string">change-this-to-the-same-key-in-config-h</span>
 
-# ── บอร์ดประตูฮาร์ดแวร์ / IoT Config ──
-ESP32_IP=192.168.1.100
-ESP32_PORT=80
-ESP32_MOCK_MODE=false
-ESP32_WOKWI=false
+<span class="token comment"># ── บอร์ดประตูฮาร์ดแวร์ / IoT Config ──</span>
+<span class="token attr-name">ESP32_IP</span><span class="token operator">=</span><span class="token string">192.168.1.100</span>
+<span class="token attr-name">ESP32_PORT</span><span class="token operator">=</span><span class="token string">80</span>
+<span class="token attr-name">ESP32_MOCK_MODE</span><span class="token operator">=</span><span class="token string">false</span>
+<span class="token attr-name">ESP32_WOKWI</span><span class="token operator">=</span><span class="token string">false</span>
 
-# ── การล้าง/สร้างข้อมูลตั้งต้นระบบ (DB Init &amp; Seed) ──
-# true = ข้ามการสแกนสร้างตารางเพื่อความรวดเร็วในการเปิด Serverless Cold Start
-SKIP_DB_INIT=false
-# true = อนุญาตให้บันทึกบัญชีผู้ดูแลระบบเริ่มแรก (Seed) จาก env ด้านล่างนี้ (เฉพาะพัฒนา)
-ALLOW_DEV_SEED=true
-INITIAL_ADMIN_USERNAME=admin
-INITIAL_ADMIN_PASSWORD=admin123456
-INITIAL_ADMIN_FULL_NAME=&quot;System Administrator&quot;
+<span class="token comment"># ── การล้าง/สร้างข้อมูลตั้งต้นระบบ (DB Init & Seed) ──</span>
+<span class="token comment"># true = ข้ามการสแกนสร้างตารางเพื่อความรวดเร็วในการเปิด Serverless Cold Start</span>
+<span class="token attr-name">SKIP_DB_INIT</span><span class="token operator">=</span><span class="token string">false</span>
+<span class="token comment"># true = อนุญาตให้บันทึกบัญชีผู้ดูแลระบบเริ่มแรก (Seed) จาก env ด้านล่างนี้ (เฉพาะพัฒนา)</span>
+<span class="token attr-name">ALLOW_DEV_SEED</span><span class="token operator">=</span><span class="token string">true</span>
+<span class="token attr-name">INITIAL_ADMIN_USERNAME</span><span class="token operator">=</span><span class="token string">admin</span>
+<span class="token attr-name">INITIAL_ADMIN_PASSWORD</span><span class="token operator">=</span><span class="token string">admin123456</span>
+<span class="token attr-name">INITIAL_ADMIN_FULL_NAME</span><span class="token operator">=</span><span class="token string">"System Administrator"</span>
 
-# ── การแจ้งเตือน &amp; เผชิญเหตุ Ops (ทางเลือก) ──
-NEXT_PUBLIC_APP_URL=https://smartaccess-project.vercel.app
-DISCORD_WEBHOOK_URL=
-CRON_SECRET=some-random-cron-secret
+<span class="token comment"># ── การแจ้งเตือน & เผชิญเหตุ Ops (ทางเลือก) ──</span>
+<span class="token attr-name">NEXT_PUBLIC_APP_URL</span><span class="token operator">=</span><span class="token string">https://smartaccess-project.vercel.app</span>
+<span class="token attr-name">DISCORD_WEBHOOK_URL</span><span class="token operator">=</span><span class="token string"></span>
+<span class="token attr-name">CRON_SECRET</span><span class="token operator">=</span><span class="token string">some-random-cron-secret</span>
 </code></pre>
+  </div>
 <p>หมายเหตุสำคัญ:</p>
 <ul>
 <li>โค้ดปัจจุบันใช้ PostgreSQL ผ่านแพ็กเกจ <code>pg</code></li>
@@ -1320,8 +1480,19 @@ CRON_SECRET=some-random-cron-secret
 <h2>4. วิธีใช้งานเว็บสำหรับนักศึกษา</h2>
 <h3>4.1 เข้าใช้งานผ่าน QR เท่านั้น</h3>
 <p>หน้า <code>/</code> ถูกออกแบบให้เข้าใช้งานผ่านลิงก์ที่มี token เช่น</p>
-<pre><code class="language-text">/?scan=&lt;token&gt;&amp;room=CE-401
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">/?scan=&lt;token&gt;&amp;room=CE-401
 </code></pre>
+  </div>
 <p>ถ้าเปิด <code>/</code> ตรง ๆ โดยไม่มี <code>scan</code> ระบบจะแสดงหน้าว่าถูกจำกัดการเข้าถึง เพราะต้องสแกน QR ที่จอหน้าห้องก่อน</p>
 <h3>4.2 ขั้นตอนใช้งาน</h3>
 <ol>
@@ -1374,8 +1545,19 @@ CRON_SECRET=some-random-cron-secret
 <h2>5. วิธีใช้งานเว็บสำหรับ Admin</h2>
 <h3>5.1 เข้าสู่ระบบ</h3>
 <p>เปิด</p>
-<pre><code class="language-text">https://smartaccess-project.vercel.app/admin/login
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">https://smartaccess-project.vercel.app/admin/login
 </code></pre>
+  </div>
 <p>กรอก username/password ที่มีในตาราง <code>admin_users</code></p>
 <p>เมื่อ login สำเร็จ ระบบจะสร้าง JWT และเก็บใน cookie ชื่อ <code>smartaccess_admin_token</code></p>
 <h3>5.2 บทบาทผู้ใช้</h3>
@@ -1456,11 +1638,33 @@ CRON_SECRET=some-random-cron-secret
 <h3>5.6 ปลดล็อกด่วนทั้งห้อง</h3>
 <p>ในแท็บห้องเรียนและ ESP32 กดปุ่มปลดล็อกห้อง เช่น CE-401</p>
 <p>ระบบจะเรียก</p>
-<pre><code class="language-text">POST /api/system/unlock-room
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">POST /api/system/unlock-room
 </code></pre>
+  </div>
 <p>body</p>
-<pre><code class="language-json">{ &quot;room&quot;: &quot;CE-401&quot; }
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{ &quot;room&quot;: &quot;CE-401&quot; }
 </code></pre>
+  </div>
 <p>จากนั้น server จะเขียน <code>room_cmd_CE-401 = unlock</code> ลงฐานข้อมูล และบอร์ดห้องนั้นจะเปิด relay เมื่อ polling รอบถัดไป</p>
 <h3>5.7 Export PDF</h3>
 <p>Owner สามารถ export ได้ 2 แบบ</p>
@@ -1469,9 +1673,20 @@ CRON_SECRET=some-random-cron-secret
 <li>รายงานรายบุคคล</li>
 </ol>
 <p>API ที่ใช้คือ</p>
-<pre><code class="language-text">GET /api/export/pdf
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">GET /api/export/pdf
 GET /api/export/pdf?id=&lt;student_id&gt;
 </code></pre>
+  </div>
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-6"></a></p>
 <h2>6. วิธีใช้งานบอร์ด ESP32</h2>
@@ -1514,15 +1729,37 @@ GET /api/export/pdf?id=&lt;student_id&gt;
 </tbody></table>
 <h3>6.2 สร้างไฟล์ config.h</h3>
 <p>คัดลอก template</p>
-<pre><code class="language-bash">copy esp32\config.h.template esp32\config.h
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">terminal</div>
+      <div class="code-lang-badge">BASH</div>
+    </div>
+    <pre class="line-numbers"><code class="language-bash">copy esp32\config.h.template esp32\config.h
 </code></pre>
+  </div>
 <p>แก้ค่าหลัก</p>
-<pre><code class="language-cpp">const char *ssid = &quot;ชื่อ Wi-Fi&quot;;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">const char *ssid = &quot;ชื่อ Wi-Fi&quot;;
 const char *password = &quot;รหัสผ่าน Wi-Fi&quot;;
 const char *server_url = &quot;https://your-domain.vercel.app/api/esp32/display?room=CE-402&quot;;
 const char *room_code = &quot;CE-402&quot;;
 const char *api_key = &quot;ค่าเดียวกับ ESP32_API_KEY บน server&quot;;
 </code></pre>
+  </div>
 <p>สำหรับบอร์ดห้องอื่น ให้แก้ <code>room_code</code> (และ <code>server_url</code> ?room=) เป็นห้องนั้น เช่น <code>CE-401</code></p>
 <h3>6.3 ติดตั้ง library ใน Arduino IDE</h3>
 <p>ต้องมี library ต่อไปนี้</p>
@@ -1590,9 +1827,20 @@ const char *api_key = &quot;ค่าเดียวกับ ESP32_API_KEY บ�
 <li>เลือก <code>Wokwi: Start Simulator</code></li>
 </ol>
 <p>ถ้าต้องการให้ Next.js เชื่อมกับ Wokwi ให้ตั้งใน <code>.env.local</code></p>
-<pre><code class="language-env">ESP32_WOKWI=true
-ESP32_WOKWI_URL=http://localhost:8180
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">.env.local</div>
+      <div class="code-lang-badge">ENV</div>
+    </div>
+    <pre class="line-numbers"><code class="language-env"><span class="token attr-name">ESP32_WOKWI</span><span class="token operator">=</span><span class="token string">true</span>
+<span class="token attr-name">ESP32_WOKWI_URL</span><span class="token operator">=</span><span class="token string">http://localhost:8180</span>
 </code></pre>
+  </div>
 <p>หมายเหตุ: <code>wokwi.toml</code> มี port forwarding จาก <code>localhost:8180</code> ไปที่ simulated ESP32 port 80 แต่ firmware ปัจจุบันใช้ cloud polling เป็นหลัก ไม่ได้เปิด endpoint <code>/door/open</code> บน ESP32 ดังนั้นสถานะและคำสั่งเปิดประตูหลักจะยังอ้างอิงฐานข้อมูลผ่าน <code>/api/esp32/display</code></p>
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-8"></a></p>
@@ -1857,9 +2105,20 @@ ESP32_WOKWI_URL=http://localhost:8180
 </ul>
 <h3>9.4 การต่อกราวด์</h3>
 <p>ฝั่งควบคุม relay ต้องมีกราวด์ร่วมกับ ESP32</p>
-<pre><code class="language-text">ESP32 GND ------------- Relay GND
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">ESP32 GND ------------- Relay GND
 Buck 5V GND ----------- ESP32 GND
 </code></pre>
+  </div>
 <p>ฝั่งโหลด 12V ของ lock สามารถแยกตามรูปแบบ module แต่ในงานทั่วไปมักมีกราวด์ร่วมผ่าน power supply และ buck converter</p>
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-10"></a></p>
@@ -3484,7 +3743,17 @@ Buck 5V GND ----------- ESP32 GND
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-25"></a></p>
 <h2>25. อธิบายโค้ด <code>esp32.ino</code> แบบ &quot;บรรทัดต่อบรรทัด&quot; (ส่วนสำคัญ)</h2>
 <h3>25.1 รูปแบบ HTTP request ที่ส่งไป server</h3>
-<pre><code class="language-cpp">HTTPClient http;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">HTTPClient http;
 WiFiClientSecure *client = new WiFiClientSecure;
 client-&gt;setCACert(root_ca_cert);        // ทำไม? เพราะ Supabase/Vercel ใช้ TLS, ต้องตรวจ cert
 http.begin(*client, server_url);
@@ -3492,6 +3761,7 @@ http.setTimeout(1200);                   // 1.2 วิ — เกินกว่
 http.addHeader(&quot;x-api-key&quot;, api_key);    // server ตรวจ header นี้ใน lib/api-security.ts
 int code = http.GET();
 </code></pre>
+  </div>
 <h3>25.2 ทำไมต้องใช้ <code>StaticJsonDocument&lt;768&gt;</code> ไม่ใช่ <code>DynamicJsonDocument</code>?</h3>
 <ul>
 <li><code>StaticJsonDocument</code> จองหน่วยความจำบน <strong>stack</strong> ทำให้เร็วและไม่ fragment heap</li>
@@ -3504,10 +3774,21 @@ int code = http.GET();
 <li>ถ้าเปิด relay ทันที ผู้ใช้จะแปลกใจว่าทำไมไม่มีฟีดแบ็ก</li>
 </ul>
 <h3>25.4 Buzzer pattern</h3>
-<pre><code class="language-cpp">tone(BUZZER_PIN, 1000, 100); delay(120);
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">tone(BUZZER_PIN, 1000, 100); delay(120);
 tone(BUZZER_PIN, 1500, 100); delay(120);
 tone(BUZZER_PIN, 2000, 200);
 </code></pre>
+  </div>
 <ul>
 <li>เสียงไล่ขึ้น 3 ขั้น = อนุมัติสำเร็จ (positive feedback ตามหลัก UX sound design)</li>
 <li>เสียงต่ำเดียว 800Hz = ปิด relay (negative-neutral)</li>
@@ -3559,9 +3840,20 @@ tone(BUZZER_PIN, 2000, 200);
 <li>ถ้าใช้ <code>SELECT</code> แล้วค่อย <code>UPDATE</code> แยกกัน → race condition ทั้งสองคนเข้าได้</li>
 </ul>
 <h3>26.3 ทำไม Discord ใช้ &quot;fire-and-forget&quot;?</h3>
-<pre><code class="language-ts">sendDiscordNotification(&#39;student_registered&#39;, data).catch(()=&gt;{}) // ไม่ await
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">sendDiscordNotification(&#39;student_registered&#39;, data).catch(()=&gt;{}) // ไม่ await
 return NextResponse.json({...})                                    // ตอบ user ก่อน
 </code></pre>
+  </div>
 <ul>
 <li>Discord อาจตอบช้า 200–800ms</li>
 <li>ผู้ใช้ไม่ควรรอ Discord — ตอบเขาก่อน, แจ้งเตือนหลังบ้านเป็นเรื่องรอง</li>
@@ -3617,7 +3909,17 @@ return NextResponse.json({...})                                    // ตอบ 
 <li><strong>Direct URL</strong> → ใช้กับ DDL/migration (pgBouncer ไม่รองรับ prepared statement บางแบบ)</li>
 </ul>
 <h3>27.3 SQL ที่น่าสนใจในระบบ</h3>
-<pre><code class="language-sql">-- Atomic token consume (กัน race condition)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">-- Atomic token consume (กัน race condition)
 UPDATE dynamic_qr_tokens
 SET is_consumed = TRUE, consumed_at = NOW()
 WHERE token = $1
@@ -3646,6 +3948,7 @@ SET count = CASE
   END
 RETURNING count;
 </code></pre>
+  </div>
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-28"></a></p>
 <h2>28. Vercel ทำอะไรกับ my-app (เจาะลึก)</h2>
@@ -3829,7 +4132,17 @@ RETURNING count;
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-30"></a></p>
 <h2>30. อัลกอริทึมสำคัญ (Pseudocode)</h2>
 <h3>30.1 generateActiveQRToken(roomCode)</h3>
-<pre><code>function getOrCreateActiveQRToken(roomCode):
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">function getOrCreateActiveQRToken(roomCode):
     // ลบ token หมดอายุของห้องนี้
     DELETE FROM dynamic_qr_tokens
     WHERE room_code = roomCode AND expires_at &lt; NOW()
@@ -3849,8 +4162,19 @@ RETURNING count;
     VALUES (token, roomCode, NOW() + 300s)
     return new token
 </code></pre>
+  </div>
 <h3>30.2 ESP32 main loop</h3>
-<pre><code>loop():
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">loop():
     if WiFi.status() != CONNECTED:
         blink LED_WIFI
         WiFi.reconnect()
@@ -3882,8 +4206,19 @@ RETURNING count;
 
     delay(polling_delay)  // 2000ms
 </code></pre>
+  </div>
 <h3>30.3 Admin login + rate limit</h3>
-<pre><code>POST /api/auth/login:
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">POST /api/auth/login:
     ip = getClientIp(req)
     rateLimit(key=&quot;login:&quot; + ip, max=5, window=60s)  // ถ้าเกิน → 429
 
@@ -3896,6 +4231,7 @@ RETURNING count;
     UPDATE admin_users SET last_login=NOW() WHERE id=user.id
     return 200 {user}
 </code></pre>
+  </div>
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-31"></a></p>
 <h2>31. Network &amp; Security Architecture</h2>
@@ -4083,7 +4419,17 @@ RETURNING count;
 <blockquote>
 <p>⚠️ <strong>สำคัญ — เมื่อใช้ <code>SKIP_DB_INIT=true</code></strong>: เมื่อตั้ง env นี้ ระบบจะ<strong>ข้าม</strong> <code>initDatabase()</code> ทั้งหมดตอน start (ไม่สร้างตาราง/index/seed ใด ๆ) เพื่อตัด ~25 DDL/cold start ดังนั้นต้องรัน DDL ชุดนี้ใน Supabase SQL Editor <strong>ครั้งเดียวด้วยตนเอง</strong> ให้ครบก่อน แล้วจึงตั้ง <code>SKIP_DB_INIT=true</code>. DDL ด้านล่างนี้ idempotent (รันซ้ำได้ ปลอดภัย) และตรงกับ <code>lib/db.ts</code> ทุกประการ</p>
 </blockquote>
-<pre><code class="language-sql">-- 1) ตารางผู้ดูแลระบบ
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">-- 1) ตารางผู้ดูแลระบบ
 CREATE TABLE IF NOT EXISTS admin_users (
   id            SERIAL PRIMARY KEY,
   username      VARCHAR(50) UNIQUE NOT NULL,
@@ -4236,9 +4582,20 @@ CREATE INDEX IF NOT EXISTS idx_logs_severity       ON access_logs (severity);
 CREATE INDEX IF NOT EXISTS idx_firmware_uploaded_at ON firmware_releases (uploaded_at DESC);
 CREATE INDEX IF NOT EXISTS idx_schedule_room       ON room_schedules (room_code, day_of_week, is_active);
 </code></pre>
+  </div>
 <h3>35.0 Seed เริ่มต้น (เมื่อ <code>initDatabase()</code> ถูกข้าม)</h3>
 <p><code>initDatabase()</code> ปกติจะ seed ค่าตั้งต้นใน <code>system_settings</code> และสร้าง admin คนแรกให้ เมื่อใช้ <code>SKIP_DB_INIT=true</code> ต้องทำเองครั้งเดียว:</p>
-<pre><code class="language-sql">-- admin owner คนแรก (password_hash = bcrypt cost 12 ของรหัสผ่านจริง — สร้างด้วยสคริปต์ฝั่ง Node อย่าใส่ plaintext)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">-- admin owner คนแรก (password_hash = bcrypt cost 12 ของรหัสผ่านจริง — สร้างด้วยสคริปต์ฝั่ง Node อย่าใส่ plaintext)
 INSERT INTO admin_users (username, password_hash, full_name, role)
 VALUES (&#39;owner&#39;, &#39;$2a$12$REPLACE_WITH_REAL_BCRYPT_HASH&#39;, &#39;ผู้ดูแลระบบ (Owner)&#39;, &#39;owner&#39;)
 ON CONFLICT (username) DO NOTHING;
@@ -4248,6 +4605,7 @@ INSERT INTO system_settings (setting_key, setting_value) VALUES
   (&#39;configured_rooms&#39;, &#39;CE-401,CE-402&#39;)
 ON CONFLICT (setting_key) DO NOTHING;
 </code></pre>
+  </div>
 <blockquote>
 <p>💡 ค่า notification (Discord/Telegram/LINE) <strong>ไม่ต้องใส่ผ่าน SQL</strong> — เพิ่มผ่านแท็บ &quot;ตั้งค่าระบบ&quot; บนเว็บ ระบบจะ UPSERT ลง <code>system_settings</code> ให้เอง</p>
 </blockquote>
@@ -4438,7 +4796,17 @@ ON CONFLICT (setting_key) DO NOTHING;
 </tr>
 </tbody></table>
 <h3>36.2 Timing ของ relay</h3>
-<pre><code>millis()  | event
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">millis()  | event
 ----------+----------------------------------------------------
 T+0       | digitalWrite(RELAY, HIGH)
 T+0..3800 | countdown bar (UI), เสียง 1000→1500→2000 Hz
@@ -4446,6 +4814,7 @@ T+3800    | digitalWrite(RELAY, LOW)
 T+3900    | tone(800, 200)  // เสียงปิด
 T+4100    | resetCache → loop() ปกติ
 </code></pre>
+  </div>
 <p>ทำไม <strong>3800ms</strong> ไม่ใช่ 5000ms?</p>
 <ul>
 <li>UX สำคัญกว่า 5 วินาที — คนเดินเข้าไม่ทันก็สแกนใหม่ได้</li>
@@ -4831,7 +5200,17 @@ T+4100    | resetCache → loop() ปกติ
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-41"></a></p>
 <h2>41. Performance Profiling แบบลงรายละเอียด</h2>
 <h3>41.1 ที่มาของเวลา 800ms ใน &quot;cold start&quot;</h3>
-<pre><code>Total: ~800ms
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Total: ~800ms
 ├─ DNS resolution            ~20ms
 ├─ TLS handshake             ~80ms
 ├─ Vercel routing            ~30ms
@@ -4843,6 +5222,7 @@ T+4100    | resetCache → loop() ปกติ
 ├─ JSON serialize            ~5ms
 └─ Response back             ~250ms (network)
 </code></pre>
+  </div>
 <p>วิธีลด:</p>
 <ul>
 <li>ใช้ <strong>Edge runtime</strong> กับ route ที่ไม่ต้อง <code>pg</code> (เช่น <code>/api/auth/me</code>) → ลด init เหลือ ~50ms</li>
@@ -5054,7 +5434,17 @@ T+4100    | resetCache → loop() ปกติ
 <li>จริง: ~30–50 fps สำหรับ 320×240 full screen</li>
 <li><strong>เขียนเต็มจอ 1 ครั้ง ≈ 60–80ms</strong></li>
 </ul>
-<pre><code>หน่วยเวลาการ redraw:
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">หน่วยเวลาการ redraw:
 ├─ fillScreen()        ~70ms (เคลียร์)
 ├─ drawQRCode (154x154)~120ms (จุดเล็ก ๆ จำนวนมาก!)
 ├─ ข้อความ header     ~15ms
@@ -5062,6 +5452,7 @@ T+4100    | resetCache → loop() ปกติ
 ├─ countdown bar      ~5ms ต่อ tick
 └─ รวมเต็มจอ          ~250–400ms
 </code></pre>
+  </div>
 <p><strong>ทำไมต้องวาด QR ด้วย <code>fillRect</code> ทีละจุด?</strong></p>
 <ul>
 <li>Library <code>ricmoo_qrcode</code> คืน matrix bit-by-bit</li>
@@ -5070,7 +5461,17 @@ T+4100    | resetCache → loop() ปกติ
 </ul>
 <h3>44.6 เหตุผลที่ 5 — Partial Redraw Strategy (ตั้งใจให้ &quot;ช้าเพื่อไม่กระพริบ&quot;)</h3>
 <p>โค้ดในระบบจงใจไม่ redraw ทั้งจอทุกรอบ poll เพราะ:</p>
-<pre><code class="language-cpp">// ถ้าข้อมูลไม่เปลี่ยน → update เฉพาะนาฬิกา
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">// ถ้าข้อมูลไม่เปลี่ยน → update เฉพาะนาฬิกา
 if (queueCount == last_queue_count
     &amp;&amp; approvedName == last_approved_name
     &amp;&amp; token == last_active_token) {
@@ -5080,6 +5481,7 @@ if (queueCount == last_queue_count
 // ถ้าข้อมูลเปลี่ยน → redraw เต็ม
 drawMainScreen(...);  // ~250-400ms
 </code></pre>
+  </div>
 <p><strong>ผลลัพธ์</strong>:</p>
 <ul>
 <li>95% ของ polling cycles แค่อัปเดตเวลา → จอนิ่ง ไม่กระพริบ</li>
@@ -5093,9 +5495,20 @@ drawMainScreen(...);  // ~250-400ms
 <li>= เพิ่ม code complexity 3 เท่า เพื่อลด latency ~200ms</li>
 </ul>
 <h3>44.7 เหตุผลที่ 6 — JSON Parsing บน ESP32</h3>
-<pre><code class="language-cpp">StaticJsonDocument&lt;768&gt; doc;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">StaticJsonDocument&lt;768&gt; doc;
 DeserializationError err = deserializeJson(doc, http.getStream());
 </code></pre>
+  </div>
 <ul>
 <li>ArduinoJson parse JSON 400 byte ใช้ ~10-25ms</li>
 <li>ทำไมไม่ใช้ MsgPack/Protobuf? — debug ยาก, library ใหญ่ขึ้น ~80KB</li>
@@ -5119,7 +5532,17 @@ DeserializationError err = deserializeJson(doc, http.getStream());
 </ul>
 <p>ถ้า Wi-Fi อ่อน packet loss → retransmit → +200ms ต่อแพ็กเก็ตที่หาย</p>
 <h3>44.9 เหตุผลที่ 8 — Cold Start ของ Serverless Function</h3>
-<pre><code>Function ที่ไม่ถูกเรียกนาน 5 นาที → Vercel ปลด container ทิ้ง
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Function ที่ไม่ถูกเรียกนาน 5 นาที → Vercel ปลด container ทิ้ง
 ครั้งหน้าที่ ESP32 poll → ต้อง:
 ├─ ปลุก container         ~120ms
 ├─ Node.js boot           ~100ms
@@ -5129,6 +5552,7 @@ DeserializationError err = deserializeJson(doc, http.getStream());
                           ────────
 รวม cold start            ~550ms
 </code></pre>
+  </div>
 <p>แต่ในระบบนี้ <strong>ESP32 poll ทุก 2 วิ → function อบอุ่นตลอด</strong> → cold start เกิดน้อย (เฉพาะหลัง deploy หรือ instance scale-down)</p>
 <h3>44.10 สรุป Latency Budget แบบรวม</h3>
 <div class="mermaid">flowchart TD
@@ -5383,7 +5807,17 @@ DeserializationError err = deserializeJson(doc, http.getStream());
 </tr>
 </tbody></table>
 <p><strong>ผลกระทบกับโปรเจกต์นี้โดยตรง:</strong></p>
-<pre><code class="language-sql">-- รหัสที่ใช้จริง — ทำได้บน PostgreSQL ใน 1 query
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">-- รหัสที่ใช้จริง — ทำได้บน PostgreSQL ใน 1 query
 -- ใน postgreSQL (เดิมคือ MySQL) ต้องทำ 3 query (SELECT → check → UPDATE → SELECT)
 UPDATE dynamic_qr_tokens
 SET is_consumed = TRUE, consumed_at = NOW()
@@ -5392,13 +5826,25 @@ WHERE token = $1
   AND expires_at &gt; NOW()
 RETURNING id, room_code;        -- ← postgreSQL (เดิมคือ MySQL) ทำตรงนี้ไม่ได้
 </code></pre>
-<pre><code class="language-sql">-- Rate limit แบบ atomic — postgreSQL (เดิมคือ MySQL) ทำได้แต่ syntax ยุ่งยากกว่า
+  </div>
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">-- Rate limit แบบ atomic — postgreSQL (เดิมคือ MySQL) ทำได้แต่ syntax ยุ่งยากกว่า
 INSERT INTO rate_limits (key, count, window_start)
 VALUES ($1, 1, NOW())
 ON CONFLICT (key) DO UPDATE        -- ← PostgreSQL clean syntax
   SET count = ...
 RETURNING count;
 </code></pre>
+  </div>
 <h4>45.2.2 เหตุผลด้าน Ecosystem</h4>
 <ul>
 <li><strong>TypeScript types</strong>: <code>node-postgres</code> มี TypeScript types ที่ดีกว่า, query result เป็น object พร้อมใช้</li>
@@ -5423,7 +5869,17 @@ RETURNING count;
     I --> J["ตัดสินใจหาทางเลือก"]
 </div>
 <h4>45.3.2 ค่า Latency ที่วัดได้จริง</h4>
-<pre><code>Aiven postgreSQL (เดิมคือ MySQL) (Mumbai, free tier):
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Aiven postgreSQL (เดิมคือ MySQL) (Mumbai, free tier):
 ├─ TLS handshake     : 95ms
 ├─ Auth roundtrip    : 60ms
 ├─ SELECT 1 (warm)   : 78ms  ← network RTT คือพระเอก
@@ -5439,6 +5895,7 @@ Supabase PostgreSQL (Singapore, free tier):
 ├─ INSERT 1 row      : 25ms
 └─ Connection idle   : pgBouncer reuse → 0ms handshake ครั้งถัดไป
 </code></pre>
+  </div>
 <p><strong>ผลลัพธ์</strong>: API response p95 ลดจาก <strong>480ms → 110ms</strong> (เร็วขึ้น 4 เท่า)</p>
 <h4>45.3.3 ที่มาของการต่างกัน: Network Geography</h4>
 <div class="mermaid">flowchart TD
@@ -5761,12 +6218,33 @@ Supabase PostgreSQL (Singapore, free tier):
 <h2>46. อธิบายโค้ดทุกไฟล์ใน <code>lib/</code> แบบเจาะลึก</h2>
 <h3>46.1 <code>lib/db.ts</code> (456 บรรทัด) — Connection + Migration</h3>
 <p><strong>โครงสร้างหลัก</strong>:</p>
-<pre><code class="language-ts">let pool: Pool | undefined = (globalThis as any).__pgPool;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">let pool: Pool | undefined = (globalThis as any).__pgPool;
 let settingsCache: { data: SettingsMap; expiresAt: number } | null = null;
 </code></pre>
+  </div>
 <p><strong>ทำไมใช้ <code>globalThis</code>?</strong> — Next.js dev mode ทำ hot-reload ทำให้ module โหลดใหม่ทุก save → ถ้าเก็บ pool ใน module variable ปกติ จะสร้าง pool ใหม่ทุกครั้ง → connection leak → DB ปฏิเสธ connection ใหม่หลัง 60 connection<br>→ ใช้ <code>globalThis</code> (อยู่นอก module scope) ทำให้ singleton จริง</p>
 <p><strong><code>readEnv()</code> — กรณีพิเศษที่เจอจริง</strong>:</p>
-<pre><code class="language-ts">function readEnv(name: string): string | undefined {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">function readEnv(name: string): string | undefined {
   const v = process.env[name];
   if (!v) return undefined;
   const trimmed = v.trim();
@@ -5777,6 +6255,7 @@ let settingsCache: { data: SettingsMap; expiresAt: number } | null = null;
   return trimmed || undefined;
 }
 </code></pre>
+  </div>
 <blockquote>
 <p>เหตุการณ์จริง: คนตั้ง env ใน Vercel ดashboard แล้วใส่ <code>&quot;value&quot;</code> มาด้วย → string มี quote ติด → connection fail</p>
 </blockquote>
@@ -5796,12 +6275,23 @@ let settingsCache: { data: SettingsMap; expiresAt: number } | null = null;
 <li>30 วินาทีพอเหมาะ — admin แก้ setting รอ max 30s ก็เห็นผล (ยอมรับได้)</li>
 </ul>
 <p><strong><code>updateSystemSettings([{key,value}])</code> — เทคนิค UNNEST</strong>:</p>
-<pre><code class="language-sql">INSERT INTO system_settings (setting_key, setting_value)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">INSERT INTO system_settings (setting_key, setting_value)
 SELECT * FROM UNNEST($1::text[], $2::text[])
 ON CONFLICT (setting_key)
   DO UPDATE SET setting_value = EXCLUDED.setting_value,
                 updated_at = NOW();
 </code></pre>
+  </div>
 <ul>
 <li>ส่ง array 2 ชุด (keys, values)</li>
 <li>PG <code>UNNEST</code> กระจายเป็นหลายแถวในครั้งเดียว</li>
@@ -5810,11 +6300,22 @@ ON CONFLICT (setting_key)
 </ul>
 <h3>46.2 <code>lib/auth.ts</code> (132 บรรทัด)</h3>
 <p><strong><code>signToken(payload)</code></strong>:</p>
-<pre><code class="language-ts">return jwt.sign(payload, JWT_SECRET, {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">return jwt.sign(payload, JWT_SECRET, {
   algorithm: &#39;HS256&#39;,
   expiresIn: &#39;8h&#39;,
 });
 </code></pre>
+  </div>
 <p><strong>ทำไม HS256 ไม่ใช่ RS256?</strong></p>
 <table>
 <thead>
@@ -5851,7 +6352,17 @@ ON CONFLICT (setting_key)
 </tr>
 </tbody></table>
 <p><strong><code>getAdminFromCookie()</code></strong>:</p>
-<pre><code class="language-ts">const cookieStore = await cookies();
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">const cookieStore = await cookies();
 const token = cookieStore.get(&#39;smartaccess_admin_token&#39;)?.value;
 if (!token) return null;
 const payload = verifyToken(token);
@@ -5860,25 +6371,48 @@ if (!payload) return null;
 const admin = await db.query(&#39;SELECT * FROM admin_users WHERE id=$1&#39;, [payload.id]);
 return admin.rows[0] ?? null;
 </code></pre>
+  </div>
 <blockquote>
 <p>เหตุผลของ double-check: ถ้า owner ลบ admin คนนั้น แต่ JWT ยังไม่หมดอายุ → ต้องป้องกัน ghost session</p>
 </blockquote>
 <h3>46.3 <code>lib/qr.ts</code> (289 บรรทัด)</h3>
 <p><strong><code>generateSecureToken()</code></strong>:</p>
-<pre><code class="language-ts">return crypto.randomBytes(16).toString(&#39;hex&#39;);  // 32 hex chars
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">return crypto.randomBytes(16).toString(&#39;hex&#39;);  // 32 hex chars
 </code></pre>
+  </div>
 <ul>
 <li>16 bytes = 128 bits ของ entropy</li>
 <li>เพียงพอจน universe ตายก่อนถูก brute-force (เทียบเท่า UUID v4)</li>
 </ul>
 <p><strong><code>consumeQRToken(token)</code> — Atomic Magic</strong>:</p>
-<pre><code class="language-sql">UPDATE dynamic_qr_tokens
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">UPDATE dynamic_qr_tokens
 SET is_consumed = TRUE, consumed_at = NOW()
 WHERE token = $1
   AND is_consumed = FALSE       -- ← กัน double-use
   AND expires_at &gt; NOW()         -- ← กัน expired
 RETURNING id, room_code;
 </code></pre>
+  </div>
 <ul>
 <li>PostgreSQL ทำ atomic SELECT+UPDATE ใน statement เดียว</li>
 <li>ถ้า 2 คนกดพร้อมกัน — มีเพียง 1 row return</li>
@@ -5889,7 +6423,17 @@ RETURNING id, room_code;
 <p><strong>หมายเหตุการปรับสถาปัตยกรรม:</strong> เดิมระบบใช้กลยุทธ์ Hybrid (เขียน DB + ยิง LAN direct push ผ่าน <code>tryLanDirectBackground</code>) แต่<strong>ได้ถอดส่วน LAN direct push ออกทั้งหมดแล้ว</strong> เปลี่ยนเป็น <strong>Cloud-Only Polling</strong> ล้วน เพราะ (1) ตัดความเสี่ยงการดักฟังแพ็กเกจ HTTP plaintext ในวง LAN และ (2) ลดความซับซ้อนของ NAT/firewall เมื่อ deploy บน Vercel ฟังก์ชัน <code>tryLanDirectBackground</code> <strong>ไม่มีอยู่ในโค้ดแล้ว</strong></p>
 </blockquote>
 <p><strong><code>openDoor(studentId, roomCode)</code> — Cloud Queue Strategy</strong>:</p>
-<pre><code class="language-ts">// Step 1: เขียน command ลง DB queue (canonical source — ground truth)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// Step 1: เขียน command ลง DB queue (canonical source — ground truth)
 await pool.query(
   `INSERT INTO system_settings (setting_key, setting_value, updated_at)
    VALUES ($1, &#39;unlock&#39;, CURRENT_TIMESTAMP)
@@ -5901,6 +6445,7 @@ await pool.query(
 // ESP32 จะมาดึงคำสั่งเองในรอบ poll ถัดไป (≤2 วินาที)
 return { success: true, message: &quot;ส่งคำสั่งเข้าคิวระบบคลาวด์เรียบร้อย&quot; };
 </code></pre>
+  </div>
 <p><strong>ทำไมเหลือแค่ &quot;เขียน DB queue&quot;?</strong></p>
 <ul>
 <li>DB = ground truth — ถ้า ESP32 reboot กลาง process ก็ยังดึงคำสั่งต่อได้</li>
@@ -5908,7 +6453,17 @@ return { success: true, message: &quot;ส่งคำสั่งเข้า�
 <li>latency worst-case = poll interval (~2 วินาที) ซึ่งยอมรับได้สำหรับการเปิดประตู</li>
 </ul>
 <p><strong><code>fetchWithTimeout()</code></strong>:</p>
-<pre><code class="language-ts">const controller = new AbortController();
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">const controller = new AbortController();
 const timer = setTimeout(() =&gt; controller.abort(), timeoutMs);
 try {
   return await fetch(url, { signal: controller.signal });
@@ -5916,13 +6471,24 @@ try {
   clearTimeout(timer);
 }
 </code></pre>
+  </div>
 <ul>
 <li>ทำไมต้อง timeout? — ESP32 อาจค้าง / network drop → request ค้าง 30 วินาที = ผู้ใช้รอ → ตั้ง 1.5s</li>
 <li>ทำไมต้อง <code>clearTimeout</code>? — กัน memory leak ใน Node</li>
 </ul>
 <h3>46.5 <code>lib/rate-limit.ts</code> (43 บรรทัด) — Atomic Counter</h3>
 <p><strong>ทั้งฟังก์ชันใน 1 SQL</strong>:</p>
-<pre><code class="language-sql">INSERT INTO rate_limits (key, count, window_start)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">INSERT INTO rate_limits (key, count, window_start)
 VALUES ($1, 1, NOW())
 ON CONFLICT (key) DO UPDATE
 SET count = CASE
@@ -5935,6 +6501,7 @@ SET count = CASE
   END
 RETURNING count;
 </code></pre>
+  </div>
 <p><strong>ทำไมไม่ใช้ Redis/Upstash?</strong></p>
 <ul>
 <li>✅ Database เดียว = ลด dependency</li>
@@ -5985,7 +6552,17 @@ RETURNING count;
 <li>pdfkit ขนาด ~3MB + ฟอนต์ Tahoma ~700KB → รวม &lt; 5MB</li>
 </ul>
 <h3>46.8 <code>lib/api-security.ts</code> (77 บรรทัด) — ESP32 API Key</h3>
-<pre><code class="language-ts">export function verifyApiKey(request: NextRequest): boolean {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">export function verifyApiKey(request: NextRequest): boolean {
   const key = request.headers.get(&#39;x-api-key&#39;);
   if (!key) return false;
   // timing-safe compare (กัน timing attack)
@@ -5995,6 +6572,7 @@ RETURNING count;
   );
 }
 </code></pre>
+  </div>
 <p><strong>ทำไมใช้ <code>timingSafeEqual</code> ไม่ใช่ <code>===</code>?</strong></p>
 <ul>
 <li><code>===</code> หยุดเปรียบเทียบทันทีที่เจอ char ต่าง</li>
@@ -6002,7 +6580,17 @@ RETURNING count;
 <li><code>timingSafeEqual</code> เปรียบเทียบทุก byte เท่ากันเสมอ → ไม่มี timing leak</li>
 </ul>
 <h3>46.9 <code>lib/resilience.ts</code> (43 บรรทัด) — Retry Wrapper</h3>
-<pre><code class="language-ts">export async function withRetry&lt;T&gt;(
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">export async function withRetry&lt;T&gt;(
   fn: () =&gt; Promise&lt;T&gt;,
   opts = { retries: 3, baseDelay: 100 }
 ): Promise&lt;T&gt; {
@@ -6019,6 +6607,7 @@ RETURNING count;
   throw lastErr;
 }
 </code></pre>
+  </div>
 <ul>
 <li>Delay 100ms → 200ms → 400ms → 800ms</li>
 <li>ใช้กับ Discord webhook (เผื่อ rate limit ชั่วคราว)</li>
@@ -6051,7 +6640,17 @@ RETURNING count;
 </li>
 </ol>
 <h3>47.1 State Tree ของ Dashboard</h3>
-<pre><code class="language-ts">// ภายใน AdminDashboard component
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// ภายใน AdminDashboard component
 const [activeTab, setActiveTab] = useState&lt;TabKey&gt;(&#39;pending&#39;);
 const [pending, setPending] = useState&lt;Student[]&gt;([]);
 const [students, setStudents] = useState&lt;Student[]&gt;([]);
@@ -6064,6 +6663,7 @@ const [selectedStudent, setSelectedStudent] = useState&lt;Student | null&gt;(nul
 const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 // ... และอีก ~30 state
 </code></pre>
+  </div>
 <p><strong>ทำไม state เยอะ?</strong></p>
 <ul>
 <li>ทุก tab ใช้ data set ของตัวเอง</li>
@@ -6100,7 +6700,17 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 </div>
 <h3>47.3 Tab &quot;คิวรอตรวจสอบ&quot; (Pending)</h3>
 <p><strong>โครงสร้างการแสดง</strong>:</p>
-<pre><code>┌─────────────────────────────────────────────────────────┐
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">┌─────────────────────────────────────────────────────────┐
 │ 🔔 คิวรอตรวจสอบ (3)        [filter] [search] [refresh] │
 ├─────────────────────────────────────────────────────────┤
 │ ┌────────────────────────────────────────────────────┐ │
@@ -6111,6 +6721,7 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 │ └────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────┘
 </code></pre>
+  </div>
 <p><strong>เหตุผลการออกแบบ</strong>:</p>
 <ul>
 <li>Card ใหญ่ ปุ่มชัด → admin กดผิดยาก</li>
@@ -6118,7 +6729,17 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 <li>ฟิลด์รหัสนักศึกษาแสดงเต็ม → ตรวจกับบัตรได้ทันที</li>
 </ul>
 <p><strong>Optimistic UI</strong>:</p>
-<pre><code class="language-ts">async function handleApprove(id: number) {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">async function handleApprove(id: number) {
   // 1. ลบออกจาก list ทันที (UI เร็ว)
   setPending(prev =&gt; prev.filter(s =&gt; s.id !== id));
   try {
@@ -6131,9 +6752,20 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
   }
 }
 </code></pre>
+  </div>
 <h3>47.4 Tab &quot;ทำเนียบและประวัติ&quot; (Students)</h3>
 <p><strong>Layout</strong>: ตาราง + filter + search + pagination + bulk actions</p>
-<pre><code>┌─────────────────────────────────────────────────────────┐
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">┌─────────────────────────────────────────────────────────┐
 │ [search ___] [คณะ ▼] [สถานะ ▼] [วันที่ ▼] [export PDF]│
 ├──┬──────────┬──────────┬─────────┬────────┬─────────────┤
 │☐│รหัส      │ชื่อ      │คณะ      │สถานะ   │การจัดการ    │
@@ -6141,8 +6773,19 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 │☐│60xxxx-x  │ก. ข.     │วิศวฯ    │approve │👁 🔓 📄 🗑   │
 └──┴──────────┴──────────┴─────────┴────────┴─────────────┘
 </code></pre>
+  </div>
 <p><strong>Search Algorithm (client-side)</strong>:</p>
-<pre><code class="language-ts">const filtered = students.filter(s =&gt; {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">const filtered = students.filter(s =&gt; {
   if (search) {
     const q = search.toLowerCase();
     if (!s.first_name.toLowerCase().includes(q)
@@ -6154,6 +6797,7 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
   return true;
 });
 </code></pre>
+  </div>
 <p><strong>ทำไมไม่ใช้ server-side search?</strong></p>
 <ul>
 <li>ข้อมูลรวมไม่เกิน 2,000 row ในช่วง 4 ปีของหลักสูตร</li>
@@ -6167,7 +6811,17 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 <li>ถ้า <code>door_operator</code> กดเข้า → 403 + redirect</li>
 </ul>
 <p><strong>Form สร้าง admin</strong>:</p>
-<pre><code class="language-tsx">&lt;form onSubmit={handleCreateAdmin}&gt;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TSX</div>
+    </div>
+    <pre class="line-numbers"><code class="language-tsx">&lt;form onSubmit={handleCreateAdmin}&gt;
   &lt;input name=&quot;username&quot; pattern=&quot;^[a-zA-Z0-9_.]{3,30}$&quot;
          title=&quot;3-30 ตัวอักษร: a-z 0-9 _ .&quot; required /&gt;
   &lt;input name=&quot;password&quot; type=&quot;password&quot; minLength={12} required 
@@ -6182,6 +6836,7 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
   &lt;button&gt;สร้าง&lt;/button&gt;
 &lt;/form&gt;
 </code></pre>
+  </div>
 <p><strong>ทำไม username pattern strict และรหัสผ่านหนาแน่น?</strong></p>
 <ul>
 <li>รหัสผ่านบังคับอย่างน้อย <strong>12 ตัวอักษร</strong> (ตาม Security Policy ใหม่ เพื่อรับมือกับกำลังประมวลผลถอดรหัสลับความเร็วสูงของแฮกเกอร์)</li>
@@ -6221,7 +6876,17 @@ const [toast, setToast] = useState&lt;Toast | null&gt;(null);
 <li><strong>ESP32</strong> — mode, default IP</li>
 </ol>
 <p><strong>การ save</strong>:</p>
-<pre><code class="language-ts">// Batch save ทุก setting พร้อมกัน
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// Batch save ทุก setting พร้อมกัน
 await fetch(&#39;/api/system/settings&#39;, {
   method: &#39;POST&#39;,
   body: JSON.stringify({ settings: [
@@ -6232,12 +6897,23 @@ await fetch(&#39;/api/system/settings&#39;, {
 });
 // → backend ใช้ UNNEST 1 query → เร็ว
 </code></pre>
+  </div>
 <h3>47.8 Tab &quot;คู่มือ&quot;</h3>
 <p>แสดง markdown ที่อธิบายระบบให้ admin ใหม่ — แต่จริง ๆ คู่มือที่คุณกำลังอ่านนี่ละเอียดกว่ามาก</p>
 <h3>47.9 Tab &quot;สถานะเซิร์ฟเวอร์ &amp; DB&quot; (Health Monitor)</h3>
 <p>หน้าตรวจสอบสุขภาพระบบเรียลไทม์ ใช้ API <code>/api/system/health</code> ดึงข้อมูลทุก 30 วินาที</p>
 <p><strong>API Response Structure:</strong></p>
-<pre><code class="language-json">{
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{
   &quot;status&quot;: &quot;healthy | degraded | unhealthy&quot;,
   &quot;components&quot;: {
     &quot;database&quot;: { &quot;status&quot;: &quot;up|down&quot;, &quot;latency_ms&quot;: 12, &quot;total_students&quot;: 50, &quot;total_logs&quot;: 200 },
@@ -6250,6 +6926,7 @@ await fetch(&#39;/api/system/settings&#39;, {
   &quot;api_probes&quot;: [ { &quot;endpoint&quot;: &quot;/api/system/health&quot;, &quot;status&quot;: &quot;up&quot;, &quot;latency_ms&quot;: 50 } ]
 }
 </code></pre>
+  </div>
 <p><strong>UI แบ่ง 4 แท็บย่อย:</strong></p>
 <ol>
 <li>ภาพรวม — แสดง Metric cards 6 ใบ (Database, Rate Limiter, Memory, Server Time, Last QR Scan, Environment)</li>
@@ -6317,7 +6994,17 @@ await fetch(&#39;/api/system/settings&#39;, {
 <li><strong>ไม่ต่อ DB ตรงจากหน้าเว็บ:</strong> หน้า <code>/</code> เรียกผ่าน API routes เท่านั้น ไม่มีการ query PostgreSQL จาก client</li>
 </ul>
 <h3>48.3 Hydration Mismatch — บั๊กที่เคยเจอ</h3>
-<pre><code class="language-tsx">// ❌ ผิด — server-render ค่าหนึ่ง, client-render อีกค่า
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TSX</div>
+    </div>
+    <pre class="line-numbers"><code class="language-tsx">// ❌ ผิด — server-render ค่าหนึ่ง, client-render อีกค่า
 &lt;div&gt;{new Date().toLocaleString(&#39;th-TH&#39;)}&lt;/div&gt;
 
 // ✅ ถูก — เรนเดอร์ค่าเดียวกันก่อน hydrate
@@ -6325,6 +7012,7 @@ const [time, setTime] = useState&lt;string&gt;(&#39;&#39;);
 useEffect(() =&gt; { setTime(new Date().toLocaleString(&#39;th-TH&#39;)); }, []);
 return &lt;div&gt;{time || &#39; &#39;}&lt;/div&gt;;
 </code></pre>
+  </div>
 <p><strong>บั๊กจริงที่เคยเจอในโปรเจกต์</strong>:</p>
 <ul>
 <li>ใช้ <code>Date.now()</code> ใน render → hydration mismatch</li>
@@ -6372,15 +7060,36 @@ return &lt;div&gt;{time || &#39; &#39;}&lt;/div&gt;;
 </ol>
 <p><strong>ที่ยังเป็นไปได้</strong>: Distributed botnet (1,000 IPs) ลองคนละ 4 ครั้ง = 4,000 ครั้ง — ป้องกันได้ด้วย CAPTCHA หรือ Cloudflare Turnstile</p>
 <h3>49.2 Scenario B: SQL Injection</h3>
-<pre><code class="language-http">POST /api/students
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.http</div>
+      <div class="code-lang-badge">HTTP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-http">POST /api/students
 Content-Type: application/json
 {
   &quot;first_name&quot;: &quot;Bob&#39;; DROP TABLE students; --&quot;,
   ...
 }
 </code></pre>
+  </div>
 <p><strong>ระบบรับมือ</strong>:</p>
-<pre><code class="language-ts">// ❌ ถ้าโค้ดเป็นแบบนี้ (โปรเจกต์นี้ไม่ใช้):
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// ❌ ถ้าโค้ดเป็นแบบนี้ (โปรเจกต์นี้ไม่ใช้):
 await db.query(`INSERT INTO students (first_name) VALUES (&#39;${firstName}&#39;)`);
 // → SQL injection ทันที
 
@@ -6388,6 +7097,7 @@ await db.query(`INSERT INTO students (first_name) VALUES (&#39;${firstName}&#39;
 await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstName]);
 // → driver escape ให้, ปลอดภัย 100%
 </code></pre>
+  </div>
 <p><strong>ทำไม parameterized query ปลอดภัย?</strong></p>
 <ul>
 <li><code>$1</code> ส่ง <strong>แยก</strong> กับ SQL command ผ่าน PostgreSQL protocol</li>
@@ -6395,13 +7105,24 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <li>ต่อให้ค่ามี <code>&#39;; DROP TABLE ...</code> → ก็แค่ string ปกติ</li>
 </ul>
 <h3>49.3 Scenario C: JWT Forgery</h3>
-<pre><code>1. Attacker login เป็น door_operator (มีบัญชีจริง)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">1. Attacker login เป็น door_operator (มีบัญชีจริง)
 2. ได้ JWT: eyJhbGc...payload...signature
 3. decode payload (base64) → {id:5, role:&quot;door_operator&quot;}
 4. แก้เป็น {id:5, role:&quot;owner&quot;} → encode base64 ใหม่
 5. ส่งกลับ → server verify HS256 → ❌ signature ไม่ match
 6. 401 Unauthorized
 </code></pre>
+  </div>
 <p><strong>ทำไม forge ไม่ได้?</strong></p>
 <ul>
 <li>HS256 signature = HMAC-SHA256(header.payload, JWT_SECRET)</li>
@@ -6409,11 +7130,22 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <li>ถ้า server ใช้ default secret → attacker เดาได้ → ดังนั้น <code>verifyJwtSecretSecurity()</code> ใน production force ใช้ secret สุ่ม</li>
 </ul>
 <h3>49.4 Scenario D: ESP32 Impersonation</h3>
-<pre><code>Attacker เห็น URL https://app.vercel.app/api/esp32/display?room=CE-401
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Attacker เห็น URL https://app.vercel.app/api/esp32/display?room=CE-401
 ลองยิง GET ตรง → 401 (ไม่มี X-API-Key)
 ลองใส่ random key → 401
 ลองดู firmware .ino ที่ git public → 🚨 ถ้ามี API_KEY ใน source code → leak!
 </code></pre>
+  </div>
 <p><strong>การป้องกัน</strong>:</p>
 <ul>
 <li><code>config.h</code> อยู่ใน <code>.gitignore</code></li>
@@ -6426,7 +7158,17 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <li>ปัจจุบันโปรเจกต์ไม่ได้เปิด → ถ้า key รั่ว ต้อง rotate + flash บอร์ดทุกตัว</li>
 </ul>
 <h3>49.5 Scenario E: QR Replay Attack</h3>
-<pre><code>1. Attacker อยู่ในห้อง CE-401 อย่างถูกต้อง
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">1. Attacker อยู่ในห้อง CE-401 อย่างถูกต้อง
 2. ถ่ายภาพ QR บนจอ TFT
 3. ส่งภาพให้เพื่อนทาง LINE
 4. เพื่อนสแกน → เปิด /?scan=TOKEN&amp;room=CE-401
@@ -6434,6 +7176,7 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 6. ❌ ถ้าใน 60s แต่ attacker คนแรกใช้แล้ว → is_consumed=TRUE → invalid
 7. ✅ ถ้าใน 60s + ยังไม่มีใครใช้ → เพื่อนกรอกฟอร์มเข้าได้
 </code></pre>
+  </div>
 <p><strong>ที่ยังเป็นไปได้</strong>: Race window ~60 วินาที — แต่:</p>
 <ul>
 <li>ต้องมี IP ในระบบของมหาวิทยาลัย หรือใช้ VPN</li>
@@ -6449,8 +7192,19 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <li>กล้องวงจรปิดเป็นชั้นเสริม</li>
 </ul>
 <h3>49.7 Scenario G: Denial of Service</h3>
-<pre><code>Attacker ยิง POST /api/students × 10,000 ครั้ง/วินาที
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Attacker ยิง POST /api/students × 10,000 ครั้ง/วินาที
 </code></pre>
+  </div>
 <p><strong>ชั้นป้องกัน</strong>:</p>
 <ol>
 <li>Vercel built-in DDoS (Layer 3/4) — รับ traffic ใหญ่ได้</li>
@@ -6459,9 +7213,20 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <li>ขั้นรุนแรง: เปิด Cloudflare ขั้นกลาง</li>
 </ol>
 <h3>49.8 Scenario H: Man-in-the-Middle</h3>
-<pre><code>Attacker อยู่ใน Wi-Fi เดียวกับ ESP32
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Attacker อยู่ใน Wi-Fi เดียวกับ ESP32
 ทำ ARP spoofing → ทุก HTTP traffic ผ่าน attacker
 </code></pre>
+  </div>
 <p><strong>ป้องกัน</strong>:</p>
 <ul>
 <li>ESP32 ใช้ <strong>HTTPS</strong> + CA cert verify</li>
@@ -6469,9 +7234,20 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <li>→ MITM ไม่ได้ผล</li>
 </ul>
 <h3>49.9 Scenario I: Physical Tampering</h3>
-<pre><code>ตัดสายไฟไปยัง relay → ประตูเปิดค้าง (ถ้าใช้ fail-safe maglock)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">ตัดสายไฟไปยัง relay → ประตูเปิดค้าง (ถ้าใช้ fail-safe maglock)
 หรือ short ขา relay บนบอร์ด → ปลดล็อก
 </code></pre>
+  </div>
 <p><strong>ป้องกัน</strong>:</p>
 <ul>
 <li>ติด ESP32 + relay ในกล่องล็อก (ใส่ tamper switch)</li>
@@ -6483,23 +7259,77 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <h2>50. Cryptographic Details — JWT, bcrypt, HMAC ในเชิงคณิตศาสตร์</h2>
 <h3>50.1 JWT HS256 ทำงานอย่างไร</h3>
 <p>JWT มี 3 ส่วนคั่นด้วย <code>.</code>:</p>
-<pre><code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6Im93bmVyIn0.signature
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6Im93bmVyIn0.signature
 └─── Header (base64) ───┘ └────── Payload (base64) ──────┘ └─ Signature ─┘
 </code></pre>
+  </div>
 <p><strong>Header</strong> (decode):</p>
-<pre><code class="language-json">{ &quot;alg&quot;: &quot;HS256&quot;, &quot;typ&quot;: &quot;JWT&quot; }
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{ &quot;alg&quot;: &quot;HS256&quot;, &quot;typ&quot;: &quot;JWT&quot; }
 </code></pre>
+  </div>
 <p><strong>Payload</strong> (decode):</p>
-<pre><code class="language-json">{ &quot;id&quot;: 1, &quot;role&quot;: &quot;owner&quot;, &quot;iat&quot;: 1716832000, &quot;exp&quot;: 1716861600 }
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{ &quot;id&quot;: 1, &quot;role&quot;: &quot;owner&quot;, &quot;iat&quot;: 1716832000, &quot;exp&quot;: 1716861600 }
 </code></pre>
+  </div>
 <p><strong>Signature</strong>:</p>
-<pre><code>HMAC-SHA256(
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">HMAC-SHA256(
   base64url(header) + &quot;.&quot; + base64url(payload),
   JWT_SECRET
 ) → 32 bytes → base64url
 </code></pre>
+  </div>
 <h3>50.2 HMAC-SHA256 ในเชิงคณิตศาสตร์</h3>
-<pre><code>HMAC(K, m) = H((K&#39; ⊕ opad) ∥ H((K&#39; ⊕ ipad) ∥ m))
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">HMAC(K, m) = H((K&#39; ⊕ opad) ∥ H((K&#39; ⊕ ipad) ∥ m))
 
 โดยที่:
 - K = secret key (≥ 32 bytes แนะนำ)
@@ -6511,6 +7341,7 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 - ⊕ = XOR
 - ∥ = concatenation
 </code></pre>
+  </div>
 <p><strong>ทำไม HMAC ปลอดภัย?</strong></p>
 <ul>
 <li>SHA-256 collision resistance: ต้อง 2¹²⁸ operations ถึงจะหา collision</li>
@@ -6525,8 +7356,19 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <li>→ ปลอดภัย</li>
 </ul>
 <h3>50.3 bcrypt ทำงานอย่างไร</h3>
-<pre><code>bcrypt(password, salt, cost) = Eksblowfish_cost(salt, password, &quot;OrpheanBeholderScryDoubt&quot;)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">bcrypt(password, salt, cost) = Eksblowfish_cost(salt, password, &quot;OrpheanBeholderScryDoubt&quot;)
 </code></pre>
+  </div>
 <p><strong>Process</strong>:</p>
 <ol>
 <li>Generate random salt 128 bits</li>
@@ -6585,7 +7427,17 @@ await db.query(&#39;INSERT INTO students (first_name) VALUES ($1)&#39;, [firstNa
 <li><code>crypto.randomBytes()</code> มี entropy จาก OS</li>
 </ul>
 <h3>50.5 Timing-safe Comparison</h3>
-<pre><code class="language-ts">// ❌ ไม่ปลอดภัย:
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// ❌ ไม่ปลอดภัย:
 if (userKey === storedKey) return true;
 // V8 engine optimize: หยุดทันทีที่เจอ char ต่าง
 
@@ -6593,6 +7445,7 @@ if (userKey === storedKey) return true;
 return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 // loop ทุก byte เสมอ → เวลาคงที่
 </code></pre>
+  </div>
 <p><strong>ตัวอย่าง timing attack</strong>:</p>
 <ul>
 <li>compare(&quot;aXXXXXX...&quot;, &quot;bYYYYY...&quot;) → fail ที่ char 1 → 5ns</li>
@@ -6662,7 +7515,17 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 </tr>
 </tbody></table>
 <h3>51.1 Security Headers ใน next.config.ts</h3>
-<pre><code class="language-ts">const headers = [
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">const headers = [
   { key: &#39;X-Frame-Options&#39;, value: &#39;DENY&#39; },                      // กัน clickjacking
   { key: &#39;X-Content-Type-Options&#39;, value: &#39;nosniff&#39; },             // กัน MIME sniff
   { key: &#39;Referrer-Policy&#39;, value: &#39;strict-origin-when-cross-origin&#39; },
@@ -6671,6 +7534,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
   { key: &#39;Content-Security-Policy&#39;, value: &quot;default-src &#39;self&#39;; ...&quot; },
 ];
 </code></pre>
+  </div>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-52"></a></p>
 <h2>52. วงจรไฟฟ้าระดับ Schematic — ทำไมแต่ละชิ้นต้องมี</h2>
@@ -6697,10 +7561,21 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 <li>เกิด ground loop → noise</li>
 </ul>
 <p><strong>Optocoupler PC817</strong>:</p>
-<pre><code>GPIO 3.3V → LED ภายใน → photons → phototransistor → switch transistor → relay coil
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">GPIO 3.3V → LED ภายใน → photons → phototransistor → switch transistor → relay coil
        ↑ ฝั่ง logic                 ↑ ฝั่ง power
        ────── ไฟแยกขาดสนิท ──────
 </code></pre>
+  </div>
 <ul>
 <li>LED ใน opto ใช้แค่ ~10mA จาก GPIO</li>
 <li>ฝั่ง power 5V ที่จ่าย relay coil <strong>แยกขาด</strong> จาก ESP32</li>
@@ -6784,12 +7659,23 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 </ul>
 <p><strong>ปัญหา</strong>: ถ้า relay module ใช้ active-HIGH (HIGH = energized) + ขา IN มี pull-up ภายใน → ตอนบูตจะ HIGH → ESP32 พยายาม boot 1.8V → ไม่ work</p>
 <p><strong>วิธีแก้ในโค้ด</strong>:</p>
-<pre><code class="language-cpp">void setup() {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">void setup() {
   pinMode(RELAY_PIN, OUTPUT);
   digitalWrite(RELAY_PIN, LOW);  // ← ก่อนทุกอย่าง
   // ...
 }
 </code></pre>
+  </div>
 <ul>
 <li>ใช้ relay module แบบ active-LOW (IN=LOW → energize) — ป้องกัน 2 ชั้น</li>
 </ul>
@@ -6916,7 +7802,17 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 <p><a id="sec-54"></a></p>
 <h2>54. PCB Layout / Wiring Best Practices</h2>
 <h3>54.1 หลักการแยกสาย</h3>
-<pre><code>┌──────────────────────────────────────────┐
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">┌──────────────────────────────────────────┐
 │ ┌──────────┐  ┌──────────┐              │
 │ │ ESP32    │  │ TFT      │  ← Logic zone│
 │ │ + buck   │  │          │   (low V/low I)
@@ -6935,6 +7831,7 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 │ └────────────────────┘                  │
 └──────────────────────────────────────────┘
 </code></pre>
+  </div>
 <h3>54.2 Best Practices</h3>
 <ol>
 <li><strong>Twisted pair</strong> สำหรับ GPIO12 → relay IN — ลด EMI pickup</li>
@@ -7066,24 +7963,57 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 </tr>
 </tbody></table>
 <h3>55.3 HTTP Keep-Alive Optimization</h3>
-<pre><code>ครั้งแรก: TLS handshake 250ms + request 100ms = 350ms
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">ครั้งแรก: TLS handshake 250ms + request 100ms = 350ms
 ครั้งถัดไป (keep-alive): request 100ms = 100ms
 </code></pre>
+  </div>
 <p><strong>โค้ด ESP32 เปิด keep-alive ยังไง?</strong></p>
-<pre><code class="language-cpp">http.addHeader(&quot;Connection&quot;, &quot;keep-alive&quot;);
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">http.addHeader(&quot;Connection&quot;, &quot;keep-alive&quot;);
 // ArduinoHTTPClient ใช้ TCP socket เดิมถ้าไม่ปิด
 </code></pre>
+  </div>
 <p><strong>ปัญหา</strong>: Vercel ปิด connection หลัง ~10 วินาที idle → ESP32 ต้อง handshake ใหม่<br>→ ลด overhead นี้: poll ทุก 2 วินาที = ใช้ socket เดียวได้ ~5 polls</p>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-56"></a></p>
 <h2>56. DNS / CDN Routing</h2>
 <h3>56.1 DNS Resolution Chain</h3>
-<pre><code>ESP32 → DNS resolver (เช่น 8.8.8.8)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">ESP32 → DNS resolver (เช่น 8.8.8.8)
   → root NS (.) → .app NS
   → vercel.app NS
   → cname.vercel-dns.com
   → multiple A records (เลือกตาม geo-DNS)
 </code></pre>
+  </div>
 <p><strong>Geo-DNS</strong>: ESP32 ในไทย → return IP ใน Singapore (~30ms RTT)<br>ESP32 ในยุโรป → return IP ใน Frankfurt</p>
 <h3>56.2 CDN Routing — Anycast</h3>
 <div class="mermaid">flowchart TD
@@ -7211,10 +8141,31 @@ return crypto.timingSafeEqual(Buffer.from(userKey), Buffer.from(storedKey));
 <h2>58. Database Query Plan Analysis</h2>
 <h3>58.1 EXPLAIN ANALYZE ของ Query สำคัญ</h3>
 <p><strong>Query 1: ดึง pending students</strong></p>
-<pre><code class="language-sql">EXPLAIN ANALYZE
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">EXPLAIN ANALYZE
 SELECT * FROM students WHERE status=&#39;pending&#39; ORDER BY created_at DESC;
 </code></pre>
-<pre><code>Sort  (cost=8.30..8.31 rows=5 width=...) (actual time=0.087..0.088)
+  </div>
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Sort  (cost=8.30..8.31 rows=5 width=...) (actual time=0.087..0.088)
   Sort Key: created_at DESC
   -&gt;  Index Scan using idx_students_status on students
         Index Cond: (status = &#39;pending&#39;)
@@ -7222,37 +8173,82 @@ SELECT * FROM students WHERE status=&#39;pending&#39; ORDER BY created_at DESC;
 Planning Time: 0.215 ms
 Execution Time: 0.118 ms
 </code></pre>
+  </div>
 <ul>
 <li>✅ ใช้ index <code>idx_students_status</code> → Index Scan แทน Seq Scan</li>
 <li>ถ้าไม่มี index: cost ~150, time ~5ms (200 rows ทั้งหมด)</li>
 </ul>
 <p><strong>Query 2: Consume QR token</strong></p>
-<pre><code class="language-sql">EXPLAIN ANALYZE
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">EXPLAIN ANALYZE
 UPDATE dynamic_qr_tokens
 SET is_consumed = TRUE
 WHERE token=&#39;abc...&#39; AND is_consumed=FALSE AND expires_at &gt; NOW();
 </code></pre>
-<pre><code>Update on dynamic_qr_tokens  (actual time=0.245..0.246)
+  </div>
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Update on dynamic_qr_tokens  (actual time=0.245..0.246)
   -&gt;  Index Scan using idx_qr_token on dynamic_qr_tokens
         Index Cond: ((token)::text = &#39;abc...&#39;::text)
         Filter: ((NOT is_consumed) AND (expires_at &gt; now()))
 Execution Time: 0.302 ms
 </code></pre>
+  </div>
 <ul>
 <li>ใช้ unique index → O(log n) lookup</li>
 <li>Lock เฉพาะ row เดียว → ไม่ block ห้องอื่น</li>
 </ul>
 <p><strong>Query 3: Access logs filter</strong></p>
-<pre><code class="language-sql">EXPLAIN ANALYZE
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">EXPLAIN ANALYZE
 SELECT * FROM access_logs
 WHERE created_at &gt;= NOW() - INTERVAL &#39;7 days&#39;
 ORDER BY created_at DESC LIMIT 100;
 </code></pre>
-<pre><code>Limit  (actual time=0.045..0.123 rows=100)
+  </div>
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Limit  (actual time=0.045..0.123 rows=100)
   -&gt;  Index Scan Backward using idx_logs_created
         Index Cond: (created_at &gt;= ...)
 Execution Time: 0.156 ms
 </code></pre>
+  </div>
 <ul>
 <li>✅ Index DESC ช่วยให้ LIMIT เร็ว</li>
 <li>ไม่ต้อง sort เพราะ index sorted แล้ว</li>
@@ -7322,7 +8318,17 @@ Execution Time: 0.156 ms
 <li>Optimizer PostgreSQL ตัดสินเอง — เราแค่เตรียม index ให้พร้อม</li>
 </ul>
 <h3>58.4 N+1 Query Problem</h3>
-<pre><code class="language-ts">// ❌ N+1
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// ❌ N+1
 const students = await db.query(&#39;SELECT * FROM students&#39;);
 for (const s of students.rows) {
   const logs = await db.query(&#39;SELECT * FROM access_logs WHERE student_id=$1&#39;, [s.id]);
@@ -7338,6 +8344,7 @@ const data = await db.query(`
 `);
 // → 1 query
 </code></pre>
+  </div>
 <p>โปรเจกต์นี้ระวังเรื่องนี้ — ใช้ JOIN ทุกที่ที่ต้องการข้อมูลที่เกี่ยวข้อง</p>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-59"></a></p>
@@ -7369,11 +8376,22 @@ const data = await db.query(`
 </tbody></table>
 <p><strong>Supabase ใช้ Transaction mode</strong> (<code>?pgbouncer=true&amp;statement_cache_mode=describe</code>)</p>
 <h3>59.2 ทำไม Vercel Serverless ต้องใช้ Pooling</h3>
-<pre><code>Vercel function: เปิด-ปิด connection ทุก request
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Vercel function: เปิด-ปิด connection ทุก request
 ถ้าไม่ pool: 100 concurrent users = 100 PostgreSQL connections
 PostgreSQL free tier: 60 connection max
 → 41 users ได้รับ &quot;too many connections&quot; error
 </code></pre>
+  </div>
 <p><strong>ด้วย pgBouncer transaction pool</strong>:</p>
 <ul>
 <li>1,000 client connection → pgBouncer แชร์ → 30 backend connection</li>
@@ -7381,7 +8399,17 @@ PostgreSQL free tier: 60 connection max
 <li>→ รองรับ 900 req/sec ด้วย 30 connection</li>
 </ul>
 <h3>59.3 ข้อจำกัด Transaction Mode</h3>
-<pre><code class="language-ts">// ❌ ใช้ไม่ได้ใน transaction mode:
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// ❌ ใช้ไม่ได้ใน transaction mode:
 await db.query(&#39;PREPARE myStmt AS SELECT ...&#39;);
 await db.query(&#39;EXECUTE myStmt&#39;);
 // → connection อาจถูก reuse ระหว่าง 2 statement → ERROR
@@ -7397,11 +8425,23 @@ await db.query(&#39;SELECT ...&#39;);
 await db.query(&#39;COMMIT&#39;);
 // → ทั้ง transaction อยู่ใน connection เดียว
 </code></pre>
+  </div>
 <p>โปรเจกต์นี้ใช้แค่ single-statement หรือ wrap ใน transaction → OK</p>
 <h3>59.4 Direct vs Pooled URL ใน .env</h3>
-<pre><code class="language-env">POSTGRES_URL=postgres://...?pgbouncer=true  # ใช้ตอนรัน query ปกติ
-POSTGRES_URL_DIRECT=postgres://...           # ใช้ตอน migration / DDL
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">.env.local</div>
+      <div class="code-lang-badge">ENV</div>
+    </div>
+    <pre class="line-numbers"><code class="language-env"><span class="token attr-name">POSTGRES_URL</span><span class="token operator">=</span><span class="token string">postgres://...?pgbouncer=true  # ใช้ตอนรัน query ปกติ</span>
+<span class="token attr-name">POSTGRES_URL_DIRECT</span><span class="token operator">=</span><span class="token string">postgres://...           # ใช้ตอน migration / DDL</span>
 </code></pre>
+  </div>
 <p>DDL ไม่ทำงานผ่าน pgBouncer transaction mode → ต้อง direct</p>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-60"></a></p>
@@ -7449,7 +8489,17 @@ POSTGRES_URL_DIRECT=postgres://...           # ใช้ตอน migration / DD
 <p>โปรเจกต์นี้ใช้ <strong>Read Committed</strong> (default) ทั้งหมด</p>
 <h3>60.2 Race Conditions ที่ระบบป้องกัน</h3>
 <p><strong>Case 1: 2 คนสแกน QR เดียวกันพร้อมกัน</strong></p>
-<pre><code class="language-sql">-- คนที่ 1
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">-- คนที่ 1
 UPDATE dynamic_qr_tokens SET is_consumed=TRUE
 WHERE token=$1 AND is_consumed=FALSE
 RETURNING *;  -- ได้ row
@@ -7459,10 +8509,22 @@ UPDATE dynamic_qr_tokens SET is_consumed=TRUE
 WHERE token=$1 AND is_consumed=FALSE
 RETURNING *;  -- รอ lock → หลังคน 1 commit → is_consumed=TRUE → no row return
 </code></pre>
+  </div>
 <p>→ Atomic ทำให้ปลอดภัย แม้ Read Committed</p>
 <p><strong>Case 2: Rate limit counter</strong></p>
-<pre><code class="language-sql">INSERT INTO rate_limits ... ON CONFLICT DO UPDATE SET count=count+1
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">INSERT INTO rate_limits ... ON CONFLICT DO UPDATE SET count=count+1
 </code></pre>
+  </div>
 <p>→ atomic increment, ไม่มี race</p>
 <h3>60.3 Race ที่ยังเป็นไปได้ (เล็กน้อย)</h3>
 <p><strong>Settings cache invalidation</strong>:</p>
@@ -7535,7 +8597,17 @@ RETURNING *;  -- รอ lock → หลังคน 1 commit → is_consumed=TRU
 <li>Wokwi simulator + scripted test สำหรับ firmware</li>
 </ul>
 <h3>61.3 ตัวอย่าง Test ที่ควรเขียนก่อน</h3>
-<pre><code class="language-ts">// __tests__/api/auth.test.ts
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// __tests__/api/auth.test.ts
 describe(&#39;POST /api/auth/login&#39;, () =&gt; {
   it(&#39;returns 429 after 5 failed attempts&#39;, async () =&gt; {
     for (let i = 0; i &lt; 5; i++) {
@@ -7550,6 +8622,7 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
   });
 });
 </code></pre>
+  </div>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-62"></a></p>
 <h2>62. Disaster Recovery Playbook</h2>
@@ -7748,7 +8821,17 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
 </tr>
 </tbody></table>
 <h3>63.3 Cost per Request</h3>
-<pre><code>Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
 1 บอร์ด ESP32 poll 2s = 1.3M invocation/เดือน → เกิน free!
 
 จริง ๆ:
@@ -7756,6 +8839,7 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
 - Vercel Pro: $20 + $0.40/M หลังจาก 1M = $20 + $5 = $25/เดือน
 - → 1 บอร์ดทำให้เกิน free แล้ว!
 </code></pre>
+  </div>
 <p>→ ในความเป็นจริงต้องลด polling หรือ batch หรือใช้ MQTT push</p>
 <h3>63.4 Optimization เพื่อประหยัด</h3>
 <ol>
@@ -7815,7 +8899,17 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
 </tr>
 </tbody></table>
 <h3>64.2 Feature ใหม่ของ v4 ที่ใช้</h3>
-<pre><code class="language-css">/* app/globals.css */
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.css</div>
+      <div class="code-lang-badge">CSS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-css">/* app/globals.css */
 @import &quot;tailwindcss&quot;;
 
 @theme {
@@ -7823,18 +8917,30 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
   --color-faculty-pink: #DB2777;
 }
 </code></pre>
+  </div>
 <ul>
 <li>ใช้ CSS native variables → ไม่ต้อง config JS file</li>
 <li>Lightning CSS bundle เร็ว 10× กว่า v3</li>
 <li>รองรับ container queries</li>
 </ul>
 <h3>64.3 Class Naming Discipline</h3>
-<pre><code class="language-tsx">// ❌ ไม่ดี: สร้าง class ซับซ้อนใน JSX
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TSX</div>
+    </div>
+    <pre class="line-numbers"><code class="language-tsx">// ❌ ไม่ดี: สร้าง class ซับซ้อนใน JSX
 &lt;div className=&quot;flex items-center justify-between p-4 m-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-purple-500 to-pink-500&quot;&gt;
 
 // ✅ ดีกว่า: ใช้ `@apply` หรือ component
 &lt;Card variant=&quot;primary&quot;&gt;...&lt;/Card&gt;
 </code></pre>
+  </div>
 <p>โปรเจกต์นี้ใช้ inline เป็นหลักเพราะ component ไม่ reuse บ่อย</p>
 <h3>64.4 โครงสร้างระบบการออกแบบร่วมระดับสากลและระบบธีม SmartAccess (Global Design System &amp; SmartAccess Theme)</h3>
 <p>เพื่อสร้างมาตรฐานด้านสุนทรียศาสตร์และการใช้งาน (Usability) ที่แข็งแกร่งเป็นเอกภาพทั่วทั้งแพลตฟอร์ม โครงสร้างสไตล์ชีตของระบบได้ผสานการทำงานร่วมกับระบบการออกแบบร่วมระดับสากล (Global Design System) ภายใต้ขุมพลังของ Tailwind CSS v4 ซึ่งมีรายละเอียดจำเพาะดังนี้:</p>
@@ -7863,12 +8969,23 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
 <p><a id="sec-65"></a></p>
 <h2>65. Color Theory &amp; Accessibility (WCAG)</h2>
 <h3>65.1 Brand Colors</h3>
-<pre><code class="language-css">--smartaccess-purple: #7C3AED;   /* SmartAccess main */
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.css</div>
+      <div class="code-lang-badge">CSS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-css">--smartaccess-purple: #7C3AED;   /* SmartAccess main */
 --faculty-pink: #DB2777;   /* Faculty of Education */
 --success:      #10B981;
 --warning:      #F59E0B;
 --danger:       #EF4444;
 </code></pre>
+  </div>
 <h3>65.2 Contrast Ratio (WCAG 2.1)</h3>
 <table>
 <thead>
@@ -7942,10 +9059,31 @@ describe(&#39;POST /api/auth/login&#39;, () =&gt; {
 </ol>
 <h3>66.3 Font Subsetting (Optimization)</h3>
 <p>ปัจจุบันส่ง Tahoma ทั้งไฟล์ 700KB → ทุก request PDF ใช้ทั้งหมด<br>ทำ subset แค่ glyph ที่ใช้ → ~150KB</p>
-<pre><code class="language-bash">pyftsubset tahoma.ttf --unicodes=&quot;U+0E00-0E7F,U+0020-007F&quot; --output-file=tahoma-thai.ttf
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">terminal</div>
+      <div class="code-lang-badge">BASH</div>
+    </div>
+    <pre class="line-numbers"><code class="language-bash">pyftsubset tahoma.ttf --unicodes=&quot;U+0E00-0E7F,U+0020-007F&quot; --output-file=tahoma-thai.ttf
 </code></pre>
+  </div>
 <h3>66.4 Web Fonts บน Next.js</h3>
-<pre><code class="language-tsx">// app/layout.tsx
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TSX</div>
+    </div>
+    <pre class="line-numbers"><code class="language-tsx">// app/layout.tsx
 import { Sarabun } from &#39;next/font/google&#39;;
 const sarabun = Sarabun({ subsets: [&#39;thai&#39;, &#39;latin&#39;], weight: [&#39;400&#39;, &#39;700&#39;] });
 
@@ -7953,6 +9091,7 @@ export default function RootLayout({ children }) {
   return &lt;html className={sarabun.className}&gt;...&lt;/html&gt;;
 }
 </code></pre>
+  </div>
 <p>Next.js จะ:</p>
 <ul>
 <li>Download font ตอน build</li>
@@ -7983,7 +9122,17 @@ export default function RootLayout({ children }) {
 <li><code>notes</code> — รายละเอียด</li>
 </ul>
 <h3>67.4 การลบ Log</h3>
-<pre><code class="language-ts">// API: POST /api/system/logs/cleanup
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-ts">// API: POST /api/system/logs/cleanup
 async function cleanupLogs(req) {
   const user = await getAdminFromCookie();
   if (user.role !== &#39;owner&#39;) return 403;
@@ -8003,6 +9152,7 @@ async function cleanupLogs(req) {
   `);
 }
 </code></pre>
+  </div>
 <blockquote>
 <p>Log &lt; 90 วันลบไม่ได้แม้ owner — ต้องยืนยันรหัส + warning ใน UI</p>
 </blockquote>
@@ -8124,7 +9274,17 @@ async function cleanupLogs(req) {
 <li>ดู timeline</li>
 </ol>
 <p><strong>สิ่งที่จะเจอใน Dashboard</strong>:</p>
-<pre><code>0ms     ─ Navigation start
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">0ms     ─ Navigation start
 50ms    ─ DOMContentLoaded
 80ms    ─ HTML parsed
 120ms   ─ JS bundle download (CDN cache hit)
@@ -8136,6 +9296,7 @@ async function cleanupLogs(req) {
 600ms   ─ First contentful paint
 800ms   ─ Largest contentful paint (table rendered)
 </code></pre>
+  </div>
 <h3>69.2 Network Waterfall</h3>
 <p>ดู:</p>
 <ul>
@@ -8144,11 +9305,22 @@ async function cleanupLogs(req) {
 <li>Image lazy load: avatar รูป (ถ้ามี)</li>
 </ul>
 <h3>69.3 Lighthouse Audit</h3>
-<pre><code>Performance:  92/100
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Performance:  92/100
 Accessibility: 88/100
 Best Practices: 100/100
 SEO: 100/100 (สำหรับหน้าที่เปิดสาธารณะ)
 </code></pre>
+  </div>
 <p><strong>ที่ Lighthouse แนะนำ</strong>:</p>
 <ul>
 <li>Preconnect to Supabase: <code>&lt;link rel=&quot;preconnect&quot; href=&quot;https://xxx.supabase.co&quot;&gt;</code></li>
@@ -8165,11 +9337,22 @@ SEO: 100/100 (สำหรับหน้าที่เปิดสาธาร
 <p><a id="sec-70"></a></p>
 <h2>70. ESP32 Oscilloscope Traces</h2>
 <h3>70.1 SPI Signal บน TFT</h3>
-<pre><code>SCK  ──┐_┌─┐_┌─┐_┌─┐_┌─┐_┌─    40MHz
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">SCK  ──┐_┌─┐_┌─┐_┌─┐_┌─┐_┌─    40MHz
 MOSI ──┐__┌─┐__┌─┐__┌──┐___    data lanes
 CS   ──┐__________________┌──  active LOW during transfer
 DC   ──┐___┐╌╌╌┌___┐╌╌╌╌╌╌    data vs command
 </code></pre>
+  </div>
 <p><strong>ที่ต้องดู</strong>:</p>
 <ul>
 <li>SCK rise/fall time &lt; 5ns</li>
@@ -8177,7 +9360,17 @@ DC   ──┐___┐╌╌╌┌___┐╌╌╌╌╌╌    data vs command
 <li>ถ้าสายยาว → ringing → ใส่ series resistor 33Ω</li>
 </ul>
 <h3>70.2 Relay Switching Transient</h3>
-<pre><code>GPIO12 ────┐________________________┌──────
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">GPIO12 ────┐________________________┌──────
            │  (HIGH 3.8s)            │
            ▼                         ▼
 Relay coil
@@ -8188,6 +9381,7 @@ voltage    ────┐                     ┌───┐
                                          │
                                          └ damp by flyback diode
 </code></pre>
+  </div>
 <p>ใช้ scope probe คร่อม diode:</p>
 <ul>
 <li>ตอน switch off → เห็น spike short (5-10µs)</li>
@@ -8308,11 +9502,22 @@ voltage    ────┐                     ┌───┐
 </ol>
 <div class="alert-box alert-warning"><strong>WARNING:</strong> **ช่องโหว่ความมั่นคง:** ในระบบ Serverless หรือมีผู้ใช้ปริมาณมาก (High Concurrency) ระหว่างขั้นตอนที่ 1 และ 3 อาจมีอีก Request หนึ่งร้องขอเข้ามาสำเร็จและเห็นสถานะเป็น `'unlock'` เช่นเดียวกัน ส่งผลให้คำสั่งเปิดประตูทำงานสองรอบซ้อน หรือเปิดค้างโดยไม่มีผู้รับผิดชอบ
 </div><p><strong>แนวทางแก้ไขเชิงทฤษฎีในโครงงานวิจัย:</strong><br>ระบบได้ออกแบบให้ใช้ <strong>Single-step Atomic Update</strong> ในระดับ SQL Engine บนเครื่องยนต์ฐานข้อมูล Supabase PostgreSQL ผ่านประโยคคำสั่งเดียวที่เป็นอะตอมิก (ไม่สามารถแยกการประมวลผลย่อยได้):</p>
-<pre><code class="language-sql">UPDATE system_settings 
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">UPDATE system_settings 
 SET setting_value = &#39;consumed&#39; 
 WHERE setting_key = &#39;room_cmd_CE-401&#39; AND setting_value = &#39;unlock&#39; 
 RETURNING *;
 </code></pre>
+  </div>
 <p><strong>คำอธิบายตรรกะการประมวลผล:</strong></p>
 <ul>
 <li>คำสั่ง <code>UPDATE</code> จะรันในลักษณะล็อกระดับแถว (Row-level lock) หากมี 2 คำร้องขอเข้ามาพร้อมกัน คำร้องตัวแรกจะเข้ามาเปลี่ยนค่า <code>setting_value</code> จาก <code>&#39;unlock&#39;</code> เป็น <code>&#39;consumed&#39;</code> และฐานข้อมูลจะส่งคืนผลลัพธ์ผ่านคำสั่ง <code>RETURNING *</code> ทำให้เซิร์ฟเวอร์ส่งคำสั่งตอบกลับบอร์ด ESP32 เพื่อเปิดประตู</li>
@@ -8527,14 +9732,36 @@ RETURNING *;
 <h4>ขั้นตอนที่ 2: การสร้างบัญชีผู้ดูแลระบบผู้สิทธิ์ควบคุมเริ่มต้น (Administrator Account Seeding)</h4>
 <p>เพื่อให้แอดมินระดับสูงสุด (Owner) มีบัญชีในการล็อกอินกู้คืนระบบได้หลังการลงตารางฐานข้อมูลเสร็จสิ้น ให้ดำเนินการดังนี้:</p>
 <ol>
-<li>สร้างหรือกำหนดตัวแปรสภาพแวดล้อมต่อไปนี้ใน <code>.env.local</code> หรือระบบคลาวด์ Vercel:<pre><code class="language-env">ALLOW_DEV_SEED=true
-INITIAL_ADMIN_USERNAME=owner_admin
-INITIAL_ADMIN_PASSWORD=SecurePassword_2026!
-INITIAL_ADMIN_FULL_NAME=System Main Administrator
+<li>สร้างหรือกำหนดตัวแปรสภาพแวดล้อมต่อไปนี้ใน <code>.env.local</code> หรือระบบคลาวด์ Vercel:<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">.env.local</div>
+      <div class="code-lang-badge">ENV</div>
+    </div>
+    <pre class="line-numbers"><code class="language-env"><span class="token attr-name">ALLOW_DEV_SEED</span><span class="token operator">=</span><span class="token string">true</span>
+<span class="token attr-name">INITIAL_ADMIN_USERNAME</span><span class="token operator">=</span><span class="token string">owner_admin</span>
+<span class="token attr-name">INITIAL_ADMIN_PASSWORD</span><span class="token operator">=</span><span class="token string">SecurePassword_2026!</span>
+<span class="token attr-name">INITIAL_ADMIN_FULL_NAME</span><span class="token operator">=</span><span class="token string">System Main Administrator</span>
 </code></pre>
+  </div>
 </li>
-<li>รันแอปพลิเคชันหรือยิงคำร้องแบบ GET ไปหา API ระบบเพื่อกระตุ้นฟังก์ชันตรวจสอบตัวแปร:<pre><code class="language-bash">curl -I https://smartaccess-project.vercel.app/api/system/settings?seed=true
+<li>รันแอปพลิเคชันหรือยิงคำร้องแบบ GET ไปหา API ระบบเพื่อกระตุ้นฟังก์ชันตรวจสอบตัวแปร:<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">terminal</div>
+      <div class="code-lang-badge">BASH</div>
+    </div>
+    <pre class="line-numbers"><code class="language-bash">curl -I https://smartaccess-project.vercel.app/api/system/settings?seed=true
 </code></pre>
+  </div>
 </li>
 <li>ตัวฟังก์ชัน in <code>lib/db.ts</code> จะเข้ารหัสลับรหัสผ่านและสร้างแถวข้อมูล <code>owner</code> ลงในตาราง <code>admin_users</code> อัตโนมัติ</li>
 <li><strong>มาตรการป้องกันความปลอดภัยสูงสุด (Security Rollback):</strong> หลังจากได้รับข้อความตอบรับการสร้างแอดมินเริ่มต้นสำเร็จ ให้ปรับเปลี่ยนสลับค่าตัวแปร <code>ALLOW_DEV_SEED=false</code> ในระบบทันทีเพื่อล็อกช่องทาง Seeding และเริ่มใช้งานล็อกอินระบบตามปกติ</li>
@@ -8745,7 +9972,17 @@ INITIAL_ADMIN_FULL_NAME=System Main Administrator
 <p><a id="sec-71-18"></a></p>
 <h3>71.18 แผนผังการจัดแบ่งโครงสร้างโค้ดและขอบเขตหน้าที่ในระบบ Next.js (Next.js App Router &amp; Library Directory Architecture)</h3>
 <p>การเขียนอธิบายสารบรรณโฟลเดอร์และสถาปัตยกรรมการแบ่งงาน (Architectural Boundaries) จะช่วยให้ปัญญาประดิษฐ์ (NotebookLM) นำทางและสอนการอัปเกรดพัฒนาโค้ดโปรเจกต์ Next.js 15+ ชุดนี้ได้อย่างถูกต้องแม่นยำสูง:</p>
-<pre><code class="language-text">my-app/
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">my-app/
 ├── app/                      [Presentation &amp; Route Layer]
 │   ├── page.tsx               - หน้าหลักลงทะเบียนของนักศึกษา (Client Component)
 │   ├── admin/
@@ -8766,6 +10003,7 @@ INITIAL_ADMIN_FULL_NAME=System Main Administrator
 │   └── client-ip.ts           - ดึงค่า IP แอดมินที่แท้จริงผ่าน Vercel trusted proxy chain
 └── proxy.ts                  - ตรวจสอบสิทธิ์ระดับเน็ตเวิร์ก ป้องกันหน้าแผงควบคุม /admin/* (เดิมชื่อ middleware.ts ก่อน Next 16)
 </code></pre>
+  </div>
 <p><strong>หลักการทำงานการแบ่งชั้นสถาปัตยกรรม (Separation of Concerns):</strong></p>
 <ul>
 <li><strong>Presentation Layer (app/page.tsx):</strong> มีหน้าที่เฉพาะในการติดต่อและส่งเสริมการตอบรับของผู้ใช้ (User Interface) และไม่มีการเชื่อมต่อกับฐานข้อมูล PostgreSQL โดยตรง</li>
@@ -9361,7 +10599,17 @@ INITIAL_ADMIN_FULL_NAME=System Main Administrator
 <p><a id="sec-71-28"></a></p>
 <h3>71.28 Schematic + PCB Layout + BOM (Bill of Materials)</h3>
 <h4>71.28.1 Schematic วงจร ESP32 + Relay + TFT (ASCII)</h4>
-<pre><code>                    ┌─── 5V USB ───┐
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">                    ┌─── 5V USB ───┐
                     │              │
                     │   ┌──────────┴──────────┐
                     │   │     ESP32 DevKit    │
@@ -9395,6 +10643,7 @@ INITIAL_ADMIN_FULL_NAME=System Main Administrator
                                           │   Fail-Safe   │      ผ่าน relay COM/NO
                                           └───────────────┘
 </code></pre>
+  </div>
 <p><strong>Note:</strong> Relay module ต้องเลือกแบบมี <strong>opto-isolation</strong> (PC817) เพื่อแยก ground เสียงรบกวนจาก motor inductance</p>
 <h4>71.28.2 BOM (Bill of Materials) — ราคา 27 พ.ค. 2026</h4>
 <table>
@@ -9541,7 +10790,17 @@ INITIAL_ADMIN_FULL_NAME=System Main Administrator
 <p><a id="sec-71-29"></a></p>
 <h3>71.29 Timing Diagram ของ Relay + Flyback Diode</h3>
 <h4>71.29.1 Sequence การปล่อยกระแสและการเกิด Back-EMF</h4>
-<pre><code>GPIO12 (ESP32)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">GPIO12 (ESP32)
   HIGH ────────┐                            ┌─────
                │                            │
   LOW          └────────────────────────────┘
@@ -9562,10 +10821,22 @@ Flyback Voltage (ที่ collector)
                                           ↑
                               1N4007 clamp ไว้ที่ +12.7V (Vf=0.7V)
 </code></pre>
+  </div>
 <h4>71.29.2 ทำไมต้องมี Flyback Diode</h4>
 <p>เมื่อปิดกระแสที่ไหลผ่าน inductor (relay coil) กระทันหัน พลังงานที่เก็บใน magnetic field จะปลดปล่อยเป็น <strong>Back-EMF</strong> ตามสมการ:</p>
-<pre><code>V_back = -L · (di/dt)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">V_back = -L · (di/dt)
 </code></pre>
+  </div>
 <p>ตัวอย่าง: relay coil L = 100mH, di/dt = 50mA / 1µs = 50,000 A/s<br>→ V_back = -0.1 × 50,000 = <strong>-5,000V</strong> ⚡</p>
 <p>แรงดันลบนี้จะ:</p>
 <ul>
@@ -9612,16 +10883,37 @@ Flyback Voltage (ที่ collector)
 <p><strong>Alternative:</strong> Schottky diode (1N5819) — เร็วกว่าแต่แพงกว่า (฿8); ใช้กับ MOSFET driver ที่ต้อง switch เร็ว</p>
 <h4>71.29.4 RC Snubber (เสริม) สำหรับ Inductive Load หนัก</h4>
 <p>หากต่อ solenoid ขนาดใหญ่ (&gt;500mA) เพิ่ม RC snubber คร่อมหน้าสัมผัส relay ลด arc:</p>
-<pre><code>R = √(L/C) = √(0.1H / 100nF) = 1kΩ
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">R = √(L/C) = √(0.1H / 100nF) = 1kΩ
 C = 100nF, 400V (X7R ceramic)
 </code></pre>
+  </div>
 <p>ต่อ R+C อนุกรม คร่อม COM-NO contact</p>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-30"></a></p>
 <h3>71.30 API Reference (OpenAPI 3.0 Spec)</h3>
 <h4>71.30.1 Public Endpoints (ไม่ต้อง auth)</h4>
 <h5><code>POST /api/students</code> — ลงทะเบียนนักศึกษา</h5>
-<pre><code class="language-yaml">requestBody:
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.yaml</div>
+      <div class="code-lang-badge">YAML</div>
+    </div>
+    <pre class="line-numbers"><code class="language-yaml">requestBody:
   required: true
   content:
     application/json:
@@ -9643,8 +10935,19 @@ responses:
   &#39;409&#39;: { description: Duplicate studentId in pending state }
   &#39;429&#39;: { description: Rate limit exceeded (5 reg/min/IP) }
 </code></pre>
+  </div>
 <h5><code>POST /api/esp32/qr/verify</code> — ตรวจสอบ QR token</h5>
-<pre><code class="language-yaml">headers:
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.yaml</div>
+      <div class="code-lang-badge">YAML</div>
+    </div>
+    <pre class="line-numbers"><code class="language-yaml">headers:
   X-API-Key: { required: true, type: string }
 requestBody:
   schema:
@@ -9657,6 +10960,7 @@ responses:
   &#39;401&#39;: { description: Invalid token or expired }
   &#39;403&#39;: { description: Wrong X-API-Key }
 </code></pre>
+  </div>
 <h4>71.30.2 Admin Endpoints (require JWT cookie)</h4>
 <table>
 <thead>
@@ -9858,7 +11162,17 @@ responses:
 </tr>
 </tbody></table>
 <p><strong>Polling response example:</strong></p>
-<pre><code class="language-json">{
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{
   &quot;room&quot;: &quot;CE-401&quot;,
   &quot;qrText&quot;: &quot;https://app/?t=abc123&quot;,
   &quot;qrTtl&quot;: 47,
@@ -9869,11 +11183,22 @@ responses:
   &quot;serverTime&quot;: &quot;2026-05-27T14:30:00+07:00&quot;
 }
 </code></pre>
+  </div>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-31"></a></p>
 <h3>71.31 CI/CD Pipeline + Branch Strategy</h3>
 <h4>71.31.1 Branch Strategy (Trunk-Based + Release Branch)</h4>
-<pre><code>main (production)  ──●──●──●──●──●──●──── deploy auto → Vercel prod
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">main (production)  ──●──●──●──●──●──●──── deploy auto → Vercel prod
                       │     │     │
                       │     │     └─ hotfix/V07-rate-limit (cherry-pick)
                       │     │
@@ -9881,13 +11206,24 @@ feature/qr-rotation ──┴──●──┘
                           │
                           merge via PR + review
 </code></pre>
+  </div>
 <ul>
 <li><strong>main:</strong> auto-deploy to Vercel prod ทุก push</li>
 <li><strong>feature/*:</strong> branch ทำงาน, PR ก่อน merge</li>
 <li><strong>hotfix/*:</strong> branch แก้ด่วน, fast-track review</li>
 </ul>
 <h4>71.31.2 GitHub Actions Workflow</h4>
-<pre><code class="language-yaml"># .github/workflows/ci.yml
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.yaml</div>
+      <div class="code-lang-badge">YAML</div>
+    </div>
+    <pre class="line-numbers"><code class="language-yaml"># .github/workflows/ci.yml
 name: CI
 on:
   pull_request:
@@ -9931,6 +11267,7 @@ jobs:
       - run: arduino-cli core install esp32:esp32
       - run: arduino-cli compile --fqbn esp32:esp32:esp32 esp32/esp32.ino
 </code></pre>
+  </div>
 <h4>71.31.3 Code Review Checklist</h4>
 <ul>
 <li><input disabled="" type="checkbox"> ไม่มี hardcoded secret (JWT_SECRET, API_KEY)</li>
@@ -10025,7 +11362,17 @@ jobs:
 </ol>
 <h4>71.32.4 แบบฟอร์มแจ้งเหตุละเมิดข้อมูลส่วนบุคคล (PDPC Form)</h4>
 <p>ตามประกาศ สคส. ที่ 1/2565</p>
-<pre><code>[ ] แบบแจ้งเหตุการละเมิดข้อมูลส่วนบุคคล
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">[ ] แบบแจ้งเหตุการละเมิดข้อมูลส่วนบุคคล
     ผู้ควบคุมข้อมูล:  มทร.พระนคร
     
 1. ลักษณะของการละเมิด: ......................
@@ -10037,9 +11384,20 @@ jobs:
 7. ข้อมูลติดต่อ DPO: ........
 8. วันเวลาที่เกิดเหตุ / ตรวจพบ / รายงาน: .........
 </code></pre>
+  </div>
 <p>ส่งทาง: <a href="https://www.pdpc.or.th/breach-notification">https://www.pdpc.or.th/breach-notification</a> (อีเมล: <a href="mailto:pdpc@mdes.go.th">pdpc@mdes.go.th</a>)</p>
 <h4>71.32.5 Post-Incident Report Template</h4>
-<pre><code class="language-markdown"># Incident Report — [YYYY-MM-DD]
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.markdown</div>
+      <div class="code-lang-badge">MARKDOWN</div>
+    </div>
+    <pre class="line-numbers"><code class="language-markdown"># Incident Report — [YYYY-MM-DD]
 
 ## Summary
 - Severity: P[0-3]
@@ -10064,6 +11422,7 @@ jobs:
 ## Lessons Learned
 [Action items + owner + due date]
 </code></pre>
+  </div>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-33"></a></p>
 <h3>71.33 Accessibility (a11y) — เกินกว่า WCAG Color</h3>
@@ -10148,7 +11507,17 @@ jobs:
 </tbody></table>
 <p><strong>Focus indicator:</strong> Tailwind class <code>focus-visible:ring-2 focus-visible:ring-purple-500</code> ทุก interactive element</p>
 <h4>71.33.3 ARIA Patterns ที่ใช้ในระบบ</h4>
-<pre><code class="language-tsx">// แท็บใน admin dashboard
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TSX</div>
+    </div>
+    <pre class="line-numbers"><code class="language-tsx">// แท็บใน admin dashboard
 &lt;div role=&quot;tablist&quot; aria-label=&quot;แท็บหลักของแดชบอร์ด&quot;&gt;
   &lt;button role=&quot;tab&quot; aria-selected=&quot;true&quot; aria-controls=&quot;panel-pending&quot;&gt;
     คิวรอตรวจสอบ
@@ -10168,6 +11537,7 @@ jobs:
   เปิดประตูไม่สำเร็จ กรุณาลองใหม่
 &lt;/div&gt;
 </code></pre>
+  </div>
 <h4>71.33.4 ภาษาไทย TTS Issues</h4>
 <ul>
 <li><code>&lt;html lang=&quot;th&quot;&gt;</code> ✅ (มีอยู่แล้ว) — บอก screen reader ใช้ภาษาไทย</li>
@@ -10264,10 +11634,21 @@ jobs:
 </ol>
 <p>* ข้อ negative → invert score</p>
 <p><strong>สูตรคำนวณ SUS Score:</strong></p>
-<pre><code>สำหรับข้อบวก (1,3,5,7,9): คะแนน = (ตอบ - 1)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">สำหรับข้อบวก (1,3,5,7,9): คะแนน = (ตอบ - 1)
 สำหรับข้อลบ (2,4,6,8,10): คะแนน = (5 - ตอบ)
 SUS Score = (ผลรวม × 2.5) → 0-100
 </code></pre>
+  </div>
 <p><strong>เกณฑ์การแปลผล:</strong></p>
 <table>
 <thead>
@@ -10477,7 +11858,17 @@ SUS Score = (ผลรวม × 2.5) → 0-100
 <li><strong>Cost Efficiency:</strong> ฿2,000/ห้อง vs Face Recognition ฿8,000/ห้อง → ลดต้นทุน 75%</li>
 </ol>
 <h4>71.35.4 References (APA Format)</h4>
-<pre><code>Brooke, J. (1996). SUS: A &quot;quick and dirty&quot; usability scale. Usability evaluation in industry, 189(194), 4-7.
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">Brooke, J. (1996). SUS: A &quot;quick and dirty&quot; usability scale. Usability evaluation in industry, 189(194), 4-7.
 
 Chen, L., Wang, H., &amp; Liu, X. (2021). NFC-based Smart Door Access System. IEEE IoT Journal, 8(5), 3421-3430.
 
@@ -10493,6 +11884,7 @@ Patil, S., et al. (2018). RFID Based Door Lock. IRJET, 5(6), 2113-2118.
 
 Sharma, R., et al. (2020). BLE Beacon-based Access Control. Procedia CS, 167, 1834-1843.
 </code></pre>
+  </div>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-36"></a></p>
 <h3>71.36 Hardware Reliability — MTBF, IP Rating, สภาพแวดล้อม</h3>
@@ -10752,7 +12144,17 @@ Sharma, R., et al. (2020). BLE Beacon-based Access Control. Procedia CS, 167, 18
 </tbody></table>
 <p><strong>Critical:</strong> VLAN 20 ต้อง <strong>isolated</strong> จาก VLAN 10/30 (deny by default) — ESP32 ห้ามคุยกับ device อื่นใน LAN</p>
 <h4>71.37.3 Firewall Rules ที่ต้องขอเปิดกับศูนย์คอมฯ</h4>
-<pre><code># OUTBOUND (จาก VLAN 20 ESP32)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text"># OUTBOUND (จาก VLAN 20 ESP32)
 allow from 10.20.0.0/24 to vercel.com:443     (HTTPS API polling)
 allow from 10.20.0.0/24 to *.supabase.co:443  (DB direct fallback)
 allow from 10.20.0.0/24 to pool.ntp.org:123   (Time sync UDP)
@@ -10768,8 +12170,19 @@ deny  from ANY to 10.20.0.0/24                 (default deny)
 allow from 10.10.0.0/16 to *.vercel.app:443   (Faculty → dashboard)
 allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 </code></pre>
+  </div>
 <h4>71.37.4 Firewall Request Form (ตัวอย่างส่งศูนย์คอมฯ มทร.พระนคร)</h4>
-<pre><code>เรียน ผู้อำนวยการศูนย์คอมพิวเตอร์
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">เรียน ผู้อำนวยการศูนย์คอมพิวเตอร์
 
 ขอเรียนแจ้งความประสงค์ขอเปิด Firewall Rule สำหรับโครงการระบบควบคุม
 การเข้าออกห้องเรียน SmartAccess:
@@ -10793,6 +12206,7 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 
 6. ผู้ติดต่อ: [ชื่อ-นามสกุล] โทร [...]
 </code></pre>
+  </div>
 <h4>71.37.5 Bandwidth Estimation</h4>
 <ul>
 <li>ESP32 1 ตัว: poll 2s = 30 req/min × ~1.5 KB/req = ~45 KB/min = <strong>0.75 KB/s</strong></li>
@@ -10804,7 +12218,17 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 <h3>71.38 คู่มือผู้ใช้แยกเล่ม (Student / Operator / Owner Quick Guides)</h3>
 <p>เล่มนี้เป็นเอกสารวิศวกร — สำหรับผู้ใช้ปลายทาง ควรมีคู่มือสั้น 1-2 หน้า แยกตามบทบาท</p>
 <h4>71.38.1 คู่มือนักศึกษา (1 หน้า)</h4>
-<pre><code>┌─────────────────────────────────────────────┐
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">┌─────────────────────────────────────────────┐
 │ 🎓 คู่มือเข้าห้องเรียน SmartAccess           │
 ├─────────────────────────────────────────────┤
 │                                             │
@@ -10823,6 +12247,7 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 │ 🆘 ติดปัญหา: ไลน์ @smartaccess               │
 └─────────────────────────────────────────────┘
 </code></pre>
+  </div>
 <h4>71.38.2 คู่มืออาจารย์ดูแลห้อง (door_operator)</h4>
 <p><strong>ขั้นตอนการอนุมัตินักศึกษา:</strong></p>
 <ol>
@@ -10900,10 +12325,21 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 <p><strong>Hosting:</strong> YouTube unlisted + embed ในหน้า <code>/help</code> ของเว็บ</p>
 <h4>71.38.5 In-App Help Tooltips</h4>
 <p>ทุก field/button ที่ซับซ้อน → เพิ่ม tooltip:</p>
-<pre><code class="language-tsx">&lt;button title=&quot;ปลดล็อกประตูชั่วคราว 5 วินาที (จำกัด 3 ครั้ง/นาที)&quot;&gt;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TSX</div>
+    </div>
+    <pre class="line-numbers"><code class="language-tsx">&lt;button title=&quot;ปลดล็อกประตูชั่วคราว 5 วินาที (จำกัด 3 ครั้ง/นาที)&quot;&gt;
   🚪 ปลดล็อกด่วน
 &lt;/button&gt;
 </code></pre>
+  </div>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-39"></a></p>
 <h3>71.39 ตรวจสอบความถูกต้องทางกฎหมาย: Cookie Consent, Terms, Privacy Policy</h3>
@@ -11120,7 +12556,17 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 </tbody></table>
 <h4>71.39.5 Recommended Fixes — Cookie Consent Banner</h4>
 <p>แนะนำให้รีดีไซน์เป็น 2 ระดับ: <strong>Initial Banner</strong> + <strong>Preferences Modal</strong></p>
-<pre><code class="language-tsx">// CookieConsent.tsx — โครงสร้างใหม่
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TSX</div>
+    </div>
+    <pre class="line-numbers"><code class="language-tsx">// CookieConsent.tsx — โครงสร้างใหม่
 const CONSENT_VERSION = &quot;2.0&quot;;  // C05: version tracking
 
 type ConsentChoices = {
@@ -11155,6 +12601,7 @@ function withdrawConsent() {
   });
 }
 </code></pre>
+  </div>
 <p><strong>Banner ใหม่ต้องมี:</strong></p>
 <ol>
 <li>ปุ่ม <strong>ยอมรับทั้งหมด</strong> | <strong>ปฏิเสธทั้งหมด</strong> | <strong>🆕 ตั้งค่า</strong> (เปิด modal)</li>
@@ -11164,7 +12611,17 @@ function withdrawConsent() {
 </ol>
 <h4>71.39.6 Recommended Fixes — Privacy Policy (โครงสร้างใหม่)</h4>
 <p>เพิ่มหัวข้อต่อไปนี้ในไฟล์ <code>privacy/page.tsx</code>:</p>
-<pre><code class="language-markdown">0. ข้อมูลผู้ควบคุมข้อมูล (Data Controller)  ← P06
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.markdown</div>
+      <div class="code-lang-badge">MARKDOWN</div>
+    </div>
+    <pre class="line-numbers"><code class="language-markdown">0. ข้อมูลผู้ควบคุมข้อมูล (Data Controller)  ← P06
    -  Innovative system for managing access rights and controlling classroom access via wireless network
    - ที่อยู่: 1381 ถ.ประชาราษฎร์ 1 แขวงวงศ์สว่าง เขตบางซื่อ กทม. 10800
    - โทร: 02-XXX-XXXX  อีเมล: dpo@eng.smartaccess.ac.th
@@ -11215,8 +12672,19 @@ function withdrawConsent() {
    - v2.0 — 2026-05-27: เพิ่ม Data Controller info, Lawful Basis, 8 rights, Cookie Table
    - v1.0 — 2026-04-15: เผยแพร่ครั้งแรก
 </code></pre>
+  </div>
 <h4>71.39.7 Recommended Fixes — Terms &amp; Conditions (โครงสร้างใหม่)</h4>
-<pre><code class="language-markdown">0. คำนิยาม (Definitions)  ← T06
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.markdown</div>
+      <div class="code-lang-badge">MARKDOWN</div>
+    </div>
+    <pre class="line-numbers"><code class="language-markdown">0. คำนิยาม (Definitions)  ← T06
    - &quot;ระบบ&quot; หมายถึง SmartAccess
    - &quot;Bypass Token&quot; หมายถึง โทเคนปลดล็อกซ้ำภายใน 5 นาที
    - &quot;Tailgating&quot; หมายถึง การเดินตามหลังโดยไม่สแกน
@@ -11254,9 +12722,20 @@ function withdrawConsent() {
 10. วันที่มีผลบังคับใช้  ← T02
     เริ่มใช้: 27 พฤษภาคม 2569 | เวอร์ชัน: 2.0
 </code></pre>
+  </div>
 <h4>71.39.8 Database Schema สำหรับ Consent Audit Trail</h4>
 <p>เพิ่มตารางใหม่เพื่อแก้ปัญหา C04 (server-side consent)</p>
-<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS consent_records (
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">CREATE TABLE IF NOT EXISTS consent_records (
   id BIGSERIAL PRIMARY KEY,
   consent_uuid UUID DEFAULT gen_random_uuid() UNIQUE,
   ip_hash CHAR(64) NOT NULL,           -- SHA-256 ของ IP (ไม่เก็บ raw)
@@ -11278,6 +12757,7 @@ CREATE INDEX idx_consent_uuid ON consent_records(consent_uuid);
 COMMENT ON TABLE consent_records IS
   &#39;PDPA ม.19 audit trail — เก็บหลักฐานการให้/ถอนความยินยอม 3 ปี&#39;;
 </code></pre>
+  </div>
 <h4>71.39.9 API Endpoint ใหม่ที่ต้องสร้าง</h4>
 <table>
 <thead>
@@ -11491,7 +12971,17 @@ COMMENT ON TABLE consent_records IS
 </ul>
 <p><a id="sec-71-40-3"></a></p>
 <h4>71.40.3 เจาะลึกตาราง <code>consent_records</code> ทุกคอลัมน์</h4>
-<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS consent_records (
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">CREATE TABLE IF NOT EXISTS consent_records (
   id BIGSERIAL PRIMARY KEY,
   consent_uuid VARCHAR(64) UNIQUE NOT NULL,
   ip_hash CHAR(64) NOT NULL,
@@ -11505,6 +12995,7 @@ COMMENT ON TABLE consent_records IS
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 </code></pre>
+  </div>
 <table>
 <thead>
 <tr>
@@ -11604,12 +13095,23 @@ COMMENT ON TABLE consent_records IS
 </ol>
 <p><strong>ทำไม <code>initDatabase()</code> ทุก request?</strong> เพราะ <code>dbInitialized</code> flag เป็น singleton ใน lambda warm-up — call ครั้งแรกจริงเท่านั้นที่ run DDL, ครั้งถัดไปคืน immediate</p>
 <h5>GET <code>/api/consent</code> — ดู Consent ล่าสุด</h5>
-<pre><code class="language-sql">SELECT consent_uuid, version, necessary, functional, analytics, marketing, action, created_at
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">SELECT consent_uuid, version, necessary, functional, analytics, marketing, action, created_at
   FROM consent_records
  WHERE ip_hash = $1
  ORDER BY created_at DESC
  LIMIT 1
 </code></pre>
+  </div>
 <ul>
 <li>ใช้ index <code>idx_consent_ip_time</code> → query plan: Index Scan (cost ≈ O(log n))</li>
 <li>คืน <code>{found: false}</code> ถ้าไม่เคย consent → frontend ตีความว่าควรขึ้น banner</li>
@@ -11631,19 +13133,52 @@ COMMENT ON TABLE consent_records IS
 <p><a id="sec-71-40-5"></a></p>
 <h4>71.40.5 เจาะลึก <code>CookieConsent.tsx</code> v2.0 ทีละส่วน</h4>
 <p><strong>Constants (บรรทัด 12-13):</strong></p>
-<pre><code class="language-typescript">const CONSENT_VERSION = &quot;2.0&quot;;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">const CONSENT_VERSION = &quot;2.0&quot;;
 const STORAGE_KEY = &quot;smartaccess_cookie_consent_v2&quot;;
 </code></pre>
+  </div>
 <ul>
 <li>ใช้ <code>_v2</code> ใน key เพื่อให้ผู้ใช้เก่า (มี v1 consent) <strong>ได้รับ banner ใหม่อัตโนมัติ</strong> เพราะ key ไม่ match → loadConsent คืน null</li>
 </ul>
 <p><strong><code>loadConsent()</code> (บรรทัด 29-39):</strong></p>
-<pre><code class="language-typescript">if (parsed.version !== CONSENT_VERSION) return null;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">if (parsed.version !== CONSENT_VERSION) return null;
 </code></pre>
+  </div>
 <p>นี่คือ defense-in-depth — แม้ STORAGE_KEY จะตรง แต่ถ้า version ใน object ไม่ตรง (เช่น downgrade rollback) ก็ถือว่า invalid</p>
 <p><strong><code>saveConsentServer()</code> (บรรทัด 49-64):</strong></p>
-<pre><code class="language-typescript">keepalive: true
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">keepalive: true
 </code></pre>
+  </div>
 <p>ใส่เพื่อให้ request ส่งต่อแม้ผู้ใช้ปิดแท็บทันที (Beacon-like behavior) — สำคัญสำหรับ analytics consent ที่อาจถูกบันทึกตอนปิดหน้า</p>
 <p><strong>State management:</strong></p>
 <ul>
@@ -11657,19 +13192,41 @@ const STORAGE_KEY = &quot;smartaccess_cookie_consent_v2&quot;;
 <li>ถ้าใช้ inline function ตรง event listener จะ leak (add ทุก render ลบไม่ได้)</li>
 </ul>
 <p><strong>Event-driven architecture:</strong></p>
-<pre><code class="language-typescript">window.dispatchEvent(new CustomEvent(&quot;smartaccess_cookie_consent_changed&quot;, { detail: record }))
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">window.dispatchEvent(new CustomEvent(&quot;smartaccess_cookie_consent_changed&quot;, { detail: record }))
 window.addEventListener(&quot;smartaccess_open_consent&quot;, handler)
 </code></pre>
+  </div>
 <ul>
 <li>decouple CookieConsent จาก Privacy page → Privacy เรียก <code>openConsentSettings()</code> ก็พอ</li>
 <li>รองรับการเพิ่ม listener อื่นๆ ในอนาคต (เช่น analytics SDK ตื่นตัวเมื่อ consent เปลี่ยน)</li>
 </ul>
 <p><strong>Modal accessibility:</strong></p>
-<pre><code class="language-tsx">role=&quot;dialog&quot;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TSX</div>
+    </div>
+    <pre class="line-numbers"><code class="language-tsx">role=&quot;dialog&quot;
 aria-modal=&quot;true&quot;
 aria-labelledby=&quot;consent-modal-title&quot;
 onClick={(e) =&gt; { if (e.target === e.currentTarget) setIsModalOpen(false); }}
 </code></pre>
+  </div>
 <ul>
 <li>Click overlay (outside modal) ปิดได้ — UX standard</li>
 <li>Screen reader ประกาศ &quot;dialog&quot; ทันที</li>
@@ -11932,10 +13489,21 @@ onClick={(e) =&gt; { if (e.target === e.currentTarget) setIsModalOpen(false); }}
 <li><strong>ปัจจุบันไม่ทำ</strong> เพราะ trade-off ไม่คุ้ม (PDPA ไม่บังคับ pepper)</li>
 </ul>
 <p><strong>Code (api/consent/route.ts):</strong></p>
-<pre><code class="language-typescript">function hashIp(ip: string): string {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">function hashIp(ip: string): string {
   return crypto.createHash(&quot;sha256&quot;).update(ip).digest(&quot;hex&quot;);
 }
 </code></pre>
+  </div>
 <p><strong>Performance:</strong> SHA-256 บน Node.js ~500ns/op → ไม่เป็น bottleneck</p>
 <p><a id="sec-71-40-10"></a></p>
 <h4>71.40.10 Withdrawal Flow — กฎ &quot;ง่ายเท่ากับให้&quot; ของ PDPA ม.19</h4>
@@ -12048,8 +13616,19 @@ onClick={(e) =&gt; { if (e.target === e.currentTarget) setIsModalOpen(false); }}
 <p><a id="sec-71-40-14"></a></p>
 <h4>71.40.14 SEO Meta Description — Trade-off ระหว่างชื่อยาว/สั้น</h4>
 <p><strong>ใหม่:</strong></p>
-<pre><code class="language-typescript">description: &quot;SmartAccess — ระบบควบคุมการเข้าออกห้องเรียนแบบไร้สาย (Innovative system for managing access rights and controlling classroom access via wireless network) คณะครุศาสตร์อุตสาหกรรม มหาวิทยาลัยเทคโนโลยีราชมงคลพระนคร&quot;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">description: &quot;SmartAccess — ระบบควบคุมการเข้าออกห้องเรียนแบบไร้สาย (Innovative system for managing access rights and controlling classroom access via wireless network) คณะครุศาสตร์อุตสาหกรรม มหาวิทยาลัยเทคโนโลยีราชมงคลพระนคร&quot;
 </code></pre>
+  </div>
 <p><strong>Google SERP จะตัดที่ ~155 chars (desktop) / 120 chars (mobile):</strong></p>
 <ul>
 <li>155 chars แรก: &quot;SmartAccess — ระบบควบคุมการเข้าออกห้องเรียนแบบไร้สาย (Innovative system for managing access rights and controlling classroom...&quot; ← ตัดกลาง project name</li>
@@ -12151,7 +13730,17 @@ onClick={(e) =&gt; { if (e.target === e.currentTarget) setIsModalOpen(false); }}
 </tr>
 </tbody></table>
 <p><strong>Query DB ตรวจสอบ:</strong></p>
-<pre><code class="language-sql">-- ดู consent ทั้งหมดของ IP ตัวเอง (hash ก่อน)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">-- ดู consent ทั้งหมดของ IP ตัวเอง (hash ก่อน)
 SELECT * FROM consent_records 
 WHERE ip_hash = encode(digest(&#39;YOUR_IP&#39;, &#39;sha256&#39;), &#39;hex&#39;)
 ORDER BY created_at DESC;
@@ -12162,6 +13751,7 @@ SELECT action, COUNT(*) FROM consent_records GROUP BY action;
 -- ดู version distribution (เผื่อมี user เก่า v1)
 SELECT version, COUNT(*) FROM consent_records GROUP BY version;
 </code></pre>
+  </div>
 <p><a id="sec-71-40-17"></a></p>
 <h4>71.40.17 ความเสี่ยงคงเหลือและงานที่ต้องทำต่อ</h4>
 <p><strong>P2 — ใน 1 เดือน:</strong></p>
@@ -12308,7 +13898,17 @@ SELECT version, COUNT(*) FROM consent_records GROUP BY version;
 </div>
 <h6>1.2 ตัวอย่างโค้ดโครงร่างการพัฒนารองรับบน ESP32 (C++ Arduino IDE)</h6>
 <p>โค้ดด้านล่างนี้แสดงการประยุกต์ใช้งานคลาส <code>HTTPUpdate</code> ของ ESP32 ร่วมกับจอแสดงผล TFT ILI9341 เพื่อสร้างกลไกการดาวน์โหลดและแฟลชข้อมูลที่ปลอดภัย โดยมีระบบตรวจจับสัญญาณไฟตกและ Error Handling เชิงลึก:</p>
-<pre><code class="language-cpp">#include &lt;WiFi.h&gt;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">#include &lt;WiFi.h&gt;
 #include &lt;HTTPClient.h&gt;
 #include &lt;WiFiClientSecure.h&gt;
 #include &lt;HTTPUpdate.h&gt;
@@ -12419,9 +14019,20 @@ void performHTTPSOTA() {
   }
 }
 </code></pre>
+  </div>
 <h6>1.3 สเปกของฝั่ง API Next.js Route (<code>/api/esp32/firmware-ota</code>)</h6>
 <p>นี่คือโครงสร้างโค้ดแบบเต็มระดับเซิร์ฟเวอร์เลสของ Next.js (TypeScript) ที่ทำหน้าที่ตรวจสอบสิทธิ์ ป้องกันการสปูฟ (Spoofing) และสตรีมไฟล์เฟิร์มแวร์ขนาดใหญ่ทีละบล็อกแบบประหยัด Memory (NodeJS Stream Interface) เพื่อรองรับการทำงานบน Vercel ได้อย่างมีเสถียรภาพ:</p>
-<pre><code class="language-typescript">import { NextResponse } from &#39;next/server&#39;;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">import { NextResponse } from &#39;next/server&#39;;
 import fs from &#39;fs&#39;;
 import path from &#39;path&#39;;
 import crypto from &#39;crypto&#39;;
@@ -12486,6 +14097,7 @@ export async function GET(req: Request) {
   }
 }
 </code></pre>
+  </div>
 <hr>
 <h5>2. ระบบบริการเว็บอัปเดตระยะใกล้ผ่านเครือข่ายภายใน (Web-Based Local Network OTA Update)</h5>
 <p>ในกรณีที่การเชื่อมต่ออินเทอร์เน็ตสาธารณะล้มเหลว หรือต้องการความรวดเร็วในการบำรุงรักษาโดยไม่ต้องพึ่งพาเซิร์ฟเวอร์บนระบบคลาวด์ แอดมินสามารถสตรีมพอร์ต Web Server ในเครือข่าย Wi-Fi วงเดียวกัน (LAN) เพื่อแฟลชไฟล์เฟิร์มแวร์ได้ทันที ซึ่งมีประโยชน์มากในขั้นตอนติดตั้งอุปกรณ์หน้างานช่วงแรกที่อินเทอร์เน็ตของสถาบันอาจจะยังไม่อนุมัติ MAC Address บอร์ดควบคุม</p>
@@ -12500,7 +14112,17 @@ export async function GET(req: Request) {
 </li>
 </ul>
 <h6>2.2 โค้ดตัวอย่างรองรับ ElegantOTA บนบอร์ดควบคุม</h6>
-<pre><code class="language-cpp">#include &lt;WiFi.h&gt;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">#include &lt;WiFi.h&gt;
 #include &lt;WebServer.h&gt;
 #include &lt;ElegantOTA.h&gt;
 #include &lt;Adafruit_GFX.h&gt;
@@ -12570,6 +14192,7 @@ void handleLocalOTALoop() {
   ElegantOTA.loop();     // คอยจัดการลูปและบล็อกข้อมูลสำหรับการเขียนแฟลชหน่วยความจำ
 }
 </code></pre>
+  </div>
 <hr>
 <h5>3. กลไกสร้างความเชื่อมั่นเชิงลึกระดับโปรดักชัน (Failsafe &amp; Security Hardening Controls)</h5>
 <p>สำหรับเล่มวิทยานิพนธ์และโครงงานวิชาการ การพัฒนา OTA Update จะต้องมีความเสถียรและความปลอดภัยระดับสูงเพื่อไม่ให้บอร์ดเกิดปัญหาใช้งานไม่ได้ (Anti-Brick):</p>
@@ -12791,20 +14414,42 @@ void handleLocalOTALoop() {
 <p><strong>การ invalidate</strong>: เมื่อ admin บันทึก settings ใหม่ ระบบเรียก clearSystemSettingsCache() ใน lib/db.ts ซึ่ง dynamic import invalidateSettingsCache() จาก lib/kv-cache.ts — ล้างทั้ง in-memory และ KV พร้อมกัน</p>
 <p><strong>หากไม่ตั้งค่า KV</strong>: ระบบ fallback กลับเป็น in-memory cache อัตโนมัติ ไม่ crash</p>
 <p><strong>Environment variables ที่ต้องเพิ่ม</strong> (ใน Vercel Dashboard → Storage → KV → Connect):</p>
-<pre><code>KV_URL
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">KV_URL
 KV_REST_API_URL
 KV_REST_API_TOKEN
 KV_REST_API_READ_ONLY_TOKEN
 </code></pre>
+  </div>
 <hr>
 <h3>71.42.3 HTTP/2 Keep-alive ใน ESP32 Firmware (Persistent TLS)</h3>
 <p><strong>ปัญหาเดิม</strong>: ทุก poll cycle ESP32 เปิด TCP connection ใหม่ → TLS Handshake ใหม่ → ใช้เวลา 1–3 วินาที</p>
 <p><strong>วิธีแก้</strong>: ใช้ persistent WiFiClientSecure ระดับ global พร้อม http.setReuse(true)</p>
-<pre><code class="language-cpp">#ifndef WOKWI_SIM
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">#ifndef WOKWI_SIM
 WiFiClientSecure persistentTlsClient;
 bool tlsClientInitialized = false;
 #endif
 </code></pre>
+  </div>
 <p><strong>ผลลัพธ์</strong>: Poll latency ลดจาก ~2s → 200–400ms (หลัง handshake ครั้งแรก)</p>
 <p><strong>หมายเหตุ</strong>: Wokwi simulator ใช้ simClient.setInsecure() แยกต่างหาก — persistent TLS ใช้เฉพาะบอร์ดจริง (#ifndef WOKWI_SIM)</p>
 <hr>
@@ -12905,11 +14550,22 @@ bool tlsClientInitialized = false;
 <h3>71.42.7 Bug Fix — QR Code format=dataurl</h3>
 <p><strong>ปัญหา</strong>: หน้า /status เรียก /api/esp32/qr?format=dataurl แต่ route เดิมส่งกลับเฉพาะ image/png binary เสมอ ทำให้ QR ไม่แสดงบนหน้า status</p>
 <p><strong>แก้ไข</strong>: เพิ่ม branch ใน app/api/esp32/qr/route.ts:</p>
-<pre><code class="language-typescript">if (format === &quot;dataurl&quot;) {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">if (format === &quot;dataurl&quot;) {
   const dataUrl = await generateQRCodeDataURL(target, 280);
   return NextResponse.json({ dataUrl, room, token });
 }
 </code></pre>
+  </div>
 <hr>
 <h3>สรุปไฟล์ที่เพิ่ม/แก้ไขในระลอกนี้</h3>
 <table>
@@ -13197,7 +14853,17 @@ bool tlsClientInitialized = false;
 </ul>
 </li>
 <li><p><strong>Atomic SQL execution ผ่าน CTE (Common Table Expressions)</strong>:<br>เพื่อประหยัด Roundtrip และป้องกันความไม่สอดคล้องของข้อมูล (Data Inconsistency) โค้ดได้รวบคำสั่ง UPDATE และ INSERT ไว้ใน SQL เดียวด้วย PostgreSQL CTE:</p>
-<pre><code class="language-sql">WITH expired AS (
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">WITH expired AS (
    UPDATE students
       SET status = &#39;rejected&#39;,
           rejection_reason = $1,
@@ -13213,6 +14879,7 @@ logged AS (
 )
 SELECT id, first_name, last_name, student_id, requested_room FROM expired
 </code></pre>
+  </div>
 <p><em>คำอธิบายทางคณิตศาสตร์และฐานข้อมูล</em>: คำสั่งด้านบนทำงานภายใต้ Transaction Isolation Level เดียวกัน การ UPDATE แถวที่มีอายุมากกว่า 5 นาที จะส่งคืนแถวที่เปลี่ยนสถานะทันที แล้วส่งต่อไปยังกล่อง <code>logged</code> เพื่อกรอกประวัติเข้าสู่ <code>access_logs</code> ทำให้สามารถรับประกันได้ 100% ว่าไม่มีคำขอใดที่ถูกเปลี่ยนสถานะแล้วไม่มีประวัติ log และสามารถรันได้เสร็จสิ้นภายในเวลาน้อยกว่า 10 มิลลิวินาที</p>
 </li>
 <li><p><strong>Multi-Channel Notification Trigger</strong>:<br>หลังจากบันทึกข้อมูลสำเร็จ ระบบจะประมวลผลดึงผู้ถูกปฏิเสธรอบดังกล่าวขึ้นมาเป็น Array แล้วทำการส่งออกข้อความแจ้งเตือนความล้มเหลวในการผ่านเข้าห้องปฏิบัติการทางช่องทางการสื่อสารต่าง ๆ ขนานกันผ่านคำสั่ง <code>Promise.allSettled()</code></p>
@@ -13285,13 +14952,24 @@ SELECT id, first_name, last_name, student_id, requested_room FROM expired
 </ol>
 <h3>71.47.4 การใช้บนบอร์ดฮาร์ดแวร์จริง (C++ Firmware)</h3>
 <p>ฝั่งเฟิร์มแวร์ ESP32 บนบอร์ดมีการนำเข้าไลบรารี Cryptographic ช่วยแปลงข้อมูลทางคณิตศาสตร์ และส่ง Request ในลักษณะดังนี้:</p>
-<pre><code class="language-cpp">// ตัวอย่างการสร้างลายเซ็นบน C++ Firmware สำหรับบอร์ด ESP32
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">// ตัวอย่างการสร้างลายเซ็นบน C++ Firmware สำหรับบอร์ด ESP32
 String timestamp = String(timeClient.getEpochTime());
 String endpoint = &quot;/api/esp32/display&quot;;
 String payload = timestamp + &quot;:&quot; + endpoint;
 
 // ...ถอดและประกอบคำนวณผ่านไลบรารี Cryptographic ในบอร์ด...
 </code></pre>
+  </div>
 <p>การเลือกใช้กลไกการถอดและเข้ารหัสที่ฝังระดับสถาปัตยกรรมหน่วยประมวลผล (Hardware-accelerated Cryptography) บนชิป ESP32 ทำให้การคำนวณเสร็จสิ้นภายในเวลาน้อยกว่า 1.2 มิลลิวินาที ไม่กระทบต่อ Timing และสัญญาณไฟของอุปกรณ์บอร์ด</p>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-48"></a></p>
@@ -13328,7 +15006,17 @@ String payload = timestamp + &quot;:&quot; + endpoint;
 </tr>
 </tbody></table>
 <p>ในการตรวจสอบสิทธิ์ (Authentication &amp; Authorization Middlewares) ทุกครั้งที่มีการส่งข้อมูลอนุมัติ ระบบจะใช้ฟังก์ชันดังต่อไปนี้ในการพิสูจน์สิทธิ์:</p>
-<pre><code class="language-typescript">// โค้ดต้นแบบสำหรับการดึงประวัติสิทธิ์ใน Next.js Server Side Route
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">// โค้ดต้นแบบสำหรับการดึงประวัติสิทธิ์ใน Next.js Server Side Route
 const adminToken = req.cookies.get(&quot;smartaccess_admin_token&quot;)?.value;
 const decoded = verifyToken(adminToken); // ดึงค่า id, role, allowed_rooms จาก JWT
 
@@ -13339,6 +15027,7 @@ if (decoded.role === &quot;door_operator&quot;) {
   }
 }
 </code></pre>
+  </div>
 <h3>71.48.3 ระบบอนุมัติและปฏิเสธข้อมูลแบบเป็นกลุ่ม (Bulk Actions Engine)</h3>
 <p>เพื่อช่วยให้แอดมินหรือเจ้าหน้าที่ผู้ดูแลสามารถจัดการอนุมัติคำขอในห้องเรียนเรียนรวมที่มีนักศึกษาต่อคิวสแกนเป็นร้อยรายการในชั่วโมงเร่งด่วนได้อย่างรวดเร็ว ระบบจึงเพิ่มโมดูล <strong>Bulk Actions</strong> บน UI แดชบอร์ดในแท็บรายการรอนุมัติ</p>
 <div class="mermaid">sequenceDiagram
@@ -13355,12 +15044,23 @@ if (decoded.role === &quot;door_operator&quot;) {
     API-->>AD: คืนผลสำเร็จ (HTTP 200 Success + จำนวนคำขอที่ทำสำเร็จ)
 </div>
 <p><strong>การบีบอัด Query เพื่อความเร็วสูงสุด</strong>:<br>แทนที่จะยิงคำสั่ง UPDATE แถวทีละรายรายการซึ่งเป็นภาระต่อระบบเน็ตเวิร์กและ Database Pool ระบบใช้กลไกการจัดกลุ่มตัวแปร (Parameterized array binding) เพื่ออัปเดตข้อมูลทั้งหมดในชุดคำสั่งเดียว:</p>
-<pre><code class="language-sql">UPDATE students
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">UPDATE students
    SET status = &#39;approved&#39;,
        approved_at = CURRENT_TIMESTAMP
  WHERE id = ANY($1::int[])
    AND status = &#39;pending&#39;
 </code></pre>
+  </div>
 <p><em>ผลลัพธ์การยกระดับประสิทธิภาพ</em>: จากการทดสอบระบบ สามารถประมวลผลอนุมัตินักศึกษาพร้อมกันได้สูงถึง 50 คนเสร็จสิ้นภายในเวลาน้อยกว่า 15 มิลลิวินาที ซึ่งเร็วกว่าการลูปเขียนข้อมูลในแบบเดิมถึง 25 เท่าตัว</p>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
 <p><a id="sec-71-49"></a></p>
@@ -13444,14 +15144,35 @@ if (decoded.role === &quot;door_operator&quot;) {
 <p>ระบบความปลอดภัยของเว็บเบราว์เซอร์กำหนดการเรียกใช้อุปกรณ์ถ่ายภาพ (WebRTC getUserMedia) ภายใต้สภาวะเข้ารหัส <strong>HTTPS</strong> เท่านั้น (ยกเว้น localhost)</p>
 <ol>
 <li><p><strong>การกำหนดพารามิเตอร์กล้องหลัง (Constraints Configuration)</strong>:<br>เพื่อให้อ่านข้อมูลบนจอภาพได้ดีที่สุด โค้ดได้ตั้งเป้าหมายไปที่กล้องหลังของมือถือที่มีความลึกของสนามและระยะออโต้โฟกัสที่ไกลกว่า:</p>
-<pre><code class="language-typescript">const stream = await navigator.mediaDevices.getUserMedia({
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">const stream = await navigator.mediaDevices.getUserMedia({
   video: { facingMode: { ideal: &quot;environment&quot; } }
 });
 </code></pre>
+  </div>
 <p>พร้อมผูกเข้ากับ Element <code>&lt;video&gt;</code> โดยกำหนดพารามิเตอร์ <code>playsinline</code> และ <code>muted</code> เพื่อป้องกันไม่ให้อุปกรณ์ iOS หรือ Android บังคับย่อหน้าต่างเข้าสู่โปรแกรมเล่นมีเดียแบบ Fullscreen นอกเว็บเบราว์เซอร์</p>
 </li>
 <li><p><strong>การทำ Frame Loop แบบเรียลไทม์ผ่าน GPU</strong>:<br>เพื่อไม่ให้การคำนวณเบียดบังความจุ CPU ของเบราว์เซอร์ ระบบใช้งาน <code>requestAnimationFrame</code> ในการดึงภาพแต่ละเฟรมมาประมวลผลแทนการตั้ง timer Loop:</p>
-<pre><code class="language-typescript">const scanFrame = () =&gt; {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">const scanFrame = () =&gt; {
   if (video.readyState === video.HAVE_ENOUGH_DATA &amp;&amp; ctx) {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -13471,6 +15192,7 @@ if (decoded.role === &quot;door_operator&quot;) {
   scanAnimationFrameRef.current = requestAnimationFrame(scanFrame);
 };
 </code></pre>
+  </div>
 </li>
 <li><p><strong>องค์ประกอบความสวยงามบน UI และโหมดทดสอบจำลอง (UX Design &amp; Simulator Fallback)</strong>:</p>
 <ul>
@@ -13509,7 +15231,17 @@ if (decoded.role === &quot;door_operator&quot;) {
 <li><p><strong>Discord (Rich Embed Format)</strong>:</p>
 <ul>
 <li><strong>ข้อดี</strong>: รองรับโครงสร้างการ์ด (Embeds), แถบสีสถานะ (Purple/Pink University Color Code), ฟิลด์แบ่งสัดส่วน (Inline Fields) และรูปภาพ Avatar ประจำมหาวิทยาลัย</li>
-<li><strong>โครงสร้าง Payload</strong>:<pre><code class="language-json">{
+<li><strong>โครงสร้าง Payload</strong>:<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{
   &quot;username&quot;: &quot;SmartAccess Security Bot&quot;,
   &quot;avatar_url&quot;: &quot;https://images.unsplash.com/photo-...&quot;,
   &quot;embeds&quot;: [{
@@ -13523,6 +15255,7 @@ if (decoded.role === &quot;door_operator&quot;) {
   }]
 }
 </code></pre>
+  </div>
 </li>
 </ul>
 </li>
@@ -13537,7 +15270,17 @@ if (decoded.role === &quot;door_operator&quot;) {
 <ul>
 <li><strong>ข้อดี</strong>: เป็นแอปพลิเคชันหลักของคนไทย มั่นใจว่าเปิดอ่านได้ 100%</li>
 <li><strong>ข้อจำกัด</strong>: LINE Notify ปิดบริการในเดือน มีนาคม 2025 ระบบจึงยกระดับไปใช้ <strong>LINE Messaging API (Push Message)</strong> ซึ่งใช้โครงสร้าง Bearer Token คู่กับ ID ปลายทาง (User ID หรือ Group ID) มีโควตาฟรี 500 ข้อความ/เดือน</li>
-<li><strong>โครงสร้าง Payload</strong>:<pre><code class="language-json">{
+<li><strong>โครงสร้าง Payload</strong>:<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{
   &quot;to&quot;: &quot;Cabcdef...&quot;,
   &quot;messages&quot;: [{
     &quot;type&quot;: &quot;text&quot;,
@@ -13545,13 +15288,24 @@ if (decoded.role === &quot;door_operator&quot;) {
   }]
 }
 </code></pre>
+  </div>
 </li>
 </ul>
 </li>
 </ol>
 <h3>71.51.3 การจำแนกสิทธิ์และความสำคัญของข้อมูล (Routing Override Logic)</h3>
 <p>เพื่อให้การแจ้งเตือนไม่รบกวนช่องส่วนกลาง และแยกห้องเรียนออกจากกันอย่างชัดเจน ระบบมีสถาปัตยกรรมกระจายข้อความแบบ <strong>Hierarchical Routing</strong>:</p>
-<pre><code class="language-text">[ระดับห้องปฏิบัติการ (Room Override)]
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">[ระดับห้องปฏิบัติการ (Room Override)]
 ตัวอย่าง: room_webhook_register_CE-401, room_telegram_register_CE-401
    │
    ▼ (ตรวจพบการตั้งค่าเฉพาะห้อง?)
@@ -13566,6 +15320,7 @@ if (decoded.role === &quot;door_operator&quot;) {
 [ระดับส่วนกลาง (Global Settings)]
 ตัวอย่าง: discord_webhook_register, telegram_chat_register
 </code></pre>
+  </div>
 <p>มาตรการจัดส่งนี้ครอบคลุมความปลอดภัยของแอดมิน โดยแบ่งหมวดหมู่ (Categories) การแจ้งเตือนออกเป็น 4 ขอบเขตชัดเจน:</p>
 <ul>
 <li><strong>Register (การลงทะเบียน)</strong>: แจ้งเตือนเมื่อนักศึกษายื่นคำขอเข้ามาใหม่</li>
@@ -13587,7 +15342,17 @@ if (decoded.role === &quot;door_operator&quot;) {
 <p>แต่เนื่องจากฝั่งลูกข่าย (Client-side) ยังคงมีตัวแปรสถานะผู้ใช้งานค้างอยู่ในหน่วยความจำ ทำให้หน้าแดชบอร์ดค้างอยู่ในหน้าจอภายใน แต่กลับขึ้นบั๊กข้อมูลไม่โหลด หรือการประมวลผลล้มเหลว ทำให้แอดมินสับสนและพยายามกดคลิกซ้ำ ๆ ซึ่งไม่เป็นมิตรต่อประสบการณ์การใช้งานและเป็นจุดอ่อนทางความมั่นคงปลอดภัย</p>
 <h3>71.52.2 สถาปัตยกรรมและกลไกการทำงานของ Global 401 Interceptor</h3>
 <p>ระบบใหม่ได้แก้ไขปัญหานี้อย่างถาวรโดยการนำสถาปัตยกรรม <strong>Global Fetch Overriding</strong> มาใช้งานใน <code>DashboardContext.tsx</code> โดยระบบจะทำการหุ้มอินเทอร์เฟซดั้งเดิมของ <code>window.fetch</code> ด้วยฟังก์ชันควบคุมตัวใหม่ที่จะวิเคราะห์และตอบสนองต่อผลลัพธ์ของ HTTP Status Code ทั่วทั้งแอปพลิเคชัน:</p>
-<pre><code class="language-text">[ ลูกข่ายทำกิจกรรมการคลิก / เบื้องหลังรัน Polling ทุก 3 วินาที ]
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">[ ลูกข่ายทำกิจกรรมการคลิก / เบื้องหลังรัน Polling ทุก 3 วินาที ]
                    │
                    ▼ (เรียกใช้งาน API ผ่าน Fetch)
          [ window.fetch Wrapper ]
@@ -13603,6 +15368,7 @@ if (decoded.role === &quot;door_operator&quot;) {
                                 ├─► สั่งเปลี่ยนเส้นทางไปยังหน้าล็อกอิน
                                 └─► เพิ่มพารามิเตอร์ `?reason=idle`
 </code></pre>
+  </div>
 <h3>71.52.3 การแยกแยะขอบเขตการทำงาน (Route Exclusion &amp; Prevention of Redirect Loops)</h3>
 <p>เพื่อป้องกันปัญหาการวนลูปการเปลี่ยนเส้นทาง (Redirect Loops) เช่น ในกรณีที่ผู้ใช้งานกรอกรหัสผ่านผิดพลาดบนหน้าล็อกอินหลัก ซึ่งเป็นปกติที่จะส่งคืนรหัส HTTP 401 ระบบได้ติดตั้งตัวกรองเงื่อนไข (<strong>Exclusion Filter</strong>):</p>
 <ul>
@@ -13860,8 +15626,19 @@ if (decoded.role === &quot;door_operator&quot;) {
 </ul>
 </li>
 <li><strong>การปรับแต่งในฝั่งฮาร์ดแวร์ ESP32 และ Generator:</strong><ul>
-<li><strong>แนวทางแก้ไข:</strong> เพิ่มการระบุค่าพารามิเตอร์ให้กับไลบรารี <code>httpUpdate</code> ใน <code>esp32.ino</code> และเทมเพลตโค้ด <code>ArduinoCode.ts</code> เพื่อบังคับให้ติดตามทิศทางการโยกย้ายไฟล์เฟิร์มแวร์ทุกกรณี:<pre><code class="language-cpp">httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+<li><strong>แนวทางแก้ไข:</strong> เพิ่มการระบุค่าพารามิเตอร์ให้กับไลบรารี <code>httpUpdate</code> ใน <code>esp32.ino</code> และเทมเพลตโค้ด <code>ArduinoCode.ts</code> เพื่อบังคับให้ติดตามทิศทางการโยกย้ายไฟล์เฟิร์มแวร์ทุกกรณี:<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
 </code></pre>
+  </div>
 การกำหนดค่า <code>HTTPC_FORCE_FOLLOW_REDIRECTS</code> ช่วยให้ ESP32 บอร์ดจริงสามารถกระโดดเชื่อมต่อและดึงไฟล์ <code>.bin</code> ปลายทางจาก Supabase Storage ได้อย่างอัตโนมัติและไร้รอยต่อ</li>
 </ul>
 </li>
@@ -13966,10 +15743,21 @@ if (decoded.role === &quot;door_operator&quot;) {
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><h2>71.54 ชุดทดสอบความปลอดภัยและการทำงานแบบอัตโนมัติ (Automated Safety &amp; Security Test Suite)</h2>
 <p>เพิ่มชุดทดสอบหน่วย (unit test) ด้วย <strong>Vitest</strong> เพื่อป้องกันการถดถอย (regression) ของตรรกะความปลอดภัยที่สำคัญที่สุด โดยเลือกทดสอบเฉพาะฟังก์ชันบริสุทธิ์ (pure functions) ที่ไม่ต้องพึ่งฐานข้อมูล ทำให้รันได้เร็ว (~1.6 วินาที) และไม่ต้องเชื่อมต่อ Supabase</p>
 <h3>71.54.1 วิธีรันชุดทดสอบ (Execution Commands)</h3>
-<pre><code class="language-bash">cd my-app
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">terminal</div>
+      <div class="code-lang-badge">BASH</div>
+    </div>
+    <pre class="line-numbers"><code class="language-bash">cd my-app
 npm test          # รันครั้งเดียว (vitest run)
 npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่ยนแปลง
 </code></pre>
+  </div>
 <h3>71.54.2 โครงสร้างไฟล์และไฟล์คีย์สำคัญ (Test Suite Structure)</h3>
 <table>
 <thead>
@@ -14560,12 +16348,23 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 </ul>
 <h3>73.4 ตัวจำกัดอัตราแบบ Atomic บน PostgreSQL (Serverless Rate Limiting)</h3>
 <p>เนื่องจาก Vercel เป็น serverless (in-memory Map ไม่ persist ข้าม lambda) ระบบจึงย้าย rate limiter มาเก็บใน PostgreSQL ด้วย single-statement upsert ที่ปลอดภัยจาก race condition:</p>
-<pre><code class="language-sql">INSERT INTO rate_limits (key, count, reset_time) VALUES ($1, 1, $2)
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">INSERT INTO rate_limits (key, count, reset_time) VALUES ($1, 1, $2)
 ON CONFLICT (key) DO UPDATE SET
   count = CASE WHEN $3 &lt; rate_limits.reset_time THEN rate_limits.count + 1 ELSE 1 END,
   reset_time = CASE WHEN $3 &lt; rate_limits.reset_time THEN rate_limits.reset_time ELSE $4 END
 RETURNING count, reset_time;
 </code></pre>
+  </div>
 <table>
 <thead>
 <tr>
@@ -14739,7 +16538,17 @@ RETURNING count, reset_time;
 <p>ระบบแจ้งเตือน &quot;เฉพาะเมื่อมีการลบจริง (&gt; 0 รายการ)&quot; เพื่อไม่ให้ cron เด้งแจ้งเตือนเปล่า</p>
 <h3>73.11 ระบบล้างคำขอค้างอนุมัติอัตโนมัติ (Auto-Reject Sweep)</h3>
 <p><code>lib/auto-reject.ts</code> (<code>sweepExpiredPending</code>) ปฏิเสธนักศึกษาที่อยู่สถานะ <code>pending</code> เกิน 5 นาทีอัตโนมัติ ด้วย CTE เดียวที่ทั้ง UPDATE สถานะ, INSERT access_log และคืนรายการเพื่อแจ้งเตือน — มี throttle (ทำงานไม่ถี่กว่า 10 วินาที) และ <code>inFlight</code> guard กันรันซ้อน</p>
-<pre><code class="language-sql">WITH expired AS (
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">WITH expired AS (
   UPDATE students SET status=&#39;rejected&#39;, rejection_reason=$1, approved_at=NOW()
   WHERE status=&#39;pending&#39; AND registered_at &lt; NOW() - INTERVAL &#39;5 minutes&#39;
   RETURNING id, first_name, last_name, student_id, requested_room
@@ -14749,6 +16558,7 @@ RETURNING count, reset_time;
   RETURNING student_id
 ) SELECT id, first_name, last_name, student_id, requested_room FROM expired;
 </code></pre>
+  </div>
 <h3>73.12 สถาปัตยกรรมการแจ้งเตือนหลายช่องทาง (Discord + Telegram + LINE)</h3>
 <p><code>lib/notify.ts</code> เป็น dispatcher รวมศูนย์: สร้าง embed เพียงครั้งเดียวด้วย <code>buildEventMessage()</code> (<code>lib/discord.ts</code>) แล้วกระจายไปทุกช่องที่ตั้งค่าไว้แบบขนาน (<code>Promise.allSettled</code>) — Telegram ส่ง HTML, LINE ส่ง plain text (แปลงจาก embed ด้วย <code>formatPlainText</code>)</p>
 <div class="mermaid">flowchart TD
@@ -15044,7 +16854,17 @@ RETURNING count, reset_time;
 <h4>73.20.3 การแก้ไขที่ดำเนินการ</h4>
 <p><strong>แก้ปัญหา 1 — ยกเลิกข้อจำกัด max-height คงที่ และเปลี่ยนเป็นค่าพลวัต:</strong></p>
 <p>ปรับปรุงค่า CSS ในชุด <code>.toc-group-list</code> ให้ใช้ค่าเริ่มต้น <code>max-height: 9999px</code> (ใหญ่พอสมควรสำหรับทุกกรณีในสถานะเปิด) และกำหนดให้สถานะ <code>.collapsed</code> ใช้ <code>max-height: 0 !important</code> เพื่อให้ CSS Override แน่นอน:</p>
-<pre><code class="language-css">.toc-group-list {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.css</div>
+      <div class="code-lang-badge">CSS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-css">.toc-group-list {
   max-height: 9999px;
   overflow: hidden;
   transition: max-height 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease-out;
@@ -15056,8 +16876,19 @@ RETURNING count, reset_time;
   pointer-events: none;
 }
 </code></pre>
+  </div>
 <p>นอกจากนี้ ได้ยกระดับฟังก์ชัน <code>expandGroup()</code> ใน JavaScript ให้ใช้ค่า <strong><code>scrollHeight</code> จริง</strong> ก่อนเปิดและปิดบานพับ เพื่อให้ Transition Animation แม่นยำและราบรื่น:</p>
-<pre><code class="language-javascript">function expandGroup(groupId) {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">app.js</div>
+      <div class="code-lang-badge">JAVASCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-javascript">function expandGroup(groupId) {
   document.querySelectorAll(&quot;.toc-group-list&quot;).forEach(list =&gt; {
     if (list.id === groupId) {
       // วัดความสูงจริงก่อน expand
@@ -15081,9 +16912,20 @@ RETURNING count, reset_time;
   });
 }
 </code></pre>
+  </div>
 <p><strong>แก้ปัญหา 2 — เปลี่ยนเป้าหมาย Scroll จาก window เป็น tocMenu:</strong></p>
 <p>แทนที่การเรียก <code>link.scrollIntoView()</code> ด้วยการคำนวณ <code>offsetTop</code> ของลิงก์เทียบกับ <code>.toc-menu</code> แล้วเรียก <code>tocMenu.scrollTo()</code> โดยตรง พร้อม <code>requestAnimationFrame</code> เพื่อรอให้ Animation บานพับเสร็จสิ้นก่อนเลื่อน:</p>
-<pre><code class="language-javascript">if (!sidebar.matches(&#39;:hover&#39;)) {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">app.js</div>
+      <div class="code-lang-badge">JAVASCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-javascript">if (!sidebar.matches(&#39;:hover&#39;)) {
   requestAnimationFrame(() =&gt; {
     const linkRect = link.getBoundingClientRect();
     const menuRect = tocMenu.getBoundingClientRect();
@@ -15095,6 +16937,7 @@ RETURNING count, reset_time;
   });
 }
 </code></pre>
+  </div>
 <h4>73.20.4 ผลลัพธ์ที่ได้รับ</h4>
 <ul>
 <li><strong>แก้ไขแล้ว:</strong> หัวข้อ §31, §32, §33, §34 และรายการอื่นที่เคยถูกตัดทิ้งแสดงขึ้นอย่างสมบูรณ์ครบถ้วนทุกกลุ่มเมนู โดยไม่มีข้อจำกัดด้านจำนวนหัวข้ออีกต่อไป</li>
@@ -15139,7 +16982,17 @@ RETURNING count, reset_time;
 <hr>
 <h4>73.21.2 โครงสร้างฐานข้อมูลเพิ่มเติม (Database Schema Modification)</h4>
 <p>การเชื่อมต่อความสัมพันธ์ระหว่างบัญชีผู้ใช้งาน (ผู้ดูแลระบบ/นักศึกษา) กับอุปกรณ์เครื่องปลายทาง ทำได้ผ่านการเพิ่มตาราง <code>fcm_tokens</code> ในฐานข้อมูล Supabase PostgreSQL โดยมีรายละเอียดโครงสร้างตารางและดัชนี (Indexes) ดังนี้:</p>
-<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS fcm_tokens (
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">schema.sql</div>
+      <div class="code-lang-badge">SQL</div>
+    </div>
+    <pre class="line-numbers"><code class="language-sql">CREATE TABLE IF NOT EXISTS fcm_tokens (
   id SERIAL PRIMARY KEY,
   user_id INT NOT NULL,
   role VARCHAR(20) NOT NULL CHECK (role IN (&#39;student&#39;, &#39;admin&#39;)),
@@ -15151,6 +17004,7 @@ RETURNING count, reset_time;
 -- เพิ่ม Index ความเร็วสูงเพื่อรองรับการดึงข้อมูลโทเค็นแบบ Multi-device ตามรหัสและบทบาทของผู้ใช้งาน
 CREATE INDEX IF NOT EXISTS idx_fcm_tokens_user ON fcm_tokens (user_id, role);
 </code></pre>
+  </div>
 <p><strong>คำอธิบายการออกแบบ:</strong></p>
 <ul>
 <li><code>role</code> กำหนดค่าความถูกต้องเป็น <code>CHECK (role IN (&#39;student&#39;, &#39;admin&#39;))</code> เพื่อแยกสิทธิ์การรับแจ้งเตือนระหว่างผู้ดูแลระบบกับนักศึกษา เนื่องจากทั้งสองฝั่งมี ID ในตารางแยกของตนเอง (<code>admin_users</code> และ <code>students</code>)</li>
@@ -15162,7 +17016,17 @@ CREATE INDEX IF NOT EXISTS idx_fcm_tokens_user ON fcm_tokens (user_id, role);
 <p>การทำให้เบราว์เซอร์บนมือถือตระหนักถึงขีดความสามารถของแอปพลิเคชัน และอนุญาตให้ผู้ใช้กด <strong>&quot;Add to Home Screen&quot;</strong> หรือแชร์หน้าจอหลักได้นั้น จำเป็นต้องมีชุดไฟล์ระบบในห้อง <code>public/</code> ดังนี้:</p>
 <h5>1. ไฟล์โครงสร้าง PWA Manifest (<code>public/manifest.json</code>)</h5>
 <p>ไฟล์สำหรับระบุคุณลักษณะ ตัวตนของแอป และไอคอนที่ปรับขนาดอย่างสวยงาม:</p>
-<pre><code class="language-json">{
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{
   &quot;name&quot;: &quot;SmartAccess — ระบบควบคุมการเข้าออกห้องเรียนอัจฉริยะ&quot;,
   &quot;short_name&quot;: &quot;SmartAccess&quot;,
   &quot;description&quot;: &quot;ระบบจัดการสิทธิ์และควบคุมการเข้าออกห้องเรียนผ่านเครือข่ายไร้สาย&quot;,
@@ -15197,13 +17061,24 @@ CREATE INDEX IF NOT EXISTS idx_fcm_tokens_user ON fcm_tokens (user_id, role);
   ]
 }
 </code></pre>
+  </div>
 <h5>2. บริการเว็บแบ็กกราวด์ออฟไลน์ (<code>public/sw.js</code> — Vanilla Service Worker)</h5>
 <p>Service Worker หลักทำหน้าที่คุมสองเสาหลัก:</p>
 <ol>
 <li><strong>Network-First Caching Strategy:</strong> มุ่งเน้นการดึงข้อมูลจากเครือข่ายจริงก่อนเพื่อให้แผงแอดมินหรือหน้าจอนักศึกษาอัปเดตสถานะการเข้าออกล่าสุดแบบวินาทีต่อวินาที หากอินเทอร์เน็ตขาดหายหรือออฟไลน์ ระบบจึงจะดึงเอา Static App Shell และแคชล่าสุดที่เก็บไว้ใน <code>smartaccess-cache-v1</code> ออกมาส่งให้เบราว์เซอร์ เพื่อให้ระบบไม่ล่ม</li>
 <li><strong>Push Notification Native Trigger:</strong> ฟังเหตุการณ์ <code>push</code> event จากเซิร์ฟเวอร์ และดึงข้อมูล payload มาเปิดใช้งานการสั่นและแสดงแบนเนอร์แจ้งเตือนแบบพรีเมียมบน iOS/Android:</li>
 </ol>
-<pre><code class="language-javascript">const CACHE_NAME = &#39;smartaccess-cache-v1&#39;;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">app.js</div>
+      <div class="code-lang-badge">JAVASCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-javascript">const CACHE_NAME = &#39;smartaccess-cache-v1&#39;;
 const PRECACHE_ASSETS = [
   &#39;/&#39;,
   &#39;/manifest.json&#39;,
@@ -15318,9 +17193,20 @@ self.addEventListener(&#39;notificationclick&#39;, (event) =&gt; {
   );
 });
 </code></pre>
+  </div>
 <h5>3. ตัวจำลองความเข้ากันได้ SDK (<code>public/firebase-messaging-sw.js</code>)</h5>
 <p>ทำหน้าที่เป็นสะพานเชื่อมเพื่อให้ Firebase Browser Client SDK ฝั่งเบราว์เซอร์สามารถดักและตอบรับโครงสร้าง FCM ในโหมดเบื้องหลัง (Background state) ได้โดยไม่เกิดขัดข้องด้านมาตรฐาน:</p>
-<pre><code class="language-javascript">importScripts(&#39;https://www.gstatic.com/firebasejs/11.8.1/firebase-app-compat.js&#39;);
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">app.js</div>
+      <div class="code-lang-badge">JAVASCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-javascript">importScripts(&#39;https://www.gstatic.com/firebasejs/11.8.1/firebase-app-compat.js&#39;);
 importScripts(&#39;https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging-compat.js&#39;);
 
 self.addEventListener(&#39;message&#39;, (event) =&gt; {
@@ -15343,12 +17229,23 @@ self.addEventListener(&#39;message&#39;, (event) =&gt; {
   }
 });
 </code></pre>
+  </div>
 <hr>
 <h4>73.21.4 การลงทะเบียนและสถาปัตยกรรม Client-Side (Client-Side SW &amp; FCM Registration)</h4>
 <p>เพื่อให้ Next.js สามารถลงทะเบียน Service Worker ทั้งสองชุดบนหน้าต่างเบราว์เซอร์ได้อย่างเป็นลำดับขั้นตอน โดยที่ไม่รบกวนจังหวะการทำ Server-Side Rendering (SSR) หรือก่อให้เกิด Hydration Error จึงได้แยกการทำงานและแก้ไขดังนี้:</p>
 <h5>1. การดึงค่าพารามิเตอร์เบราว์เซอร์ (<code>lib/firebase.ts</code>)</h5>
 <p>ดึงข้อมูลคีย์สาธารณะและรายละเอียดแอปพลิเคชันจากสภาพแวดล้อม Client-Side (พร้อมป้องกันการพังหากเรียกใช้จากเซิร์ฟเวอร์):</p>
-<pre><code class="language-typescript">export interface FirebaseConfig {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">export interface FirebaseConfig {
   apiKey: string;
   authDomain: string;
   projectId: string;
@@ -15381,6 +17278,7 @@ export function getVapidKey(): string {
   return process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || &#39;&#39;;
 }
 </code></pre>
+  </div>
 <h5>2. คอมโพเนนต์ลงทะเบียนอัตโนมัติ (<code>app/components/ServiceWorkerRegistration.tsx</code>)</h5>
 <p>ใช้สถาปัตยกรรมแบบ <code>&#39;use client&#39;</code> เพื่อให้ทำงานเฉพาะในฝั่ง Browser เท่านั้น หลังจากที่การโหลดโครงสร้างพื้นฐาน HTML สำเร็จ:</p>
 <ul>
@@ -15441,7 +17339,17 @@ export function getVapidKey(): string {
 </ul>
 <h5>2. การกำหนด Headers และการควบคุมขอบเขตของ Service Worker</h5>
 <p>โดยการใช้คุณสมบัติ <code>async headers()</code> ใน NextConfig เพื่อให้แน่ใจว่าไฟล์ Service Worker จะทำงานในระดับ Global Scope และไม่ค้างสะสมแคชเก่าในฝั่งไคลเอนต์:</p>
-<pre><code class="language-typescript">{
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">{
   source: &quot;/sw.js&quot;,
   headers: [
     { key: &quot;Cache-Control&quot;, value: &quot;no-cache, no-store, must-revalidate&quot; },
@@ -15456,6 +17364,7 @@ export function getVapidKey(): string {
   ],
 }
 </code></pre>
+  </div>
 <hr>
 <h4>73.21.7 การบูรณาการแจ้งเตือนพุชเข้ากับ Workflow ปัจจุบัน (System Workflow Integration)</h4>
 <p>ได้ทำการบูรณาการการยิงการแจ้งเตือนแบบ Push เข้าไปในเหตุการณ์สำคัญทางธุรกิจ (Business Events) บน Serverless API Routes ดังนี้:</p>
@@ -15784,7 +17693,17 @@ export function getVapidKey(): string {
 </ol>
 <h4>73.23.2 แนวทางการแก้ไขเชิงสถาปัตยกรรม (Architectural Resolution)</h4>
 <p><strong>1. ย้ายการ Initialize Firebase ไปไว้ที่ระดับบนสุดของ Service Worker (<code>my-app/public/firebase-messaging-sw.js</code>):</strong><br>ยกเลิกการรับคอนฟิกแบบ <code>postMessage</code> ทั้งหมด เปลี่ยนมารับค่าคอนฟิก (publishable keys ซึ่งปลอดภัยที่จะเปิดเผยฝั่ง Client) ผ่าน <strong>Query String</strong> ของ URL ไฟล์ Service Worker แทน ทำให้ SW สามารถอ่านค่าและเรียก <code>firebase.initializeApp()</code> พร้อม <code>firebase.messaging()</code> ได้ทันทีตั้งแต่จังหวะ Initial Evaluation ส่งผลให้ Event <code>push</code> และ <code>notificationclick</code> ถูกผูกได้ถูกต้องตามสเปก และคำเตือนทั้งหมดหายไป</p>
-<pre><code class="language-javascript">const swParams = new URL(self.location).searchParams;
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">app.js</div>
+      <div class="code-lang-badge">JAVASCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-javascript">const swParams = new URL(self.location).searchParams;
 const firebaseConfig = {
   apiKey: swParams.get(&#39;apiKey&#39;) || &#39;&#39;,
   authDomain: swParams.get(&#39;authDomain&#39;) || &#39;&#39;,
@@ -15799,6 +17718,7 @@ if (firebaseConfig.apiKey &amp;&amp; firebaseConfig.projectId &amp;&amp; !fireba
   messaging.onBackgroundMessage((payload) =&gt; { /* สร้าง notification จาก payload.data */ });
 }
 </code></pre>
+  </div>
 <p><strong>2. ปรับฝั่ง Client ให้ส่งคอนฟิกผ่าน Query String (<code>my-app/app/components/ServiceWorkerRegistration.tsx</code>):</strong><br>ขณะลงทะเบียน Service Worker จะประกอบ URL พร้อมแนบพารามิเตอร์คอนฟิก แล้วเรียก <code>navigator.serviceWorker.register(&#39;/firebase-messaging-sw.js?&lt;config&gt;&#39;, { scope: &#39;/&#39; })</code> แทนการ <code>postMessage</code> แบบเดิมที่มีจังหวะไม่แน่นอน</p>
 <p><strong>3. เปลี่ยน Payload เป็นแบบ Data-Only ฝั่งเซิร์ฟเวอร์ (<code>my-app/lib/firebase-admin.ts</code> และ <code>my-app/app/api/notifications/test/route.ts</code>):</strong><br>ตัดฟิลด์ <code>notification</code> ออกจากข้อความ FCM ทั้งหมด แล้วย้ายเนื้อหา (title, body, url, icon) ไปไว้ในฟิลด์ <code>data</code> เพียงที่เดียว ปล่อยให้ Service Worker เป็นผู้สร้างการแจ้งเตือนผ่าน <code>onBackgroundMessage</code> รายเดียวเท่านั้น แก้ปัญหาการแจ้งเตือนเด้งซ้ำได้อย่างสมบูรณ์</p>
 <p><strong>4. ตรวจจับและสื่อสารกรณีเบราว์เซอร์บล็อกพุช (<code>my-app/app/components/PushNotificationManager.tsx</code>):</strong><br>เพิ่มสถานะ <code>pushBlocked</code> พร้อมตรรกะตรวจจับ <code>AbortError</code> / <code>push service error</code> หากพบจะแสดงป้ายสถานะ &quot;🚫 เบราว์เซอร์บล็อกพุช&quot; บนวิดเจ็ต และบันทึก log แนะนำวิธีแก้ (สำหรับ Brave: เปิด <code>brave://settings/privacy</code> → เปิด &quot;Use Google services for push messaging&quot; และต้องเปิดผ่าน HTTPS หรือ localhost เท่านั้น)</p>
@@ -15926,10 +17846,21 @@ if (firebaseConfig.apiKey &amp;&amp; firebaseConfig.projectId &amp;&amp; !fireba
 <h3>73.25 การแก้ไขบั๊กระดับระบบแบบเบ็ดเสร็จ: CSP บล็อก FCM, Migration ตกหล่น, และโลโก้/UI (Full-System Bug-Fix: CSP, Skipped Migrations, Logo &amp; UI)</h3>
 <h4>73.25.1 บั๊กที่ 1 — Content Security Policy บล็อกการลงทะเบียนพุช (CSP Blocking FCM Registration)</h4>
 <p>จากการทดสอบบนระบบจริง (Production) พบ Error บน Console ที่เป็นต้นตอแท้จริงของการลงทะเบียนพุชไม่สำเร็จ (ต่างจากอาการ AbortError ของ Brave ใน §73.23):</p>
-<pre><code>[FCM] Token registration failed: TypeError: Failed to fetch.
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">note.txt</div>
+      <div class="code-lang-badge">TEXT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-text">[FCM] Token registration failed: TypeError: Failed to fetch.
 Refused to connect to &#39;https://firebaseinstallations.googleapis.com/...&#39;
 because it violates the Content Security Policy directive: &quot;connect-src ...&quot;
 </code></pre>
+  </div>
 <ul>
 <li><strong>สาเหตุ:</strong> <code>connect-src</code> ใน <code>my-app/next.config.ts</code> อนุญาตเฉพาะ <code>fcm.googleapis.com</code> และ <code>oauth2.googleapis.com</code> แต่ FCM Web SDK ต้องเรียกอีกหลายโดเมนที่ไม่ได้อยู่ในรายการ จึงถูก CSP บล็อก</li>
 <li><strong>การแก้ไข (Patched):</strong> เพิ่มโดเมนที่จำเป็นทั้งหมดเข้าใน <code>connect-src</code> ได้แก่ <code>https://firebaseinstallations.googleapis.com</code> (FID), <code>https://fcmregistrations.googleapis.com</code> (ออกโทเคน), <code>https://www.googleapis.com</code>, และ <code>wss://*.supabase.co</code> (รองรับ Realtime) — ตรวจสอบแล้วว่า HTTP Header ที่เซิร์ฟเวอร์ส่งออกมามีโดเมนครบถ้วน</li>
@@ -16157,27 +18088,60 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 </ol>
 <h4>73.29.2 แนวทางการแก้ไขและสถาปัตยกรรมประสิทธิภาพ (Tuning Resolution)</h4>
 <p><strong>1. การทำ Lazy Dynamic Import สำหรับคิวอาร์โค้ดสแกนเนอร์ (<code>jsQR</code>):</strong><br>ยกเลิกการ <code>import</code> แบบสแตติกใน <code>app/page.tsx</code> แล้วเพิ่ม <code>jsQRRef</code> เพื่อนำเข้าโมดูลแบบ inline asynchronous dynamic import ภายใน <code>startCamera</code> (เฉพาะจังหวะที่ผู้ใช้ต้องการเปิดหน้ากล้องด้วยตนเองเท่านั้น):</p>
-<pre><code class="language-typescript">if (!jsQRRef.current) {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">if (!jsQRRef.current) {
   const { default: loadedJsQR } = await import(&quot;jsqr&quot;);
   jsQRRef.current = loadedJsQR;
 }
 </code></pre>
+  </div>
 <p>ส่งผลให้ตัวแอปแยก Chunk สำหรับ <code>jsQR</code> ออกไปโหลดต่างหาก ช่วยลดขนาด JS แรกเริ่มสำหรับผู้ใช้ทั่วไปลงทันทีถึง ~100KB+</p>
 <p><strong>2. การทำ Dynamic Charting ปิด SSR ฝั่งแอดมิน แดชบอร์ด (<code>DashboardCharts</code>):</strong><br>ปรับการนำเข้ากราฟในแดชบอร์ด <code>app/admin/dashboard/layout.tsx</code> เป็นแบบ Next.js <code>dynamic</code> ร่วมกับการปิดการทำงานฝั่ง Server (<code>ssr: false</code>) และวาง Skeleton รอโหลด:</p>
-<pre><code class="language-typescript">const DashboardCharts = dynamic(() =&gt; import(&quot;../../components/DashboardCharts&quot;), {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">page.tsx</div>
+      <div class="code-lang-badge">TYPESCRIPT</div>
+    </div>
+    <pre class="line-numbers"><code class="language-typescript">const DashboardCharts = dynamic(() =&gt; import(&quot;../../components/DashboardCharts&quot;), {
   ssr: false,
   loading: () =&gt; &lt;ChartsSkeleton /&gt;
 });
 </code></pre>
+  </div>
 <p>ช่วยลดขนาด Bundle ก้อนหลักของหน้ารายการคำขอที่ค้างอนุมัติลงและเร่งความเร็ว FCP ได้อย่างโดดเด่น</p>
 <p><strong>3. การเปิดใช้งานระบบปัญญาประดิษฐ์ส่องหน้าล่วงหน้า (Speculation Rules API) ในระดับ <code>moderate</code>:</strong><br>ฝังคำสั่ง Speculation Rules ในรูป JSON Script ภายใต้ <code>&lt;head&gt;</code> ของ <code>RootLayout</code> (<code>app/layout.tsx</code>) เพื่อสั่งการให้เบราว์เซอร์ตระกูล Chromium เริ่มดำเนินการ <strong>Prerender (เรนเดอร์ล่วงหน้าฝั่ง Client แบบ 100%)</strong> สำหรับหน้าถัดไปทันทีที่ตรวจพบการโฮเวอร์ (Hover) เมาส์ชี้ไปที่ลิงก์เป็นเวลานานกว่า 200ms หรือกดสัมผัสแช่ ช่วยลดเวลาเปลี่ยนหน้าให้เป็น <strong>0 มิลลิวินาที (Instant Navigations)</strong> โดยไม่รบกวนทรัพยากรการประมวลผลเกินควร:</p>
-<pre><code class="language-json">{
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">package.json</div>
+      <div class="code-lang-badge">JSON</div>
+    </div>
+    <pre class="line-numbers"><code class="language-json">{
   &quot;prerender&quot;: [{
     &quot;where&quot;: { &quot;href_matches&quot;: &quot;/*&quot; },
     &quot;eagerness&quot;: &quot;moderate&quot;
   }]
 }
 </code></pre>
+  </div>
 <p><strong>4. การผูกเอฟเฟกต์ View Transitions API สไตล์ Cross-fade ทั่วทั้งแอป:</strong><br>เขียนกำหนดคำสั่งสไตล์ CSS ทั่วโลก <code>@view-transition { navigation: auto; }</code> ใน <code>app/globals.css</code> เพื่อเปิดระบบ Cross-fade อัตโนมัติในสถาปัตยกรรมระดับ GPU-composited ทั่วแอปพลิเคชัน ทำให้การเปลี่ยนผ่านระหว่างหน้าจอนุ่มนวลเป็นเนื้อเดียวกัน</p>
 <h4>73.29.3 ตารางสรุปไฟล์ที่แก้ไข (Modified Files Summary Table)</h4>
 <table>
@@ -16233,12 +18197,23 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <h4>73.30.2 สถาปัตยกรรมและการปรับปรุงส่วนติดต่อผู้ใช้แบบมีส่วนร่วม (Responsive Architecture Resolution)</h4>
 <p><strong>1. การยกระดับจุดตัดการตอบสนอง (Media Query Breakpoint Realignment):</strong><br>ปรับเปลี่ยนค่าสัญจร Breakpoints ทั้งระบบใน <code>my-app/app/globals.css</code> จากเดิม <code>768px</code> ขยายขึ้นไปที่ <strong><code>1024px</code></strong> ส่งผลให้สมาร์ตโฟนทุกรุ่นรวมถึงแท็บเล็ตและ iPad ทุกขนาด (เช่น iPad Mini, Air, Pro ทั้งในแนวตั้งและแนวนอนบางส่วน) ได้รับสิทธิ์เข้าถึงอินเทอร์เฟซแบบโมบายล์พรีเมียม (Responsive Mobile-Centric Layout) ที่ผ่านการจัดวางสัดส่วนใหม่ทั้งหมด</p>
 <p><strong>2. ระบบจัดวางการ์ดข้อมูลแบบ Fluid Grid สำหรับแท็บเล็ต (<code>.mobile-card-grid-container</code>):</strong><br>ยกเลิกการบังคับซ่อนการ์ดโมบายล์ผ่านคุณสมบัติ inline style <code>style={{ display: &quot;none&quot; }}</code> ใน <code>pending/page.tsx</code> แล้วถ่ายโอนไปควบคุมผ่าน CSS Rule <code>!important</code> ในมีเดียคิวรีแทน พร้อมเปิดใช้งานคลาสจัดวางแบบกริดพลวัต:</p>
-<pre><code class="language-css">.mobile-card-grid-container {
+<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">code.css</div>
+      <div class="code-lang-badge">CSS</div>
+    </div>
+    <pre class="line-numbers"><code class="language-css">.mobile-card-grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
 }
 </code></pre>
+  </div>
 <p>ส่งผลให้บน <strong>สมาร์ตโฟนขนาดปกติ</strong> รายการคำขอจะแสดงผลแบบ 1 คอลัมน์เรียงในแนวตั้ง และเมื่อเปลี่ยนไปเปิดบน <strong>iPad / แท็บเล็ต</strong> รายการการ์ดเหล่านั้นจะจัดเรียงตนเองแบบ 2 หรือ 3 คอลัมน์คู่ขนานในแนวนอนโดยอัตโนมัติตามพื้นที่เหลือเฟือของอุปกรณ์ เป็นการใช้สอยพื้นที่หน้าจอสัมผัสขนาดใหญ่ให้เกิดประโยชน์สูงสุด</p>
 <p><strong>3. การซ่อนและยุบเก็บแถบข้างนำทางอัจฉริยะ (Adaptive Sidebar Drawer):</strong></p>
 <ul>
@@ -16740,8 +18715,19 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <h4>73.35.1 บริบทและจุดอ่อนช่องทางข้างเคียง (Context &amp; Timing Side-Channel Flaw)</h4>
 <p>ในกระบวนการทำงานโหมดออฟไลน์ของบอร์ด ESP32 (<code>esp32.ino</code>) แอดมินสามารถป้อนรหัส <strong>Offline PIN 6 หลัก</strong> ผ่านบริการเว็บเพจภายในของบอร์ดเพื่อสั่งปลดล็อกประตูฉุกเฉินได้:</p>
 <ul>
-<li><strong>กลไกตรวจสอบแบบเดิม:</strong> บอร์ด C++ ทำการเช็กความถูกต้องผ่านตัวดำเนินการเปรียบเทียบมาตรฐาน:<pre><code class="language-cpp">if (enteredPin == cached_offline_pin)
+<li><strong>กลไกตรวจสอบแบบเดิม:</strong> บอร์ด C++ ทำการเช็กความถูกต้องผ่านตัวดำเนินการเปรียบเทียบมาตรฐาน:<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">esp32.ino</div>
+      <div class="code-lang-badge">CPP</div>
+    </div>
+    <pre class="line-numbers"><code class="language-cpp">if (enteredPin == cached_offline_pin)
 </code></pre>
+  </div>
 </li>
 <li><strong>ช่องโหว่ทางความปลอดภัย:</strong> ตัวเปรียบเทียบ <code>==</code> ของคลาส <code>String</code> ใน C++ ทำงานแบบ <strong>Early Termination</strong> (หยุดทำงานทันทีที่พบตัวอักษรตัวแรกที่ไม่แมตช์) ทำให้ความเร็วในการประมวลผลเปลี่ยนไปตามความถูกต้องของอักขระที่ป้อนเข้ามา แฮกเกอร์สามารถใช้บอทยิงคำสั่งในเครือข่ายภายในเพื่อวิเคราะห์ระยะเวลาหน่วงในการตอบสนอง (Network Latency / Round-Trip Time) ในระดับมิลลิวินาทีเพื่อทำการเดารหัส PIN ทีละตัวอักษรจากซ้ายไปขวา (Timing Attack) สำเร็จในเวลาอันสั้น</li>
 </ul>

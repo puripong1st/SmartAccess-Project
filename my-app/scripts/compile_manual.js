@@ -57,6 +57,73 @@ rawHtmlContent = rawHtmlContent.replace(mermaidRegex, (match, code) => {
   return `<div class="mermaid">${decodedCode}</div>`;
 });
 
+// GORGEOUS CODE WINDOWS (CodeImage.dev style)
+// This captures standard pre-code blocks (with optional language classes), resolves filenames/badges,
+// and does high-fidelity inline syntax highlighting for .env files which Prism lacks.
+const codeBlockRegex = /<pre><code(?: class="language-(\w+)")?>([\s\S]*?)<\/code><\/pre>/g;
+rawHtmlContent = rawHtmlContent.replace(codeBlockRegex, (match, lang, code) => {
+  lang = lang || 'text';
+  const langMap = {
+    'env': '.env.local',
+    'bash': 'terminal',
+    'sh': 'terminal',
+    'cpp': 'esp32.ino',
+    'ino': 'esp32.ino',
+    'json': 'package.json',
+    'javascript': 'app.js',
+    'js': 'app.js',
+    'typescript': 'page.tsx',
+    'ts': 'page.tsx',
+    'tsx': 'page.tsx',
+    'text': 'note.txt',
+    'sql': 'schema.sql'
+  };
+
+  let filename = langMap[lang.toLowerCase()] || `code.${lang}`;
+  let displayLang = lang.toUpperCase();
+
+  // Custom high-fidelity highlight for .env files since Prism.js doesn't highlight them
+  let highlightedCode = code;
+  if (lang.toLowerCase() === 'env') {
+    let decoded = code
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'");
+
+    let lines = decoded.split('\n');
+    let highlightedLines = lines.map(line => {
+      // Comments
+      if (line.trim().startsWith('#')) {
+        return `<span class="token comment">${line}</span>`;
+      }
+      // KEY=VALUE
+      let eqIdx = line.indexOf('=');
+      if (eqIdx !== -1) {
+        let key = line.substring(0, eqIdx);
+        let val = line.substring(eqIdx + 1);
+        return `<span class="token attr-name">${key}</span><span class="token operator">=</span><span class="token string">${val}</span>`;
+      }
+      return line;
+    });
+    highlightedCode = highlightedLines.join('\n');
+  }
+
+  return `<div class="code-window">
+    <div class="code-header">
+      <div class="code-dots">
+        <span class="dot red"></span>
+        <span class="dot yellow"></span>
+        <span class="dot green"></span>
+      </div>
+      <div class="code-title">${filename}</div>
+      <div class="code-lang-badge">${displayLang}</div>
+    </div>
+    <pre class="line-numbers"><code class="language-${lang}">${highlightedCode}</code></pre>
+  </div>`;
+});
+
 console.log("Injecting premium responsive CSS (fully supporting Mobile & iPad), print styles, and interactive navigation...");
 
 const htmlTemplate = `<!DOCTYPE html>
@@ -466,6 +533,89 @@ const htmlTemplate = `<!DOCTYPE html>
 
     tr:nth-child(even) {
       background-color: rgba(124, 58, 237, 0.02);
+    }
+
+    /* Code Windows - CodeImage.dev style (Aesthetic academic-friendly code frames) */
+    .code-window {
+      background-color: #0F172A; /* Slate-900 background */
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin: 28px 0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body.dark-mode .code-window {
+      background-color: #0B0F19;
+      border-color: #334155;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #1E293B; /* Slate-800 header */
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+    }
+
+    body.dark-mode .code-header {
+      background-color: #111827;
+      border-color: #1F2937;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .code-dots .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .code-dots .dot.red { background-color: #EF4444; }
+    .code-dots .dot.yellow { background-color: #F59E0B; }
+    .code-dots .dot.green { background-color: #10B981; }
+
+    .code-title {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+
+    body.dark-mode .code-title {
+      color: #64748B;
+    }
+
+    .code-lang-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background-color: rgba(124, 58, 237, 0.1);
+      color: #C084FC; /* Light purple */
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    body.dark-mode .code-lang-badge {
+      background-color: rgba(139, 92, 246, 0.15);
+      color: #A78BFA;
+    }
+
+    /* Adjust pre inside window to remove margins and shadows */
+    .code-window pre {
+      margin: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background-color: transparent !important;
+      padding: 16px 20px !important;
     }
 
     /* Code Blocks - STRICT READABILITY FIX */
