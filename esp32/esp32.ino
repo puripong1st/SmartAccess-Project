@@ -62,10 +62,10 @@ bool localServerStarted = false;
 #define TFT_CS 15
 #define TFT_RST 4
 #define TFT_DC 2
-#define RELAY_PIN 12  // รีเลย์ประตู (GPIO 12)
-#define LED_WIFI 14   // WiFi Status LED (GPIO 14)
-#define LED_REJECT 26 // Reject LED (GPIO 26)
-#define BUZZER_PIN 27 // Buzzer (GPIO 27)
+#define RELAY_PIN 12       // รีเลย์ประตู (GPIO 12)
+#define LED_WIFI 14        // WiFi Status LED (GPIO 14)
+#define LED_REJECT 26      // Reject LED (GPIO 26)
+#define BUZZER_PIN 27      // Buzzer (GPIO 27)
 #define EXIT_BUTTON_PIN 13 // Exit Button (GPIO 13)
 #define DOOR_SENSOR_PIN 32 // Magnetic Door Sensor (GPIO 32)
 
@@ -74,9 +74,9 @@ GFXcanvas16 canvas(320, 240);
 
 // ─── Adaptive Polling ────────────────────────────────────────────────────────
 // เร่งความเร็ว polling เมื่อตรวจพบกิจกรรม ชะลอลงเมื่อ idle ประหยัด API call
-const unsigned long POLL_FAST = 200;    // ms — มีคำสั่งรอ / เพิ่งปลดล็อก
-const unsigned long POLL_NORMAL = 750;  // ms — ทำงานปกติ
-const unsigned long POLL_SLOW = 3000;   // ms — idle ต่อเนื่อง 5 รอบ
+const unsigned long POLL_FAST = 200;   // ms — มีคำสั่งรอ / เพิ่งปลดล็อก
+const unsigned long POLL_NORMAL = 750; // ms — ทำงานปกติ
+const unsigned long POLL_SLOW = 3000;  // ms — idle ต่อเนื่อง 5 รอบ
 unsigned long currentPollDelay = POLL_NORMAL;
 int idleCycles = 0;   // นับรอบที่ไม่มีกิจกรรม
 String lastEtag = ""; // ETag จาก server สำหรับ 304 check
@@ -92,7 +92,8 @@ String ip_address_str = "0.0.0.0";
 // Edge-trigger กันเปิดประตูซ้ำ: เปิดเฉพาะตอนคำสั่งเปลี่ยนจาก idle→open เท่านั้น
 // ป้องกันบอร์ดวนหน้า ACCESS GRANTED ไม่จบ หากเซิร์ฟเวอร์ส่ง "open" ค้างมาหลายรอบ
 String last_door_trigger = "idle";
-unsigned long doorOpenStartTime = 0; // Timestamp when door sensor detected open state
+unsigned long doorOpenStartTime =
+    0; // Timestamp when door sensor detected open state
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
 void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
@@ -123,8 +124,8 @@ void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
     for (uint8_t x = 0; x < qrcode.size; x++) {
       if (qrcode_getModule(&qrcode, x, y)) {
         canvas.fillRect(startX + paddingX + (x * scale),
-                     startY + paddingY + (y * scale), scale, scale,
-                     ILI9341_BLACK);
+                        startY + paddingY + (y * scale), scale, scale,
+                        ILI9341_BLACK);
       }
     }
   }
@@ -144,7 +145,8 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.drawRGBBitmap(6, 1, logo_smartaccess, 24, 24);
 
   // วาดข้อความระบบภาษาไทยและอังกฤษ
-  drawThaiText(canvas, "SmartAccess ระบบควบคุมประตู", 36, 5, tft.color565(226, 232, 240));
+  drawThaiText(canvas, "SmartAccess ระบบควบคุมประตู", 36, 5,
+               tft.color565(226, 232, 240));
 
   // ปุ่มตราสัญลักษณ์ ACTIVE
   drawThaiText(canvas, "ทำงาน", 215, 5, tft.color565(16, 185, 129));
@@ -175,12 +177,14 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   drawThaiText(canvas, "สแกนเพื่อเข้าห้อง", 22, 162, tft.color565(255, 215, 0));
 
   // --- การ์ดฝั่งขวา: รายละเอียดห้องและคิวผู้ขออนุมัติ ---
-  drawThaiText(canvas, "ห้อง: " + String(room_code), 145, 36, tft.color565(240, 244, 240));
+  drawThaiText(canvas, "ห้อง: " + String(room_code), 145, 36,
+               tft.color565(240, 244, 240));
   drawThaiText(canvas, "ระบบควบคุมประตู", 145, 52, tft.color565(59, 130, 246));
 
   // การ์ดแสดงคิวสีเหลืองเหล้าองุ่น PENDING REQUESTS
   canvas.fillRoundRect(145, 72, 165, 50, 6, tft.color565(24, 16, 1));
-  canvas.drawRoundRect(145, 72, 165, 50, 6, tft.color565(245, 158, 11)); // ขอบสีส้มเหลือง
+  canvas.drawRoundRect(145, 72, 165, 50, 6,
+                       tft.color565(245, 158, 11)); // ขอบสีส้มเหลือง
 
   drawThaiText(canvas, "คำขอที่รออนุมัติ", 153, 78, tft.color565(245, 158, 11));
   drawThaiText(canvas, "จำนวนคิวสะสม", 153, 98, tft.color565(156, 163, 175));
@@ -194,8 +198,10 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   // การ์ดผู้ได้รับการอนุมัติล่าสุด LATEST APPROVED
   canvas.setTextSize(1);
   if (lastApprovedName.length() > 0) {
-    canvas.fillRoundRect(145, 130, 165, 45, 6, tft.color565(1, 18, 12)); // แถบพื้นหลังเขียวเข้ม
-    canvas.drawRoundRect(145, 130, 165, 45, 6, tft.color565(16, 185, 129)); // ขอบเขียวสว่าง
+    canvas.fillRoundRect(145, 130, 165, 45, 6,
+                         tft.color565(1, 18, 12)); // แถบพื้นหลังเขียวเข้ม
+    canvas.drawRoundRect(145, 130, 165, 45, 6,
+                         tft.color565(16, 185, 129)); // ขอบเขียวสว่าง
 
     drawThaiText(canvas, "ผู้ผ่านสิทธิ์ล่าสุด", 153, 134, tft.color565(16, 185, 129));
 
@@ -205,14 +211,16 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   } else {
     // กรอบประวัติว่างกรณีไม่มีข้อมูล
     canvas.drawRoundRect(145, 130, 165, 45, 6, tft.color565(60, 70, 60));
-    drawThaiText(canvas, "ไม่มีประวัติการเข้า", 170, 144, tft.color565(107, 122, 112));
+    drawThaiText(canvas, "ไม่มีประวัติการเข้า", 170, 144,
+                 tft.color565(107, 122, 112));
   }
 
   // --- แถบข้อมูลด้านล่างสุด (Bottom Status Bar) #0A0B10 ---
   canvas.fillRect(0, 220, 320, 20, tft.color565(10, 11, 16));
   canvas.drawFastHLine(0, 220, 320, tft.color565(30, 30, 40));
 
-  drawThaiText(canvas, "SmartAccess คณะครุศาสตร์", 8, 222, tft.color565(107, 122, 112));
+  drawThaiText(canvas, "SmartAccess คณะครุศาสตร์", 8, 222,
+               tft.color565(107, 122, 112));
 
   // แสดงค่าหมายเลขไอพีแอดเดรสของอุปกรณ์
   canvas.setTextSize(1);
@@ -236,7 +244,8 @@ void drawScanningScreen() {
   drawThaiText(canvas, "กำลังประมวลผล...", 90, 120, tft.color565(59, 130, 246));
 
   drawThaiText(canvas, "กำลังตรวจสอบสิทธิ์กับเซิร์ฟเวอร์", 50, 160, ILI9341_WHITE);
-  drawThaiText(canvas, "ระบบรักษาความปลอดภัยคลาวด์", 70, 185, tft.color565(107, 122, 112));
+  drawThaiText(canvas, "ระบบรักษาความปลอดภัยคลาวด์", 70, 185,
+               tft.color565(107, 122, 112));
 
   // ดันแคนวาสออกหน้าจอ ILI9341
   tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
@@ -247,15 +256,17 @@ void drawUnlockedScreen(const String &approvedName, const String &studentId) {
   canvas.fillScreen(tft.color565(3, 12, 5)); // สีเขียวเข้มสไตล์ฟอเรสต์ #030C05
 
   // วงกลมไฟสีเขียวสลักตราถูก
-  canvas.fillCircle(160, 65, 32, tft.color565(6, 78, 59));    // กรอบใน
-  canvas.drawCircle(160, 65, 32, tft.color565(16, 185, 129)); // เส้นขอบสีเขียวเรืองแสง
+  canvas.fillCircle(160, 65, 32, tft.color565(6, 78, 59)); // กรอบใน
+  canvas.drawCircle(160, 65, 32,
+                    tft.color565(16, 185, 129)); // เส้นขอบสีเขียวเรืองแสง
   canvas.drawCircle(160, 65, 33, tft.color565(16, 185, 129));
 
   // เครื่องหมาย ถูก (ใช้รูปไอคอน success 16x16)
   canvas.drawRGBBitmap(152, 57, icon_success, 16, 16);
 
   drawThaiText(canvas, "อนุมัติการเข้าห้อง", 90, 115, tft.color565(16, 185, 129));
-  drawThaiText(canvas, "ปลดล็อกประตูแล้ว (เข้าใช้งานได้)...", 60, 142, tft.color565(255, 215, 0));
+  drawThaiText(canvas, "ปลดล็อกประตูแล้ว (เข้าใช้งานได้)...", 60, 142,
+               tft.color565(255, 215, 0));
 
   // ตลับแคปซูลสำหรับครอบชื่อผู้เข้าใช้ห้องปฏิบัติการ
   canvas.fillRoundRect(30, 168, 260, 26, 13, tft.color565(30, 30, 40));
@@ -289,7 +300,8 @@ void drawRejectedScreen() {
 
   drawThaiText(canvas, "ปฏิเสธการเข้าห้อง", 90, 115, tft.color565(239, 68, 68));
   drawThaiText(canvas, "ข้อมูลสิทธิ์ไม่ถูกต้อง", 90, 142, tft.color565(255, 199, 199));
-  drawThaiText(canvas, "กรุณาติดต่ออาจารย์ผู้ควบคุม", 65, 175, tft.color565(156, 163, 175));
+  drawThaiText(canvas, "กรุณาติดต่ออาจารย์ผู้ควบคุม", 65, 175,
+               tft.color565(156, 163, 175));
 
   // ดันแคนวาสออกหน้าจอ ILI9341
   tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
@@ -419,10 +431,12 @@ void performHTTPSOTA() {
   tft.setTextSize(1);
   tft.println("Downloading firmware...");
 
-  t_httpUpdate_return ret = httpUpdate.update(secureClient, FIRMWARE_URL, "", [](HTTPClient *http) {
-    http->addHeader("x-esp32-version", CURRENT_VERSION);
-    http->addHeader("Authorization", "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
-  });
+  t_httpUpdate_return ret =
+      httpUpdate.update(secureClient, FIRMWARE_URL, "", [](HTTPClient *http) {
+        http->addHeader("x-esp32-version", CURRENT_VERSION);
+        http->addHeader("Authorization",
+                        "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
+      });
   if (ret == HTTP_UPDATE_FAILED) {
     tft.fillScreen(ILI9341_BLACK);
     tft.setTextColor(ILI9341_RED);
@@ -751,7 +765,8 @@ void triggerDoorOpenInstant(String name, String studentId) {
   int stepSize = 320 / 38;
   for (int i = 0; i < 38; i++) {
     tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
+                 tft.color565(6, 78, 59));
     delay(100);
   }
 
@@ -765,10 +780,10 @@ void triggerDoorOpenInstant(String name, String studentId) {
 }
 
 #ifndef WOKWI_SIM
-void mqttCallback(char* topic, byte* payload, unsigned int length) {
+void mqttCallback(char *topic, byte *payload, unsigned int length) {
   Serial.print("[MQTT] Message arrived on topic: ");
   Serial.println(topic);
-  
+
   String msg = "";
   for (unsigned int i = 0; i < length; i++) {
     msg += (char)payload[i];
@@ -778,11 +793,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   StaticJsonDocument<256> doc;
   DeserializationError err = deserializeJson(doc, msg);
-  
+
   String action = "";
   String name = "VERIFIED MEMBER";
   String studentId = "ONLINE STUDENT";
-  
+
   if (!err) {
     action = doc["action"].as<String>();
     if (doc.containsKey("name")) {
@@ -800,7 +815,6 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 }
 #endif
-
 
 void handleLocalValidation() {
   WiFiClient client = localServer.available();
@@ -1141,7 +1155,8 @@ void setup() {
   canvas.drawRGBBitmap(10, 10, logo_smartaccess, 24, 24);
   drawThaiText(canvas, "SmartAccess ระบบควบคุมประตู", 42, 14, ILI9341_WHITE);
 
-  drawThaiText(canvas, "กำลังเชื่อมต่อ Wi-Fi...", 40, 100, tft.color565(59, 130, 246));
+  drawThaiText(canvas, "กำลังเชื่อมต่อ Wi-Fi...", 40, 100,
+               tft.color565(59, 130, 246));
 
   canvas.setTextSize(1);
   canvas.setTextColor(tft.color565(156, 163, 175));
@@ -1206,19 +1221,22 @@ void setup() {
 
 void loop() {
   // Check door sensor open-state warning
-  // MC-38 outputs HIGH when door is open (magnet away), LOW when closed (magnet close)
+  // MC-38 outputs HIGH when door is open (magnet away), LOW when closed (magnet
+  // close)
   int doorState = digitalRead(DOOR_SENSOR_PIN);
-  
+
   static unsigned long lastDebugPrint = 0;
   if (millis() - lastDebugPrint > 2000) {
     lastDebugPrint = millis();
-    Serial.printf("[DEBUG] Door Sensor Pin %d State: %d, Open Time: %lu\n", DOOR_SENSOR_PIN, doorState, doorOpenStartTime);
+    Serial.printf("[DEBUG] Door Sensor Pin %d State: %d, Open Time: %lu\n",
+                  DOOR_SENSOR_PIN, doorState, doorOpenStartTime);
   }
 
   if (doorState == HIGH) {
     if (doorOpenStartTime == 0) {
       doorOpenStartTime = millis();
-    } else if (millis() - doorOpenStartTime > 10000) { // 10 seconds warning threshold
+    } else if (millis() - doorOpenStartTime >
+               10000) { // 10 seconds warning threshold
       static unsigned long lastAlertBeep = 0;
       if (millis() - lastAlertBeep > 500) {
         lastAlertBeep = millis();
@@ -1230,8 +1248,9 @@ void loop() {
     doorOpenStartTime = 0; // Reset
   }
 
-  // Check physical exit button (Active-LOW or Active-HIGH depending on module spec)
-  // Most modules output LOW when pressed. If active-HIGH sensor, change to == HIGH.
+  // Check physical exit button (Active-LOW or Active-HIGH depending on module
+  // spec) Most modules output LOW when pressed. If active-HIGH sensor, change
+  // to == HIGH.
   if (digitalRead(EXIT_BUTTON_PIN) == LOW) {
     triggerDoorOpenInstant("EXIT BUTTON", "PHYSICAL BUTTON");
 
@@ -1349,8 +1368,8 @@ void loop() {
 
       HTTPClient http;
       String pollUrl = String(server_url) + "&slim=true";
-      //Serial.print("[INFO] Polling URL: ");
-      //Serial.println(pollUrl);
+      // Serial.print("[INFO] Polling URL: ");
+      // Serial.println(pollUrl);
       if (pollUrl.startsWith("https://")) {
 #ifdef WOKWI_SIM
         static WiFiClientSecure simClient;
@@ -1375,8 +1394,8 @@ void loop() {
       }
 
       int httpCode = http.GET();
-      //Serial.print("[INFO] Polling result code: ");
-      //Serial.println(httpCode);
+      // Serial.print("[INFO] Polling result code: ");
+      // Serial.println(httpCode);
 
       if (httpCode == 304) {
         idleCycles++;
