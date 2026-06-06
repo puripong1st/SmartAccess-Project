@@ -358,6 +358,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     copyToClipboard,
     getConfigCode,
     getArduinoCode,
+    getIconsCode,
+    getThaiFontCode,
     deleteModalOpen,
     setDeleteModalOpen,
     confirmPassword,
@@ -399,6 +401,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   const [roomNotifyChannel, setRoomNotifyChannel] = useState<"discord" | "telegram" | "line">("discord");
   const [copiedConfig, setCopiedConfig] = useState(false);
   const [copiedEsp32, setCopiedEsp32] = useState(false);
+  const [copiedIcons, setCopiedIcons] = useState(false);
+  const [copiedThaiFont, setCopiedThaiFont] = useState(false);
 
   // ตามคำขอ: คงสถานะล็อกอินแบบ PWA จนกว่าจะกด Logout เอง
   // จึงปิด idle auto-logout (เดิมเตะออกหลังไม่มีกิจกรรม 15 นาที) — handlers เป็น no-op
@@ -1329,6 +1333,126 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                         }}
                         dangerouslySetInnerHTML={{
                           __html: highlightArduinoCode(getArduinoCode(activeRoomDetails.room, originUrl, firmwareMode))
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text-primary)" }}>3. icons.h (ไฟล์ข้อมูลรูปภาพและไอคอนระบบแบบ RGB565)</span>
+                    <p style={{ color: "var(--text-secondary)", fontSize: 11.5, margin: "2px 0 6px 0", lineHeight: 1.4 }}>
+                      คัดลอกโค้ดด้านล่างนี้แล้วสร้างไฟล์ชื่อ <code>icons.h</code> ไว้ในโฟลเดอร์เดียวกันกับโปรเจกต์ Arduino เพื่อใช้แสดงผลโลโก้และสัญลักษณ์สำเร็จ-ปฏิเสธบนหน้าจอ LCD
+                    </p>
+                    <div style={{ position: "relative" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const codeElement = document.getElementById("arduino-icons-block");
+                          if (codeElement) {
+                            copyToClipboard(codeElement.textContent || "");
+                            setCopiedIcons(true);
+                            setTimeout(() => setCopiedIcons(false), 2000);
+                          }
+                        }}
+                        className="smartaccess-copy-btn"
+                        style={{
+                          position: "absolute",
+                          top: 12,
+                          right: 12,
+                          padding: "6px 12px",
+                          borderRadius: 8,
+                          fontSize: 11,
+                          fontWeight: 800,
+                          background: copiedIcons ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.16)",
+                          border: copiedIcons ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(255, 255, 255, 0.3)",
+                          color: copiedIcons ? "#10B981" : "#F1F5F9",
+                          cursor: "pointer",
+                          zIndex: 10,
+                          transition: "all 0.15s ease",
+                          outline: "none"
+                        }}
+                      >
+                        {copiedIcons ? "✅ คัดลอกเรียบร้อย!" : "📋 คัดลอก icons.h"}
+                      </button>
+                      <pre
+                        id="arduino-icons-block"
+                        style={{
+                          margin: 0,
+                          padding: "46px 20px 20px 20px",
+                          background: "#0F172A",
+                          borderRadius: 12,
+                          border: "1.5px solid rgba(255,255,255,0.1)",
+                          fontFamily: "Consolas, Monaco, monospace",
+                          fontSize: 11.5,
+                          color: "#E2E8F0",
+                          overflowX: "auto",
+                          whiteSpace: "pre",
+                          maxHeight: 280,
+                          textAlign: "left",
+                          lineHeight: 1.5
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightArduinoCode(getIconsCode())
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 10 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text-primary)" }}>4. thai_font.h (คลังฟอนต์ภาษาไทยและระบบ Render ภาษาไทยเรียลไทม์)</span>
+                    <p style={{ color: "var(--text-secondary)", fontSize: 11.5, margin: "2px 0 6px 0", lineHeight: 1.4 }}>
+                      คัดลอกโค้ดด้านล่างนี้แล้วสร้างไฟล์ชื่อ <code>thai_font.h</code> ไว้ในโฟลเดอร์เดียวกันกับโปรเจกต์ Arduino เพื่อจัดการการเรนเดอร์ สระบน/ล่าง วรรณยุกต์ซ้อน และตัวหนังสือภาษาไทย
+                    </p>
+                    <div style={{ position: "relative" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const codeElement = document.getElementById("arduino-thaifont-block");
+                          if (codeElement) {
+                            copyToClipboard(codeElement.textContent || "");
+                            setCopiedThaiFont(true);
+                            setTimeout(() => setCopiedThaiFont(false), 2000);
+                          }
+                        }}
+                        className="smartaccess-copy-btn"
+                        style={{
+                          position: "absolute",
+                          top: 12,
+                          right: 12,
+                          padding: "6px 12px",
+                          borderRadius: 8,
+                          fontSize: 11,
+                          fontWeight: 800,
+                          background: copiedThaiFont ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.16)",
+                          border: copiedThaiFont ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid rgba(255, 255, 255, 0.3)",
+                          color: copiedThaiFont ? "#10B981" : "#F1F5F9",
+                          cursor: "pointer",
+                          zIndex: 10,
+                          transition: "all 0.15s ease",
+                          outline: "none"
+                        }}
+                      >
+                        {copiedThaiFont ? "✅ คัดลอกเรียบร้อย!" : "📋 คัดลอก thai_font.h"}
+                      </button>
+                      <pre
+                        id="arduino-thaifont-block"
+                        style={{
+                          margin: 0,
+                          padding: "46px 20px 20px 20px",
+                          background: "#0F172A",
+                          borderRadius: 12,
+                          border: "1.5px solid rgba(255,255,255,0.1)",
+                          fontFamily: "Consolas, Monaco, monospace",
+                          fontSize: 11.5,
+                          color: "#E2E8F0",
+                          overflowX: "auto",
+                          whiteSpace: "pre",
+                          maxHeight: 280,
+                          textAlign: "left",
+                          lineHeight: 1.5
+                        }}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightArduinoCode(getThaiFontCode())
                         }}
                       />
                     </div>
