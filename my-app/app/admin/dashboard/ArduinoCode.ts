@@ -104,14 +104,14 @@ export const getArduinoCode = (roomCode: string, origin: string, mode: "wokwi" |
   ==============================================================
 */
 ${wokwiDefine}
-#define DEBUG_MODE false  // ⚠️ Set true for development ONLY
+#define DEBUG_MODE false // ⚠️ Set true for development ONLY
 
 #if DEBUG_MODE
-  #define DBG(x) Serial.println(x)
-  #define DBGF(fmt, ...) Serial.printf(fmt, __VA_ARGS__)
+#define DBG(x) Serial.println(x)
+#define DBGF(fmt, ...) Serial.printf(fmt, __VA_ARGS__)
 #else
-  #define DBG(x)
-  #define DBGF(fmt, ...)
+#define DBG(x)
+#define DBGF(fmt, ...)
 #endif
 
 #include "ricmoo_qrcode.h"
@@ -130,25 +130,27 @@ ${wokwiDefine}
 #include <WiFi.h>
 #include <WiFiClientSecure.h> // สำหรับรัน HTTPS บนระบบคลาวด์ Vercel
 #include <mbedtls/md.h>
-#include <time.h> // สำหรับ NTP time sync (ใช้ใน HMAC timestamp)
 #include <sys/time.h> // สำหรับ settimeofday
+#include <time.h>     // สำหรับ NTP time sync (ใช้ใน HMAC timestamp)
 
 #include "config.h"
+#include "icons.h"
+#include "thai_font.h"
 
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
-const char* CURRENT_VERSION = "1.0.0";
-const char* FIRMWARE_URL = "${origin}/api/esp32/firmware-ota";
+const char *CURRENT_VERSION = "1.0.0";
+const char *FIRMWARE_URL =
+    "${origin}/api/esp32/firmware-ota";
 
 WiFiServer localServer(80); // เว็บเซิร์ฟเวอร์ LAN สำหรับคิวเปิดประตู/โหมดออฟไลน์
 bool localServerStarted = false;
 
-
 // ─── Compile-time production safety guard ───────────────────────────────────
 // Prevents accidentally shipping a Wokwi simulation build to a real device.
 #ifdef PRODUCTION
-  #ifdef WOKWI_SIM
-    #error "WOKWI_SIM must not be defined in production builds!"
-  #endif
+#ifdef WOKWI_SIM
+#error "WOKWI_SIM must not be defined in production builds!"
+#endif
 #endif
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -164,14 +166,15 @@ bool localServerStarted = false;
 #define DOOR_SENSOR_PIN 32 // Magnetic Door Sensor (GPIO 32)
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+GFXcanvas16 canvas(320, 240);
 
 // ─── Adaptive Polling ────────────────────────────────────────────────────────
 // เร่งความเร็ว polling เมื่อตรวจพบกิจกรรม ชะลอลงเมื่อ idle ประหยัด API call
-const unsigned long POLL_FAST   = 200;   // ms — มีคำสั่งรอ / เพิ่งปลดล็อก
-const unsigned long POLL_NORMAL = 1000;  // ms — ทำงานปกติ
-const unsigned long POLL_SLOW   = 5000;  // ms — idle ต่อเนื่อง 5 รอบ
-unsigned long currentPollDelay  = POLL_NORMAL;
-int idleCycles = 0; // นับรอบที่ไม่มีกิจกรรม
+const unsigned long POLL_FAST = 200;    // ms — มีคำสั่งรอ / เพิ่งปลดล็อก
+const unsigned long POLL_NORMAL = 750;  // ms — ทำงานปกติ
+const unsigned long POLL_SLOW = 3000;   // ms — idle ต่อเนื่อง 5 รอบ
+unsigned long currentPollDelay = POLL_NORMAL;
+int idleCycles = 0;   // นับรอบที่ไม่มีกิจกรรม
 String lastEtag = ""; // ETag จาก server สำหรับ 304 check
 
 // ─── TFT Dirty-region tracking ───────────────────────────────────────────────
@@ -188,7 +191,7 @@ String last_door_trigger = "idle";
 unsigned long doorOpenStartTime = 0; // Timestamp when door sensor detected open state
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
-void drawQRCode(const String& qrText, int startX, int startY, int boxSize) {
+void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
   QRCode qrcode;
 
   // ใช้ QR Code Version 7 (45x45 modules) รองรับ URL ยาวสูงสุด 154 ตัวอักษร
@@ -209,13 +212,13 @@ void drawQRCode(const String& qrText, int startX, int startY, int boxSize) {
   int paddingY = (boxSize - qrRealSize) / 2;
 
   // วาดพื้นหลังสีขาวบริสุทธิ์
-  tft.fillRect(startX, startY, boxSize, boxSize, ILI9341_WHITE);
+  canvas.fillRect(startX, startY, boxSize, boxSize, ILI9341_WHITE);
 
   // วาดโมดูลจุดสีดำของรหัส QR
   for (uint8_t y = 0; y < qrcode.size; y++) {
     for (uint8_t x = 0; x < qrcode.size; x++) {
       if (qrcode_getModule(&qrcode, x, y)) {
-        tft.fillRect(startX + paddingX + (x * scale),
+        canvas.fillRect(startX + paddingX + (x * scale),
                      startY + paddingY + (y * scale), scale, scale,
                      ILI9341_BLACK);
       }
@@ -224,214 +227,168 @@ void drawQRCode(const String& qrText, int startX, int startY, int boxSize) {
 }
 
 // 1. หน้าจอหลักโหมดสแตนด์บาย (Idle Mode) — ดีไซน์พรีเมียมถอดแบบมาจาก Next.js
-// esp32-preview
-void drawMainScreen(int queueCount, const String& lastApprovedName, const String& timeStr,
-                    const String& qrText) {
+void drawMainScreen(int queueCount, const String &lastApprovedName,
+                    const String &timeStr, const String &qrText) {
   // พื้นหลังสีน้ำเงินดำหรูหรา #06070D
-  tft.fillScreen(tft.color565(6, 7, 13));
+  canvas.fillScreen(tft.color565(6, 7, 13));
 
   // --- ส่วนหัว (Top Status Bar) #0E111C ---
-  tft.fillRect(0, 0, 320, 20, tft.color565(14, 17, 28));
-  tft.drawFastHLine(0, 20, 320, tft.color565(40, 40, 50)); // เส้นใต้เมนู
+  canvas.fillRect(0, 0, 320, 26, tft.color565(14, 17, 28));
+  canvas.drawFastHLine(0, 26, 320, tft.color565(40, 40, 50)); // เส้นใต้เมนู
 
-  tft.setTextSize(1);
-  tft.setTextColor(tft.color565(226, 232, 240)); // สีตัวอักษรขาวสว่าง #E2E8F0
-  tft.setCursor(8, 6);
-  tft.print("SmartAccess DOOR ACCESS  ");
+  // วาดโลโก้ระบบ 24x24 ที่ (6, 1)
+  canvas.drawRGBBitmap(6, 1, logo_smartaccess, 24, 24);
 
-  // ปุ่มตราสัญลักษณ์ ACTIVE สีเขียวมะนาว
-  tft.setTextColor(tft.color565(16, 185, 129)); // #10B981
-  tft.print("ACTIVE");
+  // วาดข้อความระบบภาษาไทยและอังกฤษ
+  drawThaiText(canvas, "SmartAccess ระบบควบคุมประตู", 36, 5, tft.color565(226, 232, 240));
+
+  // ปุ่มตราสัญลักษณ์ ACTIVE
+  drawThaiText(canvas, "ทำงาน", 215, 5, tft.color565(16, 185, 129));
 
   // นาฬิกาดิจิทัลเรียลไทม์ฝั่งขวา
-  tft.setCursor(265, 6);
-  tft.print(timeStr);
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(226, 232, 240));
+  canvas.setCursor(268, 9);
+  canvas.print(timeStr);
 
   // --- กล่องแสดงผล QR Code สแกนผ่านทางด้านซ้าย ---
   // วาดเฟรมกรอบโค้งสองชั้นสีกระจกเขียวเรืองแสงแบบ Glassmorphism
-  tft.drawRoundRect(10, 32, 120, 120, 6, tft.color565(16, 185, 129));
-  tft.drawRoundRect(11, 33, 118, 118, 5, tft.color565(16, 185, 129));
+  canvas.drawRoundRect(10, 36, 120, 120, 6, tft.color565(16, 185, 129));
+  canvas.drawRoundRect(11, 37, 118, 118, 5, tft.color565(16, 185, 129));
 
   // แสดงผลภาพคีย์ QR Code ที่สแกนได้จริง
   if (qrText.length() > 0) {
-    drawQRCode(qrText, 13, 35, 114);
+    drawQRCode(qrText, 13, 39, 114);
   } else {
     // หากข้อมูลยังโหลดไม่เสร็จสิ้น
-    tft.fillRect(13, 35, 114, 114, ILI9341_WHITE);
-    tft.setTextColor(ILI9341_BLACK);
-    tft.setCursor(40, 85);
-    tft.print("Loading QR...");
+    canvas.fillRect(13, 39, 114, 114, ILI9341_WHITE);
+    canvas.setTextColor(ILI9341_BLACK);
+    canvas.setCursor(40, 89);
+    canvas.print("Loading QR...");
   }
 
-  // คำแนะนำภาษาอังกฤษสีเหลืองทองเรืองแสง
-  tft.setTextColor(tft.color565(255, 215, 0)); // #FFD700
-  tft.setCursor(24, 162);
-  tft.print("SCAN FOR ACCESS");
+  // คำแนะนำภาษาไทยสีเหลืองทองเรืองแสง
+  drawThaiText(canvas, "สแกนเพื่อเข้าห้อง", 22, 162, tft.color565(255, 215, 0));
 
   // --- การ์ดฝั่งขวา: รายละเอียดห้องและคิวผู้ขออนุมัติ ---
-  tft.setTextSize(1);
-  tft.setTextColor(tft.color565(240, 244, 240)); // สีขาวงาช้าง #F0F4F0
-  tft.setCursor(145, 36);
-  tft.print("ROOM: ");
-  tft.print(room_code);
-
-  tft.setTextColor(tft.color565(59, 130, 246)); // สีฟ้าพรีเมียม #3B82F6
-  tft.setCursor(145, 48);
-  tft.print("LAB DOOR CONTROLLER");
+  drawThaiText(canvas, "ห้อง: " + String(room_code), 145, 36, tft.color565(240, 244, 240));
+  drawThaiText(canvas, "ระบบควบคุมประตู", 145, 52, tft.color565(59, 130, 246));
 
   // การ์ดแสดงคิวสีเหลืองเหล้าองุ่น PENDING REQUESTS
-  tft.fillRoundRect(145, 65, 165, 50, 6, tft.color565(24, 16, 1));
-  tft.drawRoundRect(145, 65, 165, 50, 6,
-                    tft.color565(245, 158, 11)); // ขอบสีส้มเหลือง
+  canvas.fillRoundRect(145, 72, 165, 50, 6, tft.color565(24, 16, 1));
+  canvas.drawRoundRect(145, 72, 165, 50, 6, tft.color565(245, 158, 11)); // ขอบสีส้มเหลือง
 
-  tft.setTextColor(tft.color565(245, 158, 11));
-  tft.setCursor(153, 75);
-  tft.print("PENDING REQUESTS");
-  tft.setTextColor(tft.color565(156, 163, 175)); // สีเทา
-  tft.setCursor(153, 90);
-  tft.print("QUEUE COUNTER");
+  drawThaiText(canvas, "คำขอที่รออนุมัติ", 153, 78, tft.color565(245, 158, 11));
+  drawThaiText(canvas, "จำนวนคิวสะสม", 153, 98, tft.color565(156, 163, 175));
 
   // ตัวเลขคิวใหญ่พิเศษขนาด 3 เท่า
-  tft.setTextSize(3);
-  tft.setTextColor(tft.color565(245, 158, 11));
-  tft.setCursor(275, 78);
-  tft.print(queueCount);
+  canvas.setTextSize(3);
+  canvas.setTextColor(tft.color565(245, 158, 11));
+  canvas.setCursor(275, 85);
+  canvas.print(queueCount);
 
   // การ์ดผู้ได้รับการอนุมัติล่าสุด LATEST APPROVED
-  tft.setTextSize(1);
+  canvas.setTextSize(1);
   if (lastApprovedName.length() > 0) {
-    tft.fillRoundRect(145, 125, 165, 45, 6,
-                      tft.color565(1, 18, 12)); // แถบพื้นหลังเขียวเข้ม
-    tft.drawRoundRect(145, 125, 165, 45, 6,
-                      tft.color565(16, 185, 129)); // ขอบเขียวสว่าง
+    canvas.fillRoundRect(145, 130, 165, 45, 6, tft.color565(1, 18, 12)); // แถบพื้นหลังเขียวเข้ม
+    canvas.drawRoundRect(145, 130, 165, 45, 6, tft.color565(16, 185, 129)); // ขอบเขียวสว่าง
 
-    tft.setTextColor(tft.color565(16, 185, 129));
-    tft.setCursor(153, 133);
-    tft.print("LATEST APPROVED");
+    drawThaiText(canvas, "ผู้ผ่านสิทธิ์ล่าสุด", 153, 134, tft.color565(16, 185, 129));
 
-    tft.setTextColor(ILI9341_WHITE);
-    tft.setCursor(153, 148);
-    tft.print("ID: " + lastApprovedName);
+    canvas.setTextColor(ILI9341_WHITE);
+    canvas.setCursor(153, 153);
+    canvas.print("ID: " + lastApprovedName);
   } else {
     // กรอบประวัติว่างกรณีไม่มีข้อมูล
-    tft.drawRoundRect(145, 125, 165, 45, 6, tft.color565(60, 70, 60));
-    tft.setTextColor(tft.color565(107, 122, 112));
-    tft.setCursor(160, 143);
-    tft.print("NO RECENT ACCESS");
+    canvas.drawRoundRect(145, 130, 165, 45, 6, tft.color565(60, 70, 60));
+    drawThaiText(canvas, "ไม่มีประวัติการเข้า", 170, 144, tft.color565(107, 122, 112));
   }
 
   // --- แถบข้อมูลด้านล่างสุด (Bottom Status Bar) #0A0B10 ---
-  tft.fillRect(0, 220, 320, 20, tft.color565(10, 11, 16));
-  tft.drawFastHLine(0, 220, 320, tft.color565(30, 30, 40));
+  canvas.fillRect(0, 220, 320, 20, tft.color565(10, 11, 16));
+  canvas.drawFastHLine(0, 220, 320, tft.color565(30, 30, 40));
 
-  tft.setTextSize(1);
-  tft.setTextColor(tft.color565(107, 122, 112));
-  tft.setCursor(8, 226);
-  tft.print("SmartAccess Faculty of Education");
+  drawThaiText(canvas, "SmartAccess คณะครุศาสตร์", 8, 222, tft.color565(107, 122, 112));
 
   // แสดงค่าหมายเลขไอพีแอดเดรสของอุปกรณ์
-  tft.setTextColor(tft.color565(16, 185, 129));
-  tft.setCursor(240, 226);
-  tft.print(ip_address_str);
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(16, 185, 129));
+  canvas.setCursor(240, 226);
+  canvas.print(ip_address_str);
+
+  // ดันแคนวาสออกหน้าจอ ILI9341
+  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
 }
 
 // 2. หน้าจอกำลังตรวจสอบข้อมูล (Scanning/Processing Mode)
 void drawScanningScreen() {
-  tft.fillScreen(tft.color565(3, 8, 15)); // สีน้ำเงินมหาสมุทรเข้ม #03080F
+  canvas.fillScreen(tft.color565(3, 8, 15)); // สีน้ำเงินมหาสมุทรเข้ม #03080F
 
   // วงแหวนเรืองแสงสีฟ้าจำลองตัวอ่านกำลังประมวลผล
-  tft.drawCircle(160, 70, 30, tft.color565(59, 130, 246));
-  tft.drawCircle(160, 70, 31, tft.color565(59, 130, 246));
-  tft.fillCircle(160, 70, 8, tft.color565(59, 130, 246));
+  canvas.drawCircle(160, 70, 30, tft.color565(59, 130, 246));
+  canvas.drawCircle(160, 70, 31, tft.color565(59, 130, 246));
+  canvas.fillCircle(160, 70, 8, tft.color565(59, 130, 246));
 
-  tft.setTextSize(3);
-  tft.setTextColor(tft.color565(59, 130, 246)); // #3B82F6
-  tft.setCursor(45, 125);
-  tft.print("PROCESSING...");
+  drawThaiText(canvas, "กำลังประมวลผล...", 90, 120, tft.color565(59, 130, 246));
 
-  tft.setTextSize(1);
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setCursor(75, 165);
-  tft.print("VERIFYING REQUEST WITH SERVER");
+  drawThaiText(canvas, "กำลังตรวจสอบสิทธิ์กับเซิร์ฟเวอร์", 50, 160, ILI9341_WHITE);
+  drawThaiText(canvas, "ระบบรักษาความปลอดภัยคลาวด์", 70, 185, tft.color565(107, 122, 112));
 
-  tft.setTextColor(tft.color565(107, 122, 112));
-  tft.setCursor(85, 185);
-  tft.print("SECURE CLOUD ACCESS VALIDATION");
+  // ดันแคนวาสออกหน้าจอ ILI9341
+  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
 }
 
 // 3. หน้าจอปลดล็อกผ่านสำเร็จ (Access Granted Mode) — สีเขียวสะท้อนแสงหรูหราดีไซน์พรีเมียม
-void drawUnlockedScreen(const String& approvedName, const String& studentId) {
-  tft.fillScreen(tft.color565(3, 12, 5)); // สีเขียวเข้มสไตล์ฟอเรสต์ #030C05
+void drawUnlockedScreen(const String &approvedName, const String &studentId) {
+  canvas.fillScreen(tft.color565(3, 12, 5)); // สีเขียวเข้มสไตล์ฟอเรสต์ #030C05
 
   // วงกลมไฟสีเขียวสลักตราถูก
-  tft.fillCircle(160, 65, 32, tft.color565(6, 78, 59));    // กรอบใน
-  tft.drawCircle(160, 65, 32, tft.color565(16, 185, 129)); // เส้นขอบสีเขียวเรืองแสง
-  tft.drawCircle(160, 65, 33, tft.color565(16, 185, 129));
+  canvas.fillCircle(160, 65, 32, tft.color565(6, 78, 59));    // กรอบใน
+  canvas.drawCircle(160, 65, 32, tft.color565(16, 185, 129)); // เส้นขอบสีเขียวเรืองแสง
+  canvas.drawCircle(160, 65, 33, tft.color565(16, 185, 129));
 
-  // เครื่องหมาย ถูก (v)
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setTextSize(3);
-  tft.setCursor(151, 55);
-  tft.print("v");
+  // เครื่องหมาย ถูก (ใช้รูปไอคอน success 16x16)
+  canvas.drawRGBBitmap(152, 57, icon_success, 16, 16);
 
-  tft.setTextSize(3);
-  tft.setTextColor(tft.color565(16, 185, 129));
-  tft.setCursor(35, 115);
-  tft.print("ACCESS GRANTED");
-
-  tft.setTextSize(1);
-  tft.setTextColor(tft.color565(255, 215, 0));
-  tft.setCursor(65, 148);
-  tft.print("DOOR UNLOCKED (ACCESSING)...");
+  drawThaiText(canvas, "อนุมัติการเข้าห้อง", 90, 115, tft.color565(16, 185, 129));
+  drawThaiText(canvas, "ปลดล็อกประตูแล้ว (เข้าใช้งานได้)...", 60, 142, tft.color565(255, 215, 0));
 
   // ตลับแคปซูลสำหรับครอบชื่อผู้เข้าใช้ห้องปฏิบัติการ
-  tft.fillRoundRect(30, 168, 260, 26, 13, tft.color565(30, 30, 40));
-  tft.drawRoundRect(30, 168, 260, 26, 13, tft.color565(50, 50, 60));
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setTextSize(1);
+  canvas.fillRoundRect(30, 168, 260, 26, 13, tft.color565(30, 30, 40));
+  canvas.drawRoundRect(30, 168, 260, 26, 13, tft.color565(50, 50, 60));
 
-  // แสดงผลสถานะผู้เข้าใช้เป็นภาษาอังกฤษพรีเมียมแทนการแสดงชื่อภาษาไทยเพื่อเลี่ยงฟอนต์ต่างดาว
-  String statusMsg = "VERIFIED MEMBER";
-  int nameX = 160 - (statusMsg.length() * 3);
-  tft.setCursor(nameX, 177);
-  tft.print(statusMsg);
+  drawThaiText(canvas, "สมาชิกผ่านการตรวจสอบ", 90, 173, ILI9341_WHITE);
 
   // รหัสประจำตัวของนักศึกษา
-  tft.setTextColor(tft.color565(156, 163, 175));
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(156, 163, 175));
   int idX = 160 - (studentId.length() * 3);
   if (idX < 35)
     idX = 35;
-  tft.setCursor(idX, 202);
-  tft.print(studentId);
+  canvas.setCursor(idX, 202);
+  canvas.print(studentId);
+
+  // ดันแคนวาสออกหน้าจอ ILI9341
+  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
 }
 
 // 4. หน้าจอสำหรับกรณีระบบไม่อนุมัติ (Access Denied Mode) — แดงเรืองแสง
 void drawRejectedScreen() {
-  tft.fillScreen(tft.color565(15, 3, 3)); // สีแดงเข้มมืด #0F0303
+  canvas.fillScreen(tft.color565(15, 3, 3)); // สีแดงเข้มมืด #0F0303
 
-  // วงแหวนแดงสลัก X
-  tft.fillCircle(160, 65, 32, tft.color565(127, 29, 29));
-  tft.drawCircle(160, 65, 32, tft.color565(239, 68, 68));
-  tft.drawCircle(160, 65, 33, tft.color565(239, 68, 68));
+  // วงแหวนแดงสลัก X (ใช้รูปไอคอน warning 16x16)
+  canvas.fillCircle(160, 65, 32, tft.color565(127, 29, 29));
+  canvas.drawCircle(160, 65, 32, tft.color565(239, 68, 68));
+  canvas.drawCircle(160, 65, 33, tft.color565(239, 68, 68));
 
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setTextSize(3);
-  tft.setCursor(151, 55);
-  tft.print("X");
+  canvas.drawRGBBitmap(152, 57, icon_warning, 16, 16);
 
-  tft.setTextSize(3);
-  tft.setTextColor(tft.color565(239, 68, 68));
-  tft.setCursor(45, 115);
-  tft.print("ACCESS DENIED");
+  drawThaiText(canvas, "ปฏิเสธการเข้าห้อง", 90, 115, tft.color565(239, 68, 68));
+  drawThaiText(canvas, "ข้อมูลสิทธิ์ไม่ถูกต้อง", 90, 142, tft.color565(255, 199, 199));
+  drawThaiText(canvas, "กรุณาติดต่ออาจารย์ผู้ควบคุม", 65, 175, tft.color565(156, 163, 175));
 
-  tft.setTextSize(1);
-  tft.setTextColor(tft.color565(255, 199, 199));
-  tft.setCursor(85, 148);
-  tft.print("REJECTED ACCESS ATTEMPT");
-
-  tft.setTextColor(tft.color565(156, 163, 175));
-  tft.setCursor(55, 180);
-  tft.print("PLEASE CONTACT CLASSROOM INSTRUCTOR");
+  // ดันแคนวาสออกหน้าจอ ILI9341
+  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
 }
 
 // ─── Persistent TLS Connection (HTTP Keep-alive) ─────────────────────────────
@@ -450,21 +407,21 @@ int api_fail_count = 0;
 unsigned long last_student_sync = 0;
 unsigned long last_log_sync = 0;
 const unsigned long SYNC_STUDENTS_INTERVAL = 300000; // 5 minutes
-const unsigned long SYNC_LOGS_INTERVAL = 60000;     // 1 minute
+const unsigned long SYNC_LOGS_INTERVAL = 60000;      // 1 minute
 
 String cached_qr_key = "";
-const char* cache_students_file = "/student_cache.json";
-const char* cache_logs_file = "/offline_logs.json";
-const char* cache_key_file = "/qr_key.bin";
+const char *cache_students_file = "/student_cache.json";
+const char *cache_logs_file = "/offline_logs.json";
+const char *cache_key_file = "/qr_key.bin";
 String cached_offline_pin = "123456"; // Default PIN
 
 // Forward declarations
-bool validateOfflineQR(const String& grant);
-void triggerDoorOpenOffline(const String& grant);
-void saveOfflineLog(const String& student_id);
+bool validateOfflineQR(const String &grant);
+void triggerDoorOpenOffline(const String &grant);
+void saveOfflineLog(const String &student_id);
 void syncStudentCache();
 void syncOfflineLogs();
-bool secureCompare(const char* a, const char* b);
+bool secureCompare(const char *a, const char *b);
 
 #ifndef WOKWI_SIM
 void onOTAStart() {
@@ -507,7 +464,8 @@ void onOTAEnd(bool success) {
 
 // ─── OTA Progress Bar บน TFT ─────────────────────────────────────────────────
 void onOTAProgress(int current, int total) {
-  if (total <= 0) return;
+  if (total <= 0)
+    return;
   int pct = (current * 100) / total;
   int barW = (pct * 280) / 100;
   // Progress bar background
@@ -548,8 +506,6 @@ void performHTTPSOTA() {
 
   httpUpdate.rebootOnUpdate(true);
   httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
-  httpUpdate.addHeader("x-esp32-version", CURRENT_VERSION);
-  httpUpdate.addHeader("Authorization", "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
   // แนบ callback แสดง progress bar
   httpUpdate.onProgress(onOTAProgress);
 
@@ -559,7 +515,10 @@ void performHTTPSOTA() {
   tft.setTextSize(1);
   tft.println("Downloading firmware...");
 
-  t_httpUpdate_return ret = httpUpdate.update(secureClient, FIRMWARE_URL);
+  t_httpUpdate_return ret = httpUpdate.update(secureClient, FIRMWARE_URL, "", [](HTTPClient *http) {
+    http->addHeader("x-esp32-version", CURRENT_VERSION);
+    http->addHeader("Authorization", "Bearer SUPER_SECURE_ESP32_ACCESS_TOKEN");
+  });
   if (ret == HTTP_UPDATE_FAILED) {
     tft.fillScreen(ILI9341_BLACK);
     tft.setTextColor(ILI9341_RED);
@@ -596,7 +555,7 @@ void startLocalServer() {
   }
 }
 
-String base64Decode(const String& input) {
+String base64Decode(const String &input) {
   String decodedInput = input;
   decodedInput.replace("-", "+");
   decodedInput.replace("_", "/");
@@ -604,20 +563,23 @@ String base64Decode(const String& input) {
     decodedInput += "=";
   }
   int len = decodedInput.length();
-  uint8_t* out = (uint8_t*)malloc(len + 1);
+  uint8_t *out = (uint8_t *)malloc(len + 1);
   if (!out) {
     DBG("base64Decode: malloc failed!");
     return "";
   }
   int decoded_len = 0;
-  const char* lookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const char *lookup =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   int bits = 0;
   int val = 0;
   for (int i = 0; i < len; i++) {
     char c = decodedInput[i];
-    if (c == '=') break;
-    const char* p = strchr(lookup, c);
-    if (!p) continue;
+    if (c == '=')
+      break;
+    const char *p = strchr(lookup, c);
+    if (!p)
+      continue;
     int idx = p - lookup;
     val = (val << 6) | idx;
     bits += 6;
@@ -627,20 +589,22 @@ String base64Decode(const String& input) {
     }
   }
   out[decoded_len] = '\\0';
-  String res = String((char*)out);
+  String res = String((char *)out);
   free(out);
   return res;
 }
 
-// Hex-encoded HMAC-SHA256 — ตรงกับ Node.js crypto.createHmac('sha256', key).digest('hex')
-// ใช้สำหรับ x-hmac-signature header ที่ server ตรวจสอบ
-String generateHMACHex(const String& payload, const String& key) {
+// Hex-encoded HMAC-SHA256 — ตรงกับ Node.js crypto.createHmac('sha256',
+// key).digest('hex') ใช้สำหรับ x-hmac-signature header ที่ server ตรวจสอบ
+String generateHMACHex(const String &payload, const String &key) {
   uint8_t hmacResult[32];
   mbedtls_md_context_t ctx;
   mbedtls_md_init(&ctx);
   mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
-  mbedtls_md_hmac_starts(&ctx, (const unsigned char *)key.c_str(), key.length());
-  mbedtls_md_hmac_update(&ctx, (const unsigned char *)payload.c_str(), payload.length());
+  mbedtls_md_hmac_starts(&ctx, (const unsigned char *)key.c_str(),
+                         key.length());
+  mbedtls_md_hmac_update(&ctx, (const unsigned char *)payload.c_str(),
+                         payload.length());
   mbedtls_md_hmac_finish(&ctx, hmacResult);
   mbedtls_md_free(&ctx);
   char hexBuf[65];
@@ -652,19 +616,22 @@ String generateHMACHex(const String& payload, const String& key) {
 }
 
 // Base64url-encoded HMAC-SHA256 (ใช้สำหรับ offline grant validation)
-String generateHMAC(const String& payload, const String& key) {
+String generateHMAC(const String &payload, const String &key) {
   uint8_t hmacResult[32];
   mbedtls_md_context_t ctx;
   mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
   mbedtls_md_init(&ctx);
   mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 1);
-  mbedtls_md_hmac_starts(&ctx, (const unsigned char*)key.c_str(), key.length());
-  mbedtls_md_hmac_update(&ctx, (const unsigned char*)payload.c_str(), payload.length());
+  mbedtls_md_hmac_starts(&ctx, (const unsigned char *)key.c_str(),
+                         key.length());
+  mbedtls_md_hmac_update(&ctx, (const unsigned char *)payload.c_str(),
+                         payload.length());
   mbedtls_md_hmac_finish(&ctx, hmacResult);
   mbedtls_md_free(&ctx);
 
   String encoded = "";
-  const char* lookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const char *lookup =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   int bits = 0;
   int val = 0;
   for (int i = 0; i < 32; i++) {
@@ -684,24 +651,27 @@ String generateHMAC(const String& payload, const String& key) {
 void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
   time_t nowTs = time(nullptr);
   String timestampStr = String((long)nowTs);
-  
+
   String device_id = "esp32_" + String(room_code);
-  
-  // Nonce generation: using esp_random to prevent replay attacks (Zero-Trust V2.0)
+
+  // Nonce generation: using esp_random to prevent replay attacks (Zero-Trust
+  // V2.0)
   uint32_t r1 = esp_random();
   uint32_t r2 = esp_random();
   char nonceBuf[17];
   sprintf(nonceBuf, "%08x%08x", r1, r2);
   String nonce = String(nonceBuf);
-  
-  String body_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"; // SHA-256 of empty string
-  
+
+  String body_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7"
+                     "852b855"; // SHA-256 of empty string
+
   // 1. KDF: Derive device secret key
   String device_secret = generateHMACHex(device_id, String(api_key));
-  
+
   // 2. Construct Payload: "deviceId:timestampStr:nonce:endpointPath:bodyHash"
-  String hmacPayload = device_id + ":" + timestampStr + ":" + nonce + ":" + endpoint + ":" + body_hash;
-  
+  String hmacPayload = device_id + ":" + timestampStr + ":" + nonce + ":" +
+                       endpoint + ":" + body_hash;
+
   // 3. Compute signature
   String signature = generateHMACHex(hmacPayload, device_secret);
 
@@ -714,23 +684,24 @@ void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
   http.addHeader("x-hmac-signature", signature);
 }
 
-bool validateOfflineQR(const String& grant) {
+bool validateOfflineQR(const String &grant) {
   if (cached_qr_key == "") {
     DBG("No cached QR signing key. Cannot validate offline.");
     return false;
   }
   int dotIdx = grant.indexOf(".");
-  if (dotIdx == -1) return false;
-  
+  if (dotIdx == -1)
+    return false;
+
   String encodedPayload = grant.substring(0, dotIdx);
   String signature = grant.substring(dotIdx + 1);
-  
+
   String expectedSignature = generateHMAC(encodedPayload, cached_qr_key);
   if (!secureCompare(signature.c_str(), expectedSignature.c_str())) {
     DBG("Offline signature verification failed!");
     return false;
   }
-  
+
   String decoded = base64Decode(encodedPayload);
   StaticJsonDocument<384> doc;
   DeserializationError err = deserializeJson(doc, decoded);
@@ -738,31 +709,33 @@ bool validateOfflineQR(const String& grant) {
     DBG("Failed to parse decoded payload JSON!");
     return false;
   }
-  
-  const char* room = doc["room"];
-  const char* student_id = doc["student_id"];
-  
+
+  const char *room = doc["room"];
+  const char *student_id = doc["student_id"];
+
   if (String(room) != String(room_code)) {
     DBG("Room mismatch in offline grant!");
     return false;
   }
-  
+
   if (!SPIFFS.exists(cache_students_file)) {
     DBG("No student cache JSON file exists!");
     return false;
   }
-  
+
   File f = SPIFFS.open(cache_students_file, "r");
-  if (!f) return false;
-  
-  DynamicJsonDocument cacheDoc(4096); // Allocated on Heap to prevent Stack Overflow
+  if (!f)
+    return false;
+
+  DynamicJsonDocument cacheDoc(
+      4096); // Allocated on Heap to prevent Stack Overflow
   DeserializationError cacheErr = deserializeJson(cacheDoc, f);
   f.close();
   if (cacheErr) {
     DBG("Failed to parse student cache JSON file!");
     return false;
   }
-  
+
   JsonArray arr = cacheDoc.as<JsonArray>();
   bool found = false;
   for (JsonVariant v : arr) {
@@ -779,8 +752,9 @@ bool validateOfflineQR(const String& grant) {
   return true;
 }
 
-void saveOfflineLog(const String& student_id) {
-  DynamicJsonDocument logDoc(3072); // Allocated on Heap to prevent Stack Overflow
+void saveOfflineLog(const String &student_id) {
+  DynamicJsonDocument logDoc(
+      3072); // Allocated on Heap to prevent Stack Overflow
   if (SPIFFS.exists(cache_logs_file)) {
     File f = SPIFFS.open(cache_logs_file, "r");
     if (f) {
@@ -809,45 +783,46 @@ void saveOfflineLog(const String& student_id) {
   }
 }
 
-void triggerDoorOpenOffline(const String& grant) {
+void triggerDoorOpenOffline(const String &grant) {
   int dotIdx = grant.indexOf(".");
   String encodedPayload = grant.substring(0, dotIdx);
   String decoded = base64Decode(encodedPayload);
   StaticJsonDocument<256> doc;
   deserializeJson(doc, decoded);
   String student_id = doc["student_id"].as<String>();
-  
+
   saveOfflineLog(student_id);
-  
+
   Serial.println("[INFO] Door unlocked");
   DBG("🔓 OFFLINE ACCESS GRANTED! Opening door...");
   last_door_trigger = "open";
-  
+
   drawScanningScreen();
   tone(BUZZER_PIN, 1500, 100);
   delay(1200);
-  
+
   drawUnlockedScreen("OFFLINE MEMBER", student_id);
   digitalWrite(RELAY_PIN, HIGH);
-  
+
   tone(BUZZER_PIN, 1000, 150);
   delay(180);
   tone(BUZZER_PIN, 1500, 150);
   delay(180);
   tone(BUZZER_PIN, 2000, 300);
-  
+
   int countdownMs = 3800;
   int stepSize = 320 / 38;
   for (int i = 0; i < 38; i++) {
     tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
+                 tft.color565(6, 78, 59));
     delay(100);
   }
   digitalWrite(RELAY_PIN, LOW);
   Serial.println("[INFO] Door locked");
   DBG("🔒 Door auto locked (Offline).");
   tone(BUZZER_PIN, 800, 250);
-  
+
   last_queue_count = -1;
   last_approved_name = "FORCE_REDRAW";
   last_active_token = "FORCE_REDRAW";
@@ -922,9 +897,11 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 }
 #endif
 
+
 void handleLocalValidation() {
   WiFiClient client = localServer.available();
-  if (!client) return;
+  if (!client)
+    return;
   DBG("New client connected to local offline validation server.");
   unsigned long timeout = millis() + 2000;
   String req = "";
@@ -932,8 +909,14 @@ void handleLocalValidation() {
     if (client.available()) {
       char c = client.read();
       req += c;
-      if (req.endsWith("\\r\\n\\r\\n")) break;
+      if (req.endsWith("\\r\\n\\r\\n"))
+        break;
     }
+  }
+  // Read remaining body bytes (e.g. POST form data)
+  delay(15);
+  while (client.available()) {
+    req += (char)client.read();
   }
   if (req.indexOf("POST /door/open") != -1) {
     // ─── [Real-Time HTTP Push opening from Next.js (Online Mode)] ───
@@ -972,7 +955,8 @@ void handleLocalValidation() {
     tone(BUZZER_PIN, 1500, 100);
     delay(1200);
 
-    drawUnlockedScreen("VERIFIED MEMBER", studentId != "" ? studentId : "ONLINE STUDENT");
+    drawUnlockedScreen("VERIFIED MEMBER",
+                       studentId != "" ? studentId : "ONLINE STUDENT");
     digitalWrite(RELAY_PIN, HIGH);
 
     tone(BUZZER_PIN, 1000, 150);
@@ -984,7 +968,8 @@ void handleLocalValidation() {
     int stepSize = 320 / 38;
     for (int i = 0; i < 38; i++) {
       tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-      tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+      tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
+                   tft.color565(6, 78, 59));
       delay(100);
     }
     digitalWrite(RELAY_PIN, LOW);
@@ -1002,12 +987,13 @@ void handleLocalValidation() {
     int grantIdx = req.indexOf("grant=");
     if (grantIdx != -1) {
       int endIdx = req.indexOf(" ", grantIdx);
-      if (endIdx == -1) endIdx = req.indexOf("\\r", grantIdx);
+      if (endIdx == -1)
+        endIdx = req.indexOf("\\r", grantIdx);
       String grant = req.substring(grantIdx + 6, endIdx);
       grant.replace("%2E", ".");
       grant.replace("%2D", "-");
       grant.replace("%5F", "_");
-      
+
       bool valid = validateOfflineQR(grant);
       if (valid) {
         client.println("HTTP/1.1 200 OK");
@@ -1028,8 +1014,14 @@ void handleLocalValidation() {
     int pinIdx = req.indexOf("pin=");
     if (pinIdx != -1) {
       int endIdx = req.indexOf(" ", pinIdx);
-      if (endIdx == -1) endIdx = req.indexOf("\\r", pinIdx);
+      if (endIdx == -1)
+        endIdx = req.indexOf("\\r", pinIdx);
+      if (endIdx == -1)
+        endIdx = req.indexOf("&", pinIdx);
+      if (endIdx == -1)
+        endIdx = req.length();
       String enteredPin = req.substring(pinIdx + 4, endIdx);
+      enteredPin.trim();
       if (secureCompare(enteredPin.c_str(), cached_offline_pin.c_str())) {
         client.println("HTTP/1.1 200 OK");
         client.println("Content-Type: text/html; charset=utf-8");
@@ -1044,20 +1036,32 @@ void handleLocalValidation() {
         client.println();
         client.println("<h1>ACCESS DENIED</h1><p>Invalid PIN.</p>");
       }
+    } else {
+      client.println("HTTP/1.1 400 Bad Request");
+      client.println("Content-Type: text/html; charset=utf-8");
+      client.println("Connection: close");
+      client.println();
+      client.println("<h1>Bad Request</h1><p>Missing PIN parameter.</p>");
     }
   } else {
     client.println("HTTP/1.1 200 OK");
     client.println("Content-Type: text/html; charset=utf-8");
     client.println("Connection: close");
     client.println();
-    client.println("<!DOCTYPE html><html><head><meta charset='utf-8'><title>SmartAccess Offline Mode</title></head>");
-    client.println("<body style='font-family:sans-serif; text-align:center; padding:50px;'>");
+    client.println(
+        "<!DOCTYPE html><html><head><meta charset='utf-8'><title>SmartAccess "
+        "Offline Mode</title></head>");
+    client.println("<body style='font-family:sans-serif; text-align:center; "
+                   "padding:50px;'>");
     client.println("<h1 style='color:#F59E0B;'>⚠️ OFFLINE MODE ACTIVE</h1>");
     client.println("<p>ระบบอยู่ในโหมดออฟไลน์ (อินเทอร์เน็ตขัดข้อง)</p>");
     client.println("<p>กรุณาสแกนคีย์ QR โค้ดปลดล็อกของท่าน หรือกรอก Offline PIN</p>");
     client.println("<form method='POST' action='/unlock-pin'>");
-    client.println("<input type='password' name='pin' placeholder='Enter PIN' style='padding:10px;font-size:16px;'><br><br>");
-    client.println("<button type='submit' style='padding:10px 20px;font-size:16px;background:#10B981;color:white;border:none;'>Unlock Door</button>");
+    client.println("<input type='password' name='pin' placeholder='Enter PIN' "
+                   "style='padding:10px;font-size:16px;'><br><br>");
+    client.println("<button type='submit' style='padding:10px "
+                   "20px;font-size:16px;background:#10B981;color:white;border:"
+                   "none;'>Unlock Door</button>");
     client.println("</form>");
     client.println("</body></html>");
   }
@@ -1065,9 +1069,9 @@ void handleLocalValidation() {
   client.stop();
 }
 
-
 void syncStudentCache() {
-  if (WiFi.status() != WL_CONNECTED) return;
+  if (WiFi.status() != WL_CONNECTED)
+    return;
   HTTPClient http;
   String syncUrl = String(server_url) + "&sync=1";
   static WiFiClientSecure secureClient;
@@ -1082,7 +1086,7 @@ void syncStudentCache() {
     DeserializationError error = deserializeJson(doc, payload);
     if (!error) {
       if (doc.containsKey("qr_key")) {
-        const char* key = doc["qr_key"];
+        const char *key = doc["qr_key"];
         cached_qr_key = String(key);
         File f = SPIFFS.open(cache_key_file, "w");
         if (f) {
@@ -1105,10 +1109,13 @@ void syncStudentCache() {
 }
 
 void syncOfflineLogs() {
-  if (WiFi.status() != WL_CONNECTED) return;
-  if (!SPIFFS.exists(cache_logs_file)) return;
+  if (WiFi.status() != WL_CONNECTED)
+    return;
+  if (!SPIFFS.exists(cache_logs_file))
+    return;
   File f = SPIFFS.open(cache_logs_file, "r");
-  if (!f) return;
+  if (!f)
+    return;
   String content = f.readString();
   f.close();
   HTTPClient http;
@@ -1129,19 +1136,21 @@ void syncOfflineLogs() {
 }
 
 void syncTimeViaHTTP() {
-  if (WiFi.status() != WL_CONNECTED) return;
-  
+  if (WiFi.status() != WL_CONNECTED)
+    return;
+
   String timeUrl = String(server_url);
   int displayIdx = timeUrl.indexOf("/display");
   if (displayIdx != -1) {
     timeUrl = timeUrl.substring(0, displayIdx) + "/time";
   } else {
-    timeUrl = "${origin}/api/esp32/time"; // Fallback
+    timeUrl =
+        "https://smartaccess-project.vercel.app/api/esp32/time"; // Fallback
   }
-  
+
   DBG("Attempting HTTP Time Sync Fallback via: " + timeUrl);
   HTTPClient http;
-  
+
   if (timeUrl.startsWith("https://")) {
 #ifdef WOKWI_SIM
     static WiFiClientSecure simClient;
@@ -1155,7 +1164,7 @@ void syncTimeViaHTTP() {
   } else {
     http.begin(timeUrl);
   }
-  
+
   http.setTimeout(4000);
   int httpCode = http.GET();
   if (httpCode == 200) {
@@ -1168,10 +1177,12 @@ void syncTimeViaHTTP() {
       tv.tv_sec = serverTime;
       tv.tv_usec = 0;
       settimeofday(&tv, NULL);
-      Serial.println("[INFO] HTTP Time Synced fallback: " + String((long)time(nullptr)));
+      Serial.println("[INFO] HTTP Time Synced fallback: " +
+                     String((long)time(nullptr)));
     }
   } else {
-    Serial.printf("[ERROR] HTTP Time Sync fallback failed, HTTP Code: %d\\n", httpCode);
+    Serial.printf("[ERROR] HTTP Time Sync fallback failed, HTTP Code: %d\\n",
+                  httpCode);
   }
   http.end();
 }
@@ -1218,24 +1229,23 @@ void setup() {
   tft.begin();
   tft.setRotation(1); // Landscape
 
-  tft.fillScreen(tft.color565(6, 7, 13));
-  tft.fillRect(0, 0, 320, 45, tft.color565(14, 17, 28));
-  tft.drawRect(0, 45, 320, 2, tft.color565(16, 185, 129));
+  canvas.fillScreen(tft.color565(6, 7, 13));
+  canvas.fillRect(0, 0, 320, 45, tft.color565(14, 17, 28));
+  canvas.drawFastHLine(0, 45, 320, tft.color565(16, 185, 129));
 
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setTextSize(2);
-  tft.setCursor(20, 12);
-  tft.print("SmartAccess DOOR ACCESS");
+  // วาดโลโก้ระบบ 24x24 ที่ (10, 10)
+  canvas.drawRGBBitmap(10, 10, logo_smartaccess, 24, 24);
+  drawThaiText(canvas, "SmartAccess ระบบควบคุมประตู", 42, 14, ILI9341_WHITE);
 
-  tft.setTextSize(2);
-  tft.setTextColor(tft.color565(59, 130, 246));
-  tft.setCursor(40, 100);
-  tft.print("CONNECTING WIFI...");
+  drawThaiText(canvas, "กำลังเชื่อมต่อ Wi-Fi...", 40, 100, tft.color565(59, 130, 246));
 
-  tft.setTextSize(1);
-  tft.setTextColor(tft.color565(156, 163, 175));
-  tft.setCursor(40, 140);
-  tft.print("SSID Virtual Router: Wokwi-GUEST");
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(156, 163, 175));
+  canvas.setCursor(40, 140);
+  canvas.print("SSID: ");
+  canvas.print(ssid);
+
+  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
 
   DBG("Connecting to Wi-Fi...");
   WiFi.begin(ssid, password);
@@ -1260,16 +1270,19 @@ void setup() {
       ntp_wait++;
     }
   }
-  
+
   // NTP Fallback
   if (time(nullptr) < 1000000000UL) {
-    Serial.println("[WARNING] NTP Sync Timeout. Attempting HTTP Time Fallback...");
+    Serial.println(
+        "[WARNING] NTP Sync Timeout. Attempting HTTP Time Fallback...");
     syncTimeViaHTTP();
   } else {
     Serial.println("[INFO] NTP synced: " + String((long)time(nullptr)));
   }
 
   ip_address_str = WiFi.localIP().toString();
+  Serial.print("[INFO] ESP32 IP Address: ");
+  Serial.println(ip_address_str);
 
   tone(BUZZER_PIN, 1200, 150);
   delay(180);
@@ -1290,7 +1303,15 @@ void setup() {
 void loop() {
   // Check door sensor open-state warning
   // MC-38 outputs HIGH when door is open (magnet away), LOW when closed (magnet close)
-  if (digitalRead(DOOR_SENSOR_PIN) == HIGH) {
+  int doorState = digitalRead(DOOR_SENSOR_PIN);
+  
+  static unsigned long lastDebugPrint = 0;
+  if (millis() - lastDebugPrint > 2000) {
+    lastDebugPrint = millis();
+    Serial.printf("[DEBUG] Door Sensor Pin %d State: %d, Open Time: %lu\\n", DOOR_SENSOR_PIN, doorState, doorOpenStartTime);
+  }
+
+  if (doorState == HIGH) {
     if (doorOpenStartTime == 0) {
       doorOpenStartTime = millis();
     } else if (millis() - doorOpenStartTime > 10000) { // 10 seconds warning threshold
@@ -1377,7 +1398,8 @@ void loop() {
       unsigned long mm = (sec / 60) % 60;
       unsigned long ss = sec % 60;
       char timeBuf[10];
-      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm, (int)ss);
+      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm,
+               (int)ss);
 
       static unsigned long lastScreenUpdate = 0;
       if (millis() - lastScreenUpdate > 5000) {
@@ -1417,11 +1439,14 @@ void loop() {
       unsigned long mm = (sec / 60) % 60;
       unsigned long ss = sec % 60;
       char timeBuf[10];
-      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm, (int)ss);
+      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm,
+               (int)ss);
       time_str = String(timeBuf);
 
       HTTPClient http;
       String pollUrl = String(server_url) + "&slim=true";
+      //Serial.print("[INFO] Polling URL: ");
+      //Serial.println(pollUrl);
       if (pollUrl.startsWith("https://")) {
 #ifdef WOKWI_SIM
         static WiFiClientSecure simClient;
@@ -1429,7 +1454,7 @@ void loop() {
         http.begin(simClient, pollUrl);
 #else
         if (!tlsClientInitialized) {
-          persistentTlsClient.setCACert(root_ca_cert);
+          persistentTlsClient.setInsecure();
           tlsClientInitialized = true;
         }
         http.setReuse(true);
@@ -1446,6 +1471,8 @@ void loop() {
       }
 
       int httpCode = http.GET();
+      //Serial.print("[INFO] Polling result code: ");
+      //Serial.println(httpCode);
 
       if (httpCode == 304) {
         idleCycles++;
@@ -1476,7 +1503,9 @@ void loop() {
           syncOfflineLogs();
         }
         String payload = http.getString();
-        DynamicJsonDocument doc(1024); // Increased to 1024 to prevent buffer overflows from long URLs or JSON nesting
+        DynamicJsonDocument doc(
+            1024); // Increased to 1024 to prevent buffer overflows from long
+                   // URLs or JSON nesting
         DeserializationError error = deserializeJson(doc, payload);
 
         if (!error) {
@@ -1495,7 +1524,10 @@ void loop() {
             if (new_pin != cached_offline_pin) {
               cached_offline_pin = new_pin;
               File f = SPIFFS.open("/offline_pin.txt", "w");
-              if (f) { f.print(cached_offline_pin); f.close(); }
+              if (f) {
+                f.print(cached_offline_pin);
+                f.close();
+              }
             }
           }
 
@@ -1508,7 +1540,8 @@ void loop() {
 
           String approvedName = "";
           String studentId = "";
-          if (doc.containsKey("last_approved") && !doc["last_approved"].isNull()) {
+          if (doc.containsKey("last_approved") &&
+              !doc["last_approved"].isNull()) {
             approvedName = doc["last_approved"]["name"].as<String>();
             studentId = doc["last_approved"]["student_id"].as<String>();
           }
@@ -1521,7 +1554,7 @@ void loop() {
           if (active_token) {
             String baseUrl = "https://smartaccess-project.vercel.app";
             String currentRoom = String(room_code);
-            
+
             if (register_url) {
               String regUrl = String(register_url);
               int idx = regUrl.indexOf("/?room=");
@@ -1536,25 +1569,31 @@ void loop() {
                 baseUrl = sUrl.substring(0, apiIdx);
               }
             }
-            
+
             if (requested_room) {
               currentRoom = String(requested_room);
             }
-            
-            qrText = baseUrl + "/?scan=" + String(active_token) + "&room=" + currentRoom;
+
+            qrText = baseUrl + "/?scan=" + String(active_token) +
+                     "&room=" + currentRoom;
           }
 
-          DBGF("Door command: %s | Queue: %d\\n", door_trigger ? door_trigger : "NULL", pending_count);
+          DBGF("Door command: %s | Queue: %d\\n",
+               door_trigger ? door_trigger : "NULL", pending_count);
 
           if (String(door_trigger) == "open") {
             idleCycles = 0;
             currentPollDelay = POLL_FAST;
-          } else if (pending_count != last_queue_count || studentId != last_approved_name || (active_token && String(active_token) != last_active_token)) {
+          } else if (pending_count != last_queue_count ||
+                     studentId != last_approved_name ||
+                     (active_token &&
+                      String(active_token) != last_active_token)) {
             idleCycles = 0;
             currentPollDelay = POLL_NORMAL;
           } else {
             idleCycles++;
-            if (idleCycles >= 5) currentPollDelay = POLL_SLOW;
+            if (idleCycles >= 5)
+              currentPollDelay = POLL_SLOW;
           }
 
           bool isOpenCmd = (door_trigger && String(door_trigger) == "open");
@@ -1580,8 +1619,10 @@ void loop() {
 
             int stepSize = 320 / 38;
             for (int i = 0; i < 38; i++) {
-              tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-              tft.fillRect(320 - (i * stepSize), 236, stepSize, 4, tft.color565(6, 78, 59));
+              tft.fillRect(0, 236, 320 - (i * stepSize), 4,
+                           tft.color565(16, 185, 129));
+              tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
+                           tft.color565(6, 78, 59));
               delay(100);
             }
 
@@ -1593,8 +1634,10 @@ void loop() {
             last_queue_count = -1;
             last_approved_name = "FORCE_REDRAW";
             last_active_token = "FORCE_REDRAW";
-          }
-          else if (pending_count != last_queue_count || studentId != last_approved_name || (active_token && String(active_token) != last_active_token)) {
+          } else if (pending_count != last_queue_count ||
+                     studentId != last_approved_name ||
+                     (active_token &&
+                      String(active_token) != last_active_token)) {
             last_queue_count = pending_count;
             last_approved_name = studentId;
             if (active_token)
@@ -1614,7 +1657,7 @@ void loop() {
         }
       } else {
         Serial.println("[ERROR] Connection failed");
-        DBGF("HTTP Error: %d\\n", httpCode);
+        Serial.printf("HTTP Error: %d\\n", httpCode);
         api_fail_count++;
         if (api_fail_count >= 5) {
           if (!is_offline_mode) {
@@ -1629,7 +1672,8 @@ void loop() {
       http.end();
     }
   } else if (WiFi.status() != WL_CONNECTED) {
-    // Non-blocking WiFi status blinker & reconnection logic to prevent sluggish performance
+    // Non-blocking WiFi status blinker & reconnection logic to prevent sluggish
+    // performance
     static unsigned long lastWifiBlink = 0;
     static bool wifiBlinkState = false;
     if (millis() - lastWifiBlink >= 250) {
@@ -1641,18 +1685,19 @@ void loop() {
     static unsigned long lastWifiRetry = 0;
     if (millis() - lastWifiRetry >= 10000) {
       lastWifiRetry = millis();
-      Serial.println("[WIFI] Connection lost. Attempting non-blocking reconnect...");
+      Serial.println(
+          "[WIFI] Connection lost. Attempting non-blocking reconnect...");
       WiFi.disconnect();
       WiFi.begin(ssid, password);
     }
   }
 }
 
-bool secureCompare(const char* a, const char* b) {
+bool secureCompare(const char *a, const char *b) {
   size_t lenA = strlen(a);
   size_t lenB = strlen(b);
   size_t len = (lenA > lenB) ? lenA : lenB;
-  
+
   volatile uint8_t result = lenA ^ lenB;
   for (size_t i = 0; i < len; i++) {
     uint8_t ca = (i < lenA) ? a[i] : 0;

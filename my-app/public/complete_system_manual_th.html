@@ -1901,6 +1901,8 @@ GET /api/export/pdf?id=&lt;student_id&gt;
 <li>ArduinoJson เวอร์ชัน 6.x</li>
 <li>WiFi และ HTTPClient มากับ ESP32 Arduino Core</li>
 <li><code>ricmoo_qrcode.c/.h</code> อยู่ในโปรเจกต์แล้ว</li>
+<li><code>thai_font.h</code> และ <code>icons.h</code> อยู่ในโปรเจกต์แล้ว (สำหรับแสดงผลฟอนต์ภาษาไทยและไอคอน/โลโก้กราฟิก)</li>
+<li><strong>หมายเหตุระบบแสดงผล:</strong> โปรเจกต์นี้ได้รับการปรับปรุงระบบแสดงผลด้วยเทคนิค <strong>Double Buffering (GFXcanvas16)</strong> ทำให้วาดหน้าจอเสร็จสมบูรณ์ในหน่วยความจำก่อนดันภาพออกจอพร้อมกันทีเดียว ช่วยลดการกระพริบของหน้าจอและรองรับการทำงานแบบเรียลไทม์ได้อย่างนุ่มนวล (Smooth UI)</li>
 </ul>
 <h3>6.4 Upload firmware</h3>
 <ol>
@@ -9427,7 +9429,7 @@ PostgreSQL free tier<span class="token operator">:</span> <span class="token num
 <ol>
 <li><strong>Browser default</strong> — บาง browser แสดงผิด → CSS <code>font-family: &#39;Sarabun&#39;, &#39;Tahoma&#39;, sans-serif</code></li>
 <li><strong>PDF</strong> — Helvetica ไม่มี Thai glyph → ต้อง register Tahoma เสมอ</li>
-<li><strong>ESP32 TFT</strong> — Adafruit GFX มาตรฐานไม่มี Thai → ใช้ภาษาอังกฤษบนจอ</li>
+<li><strong>ESP32 TFT</strong> — แม้ Adafruit GFX มาตรฐานไม่มีตัวอักษรภาษาไทย แต่ระบบได้พัฒนา <strong>Thai Font Engine แบบ Custom (<code>thai_font.h</code>)</strong> ที่สามารถถอดรหัส UTF-8 และทำการเรนเดอร์ฟอนต์ภาษาไทยพร้อมตัวช่วยจัดตำแหน่งสระและวรรณยุกต์ทับซ้อน ทำให้สามารถแสดงผลภาษาไทยบนหน้าจอตัวเครื่องได้อย่างสมบูรณ์แบบและคมชัด</li>
 </ol>
 <h3>66.3 Font Subsetting (Optimization)</h3>
 <p>ปัจจุบันส่ง Tahoma ทั้งไฟล์ 700KB → ทุก request PDF ใช้ทั้งหมด<br>ทำ subset แค่ glyph ที่ใช้ → ~150KB</p>

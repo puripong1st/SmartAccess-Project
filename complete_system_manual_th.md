@@ -631,6 +631,8 @@ const char *api_key = "ค่าเดียวกับ ESP32_API_KEY บน se
 - ArduinoJson เวอร์ชัน 6.x
 - WiFi และ HTTPClient มากับ ESP32 Arduino Core
 - `ricmoo_qrcode.c/.h` อยู่ในโปรเจกต์แล้ว
+- `thai_font.h` และ `icons.h` อยู่ในโปรเจกต์แล้ว (สำหรับแสดงผลฟอนต์ภาษาไทยและไอคอน/โลโก้กราฟิก)
+- **หมายเหตุระบบแสดงผล:** โปรเจกต์นี้ได้รับการปรับปรุงระบบแสดงผลด้วยเทคนิค **Double Buffering (GFXcanvas16)** ทำให้วาดหน้าจอเสร็จสมบูรณ์ในหน่วยความจำก่อนดันภาพออกจอพร้อมกันทีเดียว ช่วยลดการกระพริบของหน้าจอและรองรับการทำงานแบบเรียลไทม์ได้อย่างนุ่มนวล (Smooth UI)
 
 ### 6.4 Upload firmware
 
@@ -5261,7 +5263,7 @@ Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
 
 1. **Browser default** — บาง browser แสดงผิด → CSS `font-family: 'Sarabun', 'Tahoma', sans-serif`
 2. **PDF** — Helvetica ไม่มี Thai glyph → ต้อง register Tahoma เสมอ
-3. **ESP32 TFT** — Adafruit GFX มาตรฐานไม่มี Thai → ใช้ภาษาอังกฤษบนจอ
+3. **ESP32 TFT** — แม้ Adafruit GFX มาตรฐานไม่มีตัวอักษรภาษาไทย แต่ระบบได้พัฒนา **Thai Font Engine แบบ Custom (`thai_font.h`)** ที่สามารถถอดรหัส UTF-8 และทำการเรนเดอร์ฟอนต์ภาษาไทยพร้อมตัวช่วยจัดตำแหน่งสระและวรรณยุกต์ทับซ้อน ทำให้สามารถแสดงผลภาษาไทยบนหน้าจอตัวเครื่องได้อย่างสมบูรณ์แบบและคมชัด
 
 ### 66.3 Font Subsetting (Optimization)
 
