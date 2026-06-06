@@ -48,3 +48,15 @@ esp32/build/
 
 #obsidian
 /.obsidian/
+
+# scratch scripts (may contain credentials)
+/scratch/
+
+# config files with secrets
+aiven_postgresql_config.txt
+
+# debug / utility scripts
+check-db.js
+
+# log files
+*.log
