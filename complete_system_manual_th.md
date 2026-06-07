@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-07 18:30:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-07 19:15:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -12202,5 +12202,24 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | 1 | `esp32/esp32.ino` | **[MODIFY]** | เพิ่ม `ScreenState`, `getTimeString()`, `drawClockRegion()` และ tick นาฬิการายวินาทีในลูป ใช้เวลาจริง NTP และวาดทับเฉพาะตัวเลขเวลากันกระพริบ |
 | 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | พอร์ตตรรกะนาฬิกาเรียลไทม์กันกระพริบชุดเดียวกันลงในเทมเพลตชุดโค้ดของแผงควบคุมแอดมิน |
 | 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดระบบนาฬิกาเรียลไทม์ NTP และการ tick รายวินาทีกันกระพริบ (§71.61) |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+### 71.62 แก้บั๊ก QR Code บนจอสแกนแล้วขึ้น "Token ไม่ถูกต้อง" (Stale QR Token Rotation Fix)
+
+**อาการ:** สแกน QR Code ที่แสดงบนจอ ESP32 แล้วระบบแจ้งว่า token ไม่ถูกต้อง/หมดอายุทุกครั้ง ทำให้เข้าหน้าลงทะเบียนไม่ได้
+
+**สาเหตุที่แท้จริง (Root Cause):** ใน [my-app/app/api/esp32/display/route.ts](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts) คำสั่งดึง token ผ่าน Supabase REST กรองเพียง `is_consumed=eq.false` โดย **ไม่ได้กรองอายุของ token** และจะสร้าง token ใหม่ก็ต่อเมื่อไม่มี token ที่ยังไม่ถูกใช้เหลืออยู่เลยเท่านั้น ผลคือเมื่อมี token หนึ่งถูกสร้างและแสดงบนจอ ระบบจะคืน token เดิมนั้นซ้ำไปเรื่อย ๆ ไม่หมุนเปลี่ยน แต่ฟังก์ชัน `consumeQRToken` ใน `lib/qr.ts` จะปฏิเสธ token ที่อายุเกิน `TOKEN_EXPIRY_SECONDS` (300 วินาที) ดังนั้นหลังผ่านไป 5 นาที QR บนจอจะหมดอายุถาวรแต่ยังถูกแสดงอยู่ → สแกนแล้วล้มเหลวทุกครั้ง
+
+**การแก้ไข (Patched):**
+- เพิ่มตัวกรองช่วงเวลาหมุน token (`TOKEN_ROTATION_SECONDS = 60`) ลงใน query โดยเพิ่มเงื่อนไข `created_at=gte.{cutoff}` ทำให้ระบบ reuse เฉพาะ token ที่อายุไม่เกิน 60 วินาทีเท่านั้น
+- หาก token ล่าสุดเก่ากว่า 60 วินาที query จะคืนค่าว่าง → โค้ดเข้าเงื่อนไข `if (!activeToken)` แล้วเรียก endpoint ภายใน `/api/esp32/qr/token` ซึ่งใช้ `getOrCreateActiveQRToken` สร้าง token ใหม่ที่สดและใช้งานได้
+- ผลลัพธ์: QR ที่แสดงบนจอจะมีอายุไม่เกิน 60 วินาทีเสมอ ซึ่งอยู่ในช่วงที่ `consumeQRToken` ยอมรับ (300 วินาที) อย่างปลอดภัย จึงสแกนผ่านได้ 100% โดย token ยังคงเป็นแบบใช้ครั้งเดียว (one-time) ตามเดิม
+
+#### 71.62.1 ตารางสรุปไฟล์แก้ไข
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `my-app/app/api/esp32/display/route.ts` | **[MODIFY]** | เพิ่มตัวกรอง `created_at=gte.{cutoff}` (หน้าต่างหมุน 60 วินาที) ในการดึง active QR token เพื่อบังคับให้ token หมุนใหม่และไม่แสดง token ที่หมดอายุ |
+| 2 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกการแก้บั๊ก QR token ค้าง/หมดอายุ (§71.62) |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

@@ -150,6 +150,13 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const room = (searchParams.get("room") || "default").trim();
 
+    // ─── QR token rotation window ─────────────────────────────────────────
+    // ต้องตรงกับ TOKEN_ROTATION_SECONDS ใน lib/qr.ts — เราจะ reuse เฉพาะ token
+    // ที่อายุไม่เกิน 60 วินาที เพื่อให้ QR บนจอสดใหม่เสมอ และยังอยู่ในช่วงที่
+    // consumeQRToken ยอมรับได้ (5 นาที) ป้องกันอาการสแกนแล้วขึ้น "token ไม่ถูกต้อง"
+    const TOKEN_ROTATION_SECONDS = 60;
+    const tokenFreshCutoff = new Date(Date.now() - TOKEN_ROTATION_SECONDS * 1000).toISOString();
+
     // ─── [KV Cache] อ่าน system_settings จาก Redis ก่อน ──────────────────
     const SETTINGS_TTL = 15; // 15s cache — สั้นพอให้ per-room settings อัปเดตทันใช้
     const cacheKey = "system_settings:all";
@@ -185,7 +192,7 @@ export async function GET(req: NextRequest) {
       ),
       // 3. Active QR token
       sbFetch(
-        `dynamic_qr_tokens?is_consumed=eq.false&room_code=eq.${encodeURIComponent(room)}&select=token&order=created_at.desc&limit=1`
+        `dynamic_qr_tokens?is_consumed=eq.false&room_code=eq.${encodeURIComponent(room)}&created_at=gte.${encodeURIComponent(tokenFreshCutoff)}&select=token&order=created_at.desc&limit=1`
       ),
       // 4. Latest firmware version — เฉพาะตอน cache miss
       serverVer
