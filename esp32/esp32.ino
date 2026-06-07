@@ -1642,7 +1642,9 @@ void loop() {
   }
 
   static unsigned long lastPollTime = 0;
-  if (WiFi.status() == WL_CONNECTED && !is_offline_mode) {
+  // poll ต่อแม้อยู่ในออฟไลน์โหมด เพื่อให้กลับมาออนไลน์เองได้เมื่อเครือข่ายคืนสภาพ
+  // (เส้นทาง 200 จะเคลียร์ is_offline_mode ให้เอง) — เดิมติดออฟไลน์ถาวรจนต้องรีบูต
+  if (WiFi.status() == WL_CONNECTED) {
     digitalWrite(LED_WIFI, HIGH);
 
     if (millis() - lastPollTime >= currentPollDelay) {
@@ -1682,6 +1684,7 @@ void loop() {
       // Serial.println(httpCode);
 
       if (httpCode == 304) {
+        api_fail_count = 0; // 304 = เซิร์ฟเวอร์ติดต่อได้ ถือว่าออนไลน์ปกติ
         idleCycles++;
         if (idleCycles >= 5) {
           currentPollDelay = POLL_SLOW;
@@ -1860,8 +1863,14 @@ void loop() {
       } else {
         Serial.println("[ERROR] Connection failed");
         Serial.printf("HTTP Error: %d\n", httpCode);
+#ifndef WOKWI_SIM
+        // ปิด TLS keep-alive ที่อาจถูกเซิร์ฟเวอร์ปิดไปแล้ว เพื่อให้รอบถัดไปเปิด
+        // การเชื่อมต่อใหม่สด ๆ กันอาการ poll ล้มต่อเนื่องบน socket เก่าจนหลุดออฟไลน์
+        persistentTlsClient.stop();
+        tlsClientInitialized = false;
+#endif
         api_fail_count++;
-        if (api_fail_count >= 5) {
+        if (api_fail_count >= 8) {
           if (!is_offline_mode) {
             is_offline_mode = true;
             DBG("Entering offline fallback mode. Starting AP.");
