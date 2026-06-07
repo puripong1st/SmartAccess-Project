@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-07 19:15:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-07 20:00:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -12221,5 +12221,27 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 |---|---|---|---|
 | 1 | `my-app/app/api/esp32/display/route.ts` | **[MODIFY]** | เพิ่มตัวกรอง `created_at=gte.{cutoff}` (หน้าต่างหมุน 60 วินาที) ในการดึง active QR token เพื่อบังคับให้ token หมุนใหม่และไม่แสดง token ที่หมดอายุ |
 | 2 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกการแก้บั๊ก QR token ค้าง/หมดอายุ (§71.62) |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+### 71.63 ปรับการเรนเดอร์หน้าหลักเป็น Dirty-region และปิด Serial Debug ของเซนเซอร์ประตู
+
+**ปัญหา:** แม้นาฬิกาจะไม่กระพริบแล้ว (§71.61) แต่ฟังก์ชัน `drawMainScreen()` ยังใช้ `canvas.fillScreen()` ล้างทั้งจอแล้ววาดใหม่ทุกครั้งที่ข้อมูลเปลี่ยน เนื่องจากบอร์ดถอด framebuffer (GFXcanvas16) ออกไปเพื่อประหยัดแรม จึงวาดลงจอตรง ๆ ทำให้เห็นการ "แฟลชเต็มจอ" โดยเฉพาะเมื่อ QR token หมุนทุก ~60 วินาที (ผลพวงจากการแก้บั๊กใน §71.62)
+
+**การแก้ไข (Dirty-region Rendering):**
+1. เพิ่มตัวแปรจดจำสถานะที่วาดไปแล้ว (`rendered_queue`, `rendered_id`, `rendered_qr`) และแยกการวาดออกเป็นฟังก์ชันย่อยตามวิดเจ็ต: `drawQRContent()`, `drawQueueValue()`, `drawApprovedCard()`
+2. `drawMainScreen()` ตรวจว่า ถ้า `currentScreen == SCREEN_MAIN` อยู่แล้ว จะ **วาดใหม่เฉพาะวิดเจ็ตที่ค่าจริงเปลี่ยน** (เช่น QR เปลี่ยนก็วาดเฉพาะกล่อง QR ขนาด 114×114, คิวเปลี่ยนก็วาดเฉพาะตัวเลข, รายชื่ออนุมัติเปลี่ยนก็วาดเฉพาะการ์ด) แล้ว `return` โดยไม่ `fillScreen` ทั้งจอ
+3. จะวาดทั้งจอ (full redraw) เฉพาะตอนเข้าหน้าหลักครั้งแรกหรือเปลี่ยนมาจากหน้าอื่น (Scanning/Unlocked/Rejected) เท่านั้น
+4. ผลลัพธ์: จอนิ่งสนิทไม่แฟลชแม้ตอน QR หมุนทุก 60 วินาที และไม่กินแรมเพิ่ม (ยังวาดลงจอตรง ๆ เหมือนเดิม)
+
+**การปิด Serial Debug ที่ไม่จำเป็น:**
+- ลบคำสั่ง `Serial.printf("[DEBUG] Door Sensor Pin %d State: ...")` ที่พิมพ์สถานะเซนเซอร์ประตู (ขา GPIO 32) ออกทุก 2 วินาทีในลูป เพื่อลด log ขยะใน Serial Monitor
+
+#### 71.63.1 ตารางสรุปไฟล์แก้ไข
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `esp32/esp32.ino` | **[MODIFY]** | เพิ่ม dirty-region rendering ในหน้าหลัก (วาดเฉพาะวิดเจ็ตที่เปลี่ยน กันจอแฟลช) และลบ Serial debug ของเซนเซอร์ประตูขา 32 |
+| 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | พอร์ต dirty-region rendering และการปิด debug ชุดเดียวกันลงในเทมเพลตชุดโค้ดของแอดมิน |
+| 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกการปรับ dirty-region และการปิด Serial debug เซนเซอร์ประตู (§71.63) |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

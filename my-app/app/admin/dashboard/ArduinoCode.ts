@@ -294,9 +294,76 @@ void drawClockRegion(const String &timeStr) {
   last_clock_str = timeStr;
 }
 
+// ─── Dirty-region state + helpers สำหรับหน้าหลัก (วาดเฉพาะส่วนที่เปลี่ยน กันจอแฟลชทั้งจอ) ───
+int rendered_queue = -999;
+String rendered_id = "\\x01"; // sentinel ค่าเริ่มต้นที่ไม่มีทางตรงกับค่าจริง
+String rendered_qr = "\\x01";
+
+// วาดเนื้อหา QR ภายในกรอบ (drawQRCode ล้างพื้นขาวให้เองอยู่แล้ว)
+void drawQRContent(const String &qrText) {
+  if (qrText.length() > 0) {
+    drawQRCode(qrText, 13, 39, 114);
+  } else {
+    canvas.fillRect(13, 39, 114, 114, ILI9341_WHITE);
+    canvas.setTextColor(ILI9341_BLACK);
+    canvas.setTextSize(1);
+    canvas.setCursor(40, 89);
+    canvas.print("Loading QR...");
+  }
+}
+
+// วาดตัวเลขคิว — ล้างเฉพาะพื้นที่ตัวเลขด้วยสีพื้นการ์ดก่อนเขียนใหม่
+void drawQueueValue(int queueCount) {
+  canvas.fillRect(258, 82, 50, 26, tft.color565(24, 16, 1));
+  canvas.setTextSize(3);
+  canvas.setTextColor(tft.color565(245, 158, 11));
+  canvas.setCursor(275, 85);
+  canvas.print(queueCount);
+}
+
+// วาดการ์ดผู้ได้รับอนุมัติล่าสุด — ล้างพื้นที่การ์ดด้วยสีพื้นหลังหลักก่อนวาดใหม่
+void drawApprovedCard(const String &lastApprovedName) {
+  canvas.fillRect(144, 128, 168, 49, tft.color565(6, 7, 13));
+  canvas.setTextSize(1);
+  if (lastApprovedName.length() > 0) {
+    canvas.fillRoundRect(145, 130, 165, 45, 6, tft.color565(1, 18, 12));
+    canvas.drawRoundRect(145, 130, 165, 45, 6, tft.color565(16, 185, 129));
+    canvas.setTextColor(tft.color565(16, 185, 129));
+    canvas.setCursor(153, 134);
+    canvas.print("Latest Approved");
+    canvas.setTextColor(ILI9341_WHITE);
+    canvas.setCursor(153, 153);
+    canvas.print("ID: " + lastApprovedName);
+  } else {
+    canvas.drawRoundRect(145, 130, 165, 45, 6, tft.color565(60, 70, 60));
+    canvas.setTextColor(tft.color565(107, 122, 112));
+    canvas.setCursor(170, 148);
+    canvas.print("No entry history");
+  }
+}
+
 // 1. หน้าจอหลักโหมดสแตนด์บาย (Idle Mode) — ดีไซน์พรีเมียมถอดแบบมาจาก Next.js
 void drawMainScreen(int queueCount, const String &lastApprovedName,
                     const String &timeStr, const String &qrText) {
+  // ─── Dirty-region: ถ้าอยู่หน้าหลักอยู่แล้ว วาดใหม่เฉพาะส่วนที่ค่าเปลี่ยน กันจอแฟลชทั้งจอ ───
+  if (currentScreen == SCREEN_MAIN) {
+    if (qrText != rendered_qr) {
+      drawQRContent(qrText);
+      rendered_qr = qrText;
+    }
+    if (queueCount != rendered_queue) {
+      drawQueueValue(queueCount);
+      rendered_queue = queueCount;
+    }
+    if (lastApprovedName != rendered_id) {
+      drawApprovedCard(lastApprovedName);
+      rendered_id = lastApprovedName;
+    }
+    drawClockRegion(timeStr);
+    return;
+  }
+
+  // เข้าหน้าหลักครั้งแรก/มาจากหน้าอื่น — วาดโครงทั้งหมดครั้งเดียว
   // พื้นหลังสีน้ำเงินดำหรูหรา #06070D
   canvas.fillScreen(tft.color565(6, 7, 13));
 
@@ -411,6 +478,11 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   if (canvas.getBuffer() != nullptr) {
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
   }
+
+  // บันทึกค่าที่วาดไปแล้ว เพื่อให้รอบถัดไปวาดเฉพาะส่วนที่เปลี่ยน
+  rendered_queue = queueCount;
+  rendered_id = lastApprovedName;
+  rendered_qr = qrText;
 
   // จดจำสถานะ: เข้าสู่หน้าหลัก — เปิดให้นาฬิกา tick แบบเรียลไทม์
   currentScreen = SCREEN_MAIN;
@@ -1459,13 +1531,6 @@ void loop() {
   // MC-38 outputs HIGH when door is open (magnet away), LOW when closed (magnet
   // close)
   int doorState = digitalRead(DOOR_SENSOR_PIN);
-
-  static unsigned long lastDebugPrint = 0;
-  if (millis() - lastDebugPrint > 2000) {
-    lastDebugPrint = millis();
-    Serial.printf("[DEBUG] Door Sensor Pin %d State: %d, Open Time: %lu\\n",
-                  DOOR_SENSOR_PIN, doorState, doorOpenStartTime);
-  }
 
   if (doorState == HIGH) {
     if (doorOpenStartTime == 0) {
