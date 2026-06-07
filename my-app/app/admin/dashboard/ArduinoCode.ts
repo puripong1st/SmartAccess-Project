@@ -232,6 +232,9 @@ bool is_offline_mode = false;    // สถานะออฟไลน์ (ใช
 String last_door_trigger = "idle";
 unsigned long doorOpenStartTime =
     0; // Timestamp when door sensor detected open state
+// กันเปิดประตูซ้ำข้ามช่องทาง (MQTT + DB poll + LAN push ส่งคำสั่งเดียวกันมาหลายทาง)
+unsigned long lastUnlockAt = 0;
+const unsigned long UNLOCK_COOLDOWN_MS = 8000;
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
 void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
@@ -1073,6 +1076,10 @@ void triggerDoorOpenOffline(const String &grant) {
   deserializeJson(doc, decoded);
   String student_id = doc["student_id"].as<String>();
 
+  if (millis() - lastUnlockAt < UNLOCK_COOLDOWN_MS)
+    return; // กันสั่งซ้ำข้ามช่องทาง
+  lastUnlockAt = millis();
+
   saveOfflineLog(student_id);
 
   Serial.println("[INFO] Door unlocked");
@@ -1107,6 +1114,10 @@ void triggerDoorOpenOffline(const String &grant) {
 }
 
 void triggerDoorOpenInstant(String name, String studentId) {
+  // กันสั่งซ้ำ: ถ้าเพิ่งเปิดประตูไปไม่นาน ให้ข้าม (คำสั่งเดิมส่งมาหลายช่องทาง)
+  if (millis() - lastUnlockAt < UNLOCK_COOLDOWN_MS)
+    return;
+  lastUnlockAt = millis();
   Serial.println("[INFO] Door unlocked via MQTT/Real-time");
   last_door_trigger = "open";
   drawScanningScreen();
@@ -1221,6 +1232,11 @@ void handleLocalValidation() {
         }
       }
     }
+
+    // กันสั่งซ้ำข้ามช่องทาง (คำสั่งเดียวกันอาจมาทั้ง MQTT / DB poll / LAN push)
+    if (millis() - lastUnlockAt < UNLOCK_COOLDOWN_MS)
+      return;
+    lastUnlockAt = millis();
 
     Serial.println("[INFO] Real-time Door unlocked via HTTP Push");
     DBG("🔓 REAL-TIME ACCESS GRANTED! Opening door...");
@@ -1887,7 +1903,9 @@ void loop() {
 
           // เปิดประตูเฉพาะตอน "ขอบขาขึ้น" (idle→open) เท่านั้น — ถ้าเซิร์ฟเวอร์ยังส่ง
           // "open" ค้างมา (ยังไม่ถูก consume) บอร์ดจะไม่เปิดซ้ำและกลับไปหน้า QR ตามปกติ
-          if (isOpenCmd && last_door_trigger != "open") {
+          if (isOpenCmd && last_door_trigger != "open" &&
+              millis() - lastUnlockAt >= UNLOCK_COOLDOWN_MS) {
+            lastUnlockAt = millis();
             Serial.println("[INFO] Door unlocked");
             DBG("🔓 UNLOCK SIGNAL RECEIVED! Opening door...");
 

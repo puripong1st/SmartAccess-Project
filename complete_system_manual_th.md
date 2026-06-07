@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-07 22:00:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-07 22:45:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -12287,5 +12287,31 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | 1 | `esp32/esp32.ino` | **[MODIFY]** | เพิ่มฟอนต์ FreeSansBold, helper `printCentered/drawWifiIcon/drawCountdownRing/drawQrFreshness`, ไอคอนสถานะ, วงแหวนนับถอยหลัง, หน้า Offline ใหม่ |
 | 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | พอร์ตชุด UI/UX overhaul ทั้งหมดลงในเทมเพลตชุดโค้ดของแอดมิน |
 | 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกการยกเครื่อง UI/UX หน้าจอ ESP32 (§71.65) |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+### 71.66 แก้บั๊กประตูเปิดซ้ำ 2 รอบ (Cross-channel Unlock De-duplication)
+
+**อาการ:** เปิดประตู 1 ครั้งแต่บอร์ดสั่งเปิด 2 รอบติดกัน เห็นใน Serial:
+```
+[INFO] Door unlocked via MQTT/Real-time
+[INFO] Door locked
+[INFO] Door unlocked
+[INFO] Door locked
+```
+
+**สาเหตุที่แท้จริง:** เซิร์ฟเวอร์ส่งคำสั่ง unlock เดียวกัน **หลายช่องทางพร้อมกัน** เพื่อความทนทาน (MQTT publish + DB command queue + LAN HTTP push) บอร์ดจึงเปิดรอบแรกจาก MQTT (`triggerDoorOpenInstant`) แล้วคำสั่งเดิมที่ค้างใน DB queue ถูก poll หยิบมาเปิดซ้ำ ตัวกัน edge-trigger เดิม (`last_door_trigger`) ป้องกันไม่ได้ เพราะมีรอบ poll สถานะ idle มาคั่นกลางแล้วรีเซ็ตค่าเป็น "idle" ก่อนคำสั่ง DB จะ propagate มาถึง (race condition ข้ามช่องทาง)
+
+**การแก้ไข (Patched):**
+- เพิ่มตัวแปร `lastUnlockAt` และค่าคงที่ `UNLOCK_COOLDOWN_MS = 8000` (8 วินาที)
+- ใส่การตรวจ cooldown ที่จุดเปิดประตู **ทั้ง 4 ช่องทาง** ได้แก่ `triggerDoorOpenInstant` (MQTT), เส้นทาง poll คำสั่ง DB, `triggerDoorOpenOffline`, และ LAN HTTP push (`POST /door/open`) — ถ้าเพิ่งเปิดประตูไปภายใน 8 วินาที จะข้ามคำสั่งซ้ำทันที
+- บันทึกเวลาเปิดล่าสุดทุกครั้งที่เปิดจริง จึงกันคำสั่งเดิมที่มาจากช่องทางอื่นได้ครบ ไม่ว่าจะมาก่อนหรือหลัง และไม่กระทบการเปิดของผู้ใช้คนถัดไป (ห่างเกิน 8 วินาที)
+
+#### 71.66.1 ตารางสรุปไฟล์แก้ไข
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `esp32/esp32.ino` | **[MODIFY]** | เพิ่ม unlock cooldown (`lastUnlockAt`/`UNLOCK_COOLDOWN_MS`) ที่จุดเปิดประตูทั้ง 4 ช่องทาง กันเปิดซ้ำข้ามช่องทาง |
+| 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | พอร์ตตัวกันเปิดซ้ำชุดเดียวกันลงในเทมเพลตชุดโค้ดของแอดมิน |
+| 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกการแก้บั๊กประตูเปิดซ้ำ 2 รอบ (§71.66) |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
