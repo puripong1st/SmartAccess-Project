@@ -1122,7 +1122,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-07 23:30:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-08 00:15:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -21064,6 +21064,55 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกการแก้บั๊กตัดเข้าออฟไลน์โหมดเอง (§71.67)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><h3>71.68 อุดรอยรั่วการเข้าออฟไลน์โหมดโดยไม่จำเป็น (Smart Offline Trigger)</h3>
+<p>ต่อยอดจาก §71.67 — ปรับตรรกะให้ระบบ<strong>เข้าออฟไลน์โหมดเฉพาะเมื่อติดต่อเซิร์ฟเวอร์ไม่ได้จริงเท่านั้น</strong> (เน็ตหลุด/timeout/DNS) ไม่ใช่ทุกครั้งที่ poll ไม่ได้ 200</p>
+<p><strong>รอยรั่วเดิม:</strong> โค้ดนับ &quot;ทุก response ที่ไม่ใช่ 200/304&quot; เป็นความล้มเหลวเข้าออฟไลน์ รวมถึงกรณีที่<strong>เครือข่ายปกติดีแต่เซิร์ฟเวอร์ตอบรหัสอื่น</strong> เช่น:</p>
+<ul>
+<li><code>401/403</code> — ลายเซ็น HMAC ไม่ผ่าน (มักมาจากนาฬิกา ESP32 คลาดเคลื่อนเกิน 60 วิ)</li>
+<li><code>429</code> — โดน rate limit ชั่วคราว</li>
+<li><code>5xx</code> — เซิร์ฟเวอร์ error/cold start ชั่วคราว</li>
+</ul>
+<p>ทั้งหมดนี้แปลว่า <strong>&quot;ติดต่อเซิร์ฟเวอร์ได้&quot;</strong> (เครือข่ายไม่หลุด) จึงไม่ควรเด้งเข้าโหมด AP ออฟไลน์</p>
+<p><strong>การแก้ไข (Patched):</strong></p>
+<ol>
+<li><strong>แยกประเภทความล้มเหลวด้วยรหัส HTTP:</strong><ul>
+<li><code>httpCode &gt; 0</code> (ได้รับ response กลับมา เช่น 401/429/500) = เครือข่ายปกติ → <strong>รีเซ็ต <code>api_fail_count = 0</code> ไม่เข้าออฟไลน์</strong></li>
+<li><code>httpCode &lt;= 0</code> (timeout/connection refused/DNS/เน็ตหลุด) = ติดต่อไม่ได้จริง → นับเข้าเกณฑ์ออฟไลน์</li>
+</ul>
+</li>
+<li><strong>กู้ปัญหานาฬิกาเอง:</strong> เมื่อเจอ <code>401/403</code> จะเรียก <code>syncTimeViaHTTP()</code> เพื่อ sync เวลาใหม่ (แก้ปัญหา HMAC timestamp drift ที่เป็นต้นเหตุหลัก) จำกัดความถี่ไม่เกิน 1 ครั้ง/30 วิ</li>
+<li><strong>เพิ่มเงื่อนไขเวลา:</strong> เข้าออฟไลน์เฉพาะเมื่อล้มต่อเนื่อง <strong>≥8 ครั้ง และยาวนานเกิน 15 วินาที</strong> เพื่อยืนยันว่าติดต่อไม่ได้จริง ไม่ใช่สะดุดชั่วครู่ (กันการเด้งออฟไลน์เร็วเกินไปตอน poll ความถี่สูง <code>POLL_FAST</code>)</li>
+</ol>
+<p>ผลลัพธ์: ระบบจะคงออนไลน์ไว้ตราบใดที่ยัง &quot;คุย&quot; กับเซิร์ฟเวอร์ได้ และเข้าออฟไลน์โหมด AP เฉพาะตอนเครือข่าย/เซิร์ฟเวอร์ติดต่อไม่ถึงจริงและต่อเนื่องเท่านั้น</p>
+<h4>71.68.1 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>esp32/esp32.ino</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>แยกความล้มเหลวด้วย httpCode (&gt;0 ไม่เข้าออฟไลน์), sync เวลาเมื่อ 401/403, เข้าออฟไลน์เฉพาะล้มจริง ≥8 ครั้ง/&gt;15 วิ</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>พอร์ตตรรกะ smart offline trigger ชุดเดียวกันลงในเทมเพลตชุดโค้ดของแอดมิน</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกการอุดรอยรั่วการเข้าออฟไลน์โดยไม่จำเป็น (§71.68)</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

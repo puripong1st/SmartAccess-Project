@@ -1861,17 +1861,35 @@ void loop() {
           last_door_trigger = isOpenCmd ? "open" : "idle";
         }
       } else {
-        Serial.println("[ERROR] Connection failed");
-        Serial.printf("HTTP Error: %d\n", httpCode);
+        Serial.printf("[ERROR] Poll failed, HTTP code: %d\n", httpCode);
 #ifndef WOKWI_SIM
-        // ปิด TLS keep-alive ที่อาจถูกเซิร์ฟเวอร์ปิดไปแล้ว เพื่อให้รอบถัดไปเปิด
-        // การเชื่อมต่อใหม่สด ๆ กันอาการ poll ล้มต่อเนื่องบน socket เก่าจนหลุดออฟไลน์
+        // ปิด TLS keep-alive ที่อาจถูกปิดไปแล้ว เพื่อเปิดการเชื่อมต่อใหม่สด ๆ รอบหน้า
         persistentTlsClient.stop();
         tlsClientInitialized = false;
 #endif
-        api_fail_count++;
-        if (api_fail_count >= 8) {
-          if (!is_offline_mode) {
+        if (httpCode > 0) {
+          // ได้รับ HTTP response กลับมา (เช่น 401/403/429/5xx) = เครือข่ายปกติ
+          // เซิร์ฟเวอร์ตอบได้ จึงไม่ถือเป็นเน็ตหลุด → ไม่เข้าออฟไลน์โหมด
+          api_fail_count = 0;
+          // 401/403 อาจมาจากนาฬิกาคลาดเคลื่อน (HMAC timestamp) → sync เวลาใหม่
+          // (จำกัดความถี่ไม่เกิน 1 ครั้ง/30 วิ กัน sync ถี่เกินไป)
+          if (httpCode == 401 || httpCode == 403) {
+            static unsigned long lastTimeResync = 0;
+            if (millis() - lastTimeResync > 30000) {
+              lastTimeResync = millis();
+              syncTimeViaHTTP();
+            }
+          }
+        } else {
+          // httpCode <= 0 = ติดต่อเซิร์ฟเวอร์ไม่ได้จริง (timeout/refused/DNS/เน็ตหลุด)
+          static unsigned long firstFailAt = 0;
+          if (api_fail_count == 0)
+            firstFailAt = millis();
+          api_fail_count++;
+          // เข้าออฟไลน์เฉพาะเมื่อล้มต่อเนื่อง >=8 ครั้ง และนานเกิน 15 วิ เพื่อยืนยันว่า
+          // ติดต่อไม่ได้จริง ไม่ใช่สะดุดชั่วครู่ (กันการเด้งออฟไลน์ตอน poll เร็ว)
+          if (api_fail_count >= 8 && (millis() - firstFailAt) > 15000 &&
+              !is_offline_mode) {
             is_offline_mode = true;
             DBG("Entering offline fallback mode. Starting AP.");
             String ap_ssid = "SmartAccess_Offline_" + String(room_code);
