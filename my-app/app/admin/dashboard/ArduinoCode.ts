@@ -530,7 +530,11 @@ void drawUnlockedScreen(const String &approvedName, const String &studentId) {
                     tft.color565(16, 185, 129)); // เส้นขอบสีเขียวเรืองแสง
   canvas.drawCircle(160, 65, 33, tft.color565(16, 185, 129));
 
-  // (Success checkmark icon removed as requested)
+  // เครื่องหมายถูก (checkmark) วาดด้วยเส้นซ้อนหลายชั้นให้หนาและคมชัดกลางวงกลม
+  for (int t = 0; t < 4; t++) {
+    canvas.drawLine(148, 65 + t, 157, 75 + t, ILI9341_WHITE);
+    canvas.drawLine(157, 75 + t, 174, 53 + t, ILI9341_WHITE);
+  }
 
   canvas.setTextSize(2);
   canvas.setTextColor(tft.color565(16, 185, 129));

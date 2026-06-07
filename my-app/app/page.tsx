@@ -1088,12 +1088,13 @@ function RegistrationPageInner() {
     setBranches(SmartAccess_FACULTIES[faculty] || []);
   }
 
-  // Format student ID
+  // Format student ID — อนุญาตให้ผู้ใช้พิมพ์ตัวเลขและเครื่องหมาย "-" เองได้
+  // (รูปแบบ XXXXXXXXXXXX-X) โดยกรองอักขระอื่นออกและจำกัดให้มี "-" ได้แค่ตัวเดียว
   function handleStudentIdInput(raw: string) {
     let cleaned = raw.replace(/[^0-9-]/g, "");
     const parts = cleaned.split("-");
     if (parts.length > 2) {
-      cleaned = parts[0] + "-" + parts[1];
+      cleaned = parts[0] + "-" + parts.slice(1).join("");
     }
     setForm(f => ({ ...f, student_id: cleaned }));
   }
@@ -1924,7 +1925,7 @@ function RegistrationPageInner() {
               <input
                 id="student_id"
                 type="text"
-                inputMode="decimal"
+                inputMode="text"
                 pattern="[0-9\-]*"
                 aria-invalid={error ? "true" : "false"}
                 className="smartaccess-input"

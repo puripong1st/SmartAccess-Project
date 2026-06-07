@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-07 20:00:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-07 21:15:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -12243,5 +12243,26 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | 1 | `esp32/esp32.ino` | **[MODIFY]** | เพิ่ม dirty-region rendering ในหน้าหลัก (วาดเฉพาะวิดเจ็ตที่เปลี่ยน กันจอแฟลช) และลบ Serial debug ของเซนเซอร์ประตูขา 32 |
 | 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | พอร์ต dirty-region rendering และการปิด debug ชุดเดียวกันลงในเทมเพลตชุดโค้ดของแอดมิน |
 | 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกการปรับ dirty-region และการปิด Serial debug เซนเซอร์ประตู (§71.63) |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+### 71.64 เพิ่มไอคอนเครื่องหมายถูกหน้า ACCESS GRANTED และแก้ปัญหากรอกรหัสนักศึกษาบนมือถือ (ไม่มีปุ่ม "-")
+
+**ปัญหาที่ 1 — วงกลมหน้าอนุมัติว่างเปล่า:** หน้าจอ "ACCESS GRANTED" มีวงกลมไฟสีเขียวแต่ภายในว่างเปล่า ไม่มีไอคอนเครื่องหมายถูกบอกสถานะว่าอนุมัติแล้ว (เดิมถูกถอดออกไป)
+- **การแก้ไข:** วาดเครื่องหมายถูก (checkmark) กลางวงกลมด้วยคำสั่ง `canvas.drawLine()` ซ้อนกัน 4 ชั้นให้เส้นหนาและคมชัด สีขาวตัดกับพื้นวงกลมสีเขียว โดยไม่ใช้ bitmap จึงไม่กินแรมเพิ่ม (สอดคล้องกับสถาปัตยกรรม `TFT_DirectCanvas`) แก้ทั้งใน [esp32/esp32.ino](file:///c:/Users/aunkh/OneDrive/Desktop/Project/esp32/esp32.ino) และเทมเพลต [my-app/app/admin/dashboard/ArduinoCode.ts](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts)
+
+**ปัญหาที่ 2 — กรอกรหัสนักศึกษาบนมือถือไม่ได้:** ช่องกรอกรหัสนักศึกษาในหน้าลงทะเบียน [my-app/app/page.tsx](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/page.tsx) ใช้ `inputMode="decimal"` ทำให้บนมือถือ (iOS) แสดงแป้นตัวเลขที่มีแต่ตัวเลขและจุด "." ไม่มีปุ่ม "-" ให้กด ทั้งที่รูปแบบรหัสคือ XXXXXXXXXXXX-X จึงกรอกเครื่องหมายขีดไม่ได้
+- **การแก้ไข:**
+  - เปลี่ยน `inputMode` จาก `decimal` เป็น `text` เพื่อให้แป้นพิมพ์บนมือถือ (ทั้ง iOS และ Android) แสดงปุ่ม "-" ให้ผู้ใช้พิมพ์เครื่องหมายขีดเองได้โดยตรง
+  - ปรับฟังก์ชัน `handleStudentIdInput()` ให้รับเฉพาะตัวเลขและเครื่องหมาย "-" (กรองอักขระอื่นทิ้ง) และจำกัดให้มี "-" ได้เพียงตัวเดียวในรูปแบบ `XXXXXXXXXXXX-X`
+  - ยังรองรับรหัสวิทยบริการแบบตัวเลขล้วน (≤12 หลัก) ตามเดิม และผ่านการตรวจ regex `^\d{9,12}-\d{1}$|^\d{8,13}$` ทุกกรณี
+
+#### 71.64.1 ตารางสรุปไฟล์แก้ไข
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `esp32/esp32.ino` | **[MODIFY]** | วาดเครื่องหมายถูกกลางวงกลมหน้า ACCESS GRANTED ด้วยเส้นซ้อนกัน (ไม่ใช้ bitmap) |
+| 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | เพิ่มเครื่องหมายถูกชุดเดียวกันลงในเทมเพลตชุดโค้ดของแอดมิน |
+| 3 | `my-app/app/page.tsx` | **[MODIFY]** | เปลี่ยน inputMode เป็น text ให้แป้นพิมพ์มีปุ่ม "-" ให้ผู้ใช้พิมพ์เอง และกรองช่องรหัสนักศึกษาให้รับตัวเลข+"-" เดียว |
+| 4 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกการเพิ่มไอคอนเครื่องหมายถูกและการแก้ฟอร์มรหัสนักศึกษา (§71.64) |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
