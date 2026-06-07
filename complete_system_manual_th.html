@@ -1122,7 +1122,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-07 15:55:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-07 16:15:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -1901,8 +1901,8 @@ GET /api/export/pdf?id=&lt;student_id&gt;
 <li>ArduinoJson เวอร์ชัน 6.x</li>
 <li>WiFi และ HTTPClient มากับ ESP32 Arduino Core</li>
 <li><code>ricmoo_qrcode.c/.h</code> อยู่ในโปรเจกต์แล้ว</li>
-<li><code>thai_font.h</code> และ <code>icons.h</code> อยู่ในโปรเจกต์แล้ว (สำหรับแสดงผลฟอนต์ภาษาไทยและไอคอน/โลโก้กราฟิก)</li>
-<li><strong>หมายเหตุระบบแสดงผล:</strong> โปรเจกต์นี้ได้รับการปรับปรุงระบบแสดงผลด้วยเทคนิค <strong>Double Buffering (GFXcanvas16)</strong> ทำให้วาดหน้าจอเสร็จสมบูรณ์ในหน่วยความจำก่อนดันภาพออกจอพร้อมกันทีเดียว ช่วยลดการกระพริบของหน้าจอและรองรับการทำงานแบบเรียลไทม์ได้อย่างนุ่มนวล (Smooth UI)</li>
+<li>ระบบใช้การวาดตัวอักษรภาษาอังกฤษมาตรฐานของ Adafruit GFX เพื่อความเสถียรและหลีกเลี่ยงความทับซ้อนของตัวอักษร และถอดภาพโลโก้/ไอคอนที่ไม่จำเป็นออกเพื่อประหยัดหน่วยความจำ RAM และป้องกันปัญหาจอกระพริบ</li>
+<li><strong>หมายเหตุระบบแสดงผล:</strong> โปรเจกต์นี้ได้รับการปรับปรุงระบบแสดงผลด้วยเทคนิคการเขียนภาพโดยตรงลง TFT ผ่าน canvas wrapper ที่ประหยัดหน่วยความจำ (TFT_DirectCanvas) เพื่อหลีกเลี่ยง StoreProhibited exception จาก RAM ไม่พอ</li>
 </ul>
 <h3>6.4 Upload firmware</h3>
 <ol>
@@ -9429,7 +9429,7 @@ PostgreSQL free tier<span class="token operator">:</span> <span class="token num
 <ol>
 <li><strong>Browser default</strong> — บาง browser แสดงผิด → CSS <code>font-family: &#39;Sarabun&#39;, &#39;Tahoma&#39;, sans-serif</code></li>
 <li><strong>PDF</strong> — Helvetica ไม่มี Thai glyph → ต้อง register Tahoma เสมอ</li>
-<li><strong>ESP32 TFT</strong> — แม้ Adafruit GFX มาตรฐานไม่มีตัวอักษรภาษาไทย แต่ระบบได้พัฒนา <strong>Thai Font Engine แบบ Custom (<code>thai_font.h</code>)</strong> ที่สามารถถอดรหัส UTF-8 และทำการเรนเดอร์ฟอนต์ภาษาไทยพร้อมตัวช่วยจัดตำแหน่งสระและวรรณยุกต์ทับซ้อน ทำให้สามารถแสดงผลภาษาไทยบนหน้าจอตัวเครื่องได้อย่างสมบูรณ์แบบและคมชัด</li>
+<li><strong>ESP32 TFT</strong> — เพื่อหลีกเลี่ยงความทับซ้อนของตัวอักษรที่พบในอุปกรณ์ LCD (เรนเดอร์บิดเบี้ยวคล้ายอักขระเขมร) และปัญหา StoreProhibited exception จาก RAM ทับซ้อน ระบบจึงได้รับการอัปเดตเพื่อถอดถอน Thai Font Engine Custom (<code>thai_font.h</code>) ออก และปรับกลับไปใช้งานระบบวาดตัวอักษรภาษาอังกฤษมาตรฐานของ Adafruit GFX พร้อมตัวควบคุมหน้าจอไร้บัฟเฟอร์ (TFT_DirectCanvas) เพื่อความคมชัด ลื่นไหล ไร้กะพริบ และประหยัดหน่วยความจำ RAM สูงสุด</li>
 </ol>
 <h3>66.3 Font Subsetting (Optimization)</h3>
 <p>ปัจจุบันส่ง Tahoma ทั้งไฟล์ 700KB → ทุก request PDF ใช้ทั้งหมด<br>ทำ subset แค่ glyph ที่ใช้ → ~150KB</p>
@@ -20684,6 +20684,67 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดเชิงลึกของปัญหา StoreProhibited การแก้บั๊กหน่วยความจำล้น และตารางสรุปการเปลี่ยนแปลงในคู่มือระบบ (§71.59)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<h2>71.60 การยกเลิกฟอนต์ภาษาไทยและเปลี่ยนเป็นภาษาอังกฤษพร้อมถอดไอคอนแสดงผลบนหน้าจอ ESP32 (Removal of Thai Fonts &amp; Custom Icons on ILI9341)</h2>
+<p><strong>วันที่ดำเนินการ:</strong> 7 มิถุนายน 2569</p>
+<h4>71.60.1 สาเหตุของการปรับปรุง (Context &amp; Requirements)</h4>
+<p>ผู้ใช้งานรายงานปัญหาการแสดงผลฟอนต์ภาษาไทยบนจอ ILI9341 หลังอัปโหลด มีลักษณะบิดเบี้ยวทับซ้อนคล้ายอักขระเขมร และเนื่องจากไม่ต้องการใช้งานตัวอักษรภาษาไทยแล้ว จึงเสนอความต้องการที่จะ:</p>
+<ol>
+<li><strong>ยกเลิกฟอนต์ภาษาไทย:</strong> เปลี่ยนหน้าจอแสดงผลทุกโหมดให้แสดงเป็นภาษาอังกฤษระดับมาตรฐานของไลบรารีแทน เพื่อความชัดเจนและเข้ากันได้กับบอร์ดทุกตัวโดยไม่มีปัญหาเรื่องการเรนเดอร์อักขระทับซ้อน</li>
+<li><strong>เอาภาพไอคอนทั้งหมดออก:</strong> เอาภาพโลโก้ระบบ (<code>logo_smartaccess</code>) และภาพไอคอนสถานะความสำเร็จ/ข้อผิดพลาดออกเพื่อปรับให้รูปแบบหน้าจอดูเรียบง่าย สะอาดตา และไม่เพี้ยนจากการดึงข้อมูลบิตแมป</li>
+<li><strong>ป้องกันจอกระพริบ (Flicker-Free Clock Update):</strong> ปรับปรุงรอบการเขียนภาพนาฬิกาดิจิทัลเรียลไทม์ไม่ให้มีการกะพริบถี่ ๆ ขณะเวลาเปลี่ยนในทุก ๆ วินาที</li>
+</ol>
+<h4>71.60.2 แนวทางการแก้ไขทางสถาปัตยกรรม (Implementation Details)</h4>
+<p>ได้มีการดำเนินการปรับปรุงตรรกะการวาดผลในสองไฟล์หลักควบคู่กัน:</p>
+<ol>
+<li><strong>การปรับการเรนเดอร์เป็นภาษาอังกฤษทั้งหมด (English UI Shift):</strong><ul>
+<li>ถอดคำสั่ง <code>drawThaiText</code> ทั้งหมดออกใน <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/esp32/esp32.ino">esp32/esp32.ino</a> และนำการตั้งค่าข้อความภาษาอังกฤษผ่านคำสั่งมาตรฐานของ Adafruit GFX เช่น <code>canvas.print(&quot;SCAN TO ENTER&quot;)</code> และกำหนดขนาดตัวอักษรและพิกัดที่เหมาะสมในทุกหน้าจอ (Idle, Scanning, Access Granted, Access Denied, Wi-Fi Setup)</li>
+</ul>
+</li>
+<li><strong>การลบไอคอนและโลโก้บิตแมป (Icon Stripping):</strong><ul>
+<li>นำคำสั่ง <code>drawRGBBitmap</code> ที่ใช้เขียนโลโก้ระบบ <code>logo_smartaccess</code> (24x24) ออกจากหน้าสแตนด์บายและหน้าระหว่างเชื่อมต่อ Wi-Fi</li>
+<li>นำไอคอนสถานะ <code>icon_success</code> และ <code>icon_warning</code> (16x16) ออกจากหน้าอนุมัติและหน้าปฏิเสธ โดยคงไว้เพียงวงกลมไฟสีเขียว/แดงเรืองแสงรอบนอกเพื่อให้ภาพ UI ดูมีความประณีตและโมเดิร์นตามสไตล์ Minimalist</li>
+</ul>
+</li>
+<li><strong>การแก้ไขอาการกระพริบขณะอัปเดตนาฬิกา (Flicker-free Clock Rendering):</strong><ul>
+<li>เปลี่ยนตรรกะการอัปเดตเวลารายวินาทีในลูป <code>else</code> จากเดิมที่ต้องเรียก <code>tft.fillRect(...)</code> เพื่อล้างแถบสีดำก่อนแล้วจึงเขียนตัวอักษรทับ (ซึ่งทำให้จอเกิดจุดกะพริบสีดำเสี้ยววินาที)</li>
+<li>ปรับเป็นคำสั่ง <code>tft.setTextColor(text_color, bg_color)</code> ที่มีสีพื้นหลังซ้อนด้านหลัง เพื่อให้อักษรที่เขียนไปทับซ้อนและลบสีพื้นหลังเก่าของอักขระตัวเดิมโดยอัตโนมัติ ทำให้เวลาเปลี่ยนผ่านไม่เกิดการกะพริบและมีความลื่นไหลเป็นเนื้อเดียวกัน</li>
+</ul>
+</li>
+<li><strong>พอร์ตการแก้ไขแบบเดียวกันลงใน Dashboard Web App:</strong><ul>
+<li>นำการปรับแต่งนี้ไปเขียนลงใน <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts">my-app/app/admin/dashboard/ArduinoCode.ts</a> ในทุกส่วนที่เป็นฟังก์ชันเรนเดอร์ เพื่อให้ระบบเว็บส่งมอบโค้ดเวอร์ชันล่าสุดที่สมบูรณ์และไม่มีฟอนต์ภาษาไทยติดไป</li>
+</ul>
+</li>
+</ol>
+<h4>71.60.3 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>esp32/esp32.ino</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ถอดคำสั่งเขียนฟอนต์ไทยและไอคอนรูปภาพออก ปรับตำแหน่งข้อความภาษาอังกฤษให้สมดุล และเปลี่ยนตรรกะเขียนเวลาแบบมีสีทับหลังกันกระพริบ</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>ปรับเทมเพลตชุดโค้ดสำหรับแผงควบคุมแอดมินให้เป็นภาษาอังกฤษทั้งหมด ถอดไอคอนออก และมีนาฬิกากันกระพริบตามระบบใหม่</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดการตัดฟอนต์ไทย บันทึกการลบรูปไอคอน และระบบนาฬิกาไร้กะพริบ (§71.60)</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

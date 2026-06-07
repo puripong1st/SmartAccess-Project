@@ -5,7 +5,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { getConfigCode, getArduinoCode, getIconsCode, getThaiFontCode } from "./ArduinoCode";
+import { getConfigCode, getArduinoCode } from "./ArduinoCode";
 
 
 export interface Student {
@@ -206,8 +206,6 @@ interface DashboardContextType {
   copyToClipboard: (text: string) => void;
   getConfigCode: (roomCode: string, origin: string, mode?: "wokwi" | "physical") => string;
   getArduinoCode: (roomCode: string, origin: string, mode?: "wokwi" | "physical") => string;
-  getIconsCode: () => string;
-  getThaiFontCode: () => string;
   showToast: (msg: string, type?: "success" | "error") => void;
   fetchPending: () => Promise<void>;
   fetchAll: () => Promise<void>;
@@ -1684,8 +1682,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       copyToClipboard,
       getConfigCode,
       getArduinoCode,
-      getIconsCode,
-      getThaiFontCode,
       showToast,
       fetchPending,
       fetchAll,

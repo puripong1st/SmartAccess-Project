@@ -38,8 +38,6 @@
 #include <time.h>     // สำหรับ NTP time sync (ใช้ใน HMAC timestamp)
 
 #include "config.h"
-#include "icons.h"
-#include "thai_font.h"
 
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
 const char *CURRENT_VERSION = "1.0.0";
@@ -168,18 +166,18 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.fillRect(0, 0, 320, 26, tft.color565(14, 17, 28));
   canvas.drawFastHLine(0, 26, 320, tft.color565(40, 40, 50)); // เส้นใต้เมนู
 
-  // วาดโลโก้ระบบ 24x24 ที่ (6, 1)
-  canvas.drawRGBBitmap(6, 1, logo_smartaccess, 24, 24);
-
   // วาดข้อความระบบภาษาไทยและอังกฤษ
-  drawThaiText(canvas, "SmartAccess ระบบควบคุมประตู", 36, 5,
-               tft.color565(226, 232, 240));
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(226, 232, 240));
+  canvas.setCursor(10, 9);
+  canvas.print("SmartAccess Door Control");
 
   // ปุ่มตราสัญลักษณ์ ACTIVE
-  drawThaiText(canvas, "ทำงาน", 215, 5, tft.color565(16, 185, 129));
+  canvas.setTextColor(tft.color565(16, 185, 129));
+  canvas.setCursor(215, 9);
+  canvas.print("ACTIVE");
 
   // นาฬิกาดิจิทัลเรียลไทม์ฝั่งขวา
-  canvas.setTextSize(1);
   canvas.setTextColor(tft.color565(226, 232, 240));
   canvas.setCursor(268, 9);
   canvas.print(timeStr);
@@ -201,20 +199,33 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   }
 
   // คำแนะนำภาษาไทยสีเหลืองทองเรืองแสง
-  drawThaiText(canvas, "สแกนเพื่อเข้าห้อง", 22, 162, tft.color565(255, 215, 0));
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(255, 215, 0));
+  canvas.setCursor(25, 162);
+  canvas.print("SCAN TO ENTER");
 
   // --- การ์ดฝั่งขวา: รายละเอียดห้องและคิวผู้ขออนุมัติ ---
-  drawThaiText(canvas, "ห้อง: " + String(room_code), 145, 36,
-               tft.color565(240, 244, 240));
-  drawThaiText(canvas, "ระบบควบคุมประตู", 145, 52, tft.color565(59, 130, 246));
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(240, 244, 240));
+  canvas.setCursor(145, 36);
+  canvas.print("Room: " + String(room_code));
+  
+  canvas.setTextColor(tft.color565(59, 130, 246));
+  canvas.setCursor(145, 50);
+  canvas.print("Door Control System");
 
   // การ์ดแสดงคิวสีเหลืองเหล้าองุ่น PENDING REQUESTS
   canvas.fillRoundRect(145, 72, 165, 50, 6, tft.color565(24, 16, 1));
   canvas.drawRoundRect(145, 72, 165, 50, 6,
                        tft.color565(245, 158, 11)); // ขอบสีส้มเหลือง
 
-  drawThaiText(canvas, "คำขอที่รออนุมัติ", 153, 78, tft.color565(245, 158, 11));
-  drawThaiText(canvas, "จำนวนคิวสะสม", 153, 98, tft.color565(156, 163, 175));
+  canvas.setTextColor(tft.color565(245, 158, 11));
+  canvas.setCursor(153, 78);
+  canvas.print("Pending Requests");
+  
+  canvas.setTextColor(tft.color565(156, 163, 175));
+  canvas.setCursor(153, 98);
+  canvas.print("Queue Count");
 
   // ตัวเลขคิวใหญ่พิเศษขนาด 3 เท่า
   canvas.setTextSize(3);
@@ -230,7 +241,9 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
     canvas.drawRoundRect(145, 130, 165, 45, 6,
                          tft.color565(16, 185, 129)); // ขอบเขียวสว่าง
 
-    drawThaiText(canvas, "ผู้ผ่านสิทธิ์ล่าสุด", 153, 134, tft.color565(16, 185, 129));
+    canvas.setTextColor(tft.color565(16, 185, 129));
+    canvas.setCursor(153, 134);
+    canvas.print("Latest Approved");
 
     canvas.setTextColor(ILI9341_WHITE);
     canvas.setCursor(153, 153);
@@ -238,19 +251,20 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   } else {
     // กรอบประวัติว่างกรณีไม่มีข้อมูล
     canvas.drawRoundRect(145, 130, 165, 45, 6, tft.color565(60, 70, 60));
-    drawThaiText(canvas, "ไม่มีประวัติการเข้า", 170, 144,
-                 tft.color565(107, 122, 112));
+    canvas.setTextColor(tft.color565(107, 122, 112));
+    canvas.setCursor(170, 148);
+    canvas.print("No entry history");
   }
 
   // --- แถบข้อมูลด้านล่างสุด (Bottom Status Bar) #0A0B10 ---
   canvas.fillRect(0, 220, 320, 20, tft.color565(10, 11, 16));
   canvas.drawFastHLine(0, 220, 320, tft.color565(30, 30, 40));
 
-  drawThaiText(canvas, "SmartAccess คณะครุศาสตร์", 8, 222,
-               tft.color565(107, 122, 112));
+  canvas.setTextColor(tft.color565(107, 122, 112));
+  canvas.setCursor(8, 226);
+  canvas.print("SmartAccess System");
 
   // แสดงค่าหมายเลขไอพีแอดเดรสของอุปกรณ์
-  canvas.setTextSize(1);
   canvas.setTextColor(tft.color565(16, 185, 129));
   canvas.setCursor(240, 226);
   canvas.print(ip_address_str);
@@ -270,11 +284,19 @@ void drawScanningScreen() {
   canvas.drawCircle(160, 70, 31, tft.color565(59, 130, 246));
   canvas.fillCircle(160, 70, 8, tft.color565(59, 130, 246));
 
-  drawThaiText(canvas, "กำลังประมวลผล...", 90, 120, tft.color565(59, 130, 246));
+  canvas.setTextSize(2);
+  canvas.setTextColor(tft.color565(59, 130, 246));
+  canvas.setCursor(85, 110);
+  canvas.print("Processing...");
 
-  drawThaiText(canvas, "กำลังตรวจสอบสิทธิ์กับเซิร์ฟเวอร์", 50, 160, ILI9341_WHITE);
-  drawThaiText(canvas, "ระบบรักษาความปลอดภัยคลาวด์", 70, 185,
-               tft.color565(107, 122, 112));
+  canvas.setTextSize(1);
+  canvas.setTextColor(ILI9341_WHITE);
+  canvas.setCursor(75, 150);
+  canvas.print("Verifying credentials...");
+
+  canvas.setTextColor(tft.color565(107, 122, 112));
+  canvas.setCursor(85, 180);
+  canvas.print("Cloud Security System");
 
   // ดันแคนวาสออกหน้าจอ ILI9341
   if (canvas.getBuffer() != nullptr) {
@@ -292,18 +314,25 @@ void drawUnlockedScreen(const String &approvedName, const String &studentId) {
                     tft.color565(16, 185, 129)); // เส้นขอบสีเขียวเรืองแสง
   canvas.drawCircle(160, 65, 33, tft.color565(16, 185, 129));
 
-  // เครื่องหมาย ถูก (ใช้รูปไอคอน success 16x16)
-  canvas.drawRGBBitmap(152, 57, icon_success, 16, 16);
+  // (Success checkmark icon removed as requested)
 
-  drawThaiText(canvas, "อนุมัติการเข้าห้อง", 90, 115, tft.color565(16, 185, 129));
-  drawThaiText(canvas, "ปลดล็อกประตูแล้ว (เข้าใช้งานได้)...", 60, 142,
-               tft.color565(255, 215, 0));
+  canvas.setTextSize(2);
+  canvas.setTextColor(tft.color565(16, 185, 129));
+  canvas.setCursor(70, 110);
+  canvas.print("ACCESS GRANTED");
+
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(255, 215, 0));
+  canvas.setCursor(75, 142);
+  canvas.print("Door Unlocked - Please Enter");
 
   // ตลับแคปซูลสำหรับครอบชื่อผู้เข้าใช้ห้องปฏิบัติการ
   canvas.fillRoundRect(30, 168, 260, 26, 13, tft.color565(30, 30, 40));
   canvas.drawRoundRect(30, 168, 260, 26, 13, tft.color565(50, 50, 60));
 
-  drawThaiText(canvas, "สมาชิกผ่านการตรวจสอบ", 90, 173, ILI9341_WHITE);
+  canvas.setTextColor(ILI9341_WHITE);
+  canvas.setCursor(110, 177);
+  canvas.print("Verified Member");
 
   // รหัสประจำตัวของนักศึกษา
   canvas.setTextSize(1);
@@ -329,12 +358,21 @@ void drawRejectedScreen() {
   canvas.drawCircle(160, 65, 32, tft.color565(239, 68, 68));
   canvas.drawCircle(160, 65, 33, tft.color565(239, 68, 68));
 
-  canvas.drawRGBBitmap(152, 57, icon_warning, 16, 16);
+  // (Warning icon removed as requested)
 
-  drawThaiText(canvas, "ปฏิเสธการเข้าห้อง", 90, 115, tft.color565(239, 68, 68));
-  drawThaiText(canvas, "ข้อมูลสิทธิ์ไม่ถูกต้อง", 90, 142, tft.color565(255, 199, 199));
-  drawThaiText(canvas, "กรุณาติดต่ออาจารย์ผู้ควบคุม", 65, 175,
-               tft.color565(156, 163, 175));
+  canvas.setTextSize(2);
+  canvas.setTextColor(tft.color565(239, 68, 68));
+  canvas.setCursor(75, 110);
+  canvas.print("ACCESS DENIED");
+
+  canvas.setTextSize(1);
+  canvas.setTextColor(tft.color565(255, 199, 199));
+  canvas.setCursor(95, 142);
+  canvas.print("Invalid Credentials");
+
+  canvas.setTextColor(tft.color565(156, 163, 175));
+  canvas.setCursor(95, 175);
+  canvas.print("Please contact admin");
 
   // ดันแคนวาสออกหน้าจอ ILI9341
   if (canvas.getBuffer() != nullptr) {
@@ -1186,12 +1224,16 @@ void setup() {
   canvas.fillRect(0, 0, 320, 45, tft.color565(14, 17, 28));
   canvas.drawFastHLine(0, 45, 320, tft.color565(16, 185, 129));
 
-  // วาดโลโก้ระบบ 24x24 ที่ (10, 10)
-  canvas.drawRGBBitmap(10, 10, logo_smartaccess, 24, 24);
-  drawThaiText(canvas, "SmartAccess ระบบควบคุมประตู", 42, 14, ILI9341_WHITE);
+  // วาดโลโก้ระบบ 24x24 ที่ (10, 10) (removed logo)
+  canvas.setTextSize(1);
+  canvas.setTextColor(ILI9341_WHITE);
+  canvas.setCursor(10, 18);
+  canvas.print("SmartAccess Door Control");
 
-  drawThaiText(canvas, "กำลังเชื่อมต่อ Wi-Fi...", 40, 100,
-               tft.color565(59, 130, 246));
+  canvas.setTextSize(2);
+  canvas.setTextColor(tft.color565(59, 130, 246));
+  canvas.setCursor(40, 100);
+  canvas.print("Connecting Wi-Fi...");
 
   canvas.setTextSize(1);
   canvas.setTextColor(tft.color565(156, 163, 175));
@@ -1606,9 +1648,8 @@ void loop() {
             drawMainScreen(pending_count, studentId, time_str, qrText);
           } else {
             tft.setTextSize(1);
-            tft.fillRect(265, 0, 55, 20, tft.color565(14, 17, 28));
-            tft.setTextColor(tft.color565(16, 185, 129));
-            tft.setCursor(265, 6);
+            tft.setTextColor(tft.color565(226, 232, 240), tft.color565(14, 17, 28));
+            tft.setCursor(268, 9);
             tft.print(time_str);
           }
 
