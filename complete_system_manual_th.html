@@ -1122,7 +1122,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-07 16:15:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-07 18:30:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -20745,6 +20745,59 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดการตัดฟอนต์ไทย บันทึกการลบรูปไอคอน และระบบนาฬิกาไร้กะพริบ (§71.60)</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><h3>71.61 ปรับนาฬิกาหน้าจอ ESP32 ให้เดินแบบเรียลไทม์รายวินาทีและกันจอกระพริบ (Real-time NTP Clock + Flicker-free Tick)</h3>
+<p>ในเวอร์ชันก่อนหน้า เวลาบนแถบหัวจอจะถูกอัปเดตเฉพาะตอนที่บอร์ดได้รับผลตอบกลับ HTTP 200 จากการ poll เท่านั้น ทำให้เกิดปัญหา 2 ข้อ คือ (1) เมื่อเซิร์ฟเวอร์ตอบกลับ <code>304 Not Modified</code> โค้ดจะ <code>return</code> ออกจากลูปทันที นาฬิกาจึง &quot;ค้าง&quot; ไม่เดินในช่วงที่ระบบ idle และ (2) ค่าเวลาคำนวณจาก <code>millis()</code> (เวลาที่บอร์ดเปิดเครื่อง) ไม่ใช่เวลาจริงตามนาฬิกาโลก ได้ดำเนินการแก้ไขดังนี้:</p>
+<ol>
+<li><strong>ติดตามสถานะหน้าจอด้วย <code>ScreenState</code> (Screen-state tracking):</strong><ul>
+<li>เพิ่ม <code>enum ScreenState { SCREEN_BOOT, SCREEN_MAIN, SCREEN_SCANNING, SCREEN_UNLOCKED, SCREEN_REJECTED }</code> พร้อมตัวแปร <code>currentScreen</code> โดยฟังก์ชัน <code>drawMainScreen</code>, <code>drawScanningScreen</code>, <code>drawUnlockedScreen</code>, <code>drawRejectedScreen</code> จะกำหนดค่าสถานะหน้าจอปัจจุบันทุกครั้งที่ถูกเรียก เพื่อให้รู้ว่าควร tick นาฬิกาเฉพาะตอนอยู่หน้าหลัก (<code>SCREEN_MAIN</code>) เท่านั้น ไม่รบกวนหน้าปลดล็อก/ปฏิเสธ</li>
+</ul>
+</li>
+<li><strong>ฟังก์ชันเวลาจริงจาก NTP (<code>getTimeString</code>):</strong><ul>
+<li>อ่านค่าจาก <code>time(nullptr)</code> แล้วแปลงด้วย <code>localtime_r</code> ให้เป็นรูปแบบ <code>HH:MM:SS</code> ตามโซน UTC+7 (Bangkok ICT ที่ตั้งค่าไว้แล้วใน <code>configTime(25200, ...)</code>) หาก NTP ยังไม่ sync จะ fallback กลับไปใช้ค่า uptime จาก <code>millis()</code> ชั่วคราว</li>
+</ul>
+</li>
+<li><strong>วาดเฉพาะบริเวณนาฬิกา (<code>drawClockRegion</code>) แบบไม่ fillScreen:</strong><ul>
+<li>เขียนตัวเลขเวลาที่พิกัด (268, 9) โดยใช้ <code>tft.setTextColor(text, bg)</code> ที่มีสีพื้นหลังของแถบหัว (#0E111C) ซ้อนอยู่ จึงลบอักขระเก่าทับโดยอัตโนมัติ — ไม่ต้องล้างทั้งจอ จอจึงไม่กระพริบ</li>
+</ul>
+</li>
+<li><strong>เพิ่ม tick รายวินาทีที่ต้นลูป <code>loop()</code>:</strong><ul>
+<li>ตรวจทุก 1000 ms ว่าอยู่หน้า <code>SCREEN_MAIN</code> หรือไม่ ถ้าใช่และค่าเวลาเปลี่ยนไปจากเดิม (<code>last_clock_str</code>) จึงเรียก <code>drawClockRegion</code> — ทำงานแยกอิสระจากรอบ poll จึงเดินต่อเนื่องแม้เซิร์ฟเวอร์ตอบ <code>304</code></li>
+</ul>
+</li>
+<li><strong>พอร์ตการแก้ไขแบบเดียวกันลงใน Dashboard Web App:</strong><ul>
+<li>นำตรรกะข้างต้นไปเขียนลงในเทมเพลตเฟิร์มแวร์ <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts">my-app/app/admin/dashboard/ArduinoCode.ts</a> ครบทุกส่วน เพื่อให้โค้ดที่แอดมินดาวน์โหลดผ่านหน้าเว็บมีนาฬิกาเรียลไทม์กันกระพริบเหมือนกับ <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/esp32/esp32.ino">esp32/esp32.ino</a></li>
+</ul>
+</li>
+</ol>
+<h4>71.61.1 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>esp32/esp32.ino</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>เพิ่ม <code>ScreenState</code>, <code>getTimeString()</code>, <code>drawClockRegion()</code> และ tick นาฬิการายวินาทีในลูป ใช้เวลาจริง NTP และวาดทับเฉพาะตัวเลขเวลากันกระพริบ</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>พอร์ตตรรกะนาฬิกาเรียลไทม์กันกระพริบชุดเดียวกันลงในเทมเพลตชุดโค้ดของแผงควบคุมแอดมิน</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดระบบนาฬิกาเรียลไทม์ NTP และการ tick รายวินาทีกันกระพริบ (§71.61)</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

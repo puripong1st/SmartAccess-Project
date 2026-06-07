@@ -210,6 +210,20 @@ String last_active_token = "";
 String last_server_time = "";
 String last_status_text = "";
 String ip_address_str = "0.0.0.0";
+
+// ─── Real-time clock state ───────────────────────────────────────────────────
+// ติดตามว่าตอนนี้แสดงหน้าจอไหนอยู่ เพื่อ tick นาฬิกาเฉพาะตอนอยู่หน้าหลักเท่านั้น
+enum ScreenState {
+  SCREEN_BOOT,
+  SCREEN_MAIN,
+  SCREEN_SCANNING,
+  SCREEN_UNLOCKED,
+  SCREEN_REJECTED
+};
+ScreenState currentScreen = SCREEN_BOOT;
+unsigned long lastClockTick = 0; // เวลา tick นาฬิกาล่าสุด (ms)
+String last_clock_str = "";      // ค่าเวลาเดิมบนจอ — วาดใหม่เฉพาะเมื่อเปลี่ยน
+
 // Edge-trigger กันเปิดประตูซ้ำ: เปิดเฉพาะตอนคำสั่งเปลี่ยนจาก idle→open เท่านั้น
 // ป้องกันบอร์ดวนหน้า ACCESS GRANTED ไม่จบ หากเซิร์ฟเวอร์ส่ง "open" ค้างมาหลายรอบ
 String last_door_trigger = "idle";
@@ -250,6 +264,34 @@ void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
       }
     }
   }
+}
+
+// คืนค่าเวลาจริงรูปแบบ HH:MM:SS จากนาฬิกา NTP (UTC+7 Bangkok)
+// หาก NTP ยังไม่ sync จะ fallback ไปใช้ค่า uptime (millis) แทน
+String getTimeString() {
+  time_t now = time(nullptr);
+  char buf[10];
+  if (now > 1000000000UL) {
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
+    snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour,
+             timeinfo.tm_min, timeinfo.tm_sec);
+  } else {
+    unsigned long sec = millis() / 1000;
+    snprintf(buf, sizeof(buf), "%02d:%02d:%02d", (int)((sec / 3600) % 24),
+             (int)((sec / 60) % 60), (int)(sec % 60));
+  }
+  return String(buf);
+}
+
+// วาดเฉพาะบริเวณนาฬิกามุมขวาบน — เขียนทับด้วยสีพื้นหลังของแถบหัว (#0E111C)
+// จึงไม่ต้อง fillScreen ทั้งจอ ทำให้นาฬิกาเดินแบบเรียลไทม์โดยจอไม่กระพริบ
+void drawClockRegion(const String &timeStr) {
+  tft.setTextSize(1);
+  tft.setTextColor(tft.color565(226, 232, 240), tft.color565(14, 17, 28));
+  tft.setCursor(268, 9);
+  tft.print(timeStr);
+  last_clock_str = timeStr;
 }
 
 // 1. หน้าจอหลักโหมดสแตนด์บาย (Idle Mode) — ดีไซน์พรีเมียมถอดแบบมาจาก Next.js
@@ -369,10 +411,15 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   if (canvas.getBuffer() != nullptr) {
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
   }
+
+  // จดจำสถานะ: เข้าสู่หน้าหลัก — เปิดให้นาฬิกา tick แบบเรียลไทม์
+  currentScreen = SCREEN_MAIN;
+  last_clock_str = timeStr;
 }
 
 // 2. หน้าจอกำลังตรวจสอบข้อมูล (Scanning/Processing Mode)
 void drawScanningScreen() {
+  currentScreen = SCREEN_SCANNING;
   canvas.fillScreen(tft.color565(3, 8, 15)); // สีน้ำเงินมหาสมุทรเข้ม #03080F
 
   // วงแหวนเรืองแสงสีฟ้าจำลองตัวอ่านกำลังประมวลผล
@@ -402,6 +449,7 @@ void drawScanningScreen() {
 
 // 3. หน้าจอปลดล็อกผ่านสำเร็จ (Access Granted Mode) — สีเขียวสะท้อนแสงหรูหราดีไซน์พรีเมียม
 void drawUnlockedScreen(const String &approvedName, const String &studentId) {
+  currentScreen = SCREEN_UNLOCKED;
   canvas.fillScreen(tft.color565(3, 12, 5)); // สีเขียวเข้มสไตล์ฟอเรสต์ #030C05
 
   // วงกลมไฟสีเขียวสลักตราถูก
@@ -447,6 +495,7 @@ void drawUnlockedScreen(const String &approvedName, const String &studentId) {
 
 // 4. หน้าจอสำหรับกรณีระบบไม่อนุมัติ (Access Denied Mode) — แดงเรืองแสง
 void drawRejectedScreen() {
+  currentScreen = SCREEN_REJECTED;
   canvas.fillScreen(tft.color565(15, 3, 3)); // สีแดงเข้มมืด #0F0303
 
   // วงแหวนแดงสลัก X (ใช้รูปไอคอน warning 16x16)
@@ -1395,6 +1444,17 @@ void setup() {
 }
 
 void loop() {
+  // ─── Real-time clock tick ──────────────────────────────────────────────────
+  // อัปเดตนาฬิกาทุก 1 วินาที เฉพาะตอนอยู่หน้าหลัก โดยวาดทับเฉพาะตัวเลขเวลา
+  // (ไม่ fillScreen) จึงเดินแบบเรียลไทม์และจอไม่กระพริบ — ทำงานแม้ poll ได้ 304
+  if (currentScreen == SCREEN_MAIN && millis() - lastClockTick >= 1000) {
+    lastClockTick = millis();
+    String t = getTimeString();
+    if (t != last_clock_str) {
+      drawClockRegion(t);
+    }
+  }
+
   // Check door sensor open-state warning
   // MC-38 outputs HIGH when door is open (magnet away), LOW when closed (magnet
   // close)
@@ -1531,15 +1591,7 @@ void loop() {
     if (millis() - lastPollTime >= currentPollDelay) {
       lastPollTime = millis();
 
-      String time_str = "12:00:00";
-      unsigned long sec = millis() / 1000;
-      unsigned long hh = (sec / 3600) % 24;
-      unsigned long mm = (sec / 60) % 60;
-      unsigned long ss = sec % 60;
-      char timeBuf[10];
-      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm,
-               (int)ss);
-      time_str = String(timeBuf);
+      String time_str = getTimeString();
 
       HTTPClient http;
       String pollUrl = String(server_url) + "&slim=true";
@@ -1743,10 +1795,8 @@ void loop() {
 
             drawMainScreen(pending_count, studentId, time_str, qrText);
           } else {
-            tft.setTextSize(1);
-            tft.setTextColor(tft.color565(226, 232, 240), tft.color565(14, 17, 28));
-            tft.setCursor(268, 9);
-            tft.print(time_str);
+            // ไม่มีข้อมูลเปลี่ยน — อัปเดตเฉพาะนาฬิกา (กันจอกระพริบ)
+            drawClockRegion(time_str);
           }
 
           // จดจำสถานะคำสั่งล่าสุดไว้ตรวจขอบขาขึ้นรอบถัดไป

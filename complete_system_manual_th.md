@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-07 16:15:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-07 18:30:00 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -12178,5 +12178,29 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | 1 | `esp32/esp32.ino` | **[MODIFY]** | ถอดคำสั่งเขียนฟอนต์ไทยและไอคอนรูปภาพออก ปรับตำแหน่งข้อความภาษาอังกฤษให้สมดุล และเปลี่ยนตรรกะเขียนเวลาแบบมีสีทับหลังกันกระพริบ |
 | 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | ปรับเทมเพลตชุดโค้ดสำหรับแผงควบคุมแอดมินให้เป็นภาษาอังกฤษทั้งหมด ถอดไอคอนออก และมีนาฬิกากันกระพริบตามระบบใหม่ |
 | 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดการตัดฟอนต์ไทย บันทึกการลบรูปไอคอน และระบบนาฬิกาไร้กะพริบ (§71.60) |
+
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
+
+### 71.61 ปรับนาฬิกาหน้าจอ ESP32 ให้เดินแบบเรียลไทม์รายวินาทีและกันจอกระพริบ (Real-time NTP Clock + Flicker-free Tick)
+
+ในเวอร์ชันก่อนหน้า เวลาบนแถบหัวจอจะถูกอัปเดตเฉพาะตอนที่บอร์ดได้รับผลตอบกลับ HTTP 200 จากการ poll เท่านั้น ทำให้เกิดปัญหา 2 ข้อ คือ (1) เมื่อเซิร์ฟเวอร์ตอบกลับ `304 Not Modified` โค้ดจะ `return` ออกจากลูปทันที นาฬิกาจึง "ค้าง" ไม่เดินในช่วงที่ระบบ idle และ (2) ค่าเวลาคำนวณจาก `millis()` (เวลาที่บอร์ดเปิดเครื่อง) ไม่ใช่เวลาจริงตามนาฬิกาโลก ได้ดำเนินการแก้ไขดังนี้:
+
+1. **ติดตามสถานะหน้าจอด้วย `ScreenState` (Screen-state tracking):**
+   - เพิ่ม `enum ScreenState { SCREEN_BOOT, SCREEN_MAIN, SCREEN_SCANNING, SCREEN_UNLOCKED, SCREEN_REJECTED }` พร้อมตัวแปร `currentScreen` โดยฟังก์ชัน `drawMainScreen`, `drawScanningScreen`, `drawUnlockedScreen`, `drawRejectedScreen` จะกำหนดค่าสถานะหน้าจอปัจจุบันทุกครั้งที่ถูกเรียก เพื่อให้รู้ว่าควร tick นาฬิกาเฉพาะตอนอยู่หน้าหลัก (`SCREEN_MAIN`) เท่านั้น ไม่รบกวนหน้าปลดล็อก/ปฏิเสธ
+2. **ฟังก์ชันเวลาจริงจาก NTP (`getTimeString`):**
+   - อ่านค่าจาก `time(nullptr)` แล้วแปลงด้วย `localtime_r` ให้เป็นรูปแบบ `HH:MM:SS` ตามโซน UTC+7 (Bangkok ICT ที่ตั้งค่าไว้แล้วใน `configTime(25200, ...)`) หาก NTP ยังไม่ sync จะ fallback กลับไปใช้ค่า uptime จาก `millis()` ชั่วคราว
+3. **วาดเฉพาะบริเวณนาฬิกา (`drawClockRegion`) แบบไม่ fillScreen:**
+   - เขียนตัวเลขเวลาที่พิกัด (268, 9) โดยใช้ `tft.setTextColor(text, bg)` ที่มีสีพื้นหลังของแถบหัว (#0E111C) ซ้อนอยู่ จึงลบอักขระเก่าทับโดยอัตโนมัติ — ไม่ต้องล้างทั้งจอ จอจึงไม่กระพริบ
+4. **เพิ่ม tick รายวินาทีที่ต้นลูป `loop()`:**
+   - ตรวจทุก 1000 ms ว่าอยู่หน้า `SCREEN_MAIN` หรือไม่ ถ้าใช่และค่าเวลาเปลี่ยนไปจากเดิม (`last_clock_str`) จึงเรียก `drawClockRegion` — ทำงานแยกอิสระจากรอบ poll จึงเดินต่อเนื่องแม้เซิร์ฟเวอร์ตอบ `304`
+5. **พอร์ตการแก้ไขแบบเดียวกันลงใน Dashboard Web App:**
+   - นำตรรกะข้างต้นไปเขียนลงในเทมเพลตเฟิร์มแวร์ [my-app/app/admin/dashboard/ArduinoCode.ts](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts) ครบทุกส่วน เพื่อให้โค้ดที่แอดมินดาวน์โหลดผ่านหน้าเว็บมีนาฬิกาเรียลไทม์กันกระพริบเหมือนกับ [esp32/esp32.ino](file:///c:/Users/aunkh/OneDrive/Desktop/Project/esp32/esp32.ino)
+
+#### 71.61.1 ตารางสรุปไฟล์แก้ไข
+| ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
+|---|---|---|---|
+| 1 | `esp32/esp32.ino` | **[MODIFY]** | เพิ่ม `ScreenState`, `getTimeString()`, `drawClockRegion()` และ tick นาฬิการายวินาทีในลูป ใช้เวลาจริง NTP และวาดทับเฉพาะตัวเลขเวลากันกระพริบ |
+| 2 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | พอร์ตตรรกะนาฬิกาเรียลไทม์กันกระพริบชุดเดียวกันลงในเทมเพลตชุดโค้ดของแผงควบคุมแอดมิน |
+| 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดระบบนาฬิกาเรียลไทม์ NTP และการ tick รายวินาทีกันกระพริบ (§71.61) |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
