@@ -21,6 +21,8 @@
 #include "ricmoo_qrcode.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
+// ฟอนต์ FreeSansBold (อยู่ใน Adafruit_GFX, เก็บใน flash ไม่กิน RAM) สำหรับหัวข้อใหญ่
+#include <Fonts/FreeSansBold12pt7b.h>
 #include <ArduinoJson.h> // ติดตั้งผ่าน Library Manager (เวอร์ชัน 6.x)
 #include <FS.h>
 #include <HTTPClient.h>
@@ -127,6 +129,7 @@ enum ScreenState {
 ScreenState currentScreen = SCREEN_BOOT;
 unsigned long lastClockTick = 0; // เวลา tick นาฬิกาล่าสุด (ms)
 String last_clock_str = "";      // ค่าเวลาเดิมบนจอ — วาดใหม่เฉพาะเมื่อเปลี่ยน
+bool is_offline_mode = false;    // สถานะออฟไลน์ (ใช้ในแถบสถานะหน้าหลักด้วย)
 
 // Edge-trigger กันเปิดประตูซ้ำ: เปิดเฉพาะตอนคำสั่งเปลี่ยนจาก idle→open เท่านั้น
 // ป้องกันบอร์ดวนหน้า ACCESS GRANTED ไม่จบ หากเซิร์ฟเวอร์ส่ง "open" ค้างมาหลายรอบ
@@ -170,6 +173,74 @@ void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
   }
 }
 
+// ─── UI helpers (ฟอนต์กึ่งกลาง, ไอคอน Wi-Fi, วงแหวนนับถอยหลัง, แถบความสด QR) ───
+unsigned long qrShownAt = 0; // เวลาที่ QR ปัจจุบันถูกวาด (คำนวณแถบความสด ~60 วิ)
+
+// พิมพ์ข้อความกึ่งกลางจอแนวนอนด้วยฟอนต์ที่กำหนด (y = baseline) แล้วคืนฟอนต์เดิม
+void printCentered(const String &s, int y, const GFXfont *font, uint16_t color) {
+  canvas.setFont(font);
+  canvas.setTextSize(1);
+  canvas.setTextColor(color);
+  int16_t x1, y1;
+  uint16_t w, h;
+  canvas.getTextBounds(s, 0, y, &x1, &y1, &w, &h);
+  canvas.setCursor((320 - (int)w) / 2, y);
+  canvas.print(s);
+  canvas.setFont(NULL); // กลับฟอนต์ bitmap เริ่มต้น
+}
+
+// ไอคอนความแรงสัญญาณ Wi-Fi 4 ขีด ตามค่า RSSI
+void drawWifiIcon(int x, int y, int rssi, bool connected) {
+  int bars = 0;
+  if (connected) {
+    if (rssi >= -55)
+      bars = 4;
+    else if (rssi >= -65)
+      bars = 3;
+    else if (rssi >= -75)
+      bars = 2;
+    else
+      bars = 1;
+  }
+  for (int i = 0; i < 4; i++) {
+    int bh = 3 + i * 2;
+    int bx = x + i * 4;
+    int by = y + (9 - bh);
+    uint16_t c = (i < bars) ? tft.color565(16, 185, 129)
+                            : tft.color565(55, 65, 75);
+    canvas.fillRect(bx, by, 3, bh, c);
+  }
+}
+
+// วงแหวนนับถอยหลังรอบไอคอนกลางจอ — จุดอยู่กับที่ เปลี่ยนแค่สี จึงไม่กระพริบ
+void drawCountdownRing(int pct) {
+  const int cx = 160, cy = 65, r = 42, segs = 48;
+  int lit = (pct * segs) / 100;
+  for (int s = 0; s < segs; s++) {
+    float ang = (-90.0f + s * (360.0f / segs)) * 0.01745329f;
+    int px = cx + (int)(cos(ang) * r);
+    int py = cy + (int)(sin(ang) * r);
+    uint16_t c =
+        (s < lit) ? tft.color565(16, 185, 129) : tft.color565(8, 40, 30);
+    tft.fillCircle(px, py, 2, c);
+  }
+}
+
+// แถบแสดงความสดของ QR ใต้กรอบ (นับถอยหลังตามรอบหมุน token ~60 วิ)
+void drawQrFreshness() {
+  unsigned long age = millis() - qrShownAt;
+  int pct = 100 - (int)((age * 100UL) / 60000UL);
+  if (pct < 0)
+    pct = 0;
+  if (pct > 100)
+    pct = 100;
+  int w = (116 * pct) / 100;
+  canvas.fillRect(12, 158, 116, 2, tft.color565(20, 24, 32)); // ราง
+  uint16_t c =
+      pct > 30 ? tft.color565(16, 185, 129) : tft.color565(245, 158, 11);
+  canvas.fillRect(12, 158, w, 2, c); // แถบที่เหลือ
+}
+
 // คืนค่าเวลาจริงรูปแบบ HH:MM:SS จากนาฬิกา NTP (UTC+7 Bangkok)
 // หาก NTP ยังไม่ sync จะ fallback ไปใช้ค่า uptime (millis) แทน
 String getTimeString() {
@@ -205,6 +276,7 @@ String rendered_qr = "\x01";
 
 // วาดเนื้อหา QR ภายในกรอบ (drawQRCode ล้างพื้นขาวให้เองอยู่แล้ว)
 void drawQRContent(const String &qrText) {
+  qrShownAt = millis(); // รีเซ็ตตัวจับเวลาความสดของ QR
   if (qrText.length() > 0) {
     drawQRCode(qrText, 13, 39, 114);
   } else {
@@ -253,6 +325,7 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   if (currentScreen == SCREEN_MAIN) {
     if (qrText != rendered_qr) {
       drawQRContent(qrText);
+      drawQrFreshness();
       rendered_qr = qrText;
     }
     if (queueCount != rendered_queue) {
@@ -281,10 +354,16 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.setCursor(10, 9);
   canvas.print("SmartAccess Door Control");
 
-  // ปุ่มตราสัญลักษณ์ ACTIVE
-  canvas.setTextColor(tft.color565(16, 185, 129));
-  canvas.setCursor(215, 9);
-  canvas.print("ACTIVE");
+  // จุดสถานะ + ป้าย ONLINE/OFFLINE
+  uint16_t statusColor =
+      is_offline_mode ? tft.color565(245, 158, 11) : tft.color565(16, 185, 129);
+  canvas.fillCircle(180, 12, 3, statusColor);
+  canvas.setTextColor(statusColor);
+  canvas.setCursor(188, 9);
+  canvas.print(is_offline_mode ? "OFFLINE" : "ONLINE");
+
+  // ไอคอนความแรงสัญญาณ Wi-Fi
+  drawWifiIcon(245, 9, WiFi.RSSI(), WiFi.status() == WL_CONNECTED);
 
   // นาฬิกาดิจิทัลเรียลไทม์ฝั่งขวา
   canvas.setTextColor(tft.color565(226, 232, 240));
@@ -296,16 +375,9 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.drawRoundRect(10, 36, 120, 120, 6, tft.color565(16, 185, 129));
   canvas.drawRoundRect(11, 37, 118, 118, 5, tft.color565(16, 185, 129));
 
-  // แสดงผลภาพคีย์ QR Code ที่สแกนได้จริง
-  if (qrText.length() > 0) {
-    drawQRCode(qrText, 13, 39, 114);
-  } else {
-    // หากข้อมูลยังโหลดไม่เสร็จสิ้น
-    canvas.fillRect(13, 39, 114, 114, ILI9341_WHITE);
-    canvas.setTextColor(ILI9341_BLACK);
-    canvas.setCursor(40, 89);
-    canvas.print("Loading QR...");
-  }
+  // แสดงผลภาพคีย์ QR Code ที่สแกนได้จริง + แถบความสด
+  drawQRContent(qrText);
+  drawQrFreshness();
 
   // คำแนะนำภาษาไทยสีเหลืองทองเรืองแสง
   canvas.setTextSize(1);
@@ -403,10 +475,7 @@ void drawScanningScreen() {
   canvas.drawCircle(160, 70, 31, tft.color565(59, 130, 246));
   canvas.fillCircle(160, 70, 8, tft.color565(59, 130, 246));
 
-  canvas.setTextSize(2);
-  canvas.setTextColor(tft.color565(59, 130, 246));
-  canvas.setCursor(85, 110);
-  canvas.print("Processing...");
+  printCentered("Processing", 122, &FreeSansBold12pt7b, tft.color565(59, 130, 246));
 
   canvas.setTextSize(1);
   canvas.setTextColor(ILI9341_WHITE);
@@ -440,10 +509,10 @@ void drawUnlockedScreen(const String &approvedName, const String &studentId) {
     canvas.drawLine(157, 75 + t, 174, 53 + t, ILI9341_WHITE);
   }
 
-  canvas.setTextSize(2);
-  canvas.setTextColor(tft.color565(16, 185, 129));
-  canvas.setCursor(70, 110);
-  canvas.print("ACCESS GRANTED");
+  // วงแหวนนับถอยหลัง (เริ่มที่เต็มวง) — จะถูกอนิเมตตอนนับเวลาประตูเปิด
+  drawCountdownRing(100);
+
+  printCentered("ACCESS GRANTED", 132, &FreeSansBold12pt7b, tft.color565(16, 185, 129));
 
   canvas.setTextSize(1);
   canvas.setTextColor(tft.color565(255, 215, 0));
@@ -483,12 +552,13 @@ void drawRejectedScreen() {
   canvas.drawCircle(160, 65, 32, tft.color565(239, 68, 68));
   canvas.drawCircle(160, 65, 33, tft.color565(239, 68, 68));
 
-  // (Warning icon removed as requested)
+  // เครื่องหมายกากบาท (X) วาดด้วยเส้นซ้อนหลายชั้นให้หนาและคมชัดกลางวงกลม
+  for (int t = 0; t < 4; t++) {
+    canvas.drawLine(149, 54 + t, 171, 76 + t, ILI9341_WHITE);
+    canvas.drawLine(171, 54 + t, 149, 76 + t, ILI9341_WHITE);
+  }
 
-  canvas.setTextSize(2);
-  canvas.setTextColor(tft.color565(239, 68, 68));
-  canvas.setCursor(75, 110);
-  canvas.print("ACCESS DENIED");
+  printCentered("ACCESS DENIED", 132, &FreeSansBold12pt7b, tft.color565(239, 68, 68));
 
   canvas.setTextSize(1);
   canvas.setTextColor(tft.color565(255, 199, 199));
@@ -516,7 +586,7 @@ unsigned long lastMqttRetry = 0;
 #endif
 
 // ─── Offline Mode Configurations & Helper Functions (Prompt 18) ─────────────
-bool is_offline_mode = false;
+// หมายเหตุ: is_offline_mode ถูกย้ายไปประกาศก่อน drawMainScreen (ใช้ในแถบสถานะ)
 int api_fail_count = 0;
 unsigned long last_student_sync = 0;
 unsigned long last_log_sync = 0;
@@ -926,12 +996,8 @@ void triggerDoorOpenOffline(const String &grant) {
   delay(180);
   tone(BUZZER_PIN, 2000, 300);
 
-  int countdownMs = 3800;
-  int stepSize = 320 / 38;
-  for (int i = 0; i < 38; i++) {
-    tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
-                 tft.color565(6, 78, 59));
+  for (int i = 0; i <= 38; i++) {
+    drawCountdownRing(100 - (i * 100 / 38));
     delay(100);
   }
   digitalWrite(RELAY_PIN, LOW);
@@ -960,11 +1026,8 @@ void triggerDoorOpenInstant(String name, String studentId) {
   delay(180);
   tone(BUZZER_PIN, 2000, 300);
 
-  int stepSize = 320 / 38;
-  for (int i = 0; i < 38; i++) {
-    tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-    tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
-                 tft.color565(6, 78, 59));
+  for (int i = 0; i <= 38; i++) {
+    drawCountdownRing(100 - (i * 100 / 38));
     delay(100);
   }
 
@@ -1081,11 +1144,8 @@ void handleLocalValidation() {
     delay(180);
     tone(BUZZER_PIN, 2000, 300);
 
-    int stepSize = 320 / 38;
-    for (int i = 0; i < 38; i++) {
-      tft.fillRect(0, 236, 320 - (i * stepSize), 4, tft.color565(16, 185, 129));
-      tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
-                   tft.color565(6, 78, 59));
+    for (int i = 0; i <= 38; i++) {
+      drawCountdownRing(100 - (i * 100 / 38));
       delay(100);
     }
     digitalWrite(RELAY_PIN, LOW);
@@ -1433,6 +1493,7 @@ void loop() {
     if (t != last_clock_str) {
       drawClockRegion(t);
     }
+    drawQrFreshness(); // อัปเดตแถบความสด QR ทุกวินาที (วาดเล็ก ไม่กระพริบ)
   }
 
   // Check door sensor open-state warning
@@ -1541,18 +1602,25 @@ void loop() {
       digitalWrite(LED_WIFI, LOW);
       digitalWrite(LED_REJECT, HIGH);
 
-      static unsigned long lastScreenUpdate = 0;
-      if (millis() - lastScreenUpdate > 5000) {
-        lastScreenUpdate = millis();
-        tft.fillScreen(tft.color565(15, 3, 3));
-        tft.setTextColor(tft.color565(239, 68, 68));
-        tft.setTextSize(3);
-        tft.setCursor(45, 80);
-        tft.print("OFFLINE MODE");
-        tft.setTextSize(2);
-        tft.setTextColor(ILI9341_WHITE);
-        tft.setCursor(55, 130);
-        tft.print("NO CACHED DATA");
+      // วาดครั้งเดียวตอนเพิ่งเข้าสถานะนี้ (กันจอแฟลชซ้ำทุก 5 วิ)
+      if (currentScreen != SCREEN_REJECTED) {
+        currentScreen = SCREEN_REJECTED;
+        canvas.fillScreen(tft.color565(15, 3, 3));
+        canvas.fillCircle(160, 70, 30, tft.color565(127, 29, 29));
+        canvas.drawCircle(160, 70, 31, tft.color565(239, 68, 68));
+        for (int t = 0; t < 4; t++) {
+          canvas.drawLine(149, 59 + t, 171, 81 + t, ILI9341_WHITE);
+          canvas.drawLine(171, 59 + t, 149, 81 + t, ILI9341_WHITE);
+        }
+        printCentered("OFFLINE MODE", 142, &FreeSansBold12pt7b,
+                      tft.color565(239, 68, 68));
+        canvas.setTextSize(1);
+        canvas.setTextColor(ILI9341_WHITE);
+        canvas.setCursor(88, 166);
+        canvas.print("No cached data available");
+        canvas.setTextColor(tft.color565(156, 163, 175));
+        canvas.setCursor(98, 186);
+        canvas.print("Waiting for network...");
       }
     }
   }
@@ -1740,12 +1808,8 @@ void loop() {
             delay(180);
             tone(BUZZER_PIN, 2000, 300);
 
-            int stepSize = 320 / 38;
-            for (int i = 0; i < 38; i++) {
-              tft.fillRect(0, 236, 320 - (i * stepSize), 4,
-                           tft.color565(16, 185, 129));
-              tft.fillRect(320 - (i * stepSize), 236, stepSize, 4,
-                           tft.color565(6, 78, 59));
+            for (int i = 0; i <= 38; i++) {
+              drawCountdownRing(100 - (i * 100 / 38));
               delay(100);
             }
 
