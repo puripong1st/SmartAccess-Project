@@ -1122,7 +1122,7 @@
 
       <article class="content-card" id="compiledContent">
         <h1>คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด</h1>
-<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-05 22:00:35 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
+<p>วันที่จัดทำ: 26 พฤษภาคม 2026<br>อัปเดตล่าสุด: 2026-06-07 15:55:00 (+07:00)<br>โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network<br>ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน</p>
 <blockquote>
 <p>คู่มือนี้อธิบายจากโค้ดจริงในโปรเจกต์ปัจจุบัน โดยระบบเว็บอยู่ใน <code>my-app/</code> และเฟิร์มแวร์บอร์ดอยู่ใน <code>esp32/</code> (ใช้เฟิร์มแวร์ตัวเดียวทุกห้อง กำหนดห้องผ่าน <code>config.h</code>)</p>
 </blockquote>
@@ -20627,6 +20627,63 @@ because it violates the Content Security Policy directive: &quot;connect-src ...
 <td><code>complete_system_manual_th.md</code></td>
 <td><strong>[MODIFY]</strong></td>
 <td>บันทึกรายละเอียดของปัญหารวมถึงวิธีการแก้ไขและตารางสรุปการเปลี่ยนแปลง §71.58</td>
+</tr>
+</tbody></table>
+<p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<h2>71.59 แก้ไขปัญหาบอร์ด ESP32 รีบูตวนรอบและจอกระพริบจากหน่วยความจำเต็ม (Zero-Allocation Direct-to-TFT Canvas)</h2>
+<p><strong>วันที่ดำเนินการ:</strong> 7 มิถุนายน 2569</p>
+<h4>71.59.1 สาเหตุของปัญหา (Root Cause Analysis)</h4>
+<p>ผู้ใช้งานรายงานอาการบอร์ด ESP32 รีบูตวนรอบอย่างไม่สิ้นสุด (Boot loop) และหน้าจอแสดงผล ILI9341 เกิดอาการกระพริบเนื่องจากการรีเซ็ตฮาร์ดแวร์ซ้ำ ๆ โดยจากการวิเคราะห์รหัสความผิดพลาดจาก Serial Monitor (Guru Meditation Error: Core 1 panic&#39;ed (StoreProhibited) ที่ EXCVADDR: 0x00000000) พบต้นตอและสาเหตุเชิงลึกดังนี้:</p>
+<ol>
+<li><strong>คอขวดหน่วยความจำแรมจากการทำ Double Buffering (RAM Heap Exhaustion):</strong> เฟิร์มแวร์เดิมประกาศใช้งาน <code>GFXcanvas16 canvas(320, 240);</code> เพื่อทำหน้าที่เป็น Frame buffer สำรองสำหรับลดความกระพริบขณะวาด ซึ่งจำเป็นต้องจองพื้นที่แรมบน Heap เป็นจำนวนสูงถึง <code>320 * 240 * 2 = 153.6 KB</code> ในช่วงเริ่มต้นทำงาน</li>
+<li><strong>การชนกันของหน่วยความจำ (Memory Contention with Network Stack):</strong> บอร์ด ESP32 มีหน่วยความจำ SRAM ที่ใช้งานได้จำกัด (~320 KB) และเมื่อบอร์ดทำการเริ่มต้นเชื่อมต่อ Wi-Fi, ทำการเมาท์ SPIFFS, และเปิดใช้งาน <code>WiFiClientSecure</code> เพื่อเชื่อมต่อ HTTPS ไปยังคลาวด์ Vercel ไลบรารี SSL/TLS ของเครือข่ายจะต้องขอจองบัฟเฟอร์รับส่งข้อมูลอีกประมาณ 40–50 KB ส่งผลให้ Heap แตกเป็นเสี่ยง ๆ และหน่วยความจำแรมไม่เพียงพอที่จะจัดสรรให้บล็อกต่อเนื่องขนาด 153.6 KB ได้สำเร็จ</li>
+<li><strong>การชี้ไปยังหน่วยความจำว่างเปล่า (Null Pointer Dereference):</strong> เมื่อการจัดสรรหน่วยความจำผ่าน <code>malloc</code> ในตัวสร้างออบเจกต์ <code>GFXcanvas16</code> ล้มเหลว ตัวแปรชี้ตำแหน่งบัฟเฟอร์ภายในแคนวาสจะกลายเป็น <code>nullptr</code> (0x00000000) แต่เมื่อโปรแกรมพยายามดันภาพออกจอผ่านคำสั่ง <code>tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);</code> ไลบรารี Adafruit_GFX จะพยายามเข้าถึงค่าในอาเรย์ตำแหน่งดังกล่าวโดยตรง ทำให้เกิดข้อยกเว้นฮาร์ดแวร์ <code>StoreProhibited</code> (หรือ <code>LoadProhibited</code>) ที่แอดเดรสศูนย์และทำการรีบูตบอร์ดทันที</li>
+</ol>
+<h4>71.59.2 สถาปัตยกรรมการแก้ไขและการวาดลงฮาร์ดแวร์โดยตรง (Zero-Allocation Wrapper Implementation)</h4>
+<p>เพื่อแก้ปัญหานี้โดยไม่ต้องเขียนส่วนควบคุมและพอร์ตการแสดงผลใหม่ ได้มีการออกแบบทางวิศวกรรมเพื่อเปลี่ยนจากการใช้ Canvas แรมเป็นการแปลงคำสั่งไปควบคุมหน้าจอ TFT โดยตรง:</p>
+<ol>
+<li><strong>พัฒนาคลาสจำลองแคนวาสที่ไม่มีการจองหน่วยความจำ (Zero-Allocation Wrapper):</strong> <ul>
+<li>สร้างคลาส <code>TFT_DirectCanvas</code> ที่สืบทอดมาจาก <code>Adafruit_GFX</code> เพื่อให้ทำหน้าที่เป็นตัวประสานคำสั่งแทน <code>GFXcanvas16</code> ตัวเดิม โดยการทำงานทุกฟังก์ชันของการวาดรูป (เช่น <code>fillScreen</code>, <code>drawPixel</code>, <code>fillRect</code>, <code>drawFastHLine</code>, <code>drawFastVLine</code>, <code>drawRGBBitmap</code>) จะถูกส่งต่อ (Delegate) ไปสั่งการที่ตัวแปร <code>tft</code> ของฮาร์ดแวร์โดยตรง</li>
+<li>มีการเขียนทับฟังก์ชันให้ครอบคลุมการวาดแบบฮาร์ดแวร์เร่งความเร็ว (Hardware-accelerated SPI) เพื่อรักษาความเร็วและลดความกระพริบในการเขียนพิกเซลให้มีประสิทธิภาพสูง</li>
+<li>ฟังก์ชัน <code>getBuffer()</code> ของคลาสจำลองนี้จะส่งค่ากลับเป็น <code>nullptr</code> เสมอ เพื่อแสดงว่าไม่มีการจองแรมสำหรับบัฟเฟอร์</li>
+</ul>
+</li>
+<li><strong>การทำลายความเสี่ยงของการส่งผ่าน Null Pointer (Null Pointer Protection):</strong><ul>
+<li>ห่อหุ้มคำสั่ง <code>tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);</code> ทั้งหมด 5 จุดในโปรแกรมด้วยการตรวจสอบเงื่อนไข <code>if (canvas.getBuffer() != nullptr)</code> ป้องกันการส่งแอดเดรสศูนย์เข้าไปประมวลผลในไลบรารี ซึ่งช่วยแก้บั๊กของระบบไม่ให้เกิดการขัดข้องขึ้นอีกต่อไป แม้มีการเปิดใช้งาน double buffering ในอนาคต</li>
+</ul>
+</li>
+<li><strong>การปรับเปลี่ยนเทมเพลตในแผงควบคุมแอดมิน (Web Dashboard Alignment):</strong><ul>
+<li>อัปเกรดเทมเพลตสำหรับส่งมอบโค้ดใน <a href="file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts">my-app/app/admin/dashboard/ArduinoCode.ts</a> ให้บรรจุคลาส <code>TFT_DirectCanvas</code> และตรรกะแบบเดียวกัน เพื่อให้มั่นใจว่าโค้ดที่ผู้ดูแลระบบคัดลอกไปคอมไพล์ใช้งานจริงจะปลอดภัยและไม่เจอปัญหารีบูตวนซ้ำ</li>
+</ul>
+</li>
+</ol>
+<h4>71.59.3 ตารางสรุปไฟล์แก้ไข</h4>
+<table>
+<thead>
+<tr>
+<th>ลำดับ</th>
+<th>ตำแหน่งไฟล์</th>
+<th>สถานะ</th>
+<th>คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>esp32/esp32.ino</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>แทนที่ <code>GFXcanvas16</code> ด้วยคลาสจำลอง <code>TFT_DirectCanvas</code> เพื่อย้ายการวาดไปที่ TFT โดยตรง ช่วยประหยัดแรม Heap 153.6 KB และครอบป้องกันการเรนเดอร์ภาพจากแอดเดรสศูนย์</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>my-app/app/admin/dashboard/ArduinoCode.ts</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>อัปเดตโค้ด Arduino ในเทมเพลตหน้าแผงควบคุม ให้มีคลาส <code>TFT_DirectCanvas</code> และตรรกะการตรวจสอบบัฟเฟอร์แบบเดียวกัน เพื่อส่งมอบเฟิร์มแวร์รุ่นแก้ไขที่เสถียร</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>complete_system_manual_th.md</code></td>
+<td><strong>[MODIFY]</strong></td>
+<td>บันทึกรายละเอียดเชิงลึกของปัญหา StoreProhibited การแก้บั๊กหน่วยความจำล้น และตารางสรุปการเปลี่ยนแปลงในคู่มือระบบ (§71.59)</td>
 </tr>
 </tbody></table>
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>

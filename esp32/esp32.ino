@@ -70,7 +70,34 @@ bool localServerStarted = false;
 #define DOOR_SENSOR_PIN 32 // Magnetic Door Sensor (GPIO 32)
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
-GFXcanvas16 canvas(320, 240);
+
+// Custom zero-allocation wrapper class to redirect Adafruit_GFX drawing operations
+// directly to hardware TFT, avoiding the 153.6 KB RAM heap allocation of GFXcanvas16
+// which causes ESP32 out-of-memory crashes (StoreProhibited/LoadProhibited loop)
+// when SPIFFS and HTTPS (WiFiClientSecure TLS buffers) are active.
+class TFT_DirectCanvas : public Adafruit_GFX {
+private:
+  Adafruit_ILI9341 &tft;
+public:
+  TFT_DirectCanvas(Adafruit_ILI9341 &_tft) : Adafruit_GFX(320, 240), tft(_tft) {}
+  
+  void drawPixel(int16_t x, int16_t y, uint16_t color) override {
+    tft.drawPixel(x, y, color);
+  }
+  
+  void fillScreen(uint16_t color) override { tft.fillScreen(color); }
+  void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) override { tft.drawFastVLine(x, y, h, color); }
+  void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override { tft.drawFastHLine(x, y, w, color); }
+  void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override { tft.fillRect(x, y, w, h, color); }
+  
+  void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w, int16_t h) {
+    tft.drawRGBBitmap(x, y, bitmap, w, h);
+  }
+
+  uint16_t* getBuffer() { return nullptr; }
+};
+
+TFT_DirectCanvas canvas(tft);
 
 // ─── Adaptive Polling ────────────────────────────────────────────────────────
 // เร่งความเร็ว polling เมื่อตรวจพบกิจกรรม ชะลอลงเมื่อ idle ประหยัด API call
@@ -229,7 +256,9 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.print(ip_address_str);
 
   // ดันแคนวาสออกหน้าจอ ILI9341
-  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  if (canvas.getBuffer() != nullptr) {
+    tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  }
 }
 
 // 2. หน้าจอกำลังตรวจสอบข้อมูล (Scanning/Processing Mode)
@@ -248,7 +277,9 @@ void drawScanningScreen() {
                tft.color565(107, 122, 112));
 
   // ดันแคนวาสออกหน้าจอ ILI9341
-  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  if (canvas.getBuffer() != nullptr) {
+    tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  }
 }
 
 // 3. หน้าจอปลดล็อกผ่านสำเร็จ (Access Granted Mode) — สีเขียวสะท้อนแสงหรูหราดีไซน์พรีเมียม
@@ -284,7 +315,9 @@ void drawUnlockedScreen(const String &approvedName, const String &studentId) {
   canvas.print(studentId);
 
   // ดันแคนวาสออกหน้าจอ ILI9341
-  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  if (canvas.getBuffer() != nullptr) {
+    tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  }
 }
 
 // 4. หน้าจอสำหรับกรณีระบบไม่อนุมัติ (Access Denied Mode) — แดงเรืองแสง
@@ -304,7 +337,9 @@ void drawRejectedScreen() {
                tft.color565(156, 163, 175));
 
   // ดันแคนวาสออกหน้าจอ ILI9341
-  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  if (canvas.getBuffer() != nullptr) {
+    tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  }
 }
 
 // ─── Persistent TLS Connection (HTTP Keep-alive) ─────────────────────────────
@@ -1164,7 +1199,9 @@ void setup() {
   canvas.print("SSID: ");
   canvas.print(ssid);
 
-  tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  if (canvas.getBuffer() != nullptr) {
+    tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
+  }
 
   DBG("Connecting to Wi-Fi...");
   WiFi.begin(ssid, password);
