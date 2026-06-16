@@ -369,7 +369,7 @@ CREATE TABLE system_settings (
 
 #### 2) ลูปดึงค่าสถานะแสดงผลส่วนกลาง (Adaptive Polling Task - GET):
 * บอร์ด ESP32 จะยิง HTTP GET Request แบบ Keep-Alive ไปยังเซิร์ฟเวอร์ส่วนกลางเป็นระยะเพื่อซิงค์สถานะตัวเลขคิว, ประวัติการเข้าล่าสุด และคีย์สำหรับสแกนแบบออฟไลน์:
-  `https://smartaccess-project.vercel.app/api/esp32/display?room=A-401&slim=true`
+  `http://<RASPBERRY_PI_IP>:3000/api/esp32/display?room=A-401&slim=true`
 * **Adaptive Polling Rate:** ระบบจะปรับความถี่อัตโนมัติเพื่อประหยัดจำนวน API Requests (หากไม่มีการเคลื่อนไหวจะหน่วงเวลาขึ้นเป็น 5 วินาที, หากมีกิจกรรมหรือคำสั่งรันอยู่จะถี่ขึ้นเป็น 1 วินาที หรือ 200 มิลลิวินาที)
 * **การวาดหน้าจอ:** นำข้อมูล JSON มาเรนเดอร์ QR Code และอัปเดตข้อมูลบนจอภาพ LCD 3.2" แบบเจาะจงเฉพาะโซนเพื่อลดการกระพริบของหน้าจอ (Dirty-region tracking)
 

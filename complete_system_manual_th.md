@@ -34,8 +34,8 @@
 ### 📘 บทที่ 2: ปริทัศน์วรรณกรรมและทฤษฎีที่เกี่ยวข้อง (Literature Review & Theory)
 > หมวดทฤษฎีเทคโนโลยี ฐานข้อมูล เครือข่าย กฎหมาย และงานวิจัยอื่น
 
-- [27. Supabase ทำอะไรในระบบนี้ (เจาะลึก)](#sec-27)
-- [28. Vercel ทำอะไรกับ my-app (เจาะลึก)](#sec-28)
+- [27. PostgreSQL (Local) ทำอะไรในระบบนี้ (เจาะลึก)](#sec-27)
+- [28. Raspberry Pi ทำอะไรกับ my-app (เจาะลึก)](#sec-28)
 - [49. Attack Scenarios — Threat Modeling แบบ Step-by-Step](#sec-49)
 - [50. Cryptographic Details — JWT, bcrypt, HMAC ในเชิงคณิตศาสตร์](#sec-50)
 - [51. OWASP Top 10 (2021) — ระบบรับมืออย่างไรทีละข้อ](#sec-51)
@@ -98,7 +98,7 @@
 - [71.29 Timing Diagram ของ Relay + Flyback Diode](#sec-71-29)
 - [71.37 Network Topology — Campus Deployment](#sec-71-37)
 - [71.40 SmartAccess Rebrand + PDPA Implementation — เจาะลึกทุกประเด็น](#sec-71-40)
-- [71.42 ฟีเจอร์ใหม่ระลอก 2 — Edge Runtime, Vercel KV, ฯลฯ](#sec-71-42)
+- [71.42 ฟีเจอร์ใหม่ระลอก 2 — Edge Runtime, Local Cache, ฯลฯ](#sec-71-42)
 - [71.45 ระบบแจ้งเตือนหลายช่องทาง: Discord + Telegram + LINE](#sec-71-45)
 - [71.46 ระบบล้างคำขอค้างรออนุมัติอัตโนมัติ](#sec-71-46)
 - [71.47 ระบบรักษาความปลอดภัย API ของบอร์ด IoT แบบ Zero-Trust](#sec-71-47)
@@ -145,7 +145,7 @@
 - [71.36 Hardware Reliability — MTBF, IP Rating, สภาพแวดล้อม](#sec-71-36)
 - [71.39 ตรวจสอบความถูกต้องทางกฎหมาย: Cookie Consent, Terms, Privacy Policy](#sec-71-39)
 - [71.41 การตรวจสอบความสมบูรณ์และระบบอัพเดตแดชบอร์ดระดับพรีเมียม](#sec-71-41)
-- [71.44 การปรับแต่งประสิทธิภาพเพื่อลดภาระ Vercel/Supabase (Performance Tuning)](#sec-71-44)
+- [71.44 การปรับแต่งประสิทธิภาพเพื่อลดภาระ Raspberry Pi/PostgreSQL (Local) (Performance Tuning)](#sec-71-44)
 - [71.49 กลไกการตรวจวัดสุขภาพระบบและการกู้คืนภัยพิบัติเชิงรุก](#sec-71-49)
 - [71.54 ชุดทดสอบความปลอดภัยและการทำงานแบบอัตโนมัติ (Vitest)](#sec-71-54)
 - [71.55 รายงานสรุปผลการทดสอบเจาะระบบและตรวจประเมินความมั่นคงปลอดภัยอัตโนมัติ](#sec-71-55)
@@ -296,7 +296,7 @@ Project/
         guide/page.tsx                 แท็บคู่มือการใช้งานระบบ
       esp32-preview/page.tsx           หน้าจำลองจอ ESP32
       api/                             API ทั้งหมดของระบบ
-        system/health/route.ts         Health check API (DB, Memory, Vercel, API probes)
+        system/health/route.ts         Health check API (DB, Memory, Raspberry Pi, API probes)
     lib/
       db.ts                            เชื่อม PostgreSQL และสร้างตาราง
       auth.ts                          JWT และ cookie session ของ Admin
@@ -321,104 +321,276 @@ Project/
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-3"></a>
-## 3. การติดตั้งและรันเว็บ
+## 3. การติดตั้งและรันเว็บบน Raspberry Pi
 
-### 3.1 เตรียม Node.js และ package
+### 3.1 การเตรียมระบบปฏิบัติการและสภาพแวดล้อม (Raspberry Pi OS)
+ระบบเว็บและ API พัฒนาขึ้นด้วย Next.js และต้องการ Node.js รันไทม์เพื่อประมวลผล แนะนำให้ติดตั้งบน Raspberry Pi OS (รุ่น 64-bit) โดยทำตามขั้นตอนต่อไปนี้:
 
-เข้าไปที่โฟลเดอร์เว็บ
+1. **ติดตั้ง Node.js ผ่าน NVM (Node Version Manager)**:
+   เปิดเทอร์มินัลของ Raspberry Pi แล้วติดตั้ง NVM เพื่อช่วยในการจัดการเวอร์ชันของ Node.js:
+   ```bash
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+   source ~/.bashrc
+   ```
+   ติดตั้ง Node.js เวอร์ชัน 20 (LTS):
+   ```bash
+   nvm install 20
+   nvm use 20
+   node -v # ตรวจสอบเวอร์ชัน
+   ```
 
-```bash
-cd my-app
-npm install
-```
+2. **ดาวน์โหลดโค้ดโครงการ**:
+   โคลนโครงการเข้ามายังเครื่อง Raspberry Pi:
+   ```bash
+   git clone <URL_REPOSITORY> smartaccess
+   cd smartaccess/my-app
+   ```
 
-รัน dev server
+3. **ติดตั้ง Package Dependencies**:
+   ```bash
+   npm install
+   ```
 
-```bash
-npm run dev
-```
+### 3.2 การติดตั้งและตั้งค่าฐานข้อมูล PostgreSQL บน Raspberry Pi
+ในโครงการนี้ เราใช้ PostgreSQL เป็นระบบจัดการฐานข้อมูล (แทนบริการคลาวด์ PostgreSQL (Local)) โดยสามารถรันเซิร์ฟเวอร์ฐานข้อมูลบน Raspberry Pi ได้โดยตรง:
 
-เปิดเว็บ
+1. **ติดตั้ง PostgreSQL**:
+   ```bash
+   sudo apt update
+   sudo apt install -y postgresql postgresql-contrib
+   ```
 
-```text
-https://smartaccess-project.vercel.app
-```
+2. **เปิดระบบและตรวจสอบสถานะการทำงาน**:
+   ```bash
+   sudo systemctl start postgresql
+   sudo systemctl enable postgresql
+   sudo systemctl status postgresql
+   ```
 
-หน้า Admin
+3. **สร้างฐานข้อมูลและผู้ใช้งาน**:
+   สลับไปยังผู้ใช้งานระบบของ PostgreSQL (postgres):
+   ```bash
+   sudo -i -u postgres
+   ```
+   เข้าสู่โปรแกรมจัดการฐานข้อมูลผ่านคอมมานด์ไลน์ (psql):
+   ```bash
+   psql
+   ```
+   พิมพ์ชุดคำสั่ง SQL ต่อไปนี้เพื่อสร้างฐานข้อมูลและผู้ใช้งานเฉพาะ:
+   ```sql
+   CREATE DATABASE smartaccess;
+   CREATE USER smart_user WITH ENCRYPTED PASSWORD 'your_secure_password';
+   GRANT ALL PRIVILEGES ON DATABASE smartaccess TO smart_user;
+   \q
+   ```
+   พิมพ์ `exit` เพื่อออกจากสิทธิ์ผู้ใช้ postgres กลับมาเป็นผู้ใช้ปกติ:
+   ```bash
+   exit
+   ```
 
-```text
-https://smartaccess-project.vercel.app/admin/login
-```
+4. **ตั้งค่าให้ PostgreSQL รับการเชื่อมต่อจากภายนอก (สำหรับ ESP32 และการเข้าถึงระยะไกล)**:
+   แก้ไขไฟล์คอนฟิกหลักของ PostgreSQL (แทนที่ `<version>` ด้วยเวอร์ชันจริง เช่น `15` หรือ `16`):
+   ```bash
+   sudo nano /etc/postgresql/<version>/main/postgresql.conf
+   ```
+   หาบรรทัด `listen_addresses` แล้วเปลี่ยนค่าเป็น:
+   ```text
+   listen_addresses = '*'
+   ```
+   เซฟไฟล์และปิดโปรแกรมแก้ไข จากนั้นเปิดไฟล์ควบคุมการเข้าถึงฐานข้อมูล:
+   ```bash
+   sudo nano /etc/postgresql/<version>/main/pg_hba.conf
+   ```
+   เพิ่มบรรทัดด้านล่างนี้ลงไปที่ท้ายไฟล์เพื่อให้สามารถเชื่อมต่อฐานข้อมูลจากหมายเลข IP อื่นได้:
+   ```text
+   host    all             all             0.0.0.0/0               scram-sha-256
+   ```
+   *(หมายเหตุ: สามารถเปลี่ยน scram-sha-256 เป็น md5 ได้หากเวอร์ชันของไคลเอนต์ยังไม่รองรับการเชื่อมต่อแบบ scram)*
+   
+   ทำการโหลดบริการฐานข้อมูลใหม่เพื่อให้การตั้งค่ามีผล:
+   ```bash
+   sudo systemctl restart postgresql
+   ```
 
-หน้าจำลอง ESP32
+### 3.3 วิธีการดึงข้อมูลและย้ายตาราง (SQL Import/Migrate) จาก PostgreSQL (Local)
+หากระบบเดิมอยู่บนคลาวด์ PostgreSQL (Local) และต้องการย้ายโครงสร้างฐานข้อมูลและข้อมูลเดิมทั้งหมดมายัง Raspberry Pi สามารถทำได้ 2 แนวทาง ดังนี้:
 
-```text
-https://smartaccess-project.vercel.app/esp32-preview
-```
+#### แนวทางที่ 1: การใช้ฟีเจอร์ Schema Auto-Creation ของระบบ (แนะนำสำหรับฐานข้อมูลเปล่า)
+ระบบเว็บ Next.js ของโครงการถูกออกแบบให้มีสคริปต์ตรวจสอบโครงสร้างฐานข้อมูลแบบอัตโนมัติอยู่แล้วเมื่อเริ่มทำงาน (`lib/db.ts`) หากต้องการเริ่มฐานข้อมูลใหม่แต่ให้ได้ข้อมูลตารางสมบูรณ์เหมือน PostgreSQL (Local):
+1. กำหนดค่าในไฟล์ `.env.local` ให้ `SKIP_DB_INIT=false` และรันเซิร์ฟเวอร์ Next.js
+2. ระบบจะเชื่อมต่อไปยังฐานข้อมูลใหม่ และรันคำสั่ง DDL สร้างตาราง (`students`, `admin_users`, `access_logs`, `system_settings` และอื่นๆ) พร้อมทั้งสร้างแอดมินคนแรกให้อัตโนมัติทันที
+3. หลังจากนั้นให้ย้ายตารางและข้อมูลประวัติที่ต้องการโดยใช้วิธีที่ 2 เฉพาะตารางข้อมูลจริง
 
-> [!NOTE]
-> ลิงก์ด้านบนเป็นเว็บไซต์จำลองบนโปรดักชันหลัก (Production URL) สำหรับรันใช้งานจริง ส่วนกรณีที่รันระบบทดสอบภายในเครื่องนักพัฒนา (Local Development) สามารถเข้าใช้งานผ่าน `http://localhost:3000`, `http://localhost:3000/admin/login` และ `http://localhost:3000/esp32-preview` ตามลำดับ
+#### แนวทางที่ 2: การ Export ข้อมูลจาก PostgreSQL (Local) และนำเข้ามายัง Raspberry Pi (Full Migration)
+1. **ทำการดัมป์ข้อมูล (pg_dump) จาก PostgreSQL (Local)**:
+   รันคำสั่งดัมป์ข้อมูลจากคอมพิวเตอร์ของคุณที่สามารถเชื่อมต่ออินเทอร์เน็ตเข้ากับ PostgreSQL (Local) ได้ (แทนค่าพารามิเตอร์ของ PostgreSQL (Local) ให้ถูกต้อง):
+   ```bash
+   pg_dump -h db.PostgreSQL (Local).co -U postgres -d postgres --clean --if-exists -F p -f PostgreSQL (Local)_backup.sql
+   ```
+   *(หากใช้ pg_dump บนเครื่อง Windows หรือ macOS ให้เตรียม connection string หรือรหัสผ่าน PostgreSQL (Local) ให้พร้อม)*
 
-### 3.2 ตัวแปรสภาพแวดล้อมที่ควรตั้งค่า
+2. **นำไฟล์สำรอง SQL เข้าสู่ Raspberry Pi**:
+   ใช้คำสั่ง `scp` หรือโปรแกรม FileZilla ในการส่งไฟล์ `PostgreSQL (Local)_backup.sql` ไปยัง Raspberry Pi:
+   ```bash
+   scp PostgreSQL (Local)_backup.sql pi@<RASPBERRY_PI_IP>:/home/pi/
+   ```
 
-สร้างไฟล์ `my-app/.env.local`
+3. **นำเข้าข้อมูลเข้าสู่ PostgreSQL ของ Raspberry Pi**:
+   ล็อกอินเข้า SSH ของ Raspberry Pi จากนั้นรันคำสั่งเพื่อกู้คืนฐานข้อมูล:
+   ```bash
+   psql -h localhost -U smart_user -d smartaccess -f /home/pi/PostgreSQL (Local)_backup.sql
+   ```
+   ระบบจะทำการรันสคริปต์ SQL ทั้งหมดเพื่อลบตารางเก่า (ถ้ามี) สร้างตารางใหม่ และนำเข้าข้อมูลเดิมทั้งหมดอย่างรวดเร็ว
+
+### 3.4 การตั้งค่าตัวแปรสภาพแวดล้อม (Environment Variables)
+สร้างหรือแก้ไขไฟล์ `my-app/.env.local` บน Raspberry Pi เพื่อระบุค่าการตั้งค่าให้ใช้ทรัพยากรภายในเครื่อง:
 
 ```env
-# ── ฐานข้อมูล (PostgreSQL / Supabase Connection) ──
-# ใช้ Connection String หลัก (PgBouncer pooler พอร์ต 6543)
-POSTGRES_URL="postgres://postgres.<ref>:<password>@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require"
-# หรือใช้แบบแยกพารามิเตอร์ (db.ts จะอ่านแบบแยกนี้เป็น fallback หากไม่มี POSTGRES_URL)
-POSTGRES_HOST=db.supabase.co
+# ── ฐานข้อมูล (PostgreSQL Local บน Raspberry Pi) ──
+# รูปแบบ Connection String เชื่อมต่อภายในเครื่องเครื่องเดียวกัน
+POSTGRES_URL="postgres://smart_user:your_secure_password@localhost:5432/smartaccess"
+
+# คอนฟิกแบบแยกพารามิเตอร์ (db.ts จะอ่านหากไม่มี POSTGRES_URL)
+POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your-db-password
-POSTGRES_DATABASE=postgres
-# ขนาด pool สูงสุดที่เชื่อมต่อ (ค่าเริ่มต้นคือ 5)
-POSTGRES_POOL_MAX=5
-# PEM Certificate สำหรับการเชื่อมต่อแบบเข้ารหัส TLS (ทางเลือก)
-SUPABASE_CA_CERT=
+POSTGRES_USER=smart_user
+POSTGRES_PASSWORD=your_secure_password
+POSTGRES_DATABASE=smartaccess
+# กำหนดขนาด Pool สูงสุด (แนะนำ 15-20 เนื่องจากทำงานแบบ Persistent Server การแชร์ connection ทำได้มีประสิทธิภาพ)
+POSTGRES_POOL_MAX=20
+# บนระบบโลคอลไม่จำเป็นต้องใส่ CA certificate
+PostgreSQL (Local)_CA_CERT=
 
-# ── ความปลอดภัย & รหัสลับ (Secrets - บังคับตั้งค่า แอปจะ throw ทันทีถ้าไม่ใส่) ──
-# รหัสลับสำหรับ JWT Session (สุ่มใหม่ ≥ 32 ตัวอักษร)
-JWT_SECRET=change-this-to-a-long-random-secret
-# รหัสลับในการถอด/ถอดสิทธิ์ผ่านคิวอาร์ (สุ่มใหม่ ≥ 32 ตัวอักษร บังคับตั้งเพื่อกันระบบ throw)
-QR_SIGNING_KEY=change-this-to-another-long-random-secret
-# กุญแจ API IoT ของบอร์ดประตู (ต้องตรงกับ api_key ใน config.h ของบอร์ด)
-ESP32_API_KEY=change-this-to-the-same-key-in-config-h
+# ── ความปลอดภัย & รหัสลับ (บังคับตั้งค่าห้ามใช้ค่า default ในสายผลิต) ──
+# รหัสสุ่มลับสำหรับการลงชื่อเข้าใช้ JWT Session (สุ่มใหม่โดยรัน openssl rand -hex 32 ในคอมมานด์ไลน์)
+JWT_SECRET=f8c9b207a6a4d7d8e9526a57b2e3fc5aefbc81a2f3e4d5c6b7a8d9e0f1a2b3c4
+# รหัสลับในการเซ็นถอดรหัสและเข้ารหัสสิทธิ์ของ QR Token
+QR_SIGNING_KEY=a51d9e23b1c8f4d9a2e6f7c8d9e0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8
+# กุญแจ API ความปลอดภัยสูงของระบบ IoT (ต้องตรงกับ api_key ใน config.h ของบอร์ด ESP32)
+ESP32_API_KEY=your_super_secret_esp32_api_key
 
-# ── บอร์ดประตูฮาร์ดแวร์ / IoT Config ──
-ESP32_IP=192.168.1.100
+# ── การตั้งค่าเซิร์ฟเวอร์บอร์ดควบคุมประตู ──
+# หมายเลข IP ของบอร์ด ESP32 ที่ประตูกายภาพจริง (ใช้กรณีที่เซิร์ฟเวอร์จะสั่งยิงเปิดประตูตรงทาง LAN)
+ESP32_IP=192.168.1.150
 ESP32_PORT=80
+# เปิดโหมดทดสอบจำลอง (true = ไม่ยิงหาบอร์ดจริง เหมาะกับการเดโมแบบไม่มีอุปกรณ์)
 ESP32_MOCK_MODE=false
 ESP32_WOKWI=false
 
-# ── การล้าง/สร้างข้อมูลตั้งต้นระบบ (DB Init & Seed) ──
-# true = ข้ามการสแกนสร้างตารางเพื่อความรวดเร็วในการเปิด Serverless Cold Start
+# ── การสร้างฐานข้อมูลเริ่มต้น (Database Seeding) ──
+# true = ข้ามขั้นตอนตรวจตารางเพื่อความเร็ว (ตั้งเป็น true หลังจากติดตั้งฐานข้อมูลเรียบร้อยแล้ว)
 SKIP_DB_INIT=false
-# true = อนุญาตให้บันทึกบัญชีผู้ดูแลระบบเริ่มแรก (Seed) จาก env ด้านล่างนี้ (เฉพาะพัฒนา)
+# true = อนุญาตให้รันสคริปต์สร้างบัญชีผู้ดูแลระบบเริ่มต้นจากข้อมูลด้านล่างนี้
 ALLOW_DEV_SEED=true
 INITIAL_ADMIN_USERNAME=admin
 INITIAL_ADMIN_PASSWORD=admin123456
 INITIAL_ADMIN_FULL_NAME="System Administrator"
 
-# ── การแจ้งเตือน & เผชิญเหตุ Ops (ทางเลือก) ──
-NEXT_PUBLIC_APP_URL=https://smartaccess-project.vercel.app
+# ── การทำงานระบายข้อมูลและระบบเครือข่าย ──
+# URL หลักของเซิร์ฟเวอร์ Raspberry Pi (ตัวอย่างเช่น โดเมน DDNS หรือ Public IP ที่ตั้งค่าไว้)
+NEXT_PUBLIC_APP_URL=http://smartaccess.duckdns.org:3000
 DISCORD_WEBHOOK_URL=
-CRON_SECRET=some-random-cron-secret
+CRON_SECRET=my-cron-scheduler-secret-key-123
 ```
 
-หมายเหตุสำคัญ:
+### 3.5 การรัน Next.js ในโหมดจำหน่ายจริง (Production Build & Process Control)
+ในการใช้งานระบบในสภาพแวดล้อมจริง เราจะไม่เปิดเซิร์ฟเวอร์ด้วยคำสั่ง `npm run dev` เนื่องจากใช้ทรัพยากรสูงและไม่เสถียร ให้ใช้ขั้นตอนรันแบบโปรดักชันดังนี้:
 
-- โค้ดปัจจุบันใช้ PostgreSQL ผ่านแพ็กเกจ `pg`
-- ใน production ห้ามใช้ `JWT_SECRET` ค่า default
-- ใน production ห้ามใช้ `ESP32_API_KEY` ค่า placeholder
-- ถ้าใช้ Vercel/Supabase ให้ตั้งตัวแปรทั้งหมดใน Project Settings ของ Vercel
-- `ALLOW_DEV_SEED=true` ใช้เฉพาะ development เพื่อสร้าง admin เริ่มต้น
+1. **สร้าง Build Artifacts ของ Next.js**:
+   ```bash
+   npm run build
+   ```
+   ระบบจะทำการตรวจสอบโค้ดและทำการคอมไพล์โปรเจกต์ให้ออกมาเป็นไฟล์ที่ถูกบีบอัดและปรับแต่งแล้วในโฟลเดอร์ `.next/`
+
+2. **จัดการกระบวนการทำงานด้วย PM2 (Process Manager)**:
+   เพื่อให้ระบบยังคงรันอยู่เบื้องหลังตลอดเวลา และเริ่มการทำงานใหม่โดยอัตโนมัติหากเครื่อง Raspberry Pi ดับหรือรีบูต:
+   ติดตั้ง PM2 ทั่วทั้งระบบ:
+   ```bash
+   sudo npm install -g pm2
+   ```
+   สั่งรัน Next.js แอปพลิเคชันผ่าน PM2:
+   ```bash
+   pm2 start npm --name "smartaccess-app" -- start
+   ```
+   ตั้งค่าให้ PM2 ทำงานทันทีเมื่อเปิดเครื่อง Raspberry Pi:
+   ```bash
+   pm2 startup
+   ```
+   *(PM2 จะแสดงคำสั่งยาวๆ ให้คัดลอกคำสั่งนั้นไปวางในเทอร์มินัลแล้วกด Enter)*
+   
+   บันทึกรายการโปรเซสปัจจุบันที่รันอยู่:
+   ```bash
+   pm2 save
+   ```
+   ตรวจสอบสถานะโปรเซสด้วยคำสั่ง:
+   ```bash
+   pm2 status
+   pm2 logs smartaccess-app # ดูข้อความล็อกเรียลไทม์
+   ```
+
+### 3.6 การเปิดการเข้าถึงภายนอก (Public IP, Port Forwarding & DDNS)
+เพื่อให้บอร์ด ESP32 หรือสมาร์ตโฟนของแอดมินและนักศึกษานอกห้องเรียนสามารถเข้าใช้งานผ่านอินเทอร์เน็ตได้ ต้องตั้งค่าเครือข่ายให้เปิดบริการสู่ภายนอก ดังนี้:
+
+#### ขั้นตอนที่ 1: การกำหนดหมายเลข IP โลคอลให้คงที่ (Static Local IP)
+ให้ล็อกอินเข้าอุปกรณ์เราเตอร์ประจำพื้นที่ ไปที่ตั้งค่า **DHCP Server -> Address Reservation** แล้วผูก Mac Address ของ Raspberry Pi เข้ากับหมายเลข IP ในวงแลนแบบคงที่ (เช่น `192.168.1.200`) เพื่อป้องกันไม่ให้เราเตอร์เปลี่ยน IP ของ Pi หลังปิดเครื่องใหม่
+
+#### ขั้นตอนที่ 2: การตั้งค่าเปิดพอร์ตบนเราเตอร์ (Port Forwarding)
+1. เข้าไปที่แดชบอร์ดของเราเตอร์ผ่านหน้าเว็บปกติ (เช่น `192.168.1.1`)
+2. ค้นหาเมนูการตั้งค่า **Port Forwarding**, **Virtual Server** หรือ **NAT**
+3. เพิ่มการตั้งค่าใหม่ (Rule):
+   * **พอร์ตภายนอก (External Port)**: `80` (HTTP) หรือ `3000`
+   * **พอร์ตภายใน (Internal Port)**: `3000` (พอร์ตเริ่มต้นของ Next.js)
+   * **IP ภายในเครื่อง (Internal IP)**: `192.168.1.200` (IP ของ Raspberry Pi)
+   * **โปรโตคอล (Protocol)**: `TCP` หรือ `BOTH`
+4. บันทึกและยอมรับค่า
+
+#### ขั้นตอนที่ 3: การตั้งค่า Dynamic DNS (DDNS) เพื่อรับการเปลี่ยน Public IP
+เนื่องจากผู้ให้บริการอินเทอร์เน็ตตามบ้าน (ISP) จะทำการสุ่มเปลี่ยนหมายเลข IP สาธารณะของคุณเป็นระยะ เพื่อความสะดวกในการติดต่อ เราจึงต้องผูก IP เข้ากับชื่อโดเมน:
+1. สมัครใช้งานบริการ DDNS ฟรี เช่น [DuckDNS](https://www.duckdns.org/), [No-IP](https://www.noip.com/)
+2. สร้างโดเมนย่อย เช่น `smartaccess.duckdns.org`
+3. ติดตั้งโปรแกรมอัปเดต DDNS บน Raspberry Pi (เช่น สคริปต์สั้นๆ ของ DuckDNS ใน crontab) เพื่ออัปเดต IP สาธารณะใหม่ขึ้นไปยังหน้าเว็บ DDNS ตลอดเวลา
+
+#### ขั้นตอนที่ 4: การตั้งค่า Reverse Proxy ด้วย Nginx และติดตั้ง SSL (HTTPS)
+เพื่อความปลอดภัยสูงสุดในการส่งผ่านโทเค็นผ่านเครือข่ายอินเทอร์เน็ต และเพื่อให้ PWA ทำงานได้อย่างสมบูรณ์ ต้องเปิดใช้งาน HTTPS:
+1. **ติดตั้ง Nginx Web Server**:
+   ```bash
+   sudo apt install -y nginx
+   ```
+2. **สร้างไฟล์คอนฟิก Reverse Proxy**:
+   ```bash
+   sudo nano /etc/nginx/sites-available/smartaccess
+   ```
+   วางข้อมูลบล็อกเซิร์ฟเวอร์ต่อไปนี้ (เปลี่ยนชื่อโดเมนเป็นของคุณ):
+   ```nginx
+   server {
+       listen 80;
+       server_name smartaccess.duckdns.org;
+
+       location / {
+           proxy_pass http://127.0.0.1:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
+   ```
+3. **เปิดใช้งานบล็อกคอนฟิกและรีโหลด Nginx**:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/smartaccess /etc/nginx/sites-enabled/
+   sudo rm /etc/nginx/sites-enabled/default # ลบคอนฟิกเริ่มต้นออก
+   sudo nginx -t # ตรวจความถูกต้องของไฟล์
+   sudo systemctl restart nginx
+   ```
+4. **ติดตั้งใบรับรอง SSL (HTTPS) ฟรีด้วย Let's Encrypt (Certbot)**:
+   ```bash
+   sudo apt install -y certbot python3-certbot-nginx
+   sudo certbot --nginx -d smartaccess.duckdns.org
+   ```
+   ทำตามขั้นตอนบนหน้าจอเพื่อตกลงรับสิทธิ์สร้างใบรับรองและสั่งรีไดเร็กต์พอร์ต 80 ไปยัง 443 (HTTPS) อัตโนมัติ ตอนนี้ระบบรันอย่างปลอดภัยผ่าน URL: `https://smartaccess.duckdns.org`
 
 ---
-
-
-<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-4"></a>
 ## 4. วิธีใช้งานเว็บสำหรับนักศึกษา
@@ -524,7 +696,7 @@ https://smartaccess-project.vercel.app/admin/login
 | ทำเนียบ & ประวัติเข้าออก | ค้นหานักศึกษา, เปิดประตูรายบุคคล, export PDF, ดู access logs |
 | ผู้ดูแลระบบ | เพิ่มหรือลบ admin, จัดการสิทธิ์ห้องเรียน |
 | ตั้งค่าระบบ & Webhook | ตั้งค่า Discord Webhook ส่วนกลาง 4 หมวดหมู่ |
-| สถานะเซิร์ฟเวอร์ & DB | ตรวจสอบสุขภาพระบบ, Database latency, Vercel deployment, API status, Memory |
+| สถานะเซิร์ฟเวอร์ & DB | ตรวจสอบสุขภาพระบบ, Database latency, Raspberry Pi deployment, API status, Memory |
 | คู่มือการใช้งานระบบ | คู่มือย่อใน dashboard |
 
 ### 5.4 อนุมัติคำขอ
@@ -1183,7 +1355,7 @@ erDiagram
 | ฟังก์ชัน | หน้าที่ | รายละเอียด |
 |---|---|---|
 | `readEnv(name)` | อ่านค่า env | trim ค่า, ลบ quote รอบนอกถ้ามี, คืน `undefined` ถ้าว่าง |
-| `readCaCert()` | อ่าน CA cert | อ่าน `SUPABASE_CA_CERT`, แปลง `\n`, กันค่า placeholder |
+| `readCaCert()` | อ่าน CA cert | อ่าน `PostgreSQL (Local)_CA_CERT`, แปลง `\n`, กันค่า placeholder |
 | `getPool()` | สร้าง PostgreSQL pool | ใช้ singleton บน `globalThis`, parse `POSTGRES_URL` หรือ env แยก, ตั้ง SSL, max pool, timeout และ keepAlive |
 | `initDatabase()` | สร้าง schema และ seed | สร้างตาราง, index, default settings, seed admin ตาม env, ป้องกัน seed default ใน production |
 | `clearSystemSettingsCache()` | ล้าง settings cache | ทำให้การอ่าน settings ครั้งถัดไปดึง DB ใหม่ |
@@ -1227,7 +1399,7 @@ Interface สำคัญ:
 | `getESP32Mode()` | บอกโหมดเชื่อมต่อ | คืน `mock`, `wokwi` หรือ `physical` |
 | `getESP32BaseUrl()` | คืน base URL | ใช้ `WOKWI_URL` หรือ `http://ESP32_IP:ESP32_PORT` |
 | `isPrivateLanUrl(url)` | ตรวจ LAN/private IP | ใช้แยก localhost, 192.168, 10, 172.16-31 |
-| `isCloudEnvironment()` | ตรวจ cloud runtime | ตรวจ env ของ Vercel/AWS/GCP |
+| `isCloudEnvironment()` | ตรวจ cloud runtime | ตรวจ env ของ Raspberry Pi/AWS/GCP |
 | `getESP32Url(roomCode)` | หา URL บอร์ดตามห้อง | อ่าน `room_ip_<room>` จาก settings, fallback ไป `BASE_URL` |
 | `fetchWithTimeout(url, options, timeoutMs)` | fetch พร้อม timeout | ใช้ `AbortController` กัน request ค้าง (ปัจจุบันเหลือใช้เฉพาะการ ping สถานะใน `getESP32Status`) |
 | `openDoor(studentId, roomCode)` | สั่งเปิดประตู | **Cloud-Only**: เขียน `room_cmd_<room> = unlock` ลง DB queue แล้ว return ทันที (<20ms) — ESP32 มาดึงคำสั่งเองตอน poll, mock mode ตอบสำเร็จทันที (ไม่มีการยิงคำสั่งตรงผ่าน LAN อีกแล้ว) |
@@ -1456,7 +1628,7 @@ Icon components ในไฟล์นี้ เช่น `ClockIcon`, `UsersIcon
 1. **เส้นทาง `/api/system/status` (ตรวจวัดสถานะระบบเชิงลึกสำหรับผู้ดูแลระบบ):**
    * **การควบคุมสิทธิ์:** จำกัดการเข้าถึงเฉพาะผู้ใช้ที่มีบทบาทระดับ `admin` หรือ `owner` เท่านั้น (ผ่านระบบตรวจสอบความปลอดภัย JWT Token)
    * **ข้อมูลที่ส่งคืน (Payload Response):**
-     * **ฐานข้อมูล (Database Metrics):** ความพร้อมใช้งานของ Supabase PostgreSQL, จำนวนแถวข้อมูลคำขอเข้าห้องเรียนทั้งหมด, ตัวเลขนับแถวประวัติจราจรคอมพิวเตอร์ และจำนวนตารางที่เปิดใช้งาน
+     * **ฐานข้อมูล (Database Metrics):** ความพร้อมใช้งานของ PostgreSQL (Local DB)QL, จำนวนแถวข้อมูลคำขอเข้าห้องเรียนทั้งหมด, ตัวเลขนับแถวประวัติจราจรคอมพิวเตอร์ และจำนวนตารางที่เปิดใช้งาน
      * **การเชื่อมต่อภายนอก (Discord Webhook Integration):** รายงานความก้าวหน้าและการเชื่อมต่อช่องสัญญาณเตือนของ Discord Webhook ว่าอยู่ในสถานะพร้อมสื่อสาร (Active) หรือไม่
      * **ระบบฮาร์ดแวร์และคิว (IoT Devices & Requests):** สถิติจำนวนคำขอค้างรออนุมัติแบบเรียลไทม์ และอุปกรณ์ฮาร์ดแวร์ ESP32 ทั้งหมดที่ลงทะเบียน
      * **การปฏิบัติตามกฎหมายคอมพิวเตอร์ (Log Retention Info):** สถานะการกวาดล้างข้อมูลและระบุขอบเขตเวลาจัดเก็บประวัติจราจร (สอดคล้องกับมาตรา 26 พ.ร.บ. ว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์ พ.ศ. 2550 ที่บังคับเก็บอย่างน้อย 90 วัน)
@@ -1464,8 +1636,8 @@ Icon components ในไฟล์นี้ เช่น `ClockIcon`, `UsersIcon
    * **การควบคุมสิทธิ์:** เปิดให้ดึงข้อมูลเป็นแบบกึ่งสาธารณะเพื่อรองรับการตรวจวัดระยะไกลโดยภายนอก (Uptime Checkers)
    * **ข้อมูลที่ส่งคืน (Payload Response):**
      * **สถานะความพร้อมการเชื่อมต่อ (System Status Check):** คืนค่าความสมบูรณ์ในการสื่อสาร `status: "healthy"` หรือ `status: "degraded"`
-     * **ความหน่วงเวลาฐานข้อมูล (Database Latency Ping):** วัดระยะเวลาเป็นมิลลิวินาที (ms) ที่ระบบเว็บเบื้องหลังใช้ในการตอบสนองกับ Supabase PostgreSQL Database (คำสั่ง `SELECT 1`) เพื่อประเมินประสิทธิภาพในสภาวะโหลดสูง
-     * **ข้อมูลสภาพแวดล้อมสัญจรรันไทม์ (Runtime info & Deployment):** แสดงรุ่นรันไทม์ของ Node.js, ปริมาณการใช้ทรัพยากรหน่วยความจำของเซิร์ฟเวอร์ และหมายเลข Vercel Deployment ID ล่าสุด เพื่อความคล่องตัวในการดีบักระหว่างการอัปเดตระบบ
+     * **ความหน่วงเวลาฐานข้อมูล (Database Latency Ping):** วัดระยะเวลาเป็นมิลลิวินาที (ms) ที่ระบบเว็บเบื้องหลังใช้ในการตอบสนองกับ PostgreSQL (Local DB)QL Database (คำสั่ง `SELECT 1`) เพื่อประเมินประสิทธิภาพในสภาวะโหลดสูง
+     * **ข้อมูลสภาพแวดล้อมสัญจรรันไทม์ (Runtime info & Deployment):** แสดงรุ่นรันไทม์ของ Node.js, ปริมาณการใช้ทรัพยากรหน่วยความจำของเซิร์ฟเวอร์ และหมายเลข Raspberry Pi Deployment ID ล่าสุด เพื่อความคล่องตัวในการดีบักระหว่างการอัปเดตระบบ
 
 ### 15.6 Logs และ PDF
 
@@ -1600,7 +1772,7 @@ flowchart TD
 | **Webhook** | URL ที่ใครส่ง POST มาจะทำงานบางอย่าง (Discord ใช้รับการแจ้งเตือน) |
 | **Serverless** | แนวคิดที่โค้ดวิ่งเฉพาะตอนมี request เข้ามา ไม่ต้องมี server เปิดค้าง |
 | **Edge CDN** | เครือข่ายเซิร์ฟเวอร์ทั่วโลกที่ cache ไฟล์ static ไว้ใกล้ผู้ใช้ |
-| **PostgreSQL** | ฐานข้อมูลเชิงสัมพันธ์ที่ใช้ในโปรเจกต์นี้ (Supabase host ให้) |
+| **PostgreSQL** | ฐานข้อมูลเชิงสัมพันธ์ที่ใช้ในโปรเจกต์นี้ (PostgreSQL (Local) host ให้) |
 | **TLS/SSL** | การเข้ารหัสการสื่อสารระหว่างเครื่อง (https:// คือ TLS) |
 
 ---
@@ -1632,8 +1804,8 @@ flowchart TB
         LIB6["lib/pdf.ts"]
     end
     subgraph L4["ชั้นที่ 4: Data / Infrastructure"]
-        DB[("PostgreSQL @ Supabase")]
-        CDN[["Vercel Edge CDN"]]
+        DB[("PostgreSQL บน Raspberry Pi")]
+        CDN[["Nginx Web Server"]]
         HW["Relay + Lock"]
     end
     UI1 --> API1
@@ -1656,7 +1828,7 @@ flowchart TB
     FW --> HW
 ```
 
-แต่ละชั้นมีหน้าที่ไม่ทับกัน เปลี่ยน implementation ได้โดยไม่กระทบชั้นอื่น (เช่น ถ้าจะย้ายจาก Supabase → PlanetScale แค่แก้ `lib/db.ts`)
+แต่ละชั้นมีหน้าที่ไม่ทับกัน เปลี่ยน implementation ได้โดยไม่กระทบชั้นอื่น (เช่น ถ้าจะย้ายจาก PostgreSQL (Local) → PlanetScale แค่แก้ `lib/db.ts`)
 
 ---
 
@@ -1734,7 +1906,7 @@ flowchart TD
     F --> G[POST /api/students/:id/approve]
     G --> H["refetchPending"]
 ```
-**ทำไม polling 10 วินาที?** — ไม่ใช้ WebSocket เพราะ Vercel Serverless ไม่เหมาะ long-lived connection; 10 วินาทีเพียงพอกับงานอนุมัติคนเดียวกดทีละครั้ง
+**ทำไม polling 10 วินาที?** — ไม่ใช้ WebSocket เพราะ Next.js บน Raspberry Pi ไม่เหมาะ long-lived connection; 10 วินาทีเพียงพอกับงานอนุมัติคนเดียวกดทีละครั้ง
 
 ### 23.2 แท็บ "ทำเนียบและประวัติ"
 - ค้นหา: SQL `WHERE first_name ILIKE $1 OR student_id ILIKE $1` (มี index บน `student_id`)
@@ -1775,7 +1947,7 @@ flowchart TD
 แท็บสถานะเซิร์ฟเวอร์แสดงข้อมูลสุขภาพระบบแบบเรียลไทม์ แบ่งเป็น 4 ส่วนย่อย:
 
 1. **ภาพรวม (Overview)**: แสดงสถานะฐานข้อมูล (Online/Offline + Latency), Rate Limiter, Memory (RSS/Heap), เวลาเซิร์ฟเวอร์, QR Scan ล่าสุด, สภาพแวดล้อมการทำงาน (Production/Development)
-2. **Vercel**: แสดงข้อมูล Runtime (Region, Git SHA, Git Branch), สถานะ Deployment ล่าสุด (URL, เวลาสร้าง, Git commit), ต้องตั้งค่า VERCEL_TOKEN และ VERCEL_PROJECT_ID
+2. **Vercel**: แสดงข้อมูล Runtime (Region, Git SHA, Git Branch), สถานะ Deployment ล่าสุด (URL, เวลาสร้าง, Git commit), ต้องตั้งค่า Raspberry Pi_TOKEN และ Raspberry Pi_PROJECT_ID
 3. **API Status**: ทดสอบความเร็ว (Latency) ของ API endpoints หลักอัตโนมัติ พร้อม Progress bar แสดงผล
 4. **Runtime**: ข้อมูล Node.js version, Platform, Architecture, Process uptime, Memory breakdown แบบกราฟ
 
@@ -1826,7 +1998,7 @@ stateDiagram-v2
 ```cpp
 HTTPClient http;
 WiFiClientSecure *client = new WiFiClientSecure;
-client->setCACert(root_ca_cert);        // ทำไม? เพราะ Supabase/Vercel ใช้ TLS, ต้องตรวจ cert
+client->setCACert(root_ca_cert);        // ทำไม? เพราะ PostgreSQL (Local)/Raspberry Pi ใช้ TLS, ต้องตรวจ cert
 http.begin(*client, server_url);
 http.setTimeout(1200);                   // 1.2 วิ — เกินกว่านี้ตัดทิ้ง กัน UI ค้าง
 http.addHeader("x-api-key", api_key);    // server ตรวจ header นี้ใน lib/api-security.ts
@@ -1864,11 +2036,11 @@ tone(BUZZER_PIN, 2000, 200);
 ```mermaid
 sequenceDiagram
     participant B as Browser
-    participant V as Vercel Edge
+    participant V as Raspberry Pi Edge
     participant F as Next.js Function (Node)
     participant RL as lib/rate-limit.ts
     participant QR as lib/qr.ts
-    participant DB as Supabase Postgres
+    participant DB as PostgreSQL (Local DB)
     participant D as Discord
     participant E as ESP32 (poll)
     B->>V: POST /api/students (JSON form)
@@ -1918,115 +2090,92 @@ return NextResponse.json({...})                                    // ตอบ 
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-27"></a>
-## 27. Supabase ทำอะไรในระบบนี้ (เจาะลึก)
+## 27. PostgreSQL บน Raspberry Pi (เจาะลึก)
 
 ```mermaid
 flowchart TD
-    subgraph Supabase
-        PG[("PostgreSQL 15<br/>+ pgBouncer pool")]
-        AUTH["Supabase Auth (ไม่ได้ใช้)"]
-        STO["Supabase Storage (ไม่ได้ใช้)"]
-        EDGE["Edge Functions (ไม่ได้ใช้)"]
+    subgraph RaspberryPi["Raspberry Pi (Local Host)"]
+        NA["Next.js Web App"] -->|"pg node-postgres<br/>localhost:5432"| PG[("PostgreSQL Database<br/>(Local Storage)")]
+        CRON["Auto Backup Cron<br/>(Daily pg_dump)"] -.->|"dump"| PG
     end
-    NA["Next.js (Vercel)"] -->|"pg + TLS<br/>raw SQL"| PG
-    NA -.->|"ไม่ใช้"| AUTH
-    NA -.->|"ไม่ใช้"| STO
-    NA -.->|"ไม่ใช้"| EDGE
+    ESP["ESP32 Controllers"] -->|"HTTPS APIs"| NA
 ```
 
-| สิ่งที่ใช้ | สิ่งที่ไม่ใช้ |
-|----------|---------------|
-| ✅ PostgreSQL (เก็บข้อมูลทั้งหมด) | ❌ Supabase Auth (เราใช้ JWT เอง) |
-| ✅ Connection Pooling (pgBouncer) | ❌ Row-Level Security (ใช้ JWT verify ใน API แทน) |
-| ✅ SSL/TLS certificate | ❌ Realtime subscriptions |
-| ✅ Backup อัตโนมัติ (Supabase ให้ฟรี) | ❌ Supabase Storage |
+ในระบบนี้ เราใช้ระบบฐานข้อมูลเชิงสัมพันธ์ **PostgreSQL** แบบดั้งเดิมติดตั้งลงบน Raspberry Pi โดยตรงเพื่อทำหน้าที่เป็นสมองความจำหลักเก็บข้อมูลทั้งหมดของระบบ แทนการพึ่งพาบริการคลาวด์ภายนอก เช่น PostgreSQL (Local) ส่งผลให้การพัฒนาและติดตั้งมีลักษณะกะทัดรัดและปลอดภัยจากการถูกดักข้อมูลระหว่างเครือข่าย
 
-### 27.1 ทำไมไม่ใช้ Supabase JS Client?
-- โปรเจกต์ใช้ `pg` (node-postgres) + raw SQL → **performance ดีกว่า** เพราะคุม query ได้เอง
-- ใช้ `EXPLAIN ANALYZE` ตรวจ index ได้ตรง ๆ
-- Supabase JS client มี overhead ของ PostgREST translation
+### 27.1 ประสิทธิภาพที่ดีขึ้นของการทำงานแบบ Local DB
+1. **Network Latency เป็นศูนย์ (Zero Latency)**: เนื่องจาก Next.js และ PostgreSQL รันอยู่ในฮาร์ดแวร์ Raspberry Pi เครื่องเดียวกัน ความหน่วงเวลาในการส่งข้อมูลไปกลับระหว่างแอปพลิเคชันกับฐานข้อมูลจึงอยู่ในระดับไมโครวินาที (Microseconds) เทียบกับเดิมที่ส่งผ่านเครือข่าย WAN ไปยังเซิร์ฟเวอร์ PostgreSQL (Local) ที่ต่างประเทศซึ่งเฉลี่ย 40-60 มิลลิวินาที
+2. **ขจัดข้อจำกัดเรื่อง Connection Limit**: เดิมทีบนคลาวด์เซิร์ฟเวอร์เลสจำเป็นต้องใช้ตัวจัดการพูลอย่าง pgBouncer ในการลดการสร้าง Connection ใหม่บ่อยๆ แต่เมื่อรันเป็นเซิร์ฟเวอร์ถาวร (Persistent) บน Raspberry Pi เราสามารถตั้งค่า Connection Pool (`POSTGRES_POOL_MAX=20`) ใน Next.js ให้เชื่อมต่อกับ PostgreSQL ค้างไว้ได้ตลอดเวลา ขจัดปัญหา Connection Exhaustion และ overhead ในการจับคู่แฮนด์เชก
 
-### 27.2 Connection Strategy
-- **Pooled URL** (`POSTGRES_URL` กับ `?pgbouncer=true`) → ใช้กับ query ปกติ (เพราะ Vercel serverless เปิด connection บ่อย)
-- **Direct URL** → ใช้กับ DDL/migration (pgBouncer ไม่รองรับ prepared statement บางแบบ)
+### 27.2 การปรับปรุงประสิทธิภาพฐานข้อมูลบน Raspberry Pi (Tuning & Lifetime Extension)
+เนื่องจาก Raspberry Pi มักใช้การเก็บข้อมูลลงใน MicroSD Card ซึ่งมีความเร็วในการเขียนอ่านจำกัดและอาจเสื่อมสภาพได้เร็วกว่าปกติจากการเขียนข้อมูลบ่อยๆ ขอแนะนำให้ดำเนินการตามคำแนะนำด้านความทนทานต่อไปนี้:
 
-### 27.3 SQL ที่น่าสนใจในระบบ
-```sql
--- Atomic token consume (กัน race condition)
-UPDATE dynamic_qr_tokens
-SET is_consumed = TRUE, consumed_at = NOW()
-WHERE token = $1
-  AND is_consumed = FALSE
-  AND expires_at > NOW()
-RETURNING id, room_code;
+1. **การปรับแต่งไฟล์คอนฟิก PostgreSQL (`postgresql.conf`) สำหรับฮาร์ดแวร์ที่จำกัด**:
+   เปิดไฟล์แก้ไขคอนฟิก:
+   ```bash
+   sudo nano /etc/postgresql/<version>/main/postgresql.conf
+   ```
+   * ปรับค่าหน่วยความจำชั่วคราวให้เหมาะกับ RAM 4GB หรือ 8GB:
+     * `shared_buffers = 1GB` (แนะนำที่ 25% ของปริมาณ RAM ทั้งหมด)
+     * `work_mem = 16MB`
+     * `maintenance_work_mem = 256MB`
+     * `effective_cache_size = 3GB`
+   * ลดภาระการเขียนบันทึกไฟล์วารสารการทำงาน (WAL) เพื่อถนอมอายุการใช้งาน MicroSD Card:
+     * `wal_buffers = 16MB`
+     * `checkpoint_completion_target = 0.9`
+     * `checkpoint_timeout = 15min` (เพิ่มเวลาระหว่างเช็คพอยต์ลดความถี่การเขียนดิสก์)
 
--- Upsert หลาย setting ในครั้งเดียว
-INSERT INTO system_settings (setting_key, setting_value)
-SELECT * FROM UNNEST($1::text[], $2::text[])
-ON CONFLICT (setting_key) DO UPDATE
-SET setting_value = EXCLUDED.setting_value,
-    updated_at = NOW();
+2. **การย้ายโฟลเดอร์ฐานข้อมูลไปยัง External USB SSD**:
+   หากต้องการรันระบบที่มีทราฟฟิกสูง แนะนำให้ติดตั้งไดรฟ์ SSD ภายนอกเชื่อมต่อผ่านพอร์ต USB 3.0 และย้ายโฟลเดอร์เก็บข้อมูล PostgreSQL จากการ์ด SD Card ไปรันบนไดรฟ์ SSD แทน ซึ่งให้ความเร็วและมีความทนทานต่อการเสียหายของข้อมูลสูงกว่ามาก
 
--- Rate limit แบบ atomic
-INSERT INTO rate_limits (key, count, window_start)
-VALUES ($1, 1, NOW())
-ON CONFLICT (key) DO UPDATE
-SET count = CASE
-    WHEN rate_limits.window_start < NOW() - $2::interval THEN 1
-    ELSE rate_limits.count + 1
-  END,
-  window_start = CASE
-    WHEN rate_limits.window_start < NOW() - $2::interval THEN NOW()
-    ELSE rate_limits.window_start
-  END
-RETURNING count;
-```
+3. **การตั้งค่าระบบสำรองข้อมูลอัตโนมัติ (Daily Backup Script)**:
+   สร้างสคริปต์สั้นๆ ใน Raspberry Pi เพื่อดัมป์ข้อมูลฐานข้อมูลออกมาทุกๆ เที่ยงคืน ป้องกันภัยพิบัติข้อมูลสูญหาย:
+   ```bash
+   sudo nano /opt/backup_db.sh
+   ```
+   ใส่รหัสคำสั่งดัมป์:
+   ```bash
+   #!/bin/bash
+   BACKUP_DIR="/home/pi/backups"
+   mkdir -p \$BACKUP_DIR
+   FILENAME="smartaccess_\$(date +%Y%m%d_%H%M%S).sql"
+   pg_dump -U smart_user -d smartaccess -h localhost > \$BACKUP_DIR/\$FILENAME
+   # ลบไฟล์เก่าเกิน 30 วัน
+   find \$BACKUP_DIR -type f -name "*.sql" -mtime +30 -delete
+   ```
+   สั่งตั้งสิทธิ์ให้สคริปต์รันได้: `sudo chmod +x /opt/backup_db.sh` จากนั้นผูกการรันกับระบบ `crontab -e`:
+   ```text
+   0 0 * * * /opt/backup_db.sh
+   ```
 
 ---
-
-
-<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-28"></a>
-## 28. Vercel ทำอะไรกับ my-app (เจาะลึก)
+## 28. การรัน Next.js บน Raspberry Pi (เจาะลึก)
 
 ```mermaid
-flowchart TB
-    DEV["git push main"] --> GH["GitHub Repo"]
-    GH -->|"webhook"| VB["Vercel Build"]
-    VB --> NB["next build (Turbopack)"]
-    NB --> ART["Build Artifact<br/>(static + serverless bundles)"]
-    ART --> CDN["Edge CDN (global)"]
-    ART --> FN["Serverless Functions"]
-    USER["ผู้ใช้"] --> CDN
-    CDN -->|"static (HTML/CSS/JS)"| USER
-    USER -->|"/api/*"| FN
-    FN -->|"pg connection"| SB[("Supabase")]
-    ENV["Env Vars (Dashboard)"] --> FN
-    DOMAIN["Custom Domain + HTTPS auto"] --> CDN
+flowchart TD
+    CLIENT["ผู้ใช้ / ESP32"] -->|"HTTP/HTTPS"| NGINX["Nginx Web Server<br/>(Reverse Proxy Port 80/443)"]
+    NGINX -->|"Local Network forwarding"| PM2["PM2 daemon<br/>(Next.js App Port 3000)"]
+    PM2 -->|"Node.js Server"| DB[("PostgreSQL Local")]
 ```
 
-### 28.1 สิ่งที่ Vercel ทำให้ฟรี
-1. **HTTPS อัตโนมัติ** — สร้าง Let's Encrypt cert ให้
-2. **Edge CDN** — cache static assets ทั่วโลก (รวมถึง favicon, _next/static/*)
-3. **Preview deployment** — ทุก PR ได้ URL ใหม่
-4. **Rollback** — กลับไป build เก่าได้ใน 1 คลิก
-5. **Logs** — ดู runtime log ของ serverless function ได้
-6. **Analytics** — Core Web Vitals (LCP, FID, CLS)
+การทำงานของระบบฝั่งเว็บ Next.js เมื่อเปลี่ยนจากการบริการคลาวด์ Serverless บน Raspberry Pi มารันบนบอร์ดคอมพิวเตอร์ขนาดเล็กอย่าง Raspberry Pi จะเปลี่ยนสถาปัตยกรรมจากการปลุกประมวลผลเป็นครั้งคราว (On-demand/Serverless) มาเป็นสถาปัตยกรรมเซิร์ฟเวอร์แบบพร้อมบริการตลอดเวลา (Persistent Stateful Server)
 
-### 28.2 ข้อจำกัดที่ต้องระวัง
-| ข้อจำกัด | กระทบอย่างไร | วิธีแก้ในโปรเจกต์ |
-|----------|----------------|---------------------|
-| Function timeout 10s (Hobby) | export PDF ใหญ่อาจ timeout | จำกัดช่วงวันที่, pagination |
-| Cold start ~300-800ms | request แรกหลัง idle ช้า | ใช้ ping cron / Edge runtime |
-| 4.5MB body limit | upload ไฟล์ใหญ่ไม่ได้ | ไม่ได้ใช้ upload ในระบบนี้ |
-| ไม่มี long-lived process | ใช้ in-memory cache ระวัง | settings cache 30s โอเคเพราะ stateless |
-| ไม่มี filesystem persist | เขียนไฟล์ไม่ได้ | ทุกอย่างเก็บใน DB |
+### 28.1 ข้อดีของการรัน Next.js แบบ Local บน Raspberry Pi
+1. **ขจัดสภาวะทำงานครั้งแรกที่ช้า (No Cold Start)**: ในระบบ Serverless ของ Raspberry Pi หากไม่มีการเรียกใช้งานระบบระยะหนึ่ง ตัวประมวลผลจะเข้าสู่สภาวะหลับ ส่งผลให้การเชื่อมต่อครั้งแรกมีระยะเวลานาน (300-800ms) แต่การรัน Next.js บน Raspberry Pi เป็น Node.js รันไทม์ที่ทำงานค้างไว้ใน RAM ของระบบ ส่งผลให้ตอบสนองทันทีแบบ Real-time ทุกความถี่คำขอ
+2. **ขจัดขีดจำกัดด้านเวลาประมวลผล (No Timeout Limit)**: Raspberry Pi Free tier จะจำกัดเวลาประมวลผลของฟังก์ชัน API ไว้ไม่เกิน 10 วินาที ซึ่งทำให้เกิดความเสี่ยงในการออกรายงานเอกสาร PDF ขนาดใหญ่ที่มีรายการล็อกจราจรนับหมื่นแถว การย้ายมารันบน Raspberry Pi ตัวเซิร์ฟเวอร์จะไม่มีขีดจำกัดเวลา Timeout นี้ สามารถใช้เวลาประมวลผลรายงานขนาดใหญ่ได้อย่างอิสระ
+3. **การเข้าถึงระบบไฟล์ได้อย่างอิสระ (Local Filesystem Persistence)**: เซิร์ฟเวอร์ Next.js สามารถอ่านหรือเขียนไฟล์ลงระบบของ Raspberry Pi ได้ตรงๆ (เช่น บันทึกไฟล์รูปภาพคิวอาร์ที่แชร์ชั่วคราว, บันทึกการแคชข้อมูลของแอปพลิเคชัน) ซึ่งบน Raspberry Pi ไม่อนุญาตให้เขียนบันทึกไฟล์ชั่วคราวใดๆ
+
+### 28.2 สิ่งที่ต้องบริหารจัดการเพิ่มเติมเมื่อทำระบบ Self-Host บน Raspberry Pi
+| หัวข้อท้าทาย | รายละเอียดผลกระทบ | วิธีการจัดการในโครงการนี้ |
+|-------------|-------------------|-------------------------|
+| **การหมุนเวียนจัดเก็บไฟล์ LOG (Log Accumulation)** | PM2 จะบันทึก stdout และ stderr ทุกข้อความลงดิสก์ หากไม่ลบอาจทำความจุ MicroSD Card เต็ม | ติดตั้งปลั๊กอิน `pm2-logrotate` เพื่อบีบอัดและลบไฟล์ล็อกเก่าโดยอัตโนมัติเมื่อขนาดไฟล์เกินกำหนด |
+| **การกระจายเนื้อหาสแตติก (Static Assets & CDN)** | ไม่มี Edge CDN คอยแคชไฟล์ CSS/JS และรูปภาพให้ผู้ใช้ภายนอกทั่วโลก | ใช้ Nginx ในการทำหน้าที่เป็นตัวแคชไฟล์สแตติกหลักที่เครื่อง เพื่อลดภาระการประมวลผลโดยตรงของ Next.js |
+| **ความมั่นคงปลอดภัยและการโจมตี (DDoS & Security)** | ไม่มีไฟร์วอลล์ความปลอดภัย L7 คลาวด์ช่วยป้องกันคำขอก่อกวน | ติดตั้งไฟร์วอลล์พื้นฐานด้วย `ufw` เปิดเฉพาะพอร์ตที่จำเป็น (80, 443, 22) และใช้ระบบจำกัดอัตราคำขอ (Rate Limiting) ที่ติดมากับตัวโค้ด (`lib/rate-limit.ts`) |
+| **ความเสถียรของโปรเซสทำงาน (Process Resiliency)** | หากเซิร์ฟเวอร์ Next.js เกิดข้อผิดพลาดร้ายแรงและ crash ระบบจะเปิดให้บริการไม่ได้ | ใช้ระบบเฝ้าระวังโปรเซสของ PM2 คอยปลุกบริการ Next.js คืนกลับมาทำงานแบบอัตโนมัติภายในเสี้ยววินาที |
 
 ---
-
-
-<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-29"></a>
 ## 29. เปรียบเทียบ: ทำไมบางส่วนเร็ว / บางส่วนช้า
@@ -2059,7 +2208,7 @@ flowchart TD
 | อ่าน system_settings | 0-5ms | in-memory cache 30s | เพิ่ม TTL ถ้าข้อมูลนิ่งกว่านี้ |
 | Rate limit query | ~5ms | 1 SQL `INSERT ON CONFLICT` | คงไว้ — race-condition safe |
 | Login (bcrypt) | ~70ms | bcrypt cost 10 รอบ | ลด cost = ไม่ปลอดภัย, อย่าลด |
-| Cold start | 300-800ms | Vercel ปลุก Node runtime + load module | ping cron ทุก 5 นาที / ย้ายไป Edge runtime |
+| Cold start | 300-800ms | Raspberry Pi ปลุก Node runtime + load module | ping cron ทุก 5 นาที / ย้ายไป Edge runtime |
 | ESP32 polling delay | 0-2000ms | poll ทุก 2s เป็น worst case | ลด poll interval = traffic เพิ่ม |
 | เขียนคำสั่ง unlock ลง DB queue | 15-20ms | `INSERT ... ON CONFLICT` 1 statement แล้ว return ทันที | คงไว้ — เป็น ground truth (Cloud-Only) |
 | Export PDF 1000 row | 1500-3000ms | pdfkit render + font + DB query | ใช้ stream + cache font |
@@ -2072,7 +2221,7 @@ flowchart TD
 1. **อ่านบ่อย → cache** (settings 30s, JWT in-memory)
 2. **เขียน critical แล้ว fire-and-forget ส่วนที่เหลือ** (เขียนคำสั่งลง DB queue ก่อน แล้วค่อย Discord/log แบบ fire-and-forget)
 3. **Atomic SQL แทน multi-step transaction** (consume token, rate-limit)
-4. **Static asset ไปทาง CDN** (Vercel จัดการอัตโนมัติ)
+4. **Static asset ไปทาง CDN** (Raspberry Pi จัดการอัตโนมัติ)
 5. **Index ที่ถูกจุด**: `students.status`, `students.student_id`, `access_logs.created_at DESC`, `dynamic_qr_tokens.token UNIQUE`
 6. **Connection pooling** ผ่าน pgBouncer ลด TLS handshake
 
@@ -2179,7 +2328,7 @@ flowchart TB
         EDGE["Edge: HTTPS termination<br/>+ CDN cache"]
         FN["Serverless Function<br/>+ JWT verify<br/>+ Rate limit<br/>+ API-key check"]
     end
-    subgraph CloudSB["Cloud (Supabase)"]
+    subgraph CloudSB["Cloud (PostgreSQL (Local))"]
         PG[("PostgreSQL<br/>TLS only")]
     end
     BR -->|"HTTPS 443<br/>+ httpOnly cookie"| EDGE
@@ -2193,7 +2342,7 @@ flowchart TB
 
 ### 31.1 ชั้นการป้องกัน (Defense in Depth)
 1. **Network**: HTTPS ทุกฝั่ง, ESP32 → server ใช้ TLS + custom CA verify
-2. **API Gateway**: Vercel filter DDoS เบื้องต้น
+2. **API Gateway**: Raspberry Pi filter DDoS เบื้องต้น
 3. **Auth**: JWT HS256 + httpOnly cookie (กัน XSS) + sameSite=lax (กัน CSRF)
 4. **Authorization**: ตรวจ role ทุก endpoint (`owner` vs `door_operator`)
 5. **Input validation**: sanitize ทุก field + regex รหัสนักศึกษา
@@ -2217,7 +2366,7 @@ flowchart TB
 | Insider abuse (admin) | ⚠️ | audit log แต่ไม่ป้องกันการกระทำ |
 | Physical tampering (ตัดสาย relay) | ❌ | ต้องใส่ tamper switch + กล่องล็อก |
 | Lost cookie จากเครื่อง admin | ⚠️ | JWT หมดอายุใน 8 ชม. |
-| DDoS ใหญ่ | ⚠️ | Vercel มี basic protection แต่ไม่กัน L7 หนัก ๆ |
+| DDoS ใหญ่ | ⚠️ | Raspberry Pi มี basic protection แต่ไม่กัน L7 หนัก ๆ |
 
 ---
 
@@ -2281,7 +2430,7 @@ flowchart TD
 ## 33. คำถามที่พบบ่อย (FAQ)
 
 **Q1: ทำไมไม่ใช้ WebSocket แทน Polling?**
-A: Vercel Serverless ไม่รองรับ long-lived connection ดี + ESP32 อยู่หลัง NAT มหาวิทยาลัย, server เรียกตรงไม่ได้เสมอ → polling เรียบง่ายและ debug ง่าย
+A: Next.js บน Raspberry Pi ไม่รองรับ long-lived connection ดี + ESP32 อยู่หลัง NAT มหาวิทยาลัย, server เรียกตรงไม่ได้เสมอ → polling เรียบง่ายและ debug ง่าย
 
 **Q2: ทำไมเก็บคำสั่งเปิดประตูใน `system_settings` แทนตารางเฉพาะ?**
 A: `room_cmd_<room>` คือ key/value ใช้ตารางเดียวกันกับ settings ลดความซับซ้อน + ESP32 อ่าน settings เดียวกันได้ทั้งคำสั่งและ config
@@ -2298,7 +2447,7 @@ A: ได้ถ้าทำเร็วพอ (< 60 วินาที) แต�
 **Q5: ทำไม dashboard เป็นไฟล์เดียว 5,620 บรรทัด?**
 A: เพราะใช้ state เดียวร่วมกันทุก tab (`pending`, `students`, `logs`, `settings`) — ถ้าแยก route ต้อง lift state ขึ้น context หรือ Zustand ในอนาคตควรแยกเพื่อลด JS bundle
 
-**Q6: PostgreSQL บน Supabase หาย ระบบจะเป็นยังไง?**
+**Q6: PostgreSQL บน PostgreSQL (Local) หาย ระบบจะเป็นยังไง?**
 A: API ทั้งหมดจะ 500 + ESP32 polling ไม่ได้ข้อมูล → จอจะค้าง state สุดท้าย (ไม่มีการเปิดประตูใหม่) → ปลอดภัยแบบ "fail-secure"
 
 **Q7: เพิ่มห้องใหม่ทำยังไง?**
@@ -2319,7 +2468,7 @@ A: `room_code` = ห้องที่ ESP32 ตัวนี้รับผิ�
 <a id="sec-34"></a>
 ## 34. สรุปแบบ "1 นาที"
 
-> Innovative system for managing access rights and controlling classroom access via wireless network คือระบบที่ทำให้นักศึกษา **สแกน QR ที่จอหน้าห้อง → กรอกข้อมูล → ประตูเปิดอัตโนมัติ** (หรือรอ admin อนุมัติ) โดยมี Next.js เป็นสมอง, Supabase PostgreSQL เป็นความจำ, ESP32 เป็นมือ-ตา-หู, และ Discord เป็นปาก
+> Innovative system for managing access rights and controlling classroom access via wireless network คือระบบที่ทำให้นักศึกษา **สแกน QR ที่จอหน้าห้อง → กรอกข้อมูล → ประตูเปิดอัตโนมัติ** (หรือรอ admin อนุมัติ) โดยมี Next.js เป็นสมอง, PostgreSQL (Local DB)QL เป็นความจำ, ESP32 เป็นมือ-ตา-หู, และ Discord เป็นปาก
 >
 > ทุกการสื่อสารเป็น HTTPS, ทุก action ถูก log, ทุก credential ถูก hash/sign, และทุกการเปิดประตูใช้ token แบบ one-time ที่หมุนทุก 60 วินาที — เพื่อให้สมดุลระหว่าง **ใช้งานง่าย** กับ **ปลอดภัยตามมาตรฐาน พ.ร.บ. คอมพิวเตอร์ พ.ศ. 2560**
 
@@ -2333,7 +2482,7 @@ A: `room_code` = ห้องที่ ESP32 ตัวนี้รับผิ�
 <a id="sec-35"></a>
 ## 35. Schema DDL เต็มรูปแบบ (สร้างโดย `initDatabase()`)
 
-> ⚠️ **สำคัญ — เมื่อใช้ `SKIP_DB_INIT=true`**: เมื่อตั้ง env นี้ ระบบจะ**ข้าม** `initDatabase()` ทั้งหมดตอน start (ไม่สร้างตาราง/index/seed ใด ๆ) เพื่อตัด ~25 DDL/cold start ดังนั้นต้องรัน DDL ชุดนี้ใน Supabase SQL Editor **ครั้งเดียวด้วยตนเอง** ให้ครบก่อน แล้วจึงตั้ง `SKIP_DB_INIT=true`. DDL ด้านล่างนี้ idempotent (รันซ้ำได้ ปลอดภัย) และตรงกับ `lib/db.ts` ทุกประการ
+> ⚠️ **สำคัญ — เมื่อใช้ `SKIP_DB_INIT=true`**: เมื่อตั้ง env นี้ ระบบจะ**ข้าม** `initDatabase()` ทั้งหมดตอน start (ไม่สร้างตาราง/index/seed ใด ๆ) เพื่อตัด ~25 DDL/cold start ดังนั้นต้องรัน DDL ชุดนี้ใน PostgreSQL (Local) SQL Editor **ครั้งเดียวด้วยตนเอง** ให้ครบก่อน แล้วจึงตั้ง `SKIP_DB_INIT=true`. DDL ด้านล่างนี้ idempotent (รันซ้ำได้ ปลอดภัย) และตรงกับ `lib/db.ts` ทุกประการ
 
 ```sql
 -- 1) ตารางผู้ดูแลระบบ
@@ -2676,7 +2825,7 @@ T+4100    | resetCache → loop() ปกติ
 <a id="sec-37"></a>
 ## 37. รายการ Environment Variables ทุกตัว
 
-> ตารางนี้อ้างอิงตามไฟล์ `my-app/.env.local` จริง คอลัมน์ "โค้ดอ่าน?" ระบุว่า source code มีการอ่านตัวแปรนั้นจริงหรือไม่ (บางตัวที่ Supabase Integration ใส่มาให้อัตโนมัติ แอปไม่ได้อ่าน — เก็บไว้ได้แต่ไม่จำเป็น)
+> ตารางนี้อ้างอิงตามไฟล์ `my-app/.env.local` จริง คอลัมน์ "โค้ดอ่าน?" ระบุว่า source code มีการอ่านตัวแปรนั้นจริงหรือไม่ (บางตัวที่ PostgreSQL (Local) Integration ใส่มาให้อัตโนมัติ แอปไม่ได้อ่าน — เก็บไว้ได้แต่ไม่จำเป็น)
 
 #### กลุ่ม 1 — ฐานข้อมูล (Database Connection)
 
@@ -2685,8 +2834,8 @@ T+4100    | resetCache → loop() ปกติ
 | `POSTGRES_URL` | ✅ **หลัก** | ✅ `lib/db.ts` | connection string หลัก (pooler 6543) — `lib/db.ts` parse host/user/password/database/port จากตัวนี้ก่อน |
 | `POSTGRES_HOST` `POSTGRES_USER` `POSTGRES_PASSWORD` `POSTGRES_DATABASE` `POSTGRES_PORT` | ทางเลือก | ✅ fallback | ใช้เมื่อไม่ได้ตั้ง `POSTGRES_URL` (db.ts อ่านเป็น fallback) |
 | `POSTGRES_POOL_MAX` | ทางเลือก | ✅ `lib/db.ts` | ขนาด pool สูงสุด (ค่าเริ่มต้น 5) — สำคัญบน serverless |
-| `SUPABASE_CA_CERT` | ทางเลือก | ✅ `lib/db.ts` | PEM cert สำหรับ TLS verify (ใส่ `\n` คั่นบรรทัด) |
-| `POSTGRES_URL_NON_POOLING` `POSTGRES_PRISMA_URL` | — | ❌ ไม่อ่าน | Supabase Integration ใส่มาให้ — โค้ดปัจจุบันไม่ได้ใช้ |
+| `PostgreSQL (Local)_CA_CERT` | ทางเลือก | ✅ `lib/db.ts` | PEM cert สำหรับ TLS verify (ใส่ `\n` คั่นบรรทัด) |
+| `POSTGRES_URL_NON_POOLING` `POSTGRES_PRISMA_URL` | — | ❌ ไม่อ่าน | PostgreSQL (Local) Integration ใส่มาให้ — โค้ดปัจจุบันไม่ได้ใช้ |
 
 #### กลุ่ม 2 — ความปลอดภัย/Secret (บังคับ)
 
@@ -2695,9 +2844,9 @@ T+4100    | resetCache → loop() ปกติ
 | `JWT_SECRET` | ✅ | ✅ `lib/auth.ts` | ≥ 32 chars; **throw ทันทีถ้าไม่ตั้ง** (ไม่มี fallback) |
 | `QR_SIGNING_KEY` | ✅ | ✅ `lib/qr.ts` | sign offline grant ด้วย HMAC; **throw ถ้าไม่ตั้ง** (ไม่ fallback ไป `JWT_SECRET` แล้ว) |
 | `ESP32_API_KEY` | ✅ | ✅ `lib/esp32.ts` | ต้องตรงกับ `api_key` ใน `config.h`; production ห้ามใช้ placeholder |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅* | ✅ `api/esp32/display` | ใช้ตอนอัปโหลด/ดึงไฟล์ firmware ผ่าน Supabase Storage |
-| `NEXT_PUBLIC_SUPABASE_URL` | ✅* | ✅ `api/esp32/display` | project URL ของ Supabase (ใช้คู่กับ service role) |
-| `SUPABASE_ANON_KEY` `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` `SUPABASE_JWT_SECRET` `SUPABASE_SECRET_KEY` | — | ❌ ไม่อ่าน | Supabase Integration ใส่มาให้ — โค้ดปัจจุบันไม่ได้ใช้ (ใช้ `pg` ต่อตรง ไม่ผ่าน Supabase JS) |
+| `PostgreSQL (Local)_SERVICE_ROLE_KEY` | ✅* | ✅ `api/esp32/display` | ใช้ตอนอัปโหลด/ดึงไฟล์ firmware ผ่าน PostgreSQL (Local) Storage |
+| `NEXT_PUBLIC_PostgreSQL (Local)_URL` | ✅* | ✅ `api/esp32/display` | project URL ของ PostgreSQL (Local) (ใช้คู่กับ service role) |
+| `PostgreSQL (Local)_ANON_KEY` `NEXT_PUBLIC_PostgreSQL (Local)_PUBLISHABLE_KEY` `PostgreSQL (Local)_JWT_SECRET` `PostgreSQL (Local)_SECRET_KEY` | — | ❌ ไม่อ่าน | PostgreSQL (Local) Integration ใส่มาให้ — โค้ดปัจจุบันไม่ได้ใช้ (ใช้ `pg` ต่อตรง ไม่ผ่าน PostgreSQL (Local) JS) |
 
 #### กลุ่ม 3 — ESP32
 
@@ -2717,13 +2866,13 @@ T+4100    | resetCache → loop() ปกติ
 | `INITIAL_ADMIN_USERNAME` `INITIAL_ADMIN_PASSWORD` `INITIAL_ADMIN_FULL_NAME` | dev | ✅ | ใช้ตอน seed บัญชีแรก |
 | `SKIP_DB_INIT` | ทางเลือก | ✅ | `true` = ข้าม `initDatabase()` ลด ~25 DDL/cold start — ตั้งหลังรัน DDL §35 ครบ |
 
-#### กลุ่ม 5 — Ops (Vercel / KV / Cron / Notification)
+#### กลุ่ม 5 — Ops (Raspberry Pi / KV / Cron / Notification)
 
 | ตัวแปร | จำเป็น | โค้ดอ่าน? | คำอธิบาย |
 |--------|--------|-----------|-----------|
 | `CRON_SECRET` | ทางเลือก* | ✅ `summary`/`cleanup` | รหัสลับ (≥ 32 chars) ป้องกัน Cron endpoint; ถ้าเว้นว่าง Cron ถูกปฏิเสธ 401 (owner ยังกดเองได้) |
-| `VERCEL_TOKEN` `VERCEL_PROJECT_ID` | ทางเลือก | ✅ | ดึงสถานะ Deployment จาก Vercel API |
-| `KV_URL` `KV_REST_API_URL` `KV_REST_API_TOKEN` `KV_REST_API_READ_ONLY_TOKEN` | ทางเลือก | ✅ (`@vercel/kv`) | Vercel KV (Redis) cache ข้ามอินสแตนซ์; ถ้าไม่ตั้ง → fallback in-memory อัตโนมัติ |
+| `VERCEL_TOKEN` `VERCEL_PROJECT_ID` | ทางเลือก | ✅ | ดึงสถานะ Deployment จาก Raspberry Pi API |
+| `KV_URL` `KV_REST_API_URL` `KV_REST_API_TOKEN` `KV_REST_API_READ_ONLY_TOKEN` | ทางเลือก | ✅ (`In-memory Cache`) | Local Cache (Redis) cache ข้ามอินสแตนซ์; ถ้าไม่ตั้ง → fallback in-memory อัตโนมัติ |
 | `DISCORD_WEBHOOK_URL` | ทางเลือก | ✅ `api/system/status` | webhook กลาง (ปัจจุบันแนะนำตั้งผ่านแท็บ "ตั้งค่าระบบ" แทน — **ไม่มีใน `.env.local`**) |
 | `NEXT_PUBLIC_APP_URL` | ทางเลือก | ✅ `api/esp32/display` | ใช้สร้าง register URL ใน QR (ปัจจุบัน**ไม่มีใน `.env.local`** — ใช้ค่า default ในโค้ด) |
 
@@ -2741,7 +2890,7 @@ T+4100    | resetCache → loop() ปกติ
 >
 > **เรื่อง notification**: token/id ของ Telegram & LINE **ไม่ใช่ env** — ตั้งผ่านแท็บ "ตั้งค่าระบบ" บนเว็บ (เก็บใน `system_settings`)
 >
-> **ตัวแปรที่ Supabase ใส่มาให้แต่โค้ดไม่อ่าน** (`SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_SECRET_KEY`, `POSTGRES_URL_NON_POOLING`, `POSTGRES_PRISMA_URL`) — เก็บไว้ใน `.env.local` ได้โดยไม่กระทบการทำงาน แต่ลบออกก็ได้
+> **ตัวแปรที่ PostgreSQL (Local) ใส่มาให้แต่โค้ดไม่อ่าน** (`PostgreSQL (Local)_ANON_KEY`, `NEXT_PUBLIC_PostgreSQL (Local)_PUBLISHABLE_KEY`, `PostgreSQL (Local)_JWT_SECRET`, `PostgreSQL (Local)_SECRET_KEY`, `POSTGRES_URL_NON_POOLING`, `POSTGRES_PRISMA_URL`) — เก็บไว้ใน `.env.local` ได้โดยไม่กระทบการทำงาน แต่ลบออกก็ได้
 
 ---
 
@@ -2749,48 +2898,55 @@ T+4100    | resetCache → loop() ปกติ
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-38"></a>
-## 38. Deployment Runbook (ไป Production)
+## 38. Deployment Runbook บน Raspberry Pi
 
-### 38.1 ขั้นตอนแรกเริ่ม
+### 38.1 ลำดับขั้นตอนการติดตั้งในสภาพแวดล้อมใช้งานจริง
 ```mermaid
 flowchart TD
-    A["1. สร้าง Supabase project"] --> B["2. คัดลอก POSTGRES_URL"]
-    B --> C["3. สร้าง Vercel project<br/>เชื่อม GitHub repo"]
-    C --> D["4. ตั้ง Env Vars บน Vercel<br/>(ตามตาราง §37)"]
-    D --> E["5. กด Deploy"]
-    E --> F["6. รอ build เสร็จ → ได้ URL https://xxx.vercel.app"]
-    F --> G["7. Login admin ครั้งแรก<br/>(ใช้ INITIAL_ADMIN_*)"]
-    G --> H["8. ตั้ง ALLOW_DEV_SEED=false → Redeploy"]
-    H --> I["9. Flash ESP32 ด้วย<br/>server_url = https://xxx.vercel.app/api/esp32/display?room=CE-401"]
-    I --> J["10. เช็ค heartbeat ใน Dashboard"]
-    J --> K["11. ทดสอบเปิดประตู"]
+    A["1. ติดตั้ง Raspberry Pi OS<br/>และตั้ง IP ท้องถิ่นแบบ Static"] --> B["2. ติดตั้ง Node.js, PostgreSQL<br/>และ Nginx ในระบบ"]
+    B --> C["3. สร้างฐานข้อมูล SQL<br/>และตั้งรหัสผ่านสำหรับโปรเจกต์"]
+    C --> D["4. โคลนซอร์สโค้ดจาก Git<br/>สร้างไฟล์ .env.local"]
+    D --> E["5. รันคำสั่ง npm run build<br/>เพื่อทำโปรดักชันแพ็กเกจ"]
+    E --> F["6. เริ่มต้นระบบเว็บค้างไว้เบื้องหลัง<br/>ผ่านการควบคุมของ PM2"]
+    F --> G["7. ตั้งค่า Nginx Reverse Proxy<br/>และรัน Certbot ทำ HTTPS"]
+    G --> H["8. ล็อกอินเข้าแอดมินครั้งแรก<br/>แล้วอัปเดต ALLOW_DEV_SEED=false"]
+    H --> I["9. ทำ Port Forwarding บนเราเตอร์<br/>และอัปเดต URL บนบอร์ด ESP32"]
 ```
 
-### 38.2 Checklist ก่อนเปิดใช้จริง
-- [ ] `JWT_SECRET` สุ่มใหม่ (ใช้ `openssl rand -hex 32`)
-- [ ] `ESP32_API_KEY` สุ่มใหม่ + อัปเดต `config.h`
-- [ ] `ALLOW_DEV_SEED=false`
-- [ ] เปลี่ยน password admin เริ่มต้น
-- [ ] ตั้ง custom domain + HTTPS
-- [ ] ทดสอบ Discord webhook
-- [ ] ทดสอบ export PDF ทั้ง 2 แบบ
-- [ ] ทดสอบ rate limit (login ผิด 6 ครั้ง → ต้องโดน 429)
-- [ ] backup Supabase enable
-- [ ] log retention policy (90 วันขึ้นไป ตาม พ.ร.บ.)
+### 38.2 รายการตรวจสอบความพร้อมก่อนส่งมอบงานระบบ (Pre-production Checklist)
+- [ ] **ความปลอดภัยรหัสลับ**:
+  - เปลี่ยนค่าตัวแปรสุ่มความปลอดภัย `JWT_SECRET` และ `QR_SIGNING_KEY` เป็นค่าเฉพาะที่ปลอดภัยสูง
+  - ตั้งรหัสผ่านของระบบเชื่อมต่อ API ประตู `ESP32_API_KEY` ให้ตรงกันทั้งใน `.env.local` และ `config.h`
+- [ ] **ความมั่นคงปลอดภัยฐานข้อมูล**:
+  - เปลี่ยนรหัสผ่านของ postgres user เริ่มต้น และปิดการเข้าถึงภายนอกหากไม่อยู่ในกลุ่มแอดมินฐานข้อมูล
+  - ปิดสิทธิ์ระบบสร้างบัญชีนักสุ่มเริ่มต้นด้วยค่า `ALLOW_DEV_SEED=false` ในไฟล์สภาพแวดล้อม
+- [ ] **การจัดตั้งเซิร์ฟเวอร์กระบวนการทำงาน**:
+  - บันทึกสถานะ PM2 ในระบบเปิดบูตเพื่อให้แอป Next.js ฟื้นคืนชีพอัตโนมัติเมื่อเกิดไฟดับ
+  - ติดตั้งใบรับรอง SSL เพื่อรันระบบแบบเข้ารหัส HTTPS สำเร็จ ป้องกันการถูกโจมตีแบบดักรับข้อมูลผ่านโครงข่ายสาธารณะ
+- [ ] **การสื่อสาร IoT**:
+  - หมายเลข IP และพอร์ตที่เราเตอร์ทำการ Forward เข้ามายังเครื่องตรงตามการตั้งค่าอินเทอร์เน็ตสาธารณะ
+  - บอร์ดประตู ESP32 ตั้งค่าในโค้ดใช้ URL โดเมน DDNS ใหม่ที่ทำ HTTPS เรียบร้อยแล้ว (เช่น `https://your-domain.duckdns.org`)
+- [ ] **การควบคุมระบบข้อมูลและประวัติจราจรคอมพิวเตอร์**:
+  - ติดตั้ง Cron job คอยสำรองไฟล์สำรองข้อมูลดิบลงใน USB Storage ประจำวัน
+  - ตรวจสอบตารางประวัติจราจรคอมพิวเตอร์ไม่ให้มีสิทธิ์ลบข้อมูลสำหรับประวัติที่อัปเดตใหม่ไม่ถึง 90 วัน ตาม พ.ร.บ. คอมพิวเตอร์ มาตรา 26
 
-### 38.3 Rollback ฉุกเฉิน
-1. Vercel Dashboard → Deployments → กด "Promote to Production" บน build เก่าที่ทำงานได้
-2. ถ้า schema เพี้ยน: restore Supabase backup (ใน dashboard มี point-in-time)
-3. ถ้า ESP32 รับคำสั่งเปิดประตูค้าง: เข้า Dashboard → ตั้ง `room_cmd_<room>` = `idle` ผ่าน Settings
+### 38.3 การกู้คืนระบบยามฉุกเฉิน (Disaster Recovery & Rollback)
+1. **เมื่อหน้าเว็บ Next.js ค้างหรือหยุดทำงาน**:
+   เข้าสู่ SSH ของ Raspberry Pi แล้วพิมพ์คำสั่งรีสตาร์ทบริการ:
+   ```bash
+   pm2 restart smartaccess-app
+   ```
+2. **เมื่อโครงสร้างข้อมูลเสียหายจากการนำเข้าสคริปต์ผิด**:
+   ทำการกู้คืนข้อมูลเดิมจากไฟล์ดัมป์ล่าสุด:
+   ```bash
+   psql -h localhost -U smart_user -d smartaccess --clean < /home/pi/backups/smartaccess_latest.sql
+   ```
+3. **เมื่อบอร์ด ESP32 เกิดเหตุล็อกสถานะประตูเปิดค้าง**:
+   เปิดหน้าแดชบอร์ดแอดมิน เข้าไปที่ส่วนจัดการตั้งค่าระบบ (System Settings) แล้วคลิกเลือกฟังก์ชันสั่งรีเซ็ตสถานะคำสั่งควบคุมห้องเรียน (Room Command Control) ให้กลับคืนสู่สภาวะปกติ (`idle`)
 
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
-
-<!-- หมายเหตุ: เนื้อหา §71.19–71.23 (PDPA / Information Security / พ.ร.บ.คอมพิวเตอร์ / Terms / Privacy)
-     อยู่ในตำแหน่งที่ถูกต้องแล้วในภาค §71 ด้านล่าง — เดิมเคยมีสำเนาซ้ำตรงนี้ ได้ลบออกเพื่อแก้ลำดับหัวข้อ -->
-
-<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 <a id="sec-39"></a>
 ## 39. Monitoring & Observability
@@ -2798,8 +2954,8 @@ flowchart TD
 ### 39.1 จุดที่ต้องเฝ้าดู
 ```mermaid
 flowchart TD
-    M1["Vercel Logs<br/>ดู API errors"] --> ALERT["Alert"]
-    M2["Supabase Dashboard<br/>ดู query slow, connection"] --> ALERT
+    M1["Raspberry Pi Logs<br/>ดู API errors"] --> ALERT["Alert"]
+    M2["PostgreSQL (Local) Dashboard<br/>ดู query slow, connection"] --> ALERT
     M3["Discord channel<br/>รับ event realtime"] --> ALERT
     M4["heartbeat<br/>room_last_seen"] --> ALERT
     M5["Dashboard /api/system/status"] --> ALERT
@@ -2809,8 +2965,8 @@ flowchart TD
 ### 39.2 ตัวชี้วัด (KPI)
 | ตัวชี้วัด | เป้าหมาย | วิธีวัด |
 |----------|----------|---------|
-| API p95 latency | < 500ms | Vercel Analytics |
-| DB query p95 | < 100ms | Supabase Reports |
+| API p95 latency | < 500ms | Raspberry Pi Analytics |
+| DB query p95 | < 100ms | PostgreSQL (Local) Reports |
 | ESP32 uptime | ≥ 99% | heartbeat / รวม 24 ชม. |
 | ประตูเปิดสำเร็จ | ≥ 99.5% | นับจาก `action=door_opened` vs `door_failed` |
 | Login fail rate | < 2% | rate-limit log |
@@ -2825,7 +2981,7 @@ flowchart TD
 ## 40. การ Migrate / เพิ่มฟีเจอร์ใหม่ (Future-proofing)
 
 ### 40.1 ถ้าต้องการเปลี่ยนจาก polling เป็น push (WebSocket / SSE)
-- ทางเลือก A: ใช้ **Supabase Realtime** (subscribe ตาราง `system_settings`) → ESP32 เปลี่ยนเป็น MQTT bridge
+- ทางเลือก A: ใช้ **PostgreSQL (Local) Realtime** (subscribe ตาราง `system_settings`) → ESP32 เปลี่ยนเป็น MQTT bridge
 - ทางเลือก B: ใช้ **Pusher / Ably** — เพิ่ม cost รายเดือน
 - ทางเลือก C: ติด **MQTT broker** ใน LAN เอง → ESP32 subscribe → server publish
 
@@ -2856,7 +3012,7 @@ flowchart TD
 Total: ~800ms
 ├─ DNS resolution            ~20ms
 ├─ TLS handshake             ~80ms
-├─ Vercel routing            ~30ms
+├─ Raspberry Pi routing            ~30ms
 ├─ Lambda init               ~250ms  ← ใหญ่สุด
 │  ├─ Node runtime boot      ~120ms
 │  └─ require('pg') + lib    ~130ms
@@ -2868,18 +3024,18 @@ Total: ~800ms
 
 วิธีลด:
 - ใช้ **Edge runtime** กับ route ที่ไม่ต้อง `pg` (เช่น `/api/auth/me`) → ลด init เหลือ ~50ms
-- เปิด **Vercel KV** cache layer ระดับ Edge สำหรับ settings
-- ใช้ **fluid compute** (Vercel feature ใหม่) → instance warm นานขึ้น
+- เปิด **Local Cache** cache layer ระดับ Edge สำหรับ settings
+- ใช้ **fluid compute** (Raspberry Pi feature ใหม่) → instance warm นานขึ้น
 
 ### 41.2 ที่มาของเวลา 70ms ใน bcrypt
 - bcrypt cost factor 10 = 2^10 = 1024 รอบของ Blowfish
-- 70ms บน CPU มาตรฐาน Vercel
+- 70ms บน CPU มาตรฐาน Raspberry Pi
 - ถ้าลด cost = 8 → 17ms แต่ปลอดภัยน้อยลง 4 เท่า → **ไม่แนะนำ**
 
 ### 41.3 ESP32 polling traffic
 - 1 บอร์ด × 1 request ทุก 2 วินาที = 30 req/นาที = 43,200 req/วัน
 - Response ~400 byte = 17 MB/วัน/บอร์ด
-- 10 บอร์ด ≈ 170 MB/วัน → Vercel free tier (100GB/เดือน) เพียงพอ ~17 วัน
+- 10 บอร์ด ≈ 170 MB/วัน → Raspberry Pi free tier (100GB/เดือน) เพียงพอ ~17 วัน
 - **ถ้าต้องสเกล 100 ห้อง** → ต้องอัปเป็น Pro plan หรือเปลี่ยนเป็น push
 
 ---
@@ -2894,8 +3050,8 @@ Total: ~800ms
 |-----|--------|----------|
 | `app/admin/dashboard/page.tsx` | 5,620 บรรทัดไฟล์เดียว | แยกเป็น sub-route `/admin/dashboard/{pending,users,logs,...}` + dynamic import |
 | `lib/db.ts` `initDatabase()` | auto-migrate ใน production มีความเสี่ยง | แยกเป็น script `npm run migrate` |
-| in-memory rate-limit cache | ไม่ทำงานข้าม Vercel function instance | ย้ายไป Redis (Upstash) |
-| settings cache 30s | invalidate ไม่ทันเมื่อหลาย instance update พร้อมกัน | ใช้ pub/sub (Supabase realtime) |
+| in-memory rate-limit cache | ไม่ทำงานข้าม Raspberry Pi function instance | ย้ายไป Redis (Upstash) |
+| settings cache 30s | invalidate ไม่ทันเมื่อหลาย instance update พร้อมกัน | ใช้ pub/sub (PostgreSQL (Local) realtime) |
 | ใช้ JWT 8 ชม. | ถ้า cookie หลุดมี window ใหญ่ | ใช้ refresh token + sliding session |
 
 ---
@@ -2914,7 +3070,7 @@ Total: ~800ms
 | **Strapping pin** | GPIO ของ ESP32 ที่ค่าตอน boot กำหนด boot mode (GPIO 0, 2, 5, 12, 15) |
 | **pgBouncer** | connection pooler ของ PostgreSQL ลด TLS overhead |
 | **ISR** | Incremental Static Regeneration — Next.js สร้างหน้า static แล้ว revalidate เป็นช่วง |
-| **Edge runtime** | runtime ของ Vercel ที่เบา (V8 isolate) ไม่ใช่ Node เต็ม |
+| **Edge runtime** | runtime ของ Raspberry Pi ที่เบา (V8 isolate) ไม่ใช่ Node เต็ม |
 | **CSRF** | Cross-Site Request Forgery — เว็บอื่นยิง request จาก browser ผู้ใช้ |
 | **Optocoupler** | ตัวแยกไฟ AC/DC ระหว่างสัญญาณ logic กับ relay |
 | **Fail-safe vs Fail-secure** | กลอนปลดล็อกเมื่อไฟตัด vs ล็อกเมื่อไฟตัด |
@@ -2975,7 +3131,7 @@ sequenceDiagram
 **ทำไมไม่ใช่ 500ms?**
 - 1 บอร์ด poll ทุก 2 วินาที = 43,200 req/วัน
 - ถ้าเปลี่ยนเป็น 500ms = 172,800 req/วัน (4 เท่า!)
-- 10 บอร์ดจะกินโควต้า Vercel free tier (100GB) ในไม่กี่วัน
+- 10 บอร์ดจะกินโควต้า Raspberry Pi free tier (100GB) ในไม่กี่วัน
 - ทำให้ ESP32 ร้อนขึ้น + กิน battery (ถ้าใช้ portable)
 
 **ทำไมไม่ใช่ 5000ms?**
@@ -2986,7 +3142,7 @@ sequenceDiagram
 
 ### 44.3 เหตุผลที่ 2 — การยกระดับสู่ระบบเรียลไทม์ด้วย MQTT (HiveMQ Cloud + WebSockets)
 
-ในการออกแบบเฟสแรก ระบบเลือกใช้ Polling เนื่องจาก Vercel Serverless Function ไม่รองรับการเชื่อมต่อค้างไว้แบบ Long-lived TCP (เช่น raw WebSocket หรือ SSE) และ ESP32 มักติดตั้งอยู่ภายใต้ NAT/Firewall ของสถาบันการศึกษาทำให้ฝั่งเซิร์ฟเวอร์ยิงเรียกตรง (HTTP Webhook) ไม่ได้
+ในการออกแบบเฟสแรก ระบบเลือกใช้ Polling เนื่องจาก Next.js บน Raspberry Pi Function ไม่รองรับการเชื่อมต่อค้างไว้แบบ Long-lived TCP (เช่น raw WebSocket หรือ SSE) และ ESP32 มักติดตั้งอยู่ภายใต้ NAT/Firewall ของสถาบันการศึกษาทำให้ฝั่งเซิร์ฟเวอร์ยิงเรียกตรง (HTTP Webhook) ไม่ได้
 
 อย่างไรก็ดี ในเวอร์ชันปัจจุบันได้มีการยกระดับสถาปัตยกรรมสู่ **Real-Time Push Notification** โดยการผนวกรวมบริการโบรกเกอร์ระดับคลาวด์ภายนอก (**HiveMQ Cloud**) ซึ่งแก้ข้อจำกัดดังกล่าวได้สมบูรณ์:
 
@@ -3022,7 +3178,7 @@ sequenceDiagram
 - ไม่มี hardware crypto accelerator แบบครบเครื่อง (มีบางส่วน)
 - ทำไมไม่ใช้ HTTP? — ป้องกัน MITM ขโมย `X-API-Key`
 
-**Optimization ที่ทำในโค้ด**: ใช้ `WiFiClientSecure` แล้ว reuse connection (HTTP keep-alive) เมื่อทำได้ — แต่ Vercel function บาง instance ปิด connection หลังตอบ ทำให้ต้อง handshake ใหม่บ่อย
+**Optimization ที่ทำในโค้ด**: ใช้ `WiFiClientSecure` แล้ว reuse connection (HTTP keep-alive) เมื่อทำได้ — แต่ Raspberry Pi function บาง instance ปิด connection หลังตอบ ทำให้ต้อง handshake ใหม่บ่อย
 
 ### 44.5 เหตุผลที่ 4 — TFT SPI Bus จำกัดที่ ~40MHz
 
@@ -3089,16 +3245,16 @@ DeserializationError err = deserializeJson(doc, http.getStream());
 flowchart TD
     A["ESP32"] -->|"Wi-Fi"| B["AP มหาวิทยาลัย"]
     B -->|"backbone"| C["ISP"]
-    C -->|"BGP"| D["Vercel Edge<br/>(Singapore)"]
+    C -->|"BGP"| D["Raspberry Pi Edge<br/>(Singapore)"]
     D --> E["Lambda"]
-    E -->|"private network"| F["Supabase<br/>(Tokyo)"]
+    E -->|"private network"| F["PostgreSQL (Local)<br/>(Tokyo)"]
 ```
 
 ความหน่วงสะสม:
 - Wi-Fi → AP: 5–30ms (ขึ้นกับสัญญาณ)
 - AP → ISP: 5–20ms
-- ISP → Vercel SG: **40–80ms** (RTT)
-- Vercel SG → Supabase JP: 40–60ms
+- ISP → Raspberry Pi SG: **40–80ms** (RTT)
+- Raspberry Pi SG → PostgreSQL (Local) JP: 40–60ms
 - รวมทาง: **150–300ms ขั้นต่ำ**
 
 ถ้า Wi-Fi อ่อน packet loss → retransmit → +200ms ต่อแพ็กเก็ตที่หาย
@@ -3106,7 +3262,7 @@ flowchart TD
 ### 44.9 เหตุผลที่ 8 — Cold Start ของ Serverless Function
 
 ```
-Function ที่ไม่ถูกเรียกนาน 5 นาที → Vercel ปลด container ทิ้ง
+Function ที่ไม่ถูกเรียกนาน 5 นาที → Raspberry Pi ปลด container ทิ้ง
 ครั้งหน้าที่ ESP32 poll → ต้อง:
 ├─ ปลุก container         ~120ms
 ├─ Node.js boot           ~100ms
@@ -3139,7 +3295,7 @@ flowchart TD
 |--------|------------|-------------|--------|
 | Polling wait | 1000ms | ✅ | ลด interval (แลก traffic) |
 | TLS handshake | 300ms | ⚠️ | keep-alive, TLS 1.3 |
-| Network RTT | 200ms | ❌ | ใช้ Vercel region ใกล้กว่า |
+| Network RTT | 200ms | ❌ | ใช้ Raspberry Pi region ใกล้กว่า |
 | Server processing | 50ms | ✅ | cache, index |
 | JSON parse | 15ms | ⚠️ | เปลี่ยนเป็น binary format |
 | TFT redraw | 250ms | ⚠️ | partial redraw (ทำแล้ว) |
@@ -3166,8 +3322,8 @@ flowchart TD
 - ❌ ต้อง deploy broker (Mosquitto ฟรี + Raspberry Pi)
 - ❌ ESP32 code ซับซ้อนขึ้น ~30%
 
-**แผน D: Supabase Realtime**
-- ใช้ Postgres LISTEN/NOTIFY ผ่าน Supabase WebSocket
+**แผน D: PostgreSQL (Local) Realtime**
+- ใช้ Postgres LISTEN/NOTIFY ผ่าน PostgreSQL (Local) WebSocket
 - ESP32 ต่อ WebSocket ตรง
 - ✅ latency ~100ms
 - ❌ ESP32 WebSocket library ยังไม่นิ่ง
@@ -3194,7 +3350,7 @@ flowchart TD
 ---
 
 <a id="sec-45"></a>
-## 45. ทำไมเลือก PostgreSQL + ทำไมย้ายจาก postgreSQL (เดิมคือ MySQL) กลางทาง + Aiven vs Supabase
+## 45. ทำไมเลือก PostgreSQL + ทำไมย้ายจาก postgreSQL (เดิมคือ MySQL) กลางทาง + Aiven vs PostgreSQL (Local)
 
 หัวข้อนี้สำคัญมากเพราะเป็นการตัดสินใจทางสถาปัตยกรรมที่ส่งผลกระทบกับทุกอย่าง — เลือกผิดต้องเขียนใหม่ครึ่งหนึ่ง
 
@@ -3207,12 +3363,12 @@ timeline
                   : เซิร์ฟเวอร์อยู่ "อินเดีย" (Mumbai region)
                   : เพราะคุ้นเคย + Aiven มีฟรี tier
     พบปัญหา      : Latency เฉลี่ย 180-250ms ต่อ query
-                  : Connection pooling ไม่ดีกับ Vercel serverless
+                  : Connection pooling ไม่ดีกับ Next.js บน Raspberry Pi
                   : Schema migration ของ postgreSQL (เดิมคือ MySQL) ติดขัด
-    ทดลอง        : เปรียบเทียบ PostgreSQL บน Supabase
+    ทดลอง        : เปรียบเทียบ PostgreSQL บน PostgreSQL (Local)
                   : เซิร์ฟเวอร์ "สิงคโปร์" (ap-southeast-1)
                   : Latency ลดเหลือ 40-80ms
-    ตัดสินใจย้าย : Migrate ทั้งระบบเป็น PostgreSQL + Supabase
+    ตัดสินใจย้าย : Migrate ทั้งระบบเป็น PostgreSQL + PostgreSQL (Local)
                   : Refactor code ใช้ pg แทน pg
                   : ใช้ pgBouncer pool
     ปัจจุบัน     : รัน production stable
@@ -3264,18 +3420,18 @@ RETURNING count;
 #### 45.2.2 เหตุผลด้าน Ecosystem
 
 - **TypeScript types**: `node-postgres` มี TypeScript types ที่ดีกว่า, query result เป็น object พร้อมใช้
-- **Supabase Realtime**: ถ้าจะเพิ่มในอนาคต ใช้ PostgreSQL LISTEN/NOTIFY ผ่าน WebSocket ได้ฟรี
+- **PostgreSQL (Local) Realtime**: ถ้าจะเพิ่มในอนาคต ใช้ PostgreSQL LISTEN/NOTIFY ผ่าน WebSocket ได้ฟรี
 - **Row-Level Security (RLS)**: สำหรับ multi-tenancy ในอนาคต
 - **pgvector**: ถ้าจะเพิ่ม AI/embedding ในอนาคต
 
-### 45.3 ทำไมย้ายจาก postgreSQL/Aiven (เดิมคือ MySQL) → PostgreSQL/Supabase (กลางทาง)
+### 45.3 ทำไมย้ายจาก postgreSQL/Aiven (เดิมคือ MySQL) → PostgreSQL/PostgreSQL (Local) (กลางทาง)
 
 #### 45.3.1 ปัญหาที่เจอจริงกับ postgreSQL/Aiven (เดิมคือ MySQL)
 
 ```mermaid
 flowchart TD
     A["รัน production 2 สัปดาห์แรก"] --> B["ผู้ใช้บ่นว่าระบบ 'หน่วง'"]
-    B --> C["วิเคราะห์: Vercel logs"]
+    B --> C["วิเคราะห์: Raspberry Pi logs"]
     C --> D["พบ API response time 300-500ms"]
     D --> E["แยก breakdown ของเวลา"]
     E --> F1["DB connection: 80-120ms"]
@@ -3283,7 +3439,7 @@ flowchart TD
     E --> F3["Code: ~30ms"]
     F1 --> G["สาเหตุ: เซิร์ฟเวอร์ Aiven free tier อยู่ Mumbai"]
     F2 --> G
-    G --> H["Vercel SG → Mumbai = ~80ms RTT"]
+    G --> H["Raspberry Pi SG → Mumbai = ~80ms RTT"]
     H --> I["1 request มี ~4 query → 320ms รวมแค่ network"]
     I --> J["ตัดสินใจหาทางเลือก"]
 ```
@@ -3299,7 +3455,7 @@ Aiven postgreSQL (เดิมคือ MySQL) (Mumbai, free tier):
 ├─ INSERT 1 row      : 85ms
 └─ Connection idle   : disconnect 10 นาที → ต้อง handshake ใหม่
 
-Supabase PostgreSQL (Singapore, free tier):
+PostgreSQL (Local DB)QL (Singapore, free tier):
 ├─ TLS handshake     : 22ms
 ├─ Auth roundtrip    : 15ms (pgBouncer pool)
 ├─ SELECT 1 (warm)   : 18ms
@@ -3315,9 +3471,9 @@ Supabase PostgreSQL (Singapore, free tier):
 ```mermaid
 flowchart TD
     User["ผู้ใช้ในประเทศไทย"] -->|"~10ms"| ISP["TRUE/AIS/3BB"]
-    ISP -->|"~30ms"| VercelSG["Vercel<br/>Singapore"]
-    VercelSG -->|"~80ms"| Mumbai[("postgreSQL (เดิมคือ MySQL)@Aiven<br/>Mumbai, India")]
-    VercelSG -->|"~20ms"| SGDB[("PostgreSQL@Supabase<br/>Singapore")]
+    ISP -->|"~30ms"| Raspberry PiSG["Vercel<br/>Singapore"]
+    Raspberry PiSG -->|"~80ms"| Mumbai[("postgreSQL (เดิมคือ MySQL)@Aiven<br/>Mumbai, India")]
+    Raspberry PiSG -->|"~20ms"| SGDB[("PostgreSQL@PostgreSQL (Local)<br/>Singapore")]
 
     style Mumbai fill:#c0392b,stroke:#7b241c,color:#ffffff
     style SGDB fill:#27ae60,stroke:#196f3d,color:#ffffff
@@ -3327,11 +3483,11 @@ flowchart TD
 |---------|----------|-------------|----------------|
 | Singapore → Mumbai | ~3,900 km | SEA-ME-WE 5 + i2i | 75-90ms |
 | Singapore → Singapore (intra) | <50 km | local DC | 1-3ms |
-| ผลรวม Vercel→DB | — | — | **PG เร็วกว่า 4 เท่า** |
+| ผลรวม Raspberry Pi→DB | — | — | **PG เร็วกว่า 4 เท่า** |
 
 #### 45.3.4 เหตุผลอื่น ๆ ที่ผลักดันให้ย้าย
 
-| ปัญหา | postgreSQL/Aiven (เดิมคือ MySQL) | PostgreSQL/Supabase |
+| ปัญหา | postgreSQL/Aiven (เดิมคือ MySQL) | PostgreSQL/PostgreSQL (Local) |
 |--------|-------------|---------------------|
 | Connection limit free tier | 16 connection | 60 connection (+ pgBouncer pool ใช้ได้เกินก็ไม่ติด) |
 | Backup | manual | automatic daily + point-in-time recovery |
@@ -3344,11 +3500,11 @@ flowchart TD
 | Realtime subscription | ❌ | ✅ |
 | REST API auto-gen | ❌ | ✅ (PostgREST) — แม้ไม่ได้ใช้ก็เผื่อไว้ |
 
-### 45.4 Aiven vs Supabase — เปรียบเทียบเต็ม
+### 45.4 Aiven vs PostgreSQL (Local) — เปรียบเทียบเต็ม
 
 #### 45.4.1 ตารางเปรียบเทียบราคา
 
-| รายการ | Aiven Free | Aiven Hobbyist ($19) | Supabase Free | Supabase Pro ($25) |
+| รายการ | Aiven Free | Aiven Hobbyist ($19) | PostgreSQL (Local) Free | PostgreSQL (Local) Pro ($25) |
 |--------|------------|----------------------|---------------|---------------------|
 | Storage | 1 GB | 4 GB | 500 MB | 8 GB |
 | RAM | 1 GB | 1 GB | shared | 1 GB dedicated |
@@ -3365,8 +3521,8 @@ flowchart TD
 
 > ก็เป็นทางเลือก แต่ Aiven free tier บังคับ Mumbai เท่านั้น → ปัญหา latency เหมือนเดิม
 
-ถ้าจ่าย $19/เดือน Aiven Hobbyist ให้เลือก region ได้ → Singapore ได้ — แต่ทำไมยังเลือก Supabase?
-- ✅ Supabase ฟรีและเลือก region ได้เลย (ไม่ต้องจ่าย)
+ถ้าจ่าย $19/เดือน Aiven Hobbyist ให้เลือก region ได้ → Singapore ได้ — แต่ทำไมยังเลือก PostgreSQL (Local)?
+- ✅ PostgreSQL (Local) ฟรีและเลือก region ได้เลย (ไม่ต้องจ่าย)
 - ✅ pgBouncer มาให้พร้อม (Aiven ต้อง config เอง)
 - ✅ Dashboard UX ดีกว่า + มี SQL editor ใน browser
 - ✅ ถ้าโตในอนาคตยังต่อยอด Realtime/Edge Function/Storage ได้
@@ -3381,15 +3537,15 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["1. สร้าง Supabase project SG"] --> B["2. แปลง postgreSQL (เดิมคือ MySQL) schema → PG schema"]
+    A["1. สร้าง PostgreSQL (Local) project SG"] --> B["2. แปลง postgreSQL (เดิมคือ MySQL) schema → PG schema"]
     B --> C["3. แก้ types: TINYINT(1)→BOOLEAN<br/>AUTO_INCREMENT→SERIAL<br/>DATETIME→TIMESTAMPTZ"]
     C --> D["4. Export ข้อมูลจาก postgreSQL (เดิมคือ MySQL) (mysqldump)"]
     D --> E["5. Transform เป็น PG syntax<br/>(เปลี่ยน backtick ` เป็น quote \")"]
-    E --> F["6. Import ลง Supabase ผ่าน psql"]
+    E --> F["6. Import ลง PostgreSQL (Local) ผ่าน psql"]
     F --> G["7. แก้ code: pg → pg"]
     G --> H["8. แก้ query: ? → $1, $2<br/>เพิ่ม RETURNING * ที่ INSERT"]
     H --> I["9. ทดสอบทุก API endpoint"]
-    I --> J["10. เปลี่ยน env var ใน Vercel"]
+    I --> J["10. เปลี่ยน env var ใน Raspberry Pi"]
     J --> K["11. Deploy + monitor"]
 ```
 
@@ -3409,7 +3565,7 @@ flowchart TD
 
 ### 45.6 ผลลัพธ์หลัง Migrate
 
-| Metric | ก่อน (postgreSQL/Aiven (เดิมคือ MySQL) Mumbai) | หลัง (PG/Supabase SG) | ดีขึ้น |
+| Metric | ก่อน (postgreSQL/Aiven (เดิมคือ MySQL) Mumbai) | หลัง (PG/PostgreSQL (Local) SG) | ดีขึ้น |
 |--------|---------------------------|------------------------|--------|
 | API p50 latency | 320ms | 75ms | **4.3×** |
 | API p95 latency | 480ms | 110ms | **4.4×** |
@@ -3444,14 +3600,14 @@ function readEnv(name: string): string | undefined {
   const v = process.env[name];
   if (!v) return undefined;
   const trimmed = v.trim();
-  // ถ้าใส่ env ใน Vercel แล้วใส่ quote เกิน → strip
+  // ถ้าใส่ env ใน Raspberry Pi แล้วใส่ quote เกิน → strip
   if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
     return trimmed.slice(1, -1);
   }
   return trimmed || undefined;
 }
 ```
-> เหตุการณ์จริง: คนตั้ง env ใน Vercel ดashboard แล้วใส่ `"value"` มาด้วย → string มี quote ติด → connection fail
+> เหตุการณ์จริง: คนตั้ง env ใน Raspberry Pi ดashboard แล้วใส่ `"value"` มาด้วย → string มี quote ติด → connection fail
 
 **`initDatabase()` — ลำดับการทำงาน**:
 1. ตรวจ pool exist
@@ -3535,7 +3691,7 @@ RETURNING id, room_code;
 
 ### 46.4 `lib/esp32.ts` (291 บรรทัด) — Command Queue (Cloud-Only)
 
-> **หมายเหตุการปรับสถาปัตยกรรม:** เดิมระบบใช้กลยุทธ์ Hybrid (เขียน DB + ยิง LAN direct push ผ่าน `tryLanDirectBackground`) แต่**ได้ถอดส่วน LAN direct push ออกทั้งหมดแล้ว** เปลี่ยนเป็น **Cloud-Only Polling** ล้วน เพราะ (1) ตัดความเสี่ยงการดักฟังแพ็กเกจ HTTP plaintext ในวง LAN และ (2) ลดความซับซ้อนของ NAT/firewall เมื่อ deploy บน Vercel ฟังก์ชัน `tryLanDirectBackground` **ไม่มีอยู่ในโค้ดแล้ว**
+> **หมายเหตุการปรับสถาปัตยกรรม:** เดิมระบบใช้กลยุทธ์ Hybrid (เขียน DB + ยิง LAN direct push ผ่าน `tryLanDirectBackground`) แต่**ได้ถอดส่วน LAN direct push ออกทั้งหมดแล้ว** เปลี่ยนเป็น **Cloud-Only Polling** ล้วน เพราะ (1) ตัดความเสี่ยงการดักฟังแพ็กเกจ HTTP plaintext ในวง LAN และ (2) ลดความซับซ้อนของ NAT/firewall เมื่อ deploy บน Raspberry Pi ฟังก์ชัน `tryLanDirectBackground` **ไม่มีอยู่ในโค้ดแล้ว**
 
 **`openDoor(studentId, roomCode)` — Cloud Queue Strategy**:
 ```ts
@@ -3636,7 +3792,7 @@ flowchart TD
 ```
 
 **ทำไมไม่ใช้ Puppeteer (HTML→PDF)?**
-- Puppeteer ใหญ่ ~300MB → Vercel function ขนาดเกิน
+- Puppeteer ใหญ่ ~300MB → Raspberry Pi function ขนาดเกิน
 - ฟอนต์ไทยใน headless Chrome ลำบาก
 - pdfkit ขนาด ~3MB + ฟอนต์ Tahoma ~700KB → รวม < 5MB
 
@@ -3931,12 +4087,12 @@ await fetch('/api/system/settings', {
 
 **UI แบ่ง 4 แท็บย่อย:**
 1. ภาพรวม — แสดง Metric cards 6 ใบ (Database, Rate Limiter, Memory, Server Time, Last QR Scan, Environment)
-2. Vercel — แสดง Runtime info + Deployment status ล่าสุด
+2. Raspberry Pi — แสดง Runtime info + Deployment status ล่าสุด
 3. API Status — แสดง API endpoint latency พร้อม progress bar
 4. Runtime — แสดง Node.js info + Memory breakdown กราฟ
 
 **กลไกการเขียนโค้ดตรวจสอบสถานะฐานข้อมูลแบบเรียลไทม์ (Database Health Checking Mechanics):**
-ในการประเมินประสิทธิภาพของ Supabase PostgreSQL ตัวระบบหลังบ้าน Next.js (`my-app/app/api/system/health/route.ts`) จะทำการยิงชุดทดสอบไปที่ฐานข้อมูลหลักโดยตรงเพื่อวิเคราะห์ค่าสถิติ 3 ประการ:
+ในการประเมินประสิทธิภาพของ PostgreSQL (Local DB)QL ตัวระบบหลังบ้าน Next.js (`my-app/app/api/system/health/route.ts`) จะทำการยิงชุดทดสอบไปที่ฐานข้อมูลหลักโดยตรงเพื่อวิเคราะห์ค่าสถิติ 3 ประการ:
 1. **การตรวจสอบความเร็วการตอบรับ (Ping Latency check):**
    ใช้ไลบรารี `pg` ยิงคิวรี SQL พื้นฐาน `SELECT 1` พร้อมการจับเวลาด้วยฟังก์ชันประสิทธิภาพสูง `performance.now()` เพื่อหาความเร็ว Latency ในหน่วยมิลลิวินาที (ms) ของ Connection Pool ปัจจุบัน
 2. **การวัดปริมาณและความถูกต้องของข้อมูล (Metric count & Data validation):**
@@ -3952,10 +4108,10 @@ await fetch('/api/system/settings', {
 **ผลการดำเนินงานจากการเชื่อมโยง API เข้าสู่หน้าแดชบอร์ดความพร้อมใช้งาน (Dashboard Health Monitor Integration Outcomes):**
 จากการนำเส้นทาง API `/api/system/health` มาเชื่อมต่อร่วมกับส่วนต่อประสานผู้ใช้แอดมินแดชบอร์ด แท็บ "สถานะเซิร์ฟเวอร์ & DB" ผลลัพธ์การจัดวางและเรนเดอร์ข้อมูลสุขภาพระบบเชิงลึกเสร็จสิ้นสมบูรณ์อย่างสวยงามดังนี้:
 1. **การเรนเดอร์ระดับความหน่วงของฐานข้อมูล (Database Latency Observability):**
-   * ระบบสามารถแสดงผลตัวเลขนับเวลาการโต้ตอบกับ Supabase PostgreSQL ได้อย่างแม่นยำในหน่วยมิลลิวินาที (เช่น `12ms` หรือ `15ms`)
-   * โดยแสดงผลคู่กับสัญญาณไฟสถานะกระพริบพลวัต (Glowing Indicator Dot) สื่อสารความปลอดภัยเป็นสีเขียวตระการตาภายใต้สถานะ `healthy` และระบบจะปรับสีไฟแจ้งเตือนเป็นสีเหลืองทันทีหากความหน่วงพุ่งเกิน 500ms หรือปรับเป็นสีแดงพร้อมป้ายแจ้งเตือน "การเชื่อมต่อฐานข้อมูลล้มเหลว" หากไม่สามารถติดต่อ Supabase ได้
-2. **การดึงและแสดงผลข้อมูลการ Deploy บนระบบคลาวด์ Vercel (Vercel Deployment Integration):**
-   * หน้าแผงควบคุมสามารถเชื่อมต่อข้อมูล API หลังบ้านเพื่อดึงรายละเอียด Vercel Deployment สถานะปัจจุบัน ออกมาเรนเดอร์แสดงบนการ์ดอย่างชัดเจน เช่น เลขรหัส Git Commit SHA ล่าสุด, วันที่ผลิตสร้างโครงสร้างเว็บ (Deployment Time) และภูมิภาคโหนดปลายทาง (เช่น `sin1` สิงคโปร์ Edge) ช่วยให้ผู้ดูแลระบบมั่นใจได้ว่าโค้ดชุดล่าสุดได้ถูกปรับใช้จริงอย่างถูกต้อง
+   * ระบบสามารถแสดงผลตัวเลขนับเวลาการโต้ตอบกับ PostgreSQL (Local DB)QL ได้อย่างแม่นยำในหน่วยมิลลิวินาที (เช่น `12ms` หรือ `15ms`)
+   * โดยแสดงผลคู่กับสัญญาณไฟสถานะกระพริบพลวัต (Glowing Indicator Dot) สื่อสารความปลอดภัยเป็นสีเขียวตระการตาภายใต้สถานะ `healthy` และระบบจะปรับสีไฟแจ้งเตือนเป็นสีเหลืองทันทีหากความหน่วงพุ่งเกิน 500ms หรือปรับเป็นสีแดงพร้อมป้ายแจ้งเตือน "การเชื่อมต่อฐานข้อมูลล้มเหลว" หากไม่สามารถติดต่อ PostgreSQL (Local) ได้
+2. **การดึงและแสดงผลข้อมูลการ Deploy บนระบบคลาวด์ Raspberry Pi (Raspberry Pi Deployment Integration):**
+   * หน้าแผงควบคุมสามารถเชื่อมต่อข้อมูล API หลังบ้านเพื่อดึงรายละเอียด Raspberry Pi Deployment สถานะปัจจุบัน ออกมาเรนเดอร์แสดงบนการ์ดอย่างชัดเจน เช่น เลขรหัส Git Commit SHA ล่าสุด, วันที่ผลิตสร้างโครงสร้างเว็บ (Deployment Time) และภูมิภาคโหนดปลายทาง (เช่น `sin1` สิงคโปร์ Edge) ช่วยให้ผู้ดูแลระบบมั่นใจได้ว่าโค้ดชุดล่าสุดได้ถูกปรับใช้จริงอย่างถูกต้อง
 3. **การแตกข้อมูลเชิงลึกของสภาพแวดล้อมระบบรันไทม์ (Server Runtime & Node.js Metrics):**
    * แสดงค่าเฉลี่ยสเปคของ Node.js รันไทม์ที่ทำงานอยู่ รวมถึงการวาดกราฟวงกลมและแถบความคืบหน้าแสดงสัดส่วนทรัพยากรหน่วยความจำของโฮสต์ เช่น การใช้ Heap Memory, RSS (Resident Set Size) และค่า Uptime ของเซิร์ฟเวอร์
    * ข้อมูลเหล่านี้แสดงผลแยกหมวดหมู่และสวยงาม มีความเป็นระเบียบเรียบร้อย รองรับสัญจรอัจฉริยะ (Responsive Layout) อย่างสมบูรณ์แบบ แอดมินสามารถเปิดดูเพื่อทำการวิเคราะห์หาสาเหตุอาการระบบอืดหรือคอขวดของฐานข้อมูลได้อย่างมั่นใจผ่านสมาร์ตโฟนหรือเดสก์ท็อปในทันที
@@ -3972,7 +4128,7 @@ await fetch('/api/system/settings', {
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant V as Vercel Edge
+    participant V as Raspberry Pi Edge
     participant N as Next.js Server
     participant R as React Server
     participant B as Browser
@@ -4034,7 +4190,7 @@ Next.js 15 มี Server Actions แต่โปรเจกต์ไม่ใ�
 ```mermaid
 sequenceDiagram
     participant A as Attacker
-    participant V as Vercel
+    participant V as Raspberry Pi
     participant API as /api/auth/login
     participant DB as PostgreSQL
     A->>V: POST username=admin password=guess1
@@ -4058,7 +4214,7 @@ sequenceDiagram
 1. Rate limit 5 ครั้ง/นาที/IP
 2. bcrypt 70ms ต่อครั้ง → จำกัดความเร็ว
 3. Audit log ทุก fail → admin เห็นใน Discord
-4. ถ้า fail หนัก ๆ ปรากฏใน Vercel logs → manual block
+4. ถ้า fail หนัก ๆ ปรากฏใน Raspberry Pi logs → manual block
 
 **ที่ยังเป็นไปได้**: Distributed botnet (1,000 IPs) ลองคนละ 4 ครั้ง = 4,000 ครั้ง — ป้องกันได้ด้วย CAPTCHA หรือ Cloudflare Turnstile
 
@@ -4155,9 +4311,9 @@ Attacker ยิง POST /api/students × 10,000 ครั้ง/วินาท�
 ```
 
 **ชั้นป้องกัน**:
-1. Vercel built-in DDoS (Layer 3/4) — รับ traffic ใหญ่ได้
+1. Raspberry Pi built-in DDoS (Layer 3/4) — รับ traffic ใหญ่ได้
 2. Rate limit application layer — ทุก IP โดน 429
-3. ถ้า traffic ใหญ่จนจะกิน quota → upgrade Vercel Pro ($20/เดือน)
+3. ถ้า traffic ใหญ่จนจะกิน quota → upgrade Raspberry Pi Pro ($20/เดือน)
 4. ขั้นรุนแรง: เปิด Cloudflare ขั้นกลาง
 
 ### 49.8 Scenario H: Man-in-the-Middle
@@ -4560,7 +4716,7 @@ flowchart TD
 sequenceDiagram
     participant E as ESP32
     participant D as DNS
-    participant S as Server (Vercel SG)
+    participant S as Server (Raspberry Pi SG)
     Note over E: ก่อนหน้านี้: WiFi connected, IP assigned
     E->>D: DNS Query A "app.vercel.app"
     D-->>E: A 76.76.21.21
@@ -4611,7 +4767,7 @@ http.addHeader("Connection", "keep-alive");
 // ArduinoHTTPClient ใช้ TCP socket เดิมถ้าไม่ปิด
 ```
 
-**ปัญหา**: Vercel ปิด connection หลัง ~10 วินาที idle → ESP32 ต้อง handshake ใหม่
+**ปัญหา**: Raspberry Pi ปิด connection หลัง ~10 วินาที idle → ESP32 ต้อง handshake ใหม่
 → ลด overhead นี้: poll ทุก 2 วินาที = ใช้ socket เดียวได้ ~5 polls
 
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
@@ -4626,7 +4782,7 @@ http.addHeader("Connection", "keep-alive");
 ```
 ESP32 → DNS resolver (เช่น 8.8.8.8)
   → root NS (.) → .app NS
-  → vercel.app NS
+  → Raspberry Pi.app NS
   → cname.vercel-dns.com
   → multiple A records (เลือกตาม geo-DNS)
 ```
@@ -4639,26 +4795,26 @@ ESP32 ในยุโรป → return IP ใน Frankfurt
 ```mermaid
 flowchart TD
     USER["User in Bangkok"] --> ROUTER["Internet"]
-    ROUTER -->|"BGP route ใกล้สุด"| SG["Vercel Edge SG"]
+    ROUTER -->|"BGP route ใกล้สุด"| SG["Raspberry Pi Edge SG"]
     USER2["User in London"] --> ROUTER2["Internet"]
-    ROUTER2 -->|"BGP"| FR["Vercel Edge FRA"]
-    SG --> ORIGIN["Vercel Origin"]
+    ROUTER2 -->|"BGP"| FR["Raspberry Pi Edge FRA"]
+    SG --> ORIGIN["Raspberry Pi Origin"]
     FR --> ORIGIN
 ```
 
-- Vercel ประกาศ IP เดียวกันจาก data center หลายแห่งทั่วโลก (Anycast)
+- Raspberry Pi ประกาศ IP เดียวกันจาก data center หลายแห่งทั่วโลก (Anycast)
 - BGP router internet จะส่ง packet ไปยัง POP ใกล้ที่สุด
 - Static asset cache ที่ POP — เร็วมาก
 
-### 56.3 ทำไม Vercel ไม่ deploy Function ที่ทุก POP
+### 56.3 ทำไม Raspberry Pi ไม่ deploy Function ที่ทุก POP
 
 - Function ต้องคุย DB → DB อยู่ที่เดียว → run function ใกล้ DB ดีกว่า
-- ในโปรเจกต์นี้: Supabase SG → Vercel function ก็ที่ SG
+- ในโปรเจกต์นี้: PostgreSQL (Local) SG → Raspberry Pi function ก็ที่ SG
 - ผลคือ function-to-DB latency ต่ำสุด
 
 ### 56.4 ทำไมไม่ใช้ Cloudflare Workers
 
-| | Vercel | Cloudflare Workers |
+| | Raspberry Pi | Cloudflare Workers |
 |---|--------|---------------------|
 | Next.js integration | ✅ native | ⚠️ ต้อง adapter |
 | Function locations | regional (เลือก 1) | edge (200+ POPs) |
@@ -4666,7 +4822,7 @@ flowchart TD
 | Cold start | 300-800ms | 5ms |
 | Cost | คุ้ม | คุ้มกว่า ถ้า scale ใหญ่ |
 
-→ Vercel เหมาะกว่าสำหรับโปรเจกต์ขนาดนี้ที่ต้องใช้ `pg`
+→ Raspberry Pi เหมาะกว่าสำหรับโปรเจกต์ขนาดนี้ที่ต้องใช้ `pg`
 
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
@@ -4848,12 +5004,12 @@ const data = await db.query(`
 | **Transaction** | share หลัง COMMIT | สูง |
 | **Statement** | share หลัง statement | สูงสุด แต่ไม่รองรับ multi-statement transaction |
 
-**Supabase ใช้ Transaction mode** (`?pgbouncer=true&statement_cache_mode=describe`)
+**PostgreSQL (Local) ใช้ Transaction mode** (`?pgbouncer=true&statement_cache_mode=describe`)
 
-### 59.2 ทำไม Vercel Serverless ต้องใช้ Pooling
+### 59.2 ทำไม Next.js บน Raspberry Pi ต้องใช้ Pooling
 
 ```
-Vercel function: เปิด-ปิด connection ทุก request
+Raspberry Pi function: เปิด-ปิด connection ทุก request
 ถ้าไม่ pool: 100 concurrent users = 100 PostgreSQL connections
 PostgreSQL free tier: 60 connection max
 → 41 users ได้รับ "too many connections" error
@@ -4943,7 +5099,7 @@ INSERT INTO rate_limits ... ON CONFLICT DO UPDATE SET count=count+1
 - Instance A ยังใช้ cache เก่า 30 วินาที
 - → admin เห็นค่าใหม่หลัง max 30 วินาที (acceptable)
 
-**แก้ในอนาคต**: ใช้ Supabase Realtime หรือ Redis pub/sub
+**แก้ในอนาคต**: ใช้ PostgreSQL (Local) Realtime หรือ Redis pub/sub
 
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
@@ -4990,7 +5146,7 @@ INSERT INTO rate_limits ... ON CONFLICT DO UPDATE SET count=count+1
 - [ ] นักศึกษายื่นคำขอเข้าใช้ห้อง → แผงป้ายนับถอยหลังเริ่มจาก 05:00 เดินเวลาแบบเสถียร
 - [ ] เมื่อเวลาเหลือน้อยกว่า 60 วินาที → ป้ายเปลี่ยนสีจากสีม่วงแบรนด์เป็นสีแดงเข้มแจ้งเตือนภัยอย่างสวยงาม
 - [ ] ปล่อยให้เวลาเดินผ่านพ้น 5 นาทีจนแตะ 00:00 → บราวเซอร์ส่งคำขอ Polling ถัดไป
-- [ ] ฟังก์ชัน `sweepExpiredPending()` ทำงานอัตโนมัติบนเซิร์ฟเวอร์ → คำขอถูกเปลี่ยนสถานะเป็น `rejected` บนระบบ Supabase
+- [ ] ฟังก์ชัน `sweepExpiredPending()` ทำงานอัตโนมัติบนเซิร์ฟเวอร์ → คำขอถูกเปลี่ยนสถานะเป็น `rejected` บนระบบ PostgreSQL (Local)
 - [ ] ตรวจสอบประวัติระบบ (`access_logs`) → บันทึกการปฏิเสธระบุผู้ดำเนินการเป็น "ระบบอัตโนมัติ" และบันทึกเหตุผล
 - [ ] ตรวจสอบผลลัพธ์แจ้งเตือน Discord → บัญชีบอทยิงข้อความแจ้งเตือนสีแดงระบุสถานะคิวล้างประวัติถูกต้อง
 - [ ] หน้าจอฝั่งผู้ใช้นักศึกษาตรวจพบสถานะล่าสุด → สลับการ์ดข้อความแสดงผลการปฏิเสธภาษาไทยและแจ้งเตือน "ปฏิเสธอัตโนมัติโดยระบบ" อย่างถูกต้องแม่นยำ 100%
@@ -5036,8 +5192,8 @@ describe('POST /api/auth/login', () => {
 
 | Component | RTO (เวลาฟื้น) | RPO (ข้อมูลหาย) | วิธีฟื้น |
 |-----------|----------------|-----------------|----------|
-| Vercel function | <1 นาที | 0 | auto-rollback |
-| Supabase DB | <10 นาที | <1 นาที (PITR) | restore backup |
+| Raspberry Pi function | <1 นาที | 0 | auto-rollback |
+| PostgreSQL (Local) DB | <10 นาที | <1 นาที (PITR) | restore backup |
 | ESP32 | <5 นาที | 0 | reboot/reflash |
 | Discord | depend | 0 | external service |
 | LAN กล่อง | <10 นาที | 0 | manual restart |
@@ -5045,14 +5201,14 @@ describe('POST /api/auth/login', () => {
 ### 62.2 Scenarios & Playbook
 
 #### Scenario A: Database หาย
-1. Supabase Dashboard → Database → Backups
+1. PostgreSQL (Local) Dashboard → Database → Backups
 2. เลือก backup ล่าสุด (daily) หรือ point-in-time
 3. Click "Restore"
 4. รอ ~5 นาที
 5. ตรวจ schema ครบ + admin ยัง login ได้
 
-#### Scenario B: Vercel deployment ล่ม
-1. Vercel Dashboard → Deployments
+#### Scenario B: Raspberry Pi deployment ล่ม
+1. Raspberry Pi Dashboard → Deployments
 2. หา build ก่อนหน้าที่ "Ready"
 3. กด "..." → "Promote to Production"
 4. รอ ~30 วินาที
@@ -5067,14 +5223,14 @@ describe('POST /api/auth/login', () => {
 
 #### Scenario D: ESP32_API_KEY รั่ว
 1. สร้าง key ใหม่ (`openssl rand -hex 32`)
-2. Vercel: update `ESP32_API_KEY` env → redeploy
+2. Raspberry Pi: update `ESP32_API_KEY` env → redeploy
 3. ESP32: แก้ `config.h` → re-flash ทุกบอร์ด
 4. ทดสอบ
 5. ตรวจ access_logs ย้อนหลังว่ามี traffic ผิดปกติ
 
 #### Scenario E: JWT_SECRET รั่ว
 1. สร้างใหม่
-2. Vercel update env → redeploy
+2. Raspberry Pi update env → redeploy
 3. ผู้ใช้ทุกคนถูก logout (token เดิม invalid)
 4. admin login ใหม่
 
@@ -5082,9 +5238,9 @@ describe('POST /api/auth/login', () => {
 
 | Data | Frequency | Retention |
 |------|-----------|-----------|
-| Supabase auto-backup | รายวัน | 7 วัน (free) / 30 วัน (pro) |
+| PostgreSQL (Local) auto-backup | รายวัน | 7 วัน (free) / 30 วัน (pro) |
 | Manual export DB | สัปดาห์ละครั้ง | 1 ปี |
-| Vercel deployments | ทุก push | 100 build ล่าสุด |
+| Raspberry Pi deployments | ทุก push | 100 build ล่าสุด |
 | ESP32 firmware | ทุกรุ่น | git tag |
 | `.env` | offline copy | encrypted in password manager |
 
@@ -5099,9 +5255,9 @@ describe('POST /api/auth/login', () => {
 
 | Service | Plan | ราคา/เดือน |
 |---------|------|-------------|
-| Vercel | Hobby | 0 บาท |
-| Supabase | Free | 0 บาท |
-| Domain | (ใช้ vercel.app) | 0 บาท |
+| Raspberry Pi | Hobby | 0 บาท |
+| PostgreSQL (Local) | Free | 0 บาท |
+| Domain | (ใช้ Raspberry Pi.app) | 0 บาท |
 | Discord | Free | 0 บาท |
 | ESP32 (hardware) | one-time ~250 บาท/บอร์ด | amortize |
 | **รวม** | | **0 บาท/เดือน** |
@@ -5110,8 +5266,8 @@ describe('POST /api/auth/login', () => {
 
 | Service | Plan | ราคา/เดือน |
 |---------|------|-------------|
-| Vercel | Pro | $20 (~700 บาท) |
-| Supabase | Pro | $25 (~880 บาท) |
+| Raspberry Pi | Pro | $20 (~700 บาท) |
+| PostgreSQL (Local) | Pro | $25 (~880 บาท) |
 | Custom domain `.ac.th` | — | ~500 บาท/ปี = ~42 บาท/เดือน |
 | Cloudflare (DDoS) | Free | 0 |
 | **รวม** | | **~1,600 บาท/เดือน** |
@@ -5119,12 +5275,12 @@ describe('POST /api/auth/login', () => {
 ### 63.3 Cost per Request
 
 ```
-Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
+Raspberry Pi Hobby: 100 GB bandwidth + 100k function invocations ฟรี
 1 บอร์ด ESP32 poll 2s = 1.3M invocation/เดือน → เกิน free!
 
 จริง ๆ:
 - 10 บอร์ด × 1.3M = 13M/เดือน
-- Vercel Pro: $20 + $0.40/M หลังจาก 1M = $20 + $5 = $25/เดือน
+- Raspberry Pi Pro: $20 + $0.40/M หลังจาก 1M = $20 + $5 = $25/เดือน
 - → 1 บอร์ดทำให้เกิน free แล้ว!
 ```
 
@@ -5257,7 +5413,7 @@ Vercel Hobby: 100 GB bandwidth + 100k function invocations ฟรี
 
 - Tahoma รองรับภาษาไทย + อ่านง่าย + free license
 - มีในทุก Windows machine (สำหรับ dev local)
-- ใส่ใน `public/fonts/tahoma.ttf` ~700KB → bundled กับ Vercel function
+- ใส่ใน `public/fonts/tahoma.ttf` ~700KB → bundled กับ Raspberry Pi function
 
 ### 66.2 ปัญหาฟอนต์ไทยที่เจอ
 
@@ -5455,7 +5611,7 @@ SEO: 100/100 (สำหรับหน้าที่เปิดสาธาร
 ```
 
 **ที่ Lighthouse แนะนำ**:
-- Preconnect to Supabase: `<link rel="preconnect" href="https://xxx.supabase.co">`
+- Preconnect to PostgreSQL (Local): `<link rel="preconnect" href="https://xxx.PostgreSQL (Local).co">`
 - Reduce unused JS: dashboard มี ~30% JS ไม่ได้ใช้ → tree shake
 - Image optimization: ใช้ `next/image`
 
@@ -5529,8 +5685,8 @@ voltage    ────┐                     ┌───┐
 ระบบได้ทำการปิดช่องโหว่ความปลอดภัยระดับวิกฤต (Critical) และสูง (High) ครบถ้วนดังนี้:
 
 1. **การป้องกันรหัสผ่านและค่าคอนฟิกฐานข้อมูล (Database Secrets Hardening):** 
-   - ดำเนินการย้ายข้อมูลรหัสผ่าน Supabase และ API secrets ทั้งหมดไปอยู่บนระบบจัดการ Environment Variables ของผู้ให้บริการโฮสต์ (Vercel Project Settings) แทนการจัดเก็บเป็น Plaintext ในโค้ด
-   - ทำการเปลี่ยนผ่านรหัสผ่านฐานข้อมูล Supabase ทันทีหลังจากการทดสอบ (Database Password Rotation)
+   - ดำเนินการย้ายข้อมูลรหัสผ่าน PostgreSQL (Local) และ API secrets ทั้งหมดไปอยู่บนระบบจัดการ Environment Variables ของผู้ให้บริการโฮสต์ (Raspberry Pi Project Settings) แทนการจัดเก็บเป็น Plaintext ในโค้ด
+   - ทำการเปลี่ยนผ่านรหัสผ่านฐานข้อมูล PostgreSQL (Local) ทันทีหลังจากการทดสอบ (Database Password Rotation)
 2. **การยกระดับนโยบายรหัสผ่านของบัญชีผู้ดูแลระบบ (Admin Password Policy):**
    - แก้ไข API `/api/admin-users` เพื่อบังคับใช้นโยบายรหัสผ่านที่รัดกุมสูง: ความยาวรหัสผ่านต้องไม่ต่ำกว่า 12 ตัวอักษร และต้องประกอบด้วยอักษรตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก ตัวเลข และอักขระพิเศษอย่างน้อยประเภทละ 1 ตัว
    - เพิ่มระบบตรวจสอบรูปแบบชื่อผู้ใช้งาน (Username Validation) โดยอนุญาตเฉพาะอักษรภาษาอังกฤษ ตัวเลข ตัวอักษรพิเศษเฉพาะจุด (.) และขีดล่าง (_) เท่านั้น (`/^[a-zA-Z0-9_.]{3,30}$/`)
@@ -5541,14 +5697,14 @@ voltage    ────┐                     ┌───┐
    - นำแพ็กเกจ `isomorphic-dompurify` มาติดตั้งและกรองข้อมูลอินพุตฝั่งเซิร์ฟเวอร์แบบเข้มงวด ป้องกันการทำ Cross-Site Scripting (XSS) ในฟิลด์ข้อมูลนักศึกษา
    - จำกัดความยาวของสาเหตุในการปฏิเสธการเข้าห้องเรียน (Reject Reason) ให้ไม่เกิน 500 ตัวอักษร เพื่อป้องกันการโจมตีประเภท Denial of Service (DoS) ทางฐานข้อมูล
 5. **การป้องกันการปลอมแปลงไอพีแอดเดรส (IP Spoofing Protection):**
-   - พัฒนาระบบประมวลผลข้อมูล IP แอดเดรสของผู้ใช้งานผ่าน `x-forwarded-for` ของ Vercel Trusted Proxy Chain เพื่อแยกแยะและดึงข้อมูล IP แอดเดรสที่แท้จริงของผู้ใช้ (Right-most client IP) ส่งผลให้การควบคุมการจำกัดปริมาณคำขอ (Rate Limiting) จากสปามเมอร์มีความแม่นยำสูง
+   - พัฒนาระบบประมวลผลข้อมูล IP แอดเดรสของผู้ใช้งานผ่าน `x-forwarded-for` ของ Raspberry Pi Trusted Proxy Chain เพื่อแยกแยะและดึงข้อมูล IP แอดเดรสที่แท้จริงของผู้ใช้ (Right-most client IP) ส่งผลให้การควบคุมการจำกัดปริมาณคำขอ (Rate Limiting) จากสปามเมอร์มีความแม่นยำสูง
 6. **การป้องกันข้อผิดพลาดการแปลงชนิดข้อมูลใน API (NaN Checking):**
    - เพิ่มระบบสกัดกั้นและตรวจสอบประเภทข้อมูลใน API `/api/students/[id]` และ `/api/admin-users/[id]` ป้องกันกรณีผู้โจมตีเจตนาส่งค่าที่ไม่ใช่ตัวเลข (NaN) เพื่อหวังผลให้ฐานข้อมูลประมวลผลผิดพลาด
 
 <a id="sec-71-2"></a>
 ### 71.2 ผลการวัดประสิทธิภาพบนโปรดักชัน (Live Benchmarking)
 
-จากการทดสอบยิงทดสอบระบบจริง (Active Benchmarking) จากคอมพิวเตอร์นักศึกษาในประเทศไทย ไปยังระบบ Vercel Server และ Supabase PostgreSQL (ภูมิภาคสิงคโปร์ - ap-southeast-1) ผลการวัดประสิทธิภาพเป็นดังนี้:
+จากการทดสอบยิงทดสอบระบบจริง (Active Benchmarking) จากคอมพิวเตอร์นักศึกษาในประเทศไทย ไปยังระบบ Raspberry Pi Server และ PostgreSQL (Local DB)QL (ภูมิภาคสิงคโปร์ - ap-southeast-1) ผลการวัดประสิทธิภาพเป็นดังนี้:
 
 | API Endpoint | จำนวนรัน | เวลาตอบสนองเฉลี่ย (Avg Latency) | Percentile 50 (Median) | Percentile 95 (P95) |
 |---|---|---|---|---|
@@ -5569,8 +5725,8 @@ voltage    ────┐                     ┌───┐
 3. **ความเสี่ยงจากการตั้งค่าพอร์ตฟอร์เวิร์ดดิ้ง (Port Forwarding Risks):** การเจาะเราเตอร์เพื่อส่งข้อมูลเข้าสู่บอร์ดโดยตรงเป็นการเปิดช่องให้ผู้โจมตีภายนอกแสกนหาอุปกรณ์และทำการแฮกในระดับฮาร์ดแวร์ได้ง่าย
 
 เพื่อแก้ปัญหาข้างต้น ระบบ **Innovative system for managing access rights and controlling classroom access via wireless network** จึงนำสถาปัตยกรรม **"Push-via-Poll" (หรือ IoT Cloud Polling Design)** มาใช้งานจริง:
-- **หลักการส่งออกข้อมูลขาเดียว (Outbound-only Connection):** บอร์ด ESP32 ที่ติดตั้งภายในวง LAN ของห้องเรียนจะเป็นฝ่ายเริ่มต้นสถาปนาการเชื่อมต่อ (Initiate Connection) ขาออกด้วยการร้องขอแบบ HTTPS GET ทุก ๆ 2 วินาที ไปยังเซิร์ฟเวอร์ Vercel ภายนอก ซึ่งเป็นช่องทางสื่อสารที่ Firewall ขององค์กรอนุญาตอย่างเป็นปกติ
-- **ระบบคำสั่งในท่อข้อมูล (Command Queue via Response):** ทุกครั้งที่ ESP32 ยิงคำขอไปถามสถานะ `/api/esp32/display` ทางคลาวด์เซิร์ฟเวอร์จะตรวจสอบฐานข้อมูล Supabase เพื่อสแกนหาตัวแปรคำสั่ง `room_cmd_<room>` หากแอดมินกดอนุมัติเปิดประตู ตัวแปรดังกล่าวจะถูกเปลี่ยนค่าเป็น `unlock` และถูกจัดส่งเป็นข้อมูลแนบท้าย (JSON Response payload) ส่งกลับคืนไปในขารับสายสัญญาณข้อมูลของตัวบอร์ดทันที
+- **หลักการส่งออกข้อมูลขาเดียว (Outbound-only Connection):** บอร์ด ESP32 ที่ติดตั้งภายในวง LAN ของห้องเรียนจะเป็นฝ่ายเริ่มต้นสถาปนาการเชื่อมต่อ (Initiate Connection) ขาออกด้วยการร้องขอแบบ HTTPS GET ทุก ๆ 2 วินาที ไปยังเซิร์ฟเวอร์ Raspberry Pi ภายนอก ซึ่งเป็นช่องทางสื่อสารที่ Firewall ขององค์กรอนุญาตอย่างเป็นปกติ
+- **ระบบคำสั่งในท่อข้อมูล (Command Queue via Response):** ทุกครั้งที่ ESP32 ยิงคำขอไปถามสถานะ `/api/esp32/display` ทางคลาวด์เซิร์ฟเวอร์จะตรวจสอบฐานข้อมูล PostgreSQL (Local) เพื่อสแกนหาตัวแปรคำสั่ง `room_cmd_<room>` หากแอดมินกดอนุมัติเปิดประตู ตัวแปรดังกล่าวจะถูกเปลี่ยนค่าเป็น `unlock` และถูกจัดส่งเป็นข้อมูลแนบท้าย (JSON Response payload) ส่งกลับคืนไปในขารับสายสัญญาณข้อมูลของตัวบอร์ดทันที
 - **การวิเคราะห์การใช้งานแบนด์วิดท์เครือข่าย (Bandwidth Analysis):** 
   - ขนาดของ JSON payload ต่อการส่งหนึ่งรอบมีขนาดเฉลี่ยเพียง **784 ไบต์**
   - เมื่อส่งข้อมูลคำร้องทุก 2 วินาที ปริมาณข้อมูลทั้งหมดต่อวันสำหรับ 1 ห้องเรียนจะอยู่ที่ประมาณ **32 เมกะไบต์ (MB)** ซึ่งถือว่าน้อยมาก และไม่มีผลกระทบในเชิงลบหรือสร้างภาระงานให้กับระบบเครือข่ายส่วนกลางของทางมหาวิทยาลัยแต่อย่างใด
@@ -5589,7 +5745,7 @@ voltage    ────┐                     ┌───┐
 > **ช่องโหว่ความมั่นคง:** ในระบบ Serverless หรือมีผู้ใช้ปริมาณมาก (High Concurrency) ระหว่างขั้นตอนที่ 1 และ 3 อาจมีอีก Request หนึ่งร้องขอเข้ามาสำเร็จและเห็นสถานะเป็น `'unlock'` เช่นเดียวกัน ส่งผลให้คำสั่งเปิดประตูทำงานสองรอบซ้อน หรือเปิดค้างโดยไม่มีผู้รับผิดชอบ
 
 **แนวทางแก้ไขเชิงทฤษฎีในโครงงานวิจัย:**
-ระบบได้ออกแบบให้ใช้ **Single-step Atomic Update** ในระดับ SQL Engine บนเครื่องยนต์ฐานข้อมูล Supabase PostgreSQL ผ่านประโยคคำสั่งเดียวที่เป็นอะตอมิก (ไม่สามารถแยกการประมวลผลย่อยได้):
+ระบบได้ออกแบบให้ใช้ **Single-step Atomic Update** ในระดับ SQL Engine บนเครื่องยนต์ฐานข้อมูล PostgreSQL (Local DB)QL ผ่านประโยคคำสั่งเดียวที่เป็นอะตอมิก (ไม่สามารถแยกการประมวลผลย่อยได้):
 
 ```sql
 UPDATE system_settings 
@@ -5628,12 +5784,12 @@ RETURNING *;
 > > หลายคนมักตั้งคำถามว่า *"ทำไมระบบไม่กดปุ่มป้อนโค้ดบนเว็บแล้วให้เซิร์ฟเวอร์คลาวด์คอมไพล์เสร็จออกมาเป็นไฟล์ .bin ให้เลยโดยอัตโนมัติ?"* ในทางวิศวกรรมคอมพิวเตอร์และระบบเครือข่าย มีข้อจำกัดร้ายแรงที่จำเป็นต้องหลีกเลี่ยงดังนี้:
 > > 1. **ข้อจำกัดทรัพยากรของเซิร์ฟเวอร์แบบไร้เซิร์ฟเวอร์ (Serverless Memory & CPU Limits):**
 > >    - การคอมไพล์ภาษา C++ สำหรับชิปสถาปัตยกรรม Xtensa ของ ESP32 ต้องใช้โปรแกรมคอมไพล์เลอร์เฉพาะรุ่น และกินหน่วยความจำแรมสูงถึง 2GB - 4GB รวมถึงประมวลผลซีพียู 100% ตลอดระยะเวลา 1-3 นาที
-> >    - คลาวด์ยุคใหม่ (เช่น Vercel Serverless Functions) ได้รับการออกแบบให้ทำงานสั้น ๆ (มี Execution Timeout สูงสุดเพียง 10-60 วินาทีและแรมจำกัด 1024MB) ส่งผลให้การสั่งคอมไพล์บนเซิร์ฟเวอร์เกิดสภาวะล่ม (Out of Memory / Timeout Error) เสมอ
+> >    - คลาวด์ยุคใหม่ (เช่น Next.js บน Raspberry Pi Functions) ได้รับการออกแบบให้ทำงานสั้น ๆ (มี Execution Timeout สูงสุดเพียง 10-60 วินาทีและแรมจำกัด 1024MB) ส่งผลให้การสั่งคอมไพล์บนเซิร์ฟเวอร์เกิดสภาวะล่ม (Out of Memory / Timeout Error) เสมอ
 > > 2. **ความยากในการบำรุงรักษาระบบไลบรารี (Complex Dependency Management):**
 > >    - โค้ดควบคุมประตูใช้ไลบรารีจำนวนมาก เช่น `Adafruit_GFX`, `Adafruit_ILI9341`, `ArduinoJson`, `ElegantOTA`, `ricmoo_qrcode` 
 > >    - การรันตัวคอมไพล์บนคลาวด์จำเป็นต้องติดตั้งโปรแกรม Arduino-CLI และต้องคอยดึง อัปเดต สั่งติดตั้งไลบรารีทุกตัวเหล่านี้ให้ตรงรุ่นอยู่เสมอ ซึ่งเป็นภาระหนักทางระบบไอทีและมีโอกาสที่คอมไพล์เลอร์จะเข้ากันไม่ได้ (Incompatible Version) สูงมาก
 > > 3. **ความเสี่ยงด้านความปลอดภัยขั้นร้ายแรง (Remote Code Execution Vulnerability):**
-> >    - การยินยอมให้เว็บแอปพลิเคชันรับโค้ดดิบไปคอมไพล์และรันคำสั่งเชิงระบบ (System Shell Commands) บนหลังบ้าน ถือเป็นการเปิดช่องโหว่ความมั่นคงปลอดภัยขนาดมหึมา (RCE) หากแฮกเกอร์โจมตีนำสคริปต์อันตรายป้อนเข้ามา จะสามารถเข้าควบคุมระบบคลาวด์ แฟลชเฟิร์มแวร์แฝงมัลแวร์ไปคุมประตูห้อง หรือขโมยคีย์ Supabase/PostgreSQL ออกไปได้ทั้งหมด
+> >    - การยินยอมให้เว็บแอปพลิเคชันรับโค้ดดิบไปคอมไพล์และรันคำสั่งเชิงระบบ (System Shell Commands) บนหลังบ้าน ถือเป็นการเปิดช่องโหว่ความมั่นคงปลอดภัยขนาดมหึมา (RCE) หากแฮกเกอร์โจมตีนำสคริปต์อันตรายป้อนเข้ามา จะสามารถเข้าควบคุมระบบคลาวด์ แฟลชเฟิร์มแวร์แฝงมัลแวร์ไปคุมประตูห้อง หรือขโมยคีย์ PostgreSQL (Local)/PostgreSQL ออกไปได้ทั้งหมด
 > > 
 > > #### 3. แผนการดำเนินงานและแนวปฏิบัติที่เป็นเลิศ (Enterprise Cloud OTA Deployment Runbook)
 > > เพื่อความปลอดภัยและรวดเร็วสูงสุด ระบบจึงเลือกใช้แนวทาง **"Local Compilation & Secure Web Upload"** ซึ่งเป็นมาตรฐานสากลที่ใช้ในอุปกรณ์สมาร์ทโฮมแบรนด์เนม โดยมีขั้นตอนการจัดส่งอัปเดตดังนี้:
@@ -5686,7 +5842,7 @@ RETURNING *;
     - มีระบบ **Immutable Log Policy** บนระบบฐานข้อมูลเพื่อป้องกันไม่ให้ผู้ใช้งานทั่วไป รวมถึงผู้ควบคุมห้องเรียนระดับ `door_operator` ทำการแก้ไข ลบ หรือดัดแปลงข้อมูลประวัติย้อนหลังใดๆ ได้ เพื่อรักษาความน่าเชื่อถือของพยานหลักฐานทางนิติวิทยาศาสตร์ดิจิทัลกรณีเกิดเหตุอาชญากรรมในชั้นเรียน
 *   **พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 (PDPA):**
     - เพื่อปกป้องข้อมูลส่วนบุคคลที่ระบุตัวตนนักศึกษาได้ (Personally Identifiable Information - PII) ระบบมีการแสดงผลข้อมูลบนหน้าจอประวัติการเข้าใช้งานแอดมินแดชบอร์ด โดยมีระบบบดบังข้อมูลบางส่วน (Data Masking) เช่น การแสดงรหัสนักศึกษาในรูปแบบ `1164xxxxxx45` และไม่แสดงข้อมูลที่ละเอียดอ่อนแก่ผู้ไม่มีสิทธิ์
-    - นำระบบ **Row-Level Security (RLS)** ของ Supabase PostgreSQL มาตั้งค่าห้ามการสแกนหรืออ่านข้อมูลตารางผู้สมัครแบบสาธารณะ โดยอนุญาตสิทธิ์การคิวรี่และเข้าถึงเฉพาะคีย์เซสชันที่ลงชื่อเข้าใช้ด้วยบัญชีแอดมิน `owner` ที่ได้รับอนุญาตตามกฎหมายแล้วเท่านั้น
+    - นำระบบ **Row-Level Security (RLS)** ของ PostgreSQL (Local DB)QL มาตั้งค่าห้ามการสแกนหรืออ่านข้อมูลตารางผู้สมัครแบบสาธารณะ โดยอนุญาตสิทธิ์การคิวรี่และเข้าถึงเฉพาะคีย์เซสชันที่ลงชื่อเข้าใช้ด้วยบัญชีแอดมิน `owner` ที่ได้รับอนุญาตตามกฎหมายแล้วเท่านั้น
 
 <a id="sec-71-7"></a>
 ### 71.7 การวิเคราะห์การจัดสรรพลังงานและการออกแบบกลไกเผชิญเหตุฉุกเฉิน (Power Budget & Fail-Safe Design)
@@ -5723,7 +5879,7 @@ RETURNING *;
 วิทยานิพนธ์ระดับดีเด่นต้องมีการประเมินกรณีเกิดเหตุไม่คาดคิด (Worst-case Scenario) และแสดงวิธีการจัดการระบบให้ตอบสนองได้อย่างนุ่มนวลและไม่เกิดภาวะอัมพาต (Graceful Degradation)
 
 #### 1. มาตรการรองรับกรณีคลาวด์ฐานข้อมูลล่ม (Database Outage Handling)
-- **ปัญหา:** หากเซิร์ฟเวอร์ฐานข้อมูล Supabase เกิดการปิดซ่อมบำรุง หรือทำงานช้าเกินกว่าเป้าหมาย
+- **ปัญหา:** หากเซิร์ฟเวอร์ฐานข้อมูล PostgreSQL (Local) เกิดการปิดซ่อมบำรุง หรือทำงานช้าเกินกว่าเป้าหมาย
 - **วิธีจัดการฝั่งเว็บ:** 
   - หน้าแอปพลิเคชัน Next.js มีกลไกตรวจจับการขาดหายของการเชื่อมต่อ (Connection Timeout Detection) หากพยายามคิวรี่แล้วไม่ตอบสนอง ระบบจะสลับไปใช้ **Fallback Memory Cache** ในระบบซึ่งจำลองข้อมูลการตั้งค่าเริ่มต้น (Default Settings) เพื่อยังคงเปิดหน้าเว็บลงทะเบียนและแสดงผลข้อมูลส่วนขัดข้องให้ผู้ใช้ทราบโดยไม่มีอาการหน้าจอฟ้าขัดข้อง (Zero Server Crash)
   - หน้าเว็บจะแจ้งเตือนผู้ใช้งานให้นำบาร์โค้ดสิทธิ์เข้าห้องแบบออฟไลน์มาใช้ในการตรวจสอบ
@@ -5745,13 +5901,13 @@ RETURNING *;
 | **ค่าจัดหาเครื่องคอมพิวเตอร์เซิร์ฟเวอร์** | 35,000 - 50,000 บาท (เซิร์ฟเวอร์กลาง) | **0 บาท** (ไม่ต้องการเครื่องเซิร์ฟเวอร์กลางในสถาบัน) |
 | **ค่าระบบสำรองไฟและการปรับอากาศ** | 8,000 บาท (เครื่อง UPS และพัดลมระบายความร้อน) | **0 บาท** (ใช้เซิร์ฟเวอร์คลาวด์ในประเทศสิงคโปร์) |
 | **ค่าไฟฟ้าเซิร์ฟเวอร์กลาง** | ~18,000 บาทต่อปี (เปิด 24 ชั่วโมง) | **0 บาท** (แปรผันตามแบนด์วิดท์คลาวด์) |
-| **ค่าบริการคลาวด์แบนด์วิดท์รายปี** | — | **0 บาท** (Vercel & Supabase ฟรีจำกัดปริมาณใช้งานระดับนักศึกษา) |
+| **ค่าบริการคลาวด์แบนด์วิดท์รายปี** | — | **0 บาท** (Raspberry Pi & PostgreSQL (Local) ฟรีจำกัดปริมาณใช้งานระดับนักศึกษา) |
 | **ค่าดูแลและบำรุงรักษาระบบเครือข่าย** | ~10,000 บาทต่อปี (ต้องมีทีมไอทีเปิดพอร์ต/ดูแล) | **0 บาท** (รองรับอัปเดตแบบไร้สาย OTA บนอินเทอร์เน็ตสาธารณะ) |
 | **ยอดรวมงบประมาณเริ่มต้นปีแรก** | **~72,500 บาท** | **~1,500 บาท (ประหยัดงบได้ถึง 97.9%)** |
 
 #### ขั้นตอนที่ 2: การสร้างบัญชีผู้ดูแลระบบผู้สิทธิ์ควบคุมเริ่มต้น (Administrator Account Seeding)
 เพื่อให้แอดมินระดับสูงสุด (Owner) มีบัญชีในการล็อกอินกู้คืนระบบได้หลังการลงตารางฐานข้อมูลเสร็จสิ้น ให้ดำเนินการดังนี้:
-1. สร้างหรือกำหนดตัวแปรสภาพแวดล้อมต่อไปนี้ใน `.env.local` หรือระบบคลาวด์ Vercel:
+1. สร้างหรือกำหนดตัวแปรสภาพแวดล้อมต่อไปนี้ใน `.env.local` หรือระบบคลาวด์ Raspberry Pi:
    ```env
    ALLOW_DEV_SEED=true
    INITIAL_ADMIN_USERNAME=owner_admin
@@ -5778,7 +5934,7 @@ RETURNING *;
 | **ไฟ LED Wi-Fi กระพริบถี่ๆ** (5 ครั้งต่อวินาที) | บอร์ด ESP32 | เชื่อมต่อ AP สำเร็จแล้ว แต่บอร์ดไม่ได้รับ IP Address จากระบบ DHCP | ตรวจสอบเราเตอร์และช่วงที่แจกไอพี หรือทำการสวิตช์ไปใช้ IP แบบ Static |
 | **เสียง Buzzer ปี๊บสั้น 3 ครั้ง** | บอร์ด ESP32 | บอร์ดทำการเริ่มต้นระบบ (Boot) และเชื่อมต่อเครือข่ายอินเทอร์เน็ตสำเร็จ | สถานะการทำงานปกติ พร้อมเข้าสู่การทำงาน Polling |
 | **เสียง Buzzer ปี๊บยาว 1 ครั้ง** | บอร์ด ESP32 | ประตูได้รับคำสั่งอนุมัติปลดล็อก (`door_trigger: "open"`) | สถานะปกติ รีเลย์จะจ่ายพลังงานไฟฟ้าสลับขั้วกลอน |
-| **เสียง Buzzer ปี๊บสั้น 5 ครั้งถี่ๆ** | บอร์ด ESP32 | เกิดความผิดพลาดในการส่ง header ยืนยันสิทธิ์ (`x-api-key` ไม่ถูกต้อง) | ตรวจสอบค่า `ESP32_API_KEY` บน Vercel และบอร์ดให้ตรงกัน |
+| **เสียง Buzzer ปี๊บสั้น 5 ครั้งถี่ๆ** | บอร์ด ESP32 | เกิดความผิดพลาดในการส่ง header ยืนยันสิทธิ์ (`x-api-key` ไม่ถูกต้อง) | ตรวจสอบค่า `ESP32_API_KEY` บน Raspberry Pi และบอร์ดให้ตรงกัน |
 | **หน้าจอขึ้นแถบสีแดงด้านบนค้าง** | หน้าจอ TFT | เกิดความล้มเหลวในการส่ง HTTP Request หรือ Server ล่มตอบกลับช้า | เช็คสถานะ Web Hosting และเกตเวย์อินเทอร์เน็ต |
 
 #### 2. ตารางรหัสข้อผิดพลาด API (HTTP Response Status Code Diagnostic)
@@ -5788,7 +5944,7 @@ RETURNING *;
 | **401 Unauthorized** | คีย์ API ผิดพลาด หรือไม่มี Token แอดมิน | `ESP32_API_KEY` หรือ JWT Session ของแอดมินหมดอายุการล็อกอิน | ตรวจสอบสภาพแวดล้อมระบบหรือทำการลงชื่อเข้าสู่ระบบใหม่อีกครั้ง |
 | **403 Forbidden** | ดำเนินการนอกขอบเขตห้องที่รับผิดชอบ | ผู้ใช้เป็น `door_operator` ที่ไม่มีสิทธิ์ดูแลห้องนั้นตามคอลัมน์ `allowed_rooms` | ดำเนินการยกระดับสิทธิ์ผู้ใช้เป็น `owner` หรือตั้งค่า CSV เพิ่มห้องเรียน |
 | **429 Too Many Requests** | ปริมาณคำขอถล่มเข้ามาเกินขอบเขต | ระบบ Rate Limiter ดักพบไอพีแอดเดรสใช้งานเกิน 5 ครั้งต่อ 1 นาที | หยุดยิงทดสอบ API และรอให้ครบ 60 วินาที ระบบจะปลดล็อกเอง |
-| **500 Database Connection Fail** | ไม่สามารถสถาปนาท่อหาฐานข้อมูลได้ | Supabase Database ล่ม หรือโควตาเชื่อมต่อเกินขีดจำกัด (Connection Limit Exceeded) | ตรวจสอบระบบ PgBouncer (Port 6543) หรือรีบูต Connection Pool |
+| **500 Database Connection Fail** | ไม่สามารถสถาปนาท่อหาฐานข้อมูลได้ | PostgreSQL (Local) Database ล่ม หรือโควตาเชื่อมต่อเกินขีดจำกัด (Connection Limit Exceeded) | ตรวจสอบระบบ PgBouncer (Port 6543) หรือรีบูต Connection Pool |
 
 <a id="sec-71-11"></a>
 ### 71.11 คู่มือการบำรุงรักษาเชิงป้องกันและการลดสัญญาณรบกวนในระบบวงจรจริง (Preventive Maintenance & Hardware De-noising)
@@ -5812,7 +5968,7 @@ RETURNING *;
 
 ```mermaid
 flowchart TD
-    DEV["👤 ผู้พัฒนา / แอดมิน"] -->|"อัปโหลด esp32.bin (Firmware)"| SRV["🖥️ Next.js Server<br/>(Vercel Cloud)"]
+    DEV["👤 ผู้พัฒนา / แอดมิน"] -->|"อัปโหลด esp32.bin (Firmware)"| SRV["🖥️ Next.js Server<br/>(Raspberry Pi Cloud)"]
     SRV -->|"/api/esp32/firmware-update<br/>HTTPS TLS 1.2"| ESP["📟 ESP32 Controller<br/>(Dual Partition: OTA_0 / OTA_1)"]
 
     classDef devStyle fill:#7C3AED,stroke:#333,stroke-width:2px,color:#fff;
@@ -5870,7 +6026,7 @@ stateDiagram-v2
 ชิปประมวลผลหลักของ ESP32 ประกอบด้วยซีพียูสถาปัตยกรรม Tensilica 32-bit Dual-Core (Core 0 และ Core 1) เพื่อป้องกันไม่ให้ขั้นตอนการดึงข้อมูลเน็ตเวิร์ก (ซึ่งมีค่าความหน่วงไม่แน่นอน) ส่งผลให้หน้าจอ TFT นาฬิกากระตุกหรือทำงานไม่เรียบเนียน ระบบได้แบ่งสรรภารกิจด้วย FreeRTOS ดังนี้:
 
 - **Core 0 (Protocol Core):** 
-  - ทำหน้าที่หลักด้านการเชื่อมต่อเครือข่ายไร้สาย (Wi-Fi Protocol Stack) และการยิง HTTPS Request ขาออกไปยัง Vercel API
+  - ทำหน้าที่หลักด้านการเชื่อมต่อเครือข่ายไร้สาย (Wi-Fi Protocol Stack) และการยิง HTTPS Request ขาออกไปยัง Raspberry Pi API
   - รันฟังก์ชัน **HTTPS Polling Loop** ในเบื้องหลัง (Background Task) โดยทำการโพลล์ข้อมูลทุก 2 วินาทีอย่างเงียบๆ
 - **Core 1 (Application Core):**
   - ทำหน้าที่หลักด้านระบบประยุกต์และส่วนติดต่อผู้ใช้งาน (User Interface & Actuators)
@@ -5930,13 +6086,13 @@ my-app/
 │       ├── esp32/             - API ให้บริการข้อมูลสำหรับบอร์ด (display, qr, status)
 │       └── students/          - API จัดการนักศึกษา (approve, reject, bypass, pending)
 ├── lib/                      [Business Logic & Infrastructure Layer]
-│   ├── db.ts                  - ฟังก์ชันเชื่อม Supabase, Connection Pooling และ Seed
+│   ├── db.ts                  - ฟังก์ชันเชื่อม PostgreSQL (Local), Connection Pooling และ Seed
 │   ├── auth.ts                - บริการตรวจสอบสิทธิ์ JWT, ออกตั๋ว, ตรวจสอบ password
 │   ├── qr.ts                  - สร้าง ล้าง และประมวลผลวงจรชีวิตของ QR tokens
 │   ├── esp32.ts               - คลังคิวคำสั่งเปิดประตู และ LAN direct fallback
 │   ├── discord.ts             - บริการจัดส่ง Discord Webhook แจ้งเตือนสถาบัน
 │   ├── rate-limit.ts          - ระบบสกัดกั้นสแปมและยิงถล่มด้วย PostgreSQL atomic counters
-│   └── client-ip.ts           - ดึงค่า IP แอดมินที่แท้จริงผ่าน Vercel trusted proxy chain
+│   └── client-ip.ts           - ดึงค่า IP แอดมินที่แท้จริงผ่าน Raspberry Pi trusted proxy chain
 └── proxy.ts                  - ตรวจสอบสิทธิ์ระดับเน็ตเวิร์ก ป้องกันหน้าแผงควบคุม /admin/* (เดิมชื่อ middleware.ts ก่อน Next 16)
 ```
 
@@ -5956,7 +6112,7 @@ my-app/
 
 1. **กลไกการขอความยินยอม (Consent Management):** Component `CookieConsent.tsx` บันทึกค่าใน `localStorage` คีย์ `smartaccess_cookie_consent` และส่ง Custom Event `smartaccess_cookie_consent_changed` กรณีผู้ใช้ปฏิเสธจะบล็อกฟอร์มลงทะเบียนทั้งหมด
 2. **Data Masking บน UI:** รหัสนักศึกษาแสดงแบบ `1164******45` ป้องกัน door_operator คัดลอกข้อมูลออกนอกระบบ
-3. **Row-Level Security (RLS):** Supabase PostgreSQL ตั้ง RLS เฉพาะ JWT ที่ผ่านการตรวจสอบเท่านั้นที่ query ได้
+3. **Row-Level Security (RLS):** PostgreSQL (Local DB)QL ตั้ง RLS เฉพาะ JWT ที่ผ่านการตรวจสอบเท่านั้นที่ query ได้
 
 <a id="sec-71-20"></a>
 ### 71.20 สถาปัตยกรรมการรักษาความปลอดภัยข้อมูล (Information Security Framework)
@@ -5998,7 +6154,7 @@ my-app/
 <a id="sec-71-24"></a>
 ### 71.24 Threat Model แบบ STRIDE และการประเมิน DREAD
 
-วิเคราะห์ภัยคุกคามตามกรอบ Microsoft STRIDE โดยแยก trust boundary 4 ชั้น: Browser → Vercel Edge → Supabase → ESP32 LAN
+วิเคราะห์ภัยคุกคามตามกรอบ Microsoft STRIDE โดยแยก trust boundary 4 ชั้น: Browser → Raspberry Pi Edge → PostgreSQL (Local) → ESP32 LAN
 
 #### 71.24.1 Threat Actors
 
@@ -6015,10 +6171,10 @@ my-app/
 | ภัย | คำอธิบาย | จุดในระบบ | การป้องกัน | ความเสี่ยงคงเหลือ |
 |---|---|---|---|---|
 | **S**poofing | ปลอม JWT, ปลอม X-API-Key, ปลอม QR | Cookie, Header, QR payload | HS256 (256-bit), HMAC QR, API Key 32 chars | ต่ำ |
-| **T**ampering | แก้ request body, แก้ DB direct | API payload, Supabase | parameterized SQL, RLS, Zod validation | ต่ำ |
+| **T**ampering | แก้ request body, แก้ DB direct | API payload, PostgreSQL (Local) | parameterized SQL, RLS, Zod validation | ต่ำ |
 | **R**epudiation | ปฏิเสธว่าไม่ได้เปิดประตู | access_logs | Immutable logs + IP + UA + timestamp | ต่ำมาก |
 | **I**nformation Disclosure | leak PII จาก dashboard | /admin/dashboard | Data masking, role-based view | กลาง (mask แค่ display) |
-| **D**enial of Service | ยิงถล่ม API, ทำ DB หมดคอนเนคชัน | /api/auth/login | rate-limit 10/5min, Vercel auto-scale | กลาง (Vercel free tier limit) |
+| **D**enial of Service | ยิงถล่ม API, ทำ DB หมดคอนเนคชัน | /api/auth/login | rate-limit 10/5min, Raspberry Pi auto-scale | กลาง (Raspberry Pi free tier limit) |
 | **E**levation of Privilege | door_operator → owner | role check ใน API | ตรวจ role ทุก endpoint, allowed_rooms CSV | ต่ำ |
 
 #### 71.24.3 DREAD Scoring (0-10)
@@ -6044,11 +6200,11 @@ flowchart TD
         BROWSER["Browser นักศึกษา"]
         ATTACKER["Attacker"]
     end
-    subgraph EDGE["🟣 Vercel Edge (Semi-trusted)"]
+    subgraph EDGE["🟣 Raspberry Pi Edge (Semi-trusted)"]
         MW["proxy.ts<br/>JWT verify"]
         API["API Routes"]
     end
-    subgraph DB["🟢 Supabase (Trusted)"]
+    subgraph DB["🟢 PostgreSQL (Local) (Trusted)"]
         PG["PostgreSQL + RLS"]
     end
     subgraph LAN["🟠 Campus LAN (Semi-trusted)"]
@@ -6085,7 +6241,7 @@ flowchart TD
     A["แอดมิน<br/>(Data Processor)"]
     SYS(("ระบบควบคุม<br/>ประตู SmartAccess"))
     D["Discord<br/>(3rd Party)"]
-    SUP["Supabase<br/>(Sub-Processor<br/>AWS Singapore)"]
+    SUP["PostgreSQL (Local)<br/>(Sub-Processor<br/>AWS Singapore)"]
     
     S -->|"PII: ชื่อ, รหัส, IP"| SYS
     SYS -->|"QR Token"| S
@@ -6217,14 +6373,14 @@ flowchart TB
 | 1 | **ชื่อกิจกรรม** | ระบบควบคุมการเข้าห้องเรียน SmartAccess |
 | 2 | **Data Controller** |  มทร.พระนคร |
 | 3 | **DPO Contact** | dpo@smartaccess.ac.th (ตัวอย่าง) |
-| 4 | **Data Processor** | Supabase Inc. (AWS Singapore) |
+| 4 | **Data Processor** | PostgreSQL (Local) Inc. (AWS Singapore) |
 | 5 | **วัตถุประสงค์** | ควบคุมการเข้าออกห้องปฏิบัติการเพื่อความปลอดภัย, ป้องกันโจรกรรม |
 | 6 | **Lawful Basis** | Legitimate Interest (PDPA ม.24(5)) + Legal Obligation (พ.ร.บ.คอม ม.26) |
 | 7 | **ประเภทข้อมูล** | ชื่อ-นามสกุล, รหัส นศ., คณะ-สาขา, IP, User-Agent, timestamp |
 | 8 | **ประเภทเจ้าของข้อมูล** | นักศึกษา + อาจารย์ผู้ใช้ห้อง |
 | 9 | **ผู้รับข้อมูล** | แอดมินคณะ, Discord webhook ภายใน |
-| 10 | **ส่งข้อมูลออกนอก ปทท.** | ใช่ — Supabase AWS Singapore + Discord (EU/US) |
-| 11 | **Safeguards** | TLS 1.3, Standard Contractual Clauses (Supabase SOC2), Encryption at-rest |
+| 10 | **ส่งข้อมูลออกนอก ปทท.** | ใช่ — PostgreSQL (Local) AWS Singapore + Discord (EU/US) |
+| 11 | **Safeguards** | TLS 1.3, Standard Contractual Clauses (PostgreSQL (Local) SOC2), Encryption at-rest |
 | 12 | **ระยะเวลาเก็บ** | access_logs ≥ 90 วัน (พ.ร.บ.คอม) / students = จนจบ ปกศ. + 1 ปี |
 | 13 | **มาตรการความปลอดภัย** | JWT, bcrypt, RLS, rate-limit, RBAC, audit logs |
 | 14 | **Risk Level** | Medium (มี PII แต่ไม่มี Sensitive Data ตาม ม.26) |
@@ -6502,7 +6658,7 @@ responses:
 | `my-app/lib/access-log.ts` | **ไฟล์ใหม่** — helper บันทึก log รวมศูนย์ |
 | `my-app/lib/discord.ts` | event `security_alert`, `system_summary`, device ใน embed |
 | `my-app/app/api/system/summary/route.ts` | **ไฟล์ใหม่** — รายงานสรุปรายวัน/สัปดาห์ |
-| `my-app/vercel.json` | **ไฟล์ใหม่** — Vercel Cron |
+| `my-app/vercel.json` | **ไฟล์ใหม่** — Raspberry Pi Cron |
 | routes: `approve`, `door`, `reject`, `bypass`, `auth/login` | ใช้ `logEvent` เก็บ IP/อุปกรณ์/severity |
 
 **Polling response example:**
@@ -6529,7 +6685,7 @@ responses:
 #### 71.31.1 Branch Strategy (Trunk-Based + Release Branch)
 
 ```
-main (production)  ──●──●──●──●──●──●──── deploy auto → Vercel prod
+main (production)  ──●──●──●──●──●──●──── deploy auto → Raspberry Pi prod
                       │     │     │
                       │     │     └─ hotfix/V07-rate-limit (cherry-pick)
                       │     │
@@ -6538,7 +6694,7 @@ feature/qr-rotation ──┴──●──┘
                           merge via PR + review
 ```
 
-- **main:** auto-deploy to Vercel prod ทุก push
+- **main:** auto-deploy to Raspberry Pi prod ทุก push
 - **feature/\*:** branch ทำงาน, PR ก่อน merge
 - **hotfix/\*:** branch แก้ด่วน, fast-track review
 
@@ -6645,14 +6801,14 @@ flowchart TD
 #### 71.32.3 Containment Playbook ตาม Scenario
 
 **Scenario A: JWT_SECRET รั่ว (P0)**
-1. ขั้นที่ 1 (T+0): Rotate `JWT_SECRET` ผ่าน Vercel env → redeploy (ทำให้ทุก session หมดอายุ)
+1. ขั้นที่ 1 (T+0): Rotate `JWT_SECRET` ผ่าน Raspberry Pi env → redeploy (ทำให้ทุก session หมดอายุ)
 2. ขั้นที่ 2 (T+5): Force re-login admin ทุกคน, ตรวจ access_logs 24 ชม. ย้อนหลัง
 3. ขั้นที่ 3 (T+15): แจ้ง Discord channel + เปลี่ยนรหัสผ่าน admin ทุกคน
 4. ขั้นที่ 4 (T+30): ทำ root cause analysis (ทำไม secret leak)
 5. ขั้นที่ 5 (T+24h): แจ้ง สคส. ตามแบบฟอร์มด้านล่าง
 
 **Scenario B: PII Database Leak (P0 — ต้องแจ้ง 72 ชม.)**
-1. Containment: ยึด session admin ทันที, revoke Supabase service role key
+1. Containment: ยึด session admin ทันที, revoke PostgreSQL (Local) service role key
 2. Forensics: copy access_logs ทั้งหมด, snapshot DB
 3. Notification:
    - **เจ้าของข้อมูล (นักศึกษา)** ภายใน "เร็วที่สุดเท่าที่ทำได้" ตาม PDPA ม.37(4)
@@ -6983,7 +7139,7 @@ Sharma, R., et al. (2020). BLE Beacon-based Access Control. Procedia CS, 167, 18
 
 ```mermaid
 flowchart TB
-    INET["🌐 Internet<br/>(Vercel + Supabase<br/>AWS Singapore)"]
+    INET["🌐 Internet<br/>(Raspberry Pi + PostgreSQL (Local)<br/>AWS Singapore)"]
     FW["🔥 Campus Firewall<br/>(Fortigate)"]
     CORE["🌐 Core Switch<br/>(Cisco Catalyst)"]
     
@@ -7022,7 +7178,7 @@ flowchart TB
 | VLAN | Purpose | IP Range | Access |
 |---|---|---|---|
 | 10 | Faculty/Staff Wi-Fi | 10.10.0.0/16 | Full internet, Admin dashboard |
-| 20 | **IoT (ESP32)** | 10.20.0.0/24 | Internet outbound only (Vercel + NTP) |
+| 20 | **IoT (ESP32)** | 10.20.0.0/24 | Internet outbound only (Raspberry Pi + NTP) |
 | 30 | Student Wi-Fi | 10.30.0.0/16 | Full internet, student form only |
 | 99 | Management | 10.99.0.0/24 | SSH/admin to switches |
 
@@ -7032,13 +7188,13 @@ flowchart TB
 
 ```
 # OUTBOUND (จาก VLAN 20 ESP32)
-allow from 10.20.0.0/24 to vercel.com:443     (HTTPS API polling)
-allow from 10.20.0.0/24 to *.supabase.co:443  (DB direct fallback)
+allow from 10.20.0.0/24 to Raspberry Pi.com:443     (HTTPS API polling)
+allow from 10.20.0.0/24 to *.PostgreSQL (Local).co:443  (DB direct fallback)
 allow from 10.20.0.0/24 to pool.ntp.org:123   (Time sync UDP)
 allow from 10.20.0.0/24 to 8.8.8.8:53         (DNS resolution)
 deny  from 10.20.0.0/24 to ANY                 (default deny)
 
-# INBOUND (จาก Vercel → ESP32) — สำหรับ LAN direct fallback
+# INBOUND (จาก Raspberry Pi → ESP32) — สำหรับ LAN direct fallback
 allow from <vercel-egress-ip-range> to 10.20.0.0/24:80
   (เผยแพร่ผ่าน NAT port forward — ทำได้แค่ห้องที่มี static port mapping)
 deny  from ANY to 10.20.0.0/24                 (default deny)
@@ -7057,13 +7213,13 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 การเข้าออกห้องเรียน SmartAccess:
 
 1. วัตถุประสงค์: ให้ ESP32 จำนวน 50 อุปกรณ์ในห้องเรียน
-   สามารถสื่อสารกับ Cloud Server (Vercel + Supabase) ได้
+   สามารถสื่อสารกับ Cloud Server (Raspberry Pi + PostgreSQL (Local)) ได้
    
 2. VLAN ที่ขอใช้: VLAN 20 (IoT)
    IP Range: 10.20.0.0/24
    
 3. Outbound Rules:
-   - Destination: *.vercel.app, *.supabase.co
+   - Destination: *.vercel.app, *.PostgreSQL (Local).co
    - Protocol: HTTPS (TCP 443)
    - Frequency: ทุก 2 วินาที (polling)
    - Bandwidth: ~50 KB/min/device
@@ -7210,7 +7366,7 @@ PDPA มาตรา 23 บังคับให้ Privacy Notice ต้อง�
 | P02 | (2) ฐานทางกฎหมาย (Lawful Basis) | ❌ ไม่มี | **ขาด** |
 | P03 | (3) ประเภทข้อมูลที่เก็บ | ✅ มี (ข้อ 1) | ผ่าน |
 | P04 | (4) ระยะเวลาเก็บ | ✅ มี (ข้อ 4) | ผ่าน (แต่กำกวม) |
-| P05 | (5) ประเภทบุคคล/หน่วยงานที่อาจได้รับข้อมูล | ⚠️ มีบางส่วน (Discord) แต่ขาด Supabase (Sub-processor) | **ไม่ครบ** |
+| P05 | (5) ประเภทบุคคล/หน่วยงานที่อาจได้รับข้อมูล | ⚠️ มีบางส่วน (Discord) แต่ขาด PostgreSQL (Local) (Sub-processor) | **ไม่ครบ** |
 | P06 | (6) **ชื่อ-ที่อยู่-ช่องทางติดต่อ Data Controller + DPO** | ❌ ไม่มี | **ขาด (วิกฤต)** |
 | P07 | (7) สิทธิของเจ้าของข้อมูลตามม.30-36 ทั้ง 8 ข้อ | ❌ มีแค่ 2 ใน 8 | **ขาด** |
 
@@ -7224,7 +7380,7 @@ PDPA มาตรา 23 บังคับให้ Privacy Notice ต้อง�
 - ❌ ม.73 สิทธิร้องเรียนต่อ สคส. (Right to Lodge Complaint)
 
 **ปัญหาอื่น:**
-- P08 **ขาดการระบุการส่งข้อมูลออกนอกประเทศ** — Supabase อยู่ AWS Singapore, Discord อยู่ US/EU → PDPA ม.28-29 บังคับให้ต้องระบุ + safeguards (TLS, SCC, AdequacyDecision)
+- P08 **ขาดการระบุการส่งข้อมูลออกนอกประเทศ** — PostgreSQL (Local) อยู่ AWS Singapore, Discord อยู่ US/EU → PDPA ม.28-29 บังคับให้ต้องระบุ + safeguards (TLS, SCC, AdequacyDecision)
 - P09 **ขาด Cookies/Storage Disclosure Table** — ไม่บอกว่าใช้ `smartaccess_cookie_consent` localStorage, `admin_token` cookie, etc.
 - P10 **ขาดวันที่มีผลบังคับใช้ + ประวัติการแก้ไข (Change Log)** — ม.23(7) บังคับ
 - P11 ระบุแค่ "นักศึกษา" แต่ระบบเก็บข้อมูลบุคลากร/อาจารย์ด้วย → scope แคบเกิน
@@ -7254,7 +7410,7 @@ const CONSENT_VERSION = "2.0";  // C05: version tracking
 type ConsentChoices = {
   necessary: true;       // บังคับ — ไม่ต้องขอ consent ตาม PDPC ข้อ 6.1
   functional: boolean;   // localStorage จดจำ token/room
-  analytics: boolean;    // future: Vercel Analytics
+  analytics: boolean;    // future: Raspberry Pi Analytics
   marketing: false;      // ระบบไม่ใช้
 };
 
@@ -7310,12 +7466,12 @@ function withdrawConsent() {
 
 4. ผู้รับข้อมูล (Recipients & Sub-Processors)  ← ขยาย P05
    - แอดมินSmartAccess (Data User ภายใน)
-   - Supabase Inc. (Sub-Processor — AWS Singapore region)
+   - PostgreSQL (Local) Inc. (Sub-Processor — AWS Singapore region)
    - Discord Inc. (US-based — แจ้งเตือนเหตุการณ์เท่านั้น)
-   - Vercel Inc. (Hosting — Singapore edge)
+   - Raspberry Pi Inc. (Hosting — Singapore edge)
 
 5. การส่งข้อมูลออกนอกราชอาณาจักร (Cross-Border Transfer)  ← P08
-   - Supabase: AWS ap-southeast-1 (Singapore) — ใช้ Standard Contractual Clauses
+   - PostgreSQL (Local): AWS ap-southeast-1 (Singapore) — ใช้ Standard Contractual Clauses
    - Discord: US — covered by Privacy Shield successor framework
    - Safeguards: TLS 1.3 end-to-end, encryption at-rest (AES-256)
 
@@ -7507,8 +7663,8 @@ sequenceDiagram
     participant U as 👤 ผู้ใช้
     participant C as 🍪 CookieConsent.tsx<br/>(Browser)
     participant LS as 💾 localStorage<br/>(smartaccess_cookie_consent_v2)
-    participant API as 🟣 POST /api/consent<br/>(Vercel Edge)
-    participant DB as 🟢 consent_records<br/>(Supabase PG)
+    participant API as 🟣 POST /api/consent<br/>(Raspberry Pi Edge)
+    participant DB as 🟢 consent_records<br/>(PostgreSQL (Local) PG)
     
     Note over U,DB: ① Initial visit
     U->>C: เปิดเว็บ
@@ -7541,7 +7697,7 @@ sequenceDiagram
 ```
 
 **จุดสำคัญทางสถาปัตยกรรม:**
-- **Source of truth:** Database (Supabase) — ไม่ใช่ localStorage
+- **Source of truth:** Database (PostgreSQL (Local)) — ไม่ใช่ localStorage
 - **localStorage role:** Cache เพื่อ UX (ไม่ขึ้น banner ซ้ำ) เท่านั้น
 - **Insertion-only:** ไม่เคย UPDATE/DELETE record เดิม — ทุก action สร้างแถวใหม่ → audit trail สมบูรณ์
 - **Anonymous binding:** ผูกกับ SHA-256(IP) แทน user_id เพราะ consent เกิดก่อนการลงทะเบียนนักศึกษา
@@ -7574,7 +7730,7 @@ CREATE TABLE IF NOT EXISTS consent_records (
 | `version` | VARCHAR(10) | semver-like "2.0" — invalidate consent เมื่อ policy เปลี่ยน | GDPR Art.7(1) บังคับให้พิสูจน์ได้ว่ายินยอม policy เวอร์ชันไหน |
 | `necessary` | BOOLEAN (always TRUE) | คุกกี้จำเป็นไม่ต้องขอ consent ตาม PDPC ข้อ 6.1 | เก็บไว้เพื่อความสมบูรณ์ของ record |
 | `functional` | BOOLEAN | ผู้ใช้เลือก yes/no | PDPA ม.19 — ความยินยอมเฉพาะเจาะจง |
-| `analytics` | BOOLEAN | ผู้ใช้เลือก yes/no | เผื่ออนาคตเชื่อม Vercel Analytics |
+| `analytics` | BOOLEAN | ผู้ใช้เลือก yes/no | เผื่ออนาคตเชื่อม Raspberry Pi Analytics |
 | `marketing` | BOOLEAN | ผู้ใช้เลือก yes/no | เผื่ออนาคต mail campaign |
 | `action` | VARCHAR(20) + CHECK | `granted` / `declined` / `updated` / `withdrawn` | แสดง intent ตอนนั้น — ม.19 วรรค 5 |
 | `created_at` | TIMESTAMP | เก็บ timezone-naive (Asia/Bangkok ใน app) | พิสูจน์ "เมื่อไหร่" ยินยอม |
@@ -7597,7 +7753,7 @@ CREATE TABLE IF NOT EXISTS consent_records (
 4. **Action sanitization** → fallback เป็น "granted" ถ้าค่าไม่ valid
 5. **Boolean coercion** → `Boolean(body.functional)` กัน undefined/null
 6. **IP hashing** → `crypto.createHash('sha256').update(ip).digest('hex')`
-7. **UUID generation** → `crypto.randomUUID()` (Node 19+, รองรับใน Vercel)
+7. **UUID generation** → `crypto.randomUUID()` (Node 19+, รองรับใน Raspberry Pi)
 8. **INSERT** parameterized query ($1-$8) → กัน SQL injection
 9. **Response** → คืน `consent_uuid` ให้ frontend เก็บไว้
 
@@ -7695,7 +7851,7 @@ onClick={(e) => { if (e.target === e.currentTarget) setIsModalOpen(false); }}
 | 1. Lawful Basis | 3 ฐาน: LI (ม.24(5)), Legal Obligation (ม.24(6)), Consent (ม.24(1)) | PDPA ม.24 | ต้องประกาศฐานทุกตัวที่ใช้ ไม่ใช่แค่ "เพื่อความปลอดภัย" |
 | 2. Types of Data | ตาราง 4 หมวด + disclaimer ไม่มี Sensitive Data | ม.23(3) + ม.26 | ระบุชัดว่าไม่เก็บข้อมูลอ่อนไหว → ลด compliance burden |
 | 3. Purposes | bullet list 4 ข้อ | ม.23(1) | จำกัด purpose-bound (purpose limitation principle) |
-| 4. Recipients | ตาราง 4 entity: Admin, Supabase, Vercel, Discord | ม.23(5) | ต้องประกาศ Sub-Processor ทุกตัว |
+| 4. Recipients | ตาราง 4 entity: Admin, PostgreSQL (Local), Raspberry Pi, Discord | ม.23(5) | ต้องประกาศ Sub-Processor ทุกตัว |
 | 5. Cross-Border | Safeguards แต่ละ recipient | ม.28-29 | SCC / SOC 2 / Privacy Framework — ต้องระบุชัด |
 | 6. Retention | ตาราง 5 ประเภทข้อมูล | ม.23(4) + พ.ร.บ.คอม ม.26 | ระบุเวลาเก็บแต่ละประเภท → ใช้ฐาน Legal Obligation |
 | 7. Cookies | ตาราง 4 รายการ + ปุ่ม Settings | PDPC Guideline 2565 ข้อ 5.1 | ต้อง disclose ทุก cookie + ให้ผู้ใช้จัดการ |
@@ -7801,13 +7957,13 @@ PDPA ม.28-29 บังคับให้ผู้ส่งข้อมูล�
 
 | ปลายทาง | ประเทศ | กลไก | หลักฐาน |
 |---|---|---|---|
-| Supabase | Singapore (AWS ap-southeast-1) | (ก) Adequacy — สิงคโปร์มี PDPA ของตัวเอง + SOC 2 Type II | [Supabase Compliance](https://supabase.com/security) |
-| Vercel | Global Edge (Singapore primary) | (ข) Standard Contractual Clauses + ISO 27001 + SOC 2 | [Vercel Security](https://vercel.com/security) |
+| PostgreSQL (Local) | Singapore (AWS ap-southeast-1) | (ก) Adequacy — สิงคโปร์มี PDPA ของตัวเอง + SOC 2 Type II | [PostgreSQL (Local) Compliance](https://PostgreSQL (Local).com/security) |
+| Raspberry Pi | Global Edge (Singapore primary) | (ข) Standard Contractual Clauses + ISO 27001 + SOC 2 | [Raspberry Pi Security](https://vercel.com/security) |
 | Discord | US (Cloudflare CDN) | (ข) EU-US Data Privacy Framework (successor of Privacy Shield) | [Discord Privacy](https://discord.com/privacy) |
 
 **ระบบทำอะไรเพิ่ม:**
 - TLS 1.3 ทุก connection (ไม่ใช่ TLS 1.2)
-- Encryption at-rest AES-256 (Supabase default)
+- Encryption at-rest AES-256 (PostgreSQL (Local) default)
 - ไม่ส่ง raw PII ไป Discord — masked เสมอ (`1164******45`)
 
 **ความเสี่ยงคงเหลือ:** หาก US Cloud Act บังคับ Discord ส่งข้อมูลให้รัฐบาล US → เป็น risk แต่ระบบส่งเฉพาะ event notification ไม่ใช่ PII complete → low
@@ -7869,9 +8025,9 @@ description: "SmartAccess — ระบบควบคุมการเข้�
 
 **ขั้นตอน production deploy:**
 - [ ] รัน DB migration (auto): startup จะ `CREATE TABLE IF NOT EXISTS consent_records`
-- [ ] ตรวจ Vercel logs ดูว่า `idx_consent_ip_time`, `idx_consent_uuid` ถูกสร้าง
+- [ ] ตรวจ Raspberry Pi logs ดูว่า `idx_consent_ip_time`, `idx_consent_uuid` ถูกสร้าง
 - [ ] ตั้ง env vars (ไม่มีเพิ่มในรอบนี้)
-- [ ] Deploy → Vercel auto build + deploy
+- [ ] Deploy → Raspberry Pi auto build + deploy
 - [ ] Smoke test:
   - [ ] เปิดเว็บ incognito → ขึ้น banner v2
   - [ ] กด "ยอมรับทั้งหมด" → ตรวจ DB ว่ามี record
@@ -7884,7 +8040,7 @@ description: "SmartAccess — ระบบควบคุมการเข้�
 - [ ] Clear caches: `localStorage.clear()` ใน devtools (ตัวเองทดสอบใหม่)
 
 **Rollback plan:**
-- ถ้าพังหลัก: Vercel Dashboard → Promote previous deployment
+- ถ้าพังหลัก: Raspberry Pi Dashboard → Promote previous deployment
 - ถ้า DB schema มีปัญหา: ตาราง `consent_records` ปล่อยทิ้งได้ (ไม่กระทบฟีเจอร์อื่น)
 - ถ้า cookie banner break: ส่ง patch ฉุกเฉิน — frontend issue ไม่ต้อง rollback DB
 
@@ -7937,7 +8093,7 @@ SELECT version, COUNT(*) FROM consent_records GROUP BY version;
 | DSR endpoints (/api/dsr/export, /erasure, /rectify) | PDPA ม.30-36 — ปัจจุบันใช้ email DPO ก็ถูกต้อง |
 | Multi-language (TH + EN) ใน Privacy/Terms | inclusive UX สำหรับนักศึกษาต่างชาติ |
 | WCAG AAA contrast audit ของ Modal | ปัจจุบัน AA ผ่าน → AAA จะดีกว่า |
-| Cookie consent log → ระบบแยก (DataDog) | ปัจจุบันใน Supabase same-db |
+| Cookie consent log → ระบบแยก (DataDog) | ปัจจุบันใน PostgreSQL (Local) same-db |
 
 **ความเสี่ยงที่ยอมรับได้ (Accepted Risk):**
 - SHA-256 IP ไม่มี pepper → brute-forceable แต่ purpose ไม่ใช่ irreversibility
@@ -7966,7 +8122,7 @@ SELECT version, COUNT(*) FROM consent_records GROUP BY version;
 * **การแจ้งเตือน:** ระบบจะทำประวัติเหตุการณ์ล้มเหลวลงในฐานข้อมูล และแจ้งเตือนผ่าน Discord Webhook ทันทีเมื่อเปลี่ยนสถานะเป็น Offline เพื่อให้ทีมแอดมินเข้าแก้ไขระบบได้ทันท่วงที
 * **รายงานผลการทดสอบความแม่นยำและความเที่ยงตรงระบบ (Active Telemetry Validation & Testing Outcomes):**
   * **วิธีการทดสอบ (Testing Methodology):** ผู้ทดสอบทำการตัดการเชื่อมต่อเครือข่ายของบอร์ด ESP32 ประจำห้องปฏิบัติการ 602 (โดยปิดเราเตอร์จำลองหรือดึงสายสัญญาณไฟออกชั่วคราว) เพื่อทดสอบกลไกตรวจวัดความทนทาน
-  * **ผลการตรวจจับระดับเซิร์ฟเวอร์ (Back-end Response & Diagnostics):** ทันทีที่เวลาล่วงเลยผ่านไปครบ 120 วินาที (120-Second Offline Threshold) สคริปต์ตรวจสอบความต่างของรอบประทับเวลาล่าสุด `room_last_seen_602` ทำงานร่วมกับ Supabase Database คำนวณผลต่างวิกฤต `delta_t > 120` วินาที ได้อย่างถูกต้องไม่คลาดเคลื่อน
+  * **ผลการตรวจจับระดับเซิร์ฟเวอร์ (Back-end Response & Diagnostics):** ทันทีที่เวลาล่วงเลยผ่านไปครบ 120 วินาที (120-Second Offline Threshold) สคริปต์ตรวจสอบความต่างของรอบประทับเวลาล่าสุด `room_last_seen_602` ทำงานร่วมกับ PostgreSQL (Local) Database คำนวณผลต่างวิกฤต `delta_t > 120` วินาที ได้อย่างถูกต้องไม่คลาดเคลื่อน
   * **สัมฤทธิผลบนอินเทอร์เฟซผู้ดูแลระบบ (Frontend UI Outcome):** หน้าจอผู้ดูแลระบบ (Admin Dashboard Layer) ตรวจพบการเปลี่ยนแปลงใน API JSON ทันทีและเรนเดอร์เปลี่ยนสัญลักษณ์สถานะของห้อง 602 จากปุ่มสีเขียวเรืองแสง (`🟢 Online`) ไปเป็นป้ายสีเทาหม่นสลับสีแดงเตือนเรืองแสงเตือนภัย (**`🔴 Offline - ขาดการเชื่อมต่อ`**) ได้อย่างราบรื่น สวยงาม และถูกต้องตามผลลัพธ์เชิงตัวเลขจริง 100%
   * **สัญญาณแจ้งเตือนภัยพิบัติ (Discord Alert Push):** มีการยิงข้อความด่วนผ่าน Discord Webhook วิ่งเข้าห้องศูนย์รวมความปลอดภัยของแอดมินโดยอัตโนมัติ ระบุข้อความ: `"[WARNING] อุปกรณ์ SmartAccess ณ ห้อง 602 ขาดการติดต่อเกิน 120 วินาที! กรุณาตรวจสอบโครงสร้างพื้นฐานไอทีและเครือข่าย"` ยืนยันความน่าเชื่อถือและการตอบสนองภัยพิบัติในระดับองค์กรอย่างมีประสิทธิภาพสูงสุด
 
@@ -8004,8 +8160,8 @@ sequenceDiagram
     autonumber
     participant Admin as ผู้ดูแลระบบ (Dashboard)
     participant Web as Next.js Cloud Server
-    participant DB as Supabase Database
-    participant Storage as Cloud Storage (S3/Supabase)
+    participant DB as PostgreSQL (Local) Database
+    participant Storage as Cloud Storage (S3/PostgreSQL (Local))
     participant ESP as บอร์ดควบคุม ESP32 หน้าห้อง
     
     Admin->>Web: อัปโหลดไฟล์ firmware_v1.0.1.bin ผ่านหน้า Admin Panel
@@ -8150,7 +8306,7 @@ void performHTTPSOTA() {
 ```
 
 ###### 1.3 สเปกของฝั่ง API Next.js Route (`/api/esp32/firmware-ota`)
-นี่คือโครงสร้างโค้ดแบบเต็มระดับเซิร์ฟเวอร์เลสของ Next.js (TypeScript) ที่ทำหน้าที่ตรวจสอบสิทธิ์ ป้องกันการสปูฟ (Spoofing) และสตรีมไฟล์เฟิร์มแวร์ขนาดใหญ่ทีละบล็อกแบบประหยัด Memory (NodeJS Stream Interface) เพื่อรองรับการทำงานบน Vercel ได้อย่างมีเสถียรภาพ:
+นี่คือโครงสร้างโค้ดแบบเต็มระดับเซิร์ฟเวอร์เลสของ Next.js (TypeScript) ที่ทำหน้าที่ตรวจสอบสิทธิ์ ป้องกันการสปูฟ (Spoofing) และสตรีมไฟล์เฟิร์มแวร์ขนาดใหญ่ทีละบล็อกแบบประหยัด Memory (NodeJS Stream Interface) เพื่อรองรับการทำงานบน Raspberry Pi ได้อย่างมีเสถียรภาพ:
 
 ```typescript
 import { NextResponse } from 'next/server';
@@ -8175,7 +8331,7 @@ export async function GET(req: Request) {
       });
     }
 
-    // 2. ระบุเลขเวอร์ชันล่าสุดบนเซิร์ฟเวอร์ (สามารถพัฒนาให้อ่านจากตาราง system_settings ใน Supabase ได้)
+    // 2. ระบุเลขเวอร์ชันล่าสุดบนเซิร์ฟเวอร์ (สามารถพัฒนาให้อ่านจากตาราง system_settings ใน PostgreSQL (Local) ได้)
     const latestVersion = '1.0.1'; 
 
     // 3. หากรุ่นตรงกัน ส่งกลับ 304 Not Modified ทันทีเพื่อความเร็วและประหยัด Bandwidth ของคลาวด์
@@ -8352,12 +8508,12 @@ void handleLocalOTALoop() {
 > - ใช้คำสั่ง PostgreSQL CTE (Common Table Expression) เพียงคำสั่งเดียวเพื่อ atomic operation: `WITH expired AS (UPDATE students SET status='rejected', rejection_reason=..., approved_at=CURRENT_TIMESTAMP WHERE status='pending' AND registered_at < NOW() - INTERVAL '5 minutes' RETURNING ...), logged AS (INSERT INTO access_logs ... SELECT FROM expired) SELECT ... FROM expired` — ทั้งการอัปเดตสถานะนักศึกษาและการบันทึก access_logs เกิดในธุรกรรมเดียวกัน ไม่มีโอกาสค้างกลางทาง
 > - บันทึก `access_logs.performed_by = NULL` เพื่อแยกแยะอย่างชัดเจนว่าเป็นการปฏิเสธโดยระบบอัตโนมัติ ไม่ใช่แอดมินคนใดคนหนึ่ง พร้อมหมายเหตุภาษาไทย "เหตุผล: ... | โดย: ระบบอัตโนมัติ" ในคอลัมน์ notes
 > - ส่งแจ้งเตือน Discord ผ่าน `sendDiscordNotification("student_rejected", ...)` โดยระบุ `adminName: "ระบบอัตโนมัติ"` เพื่อให้ทีมงานในห้อง Discord ทราบว่าเกิดการปฏิเสธอัตโนมัติ (fire-and-forget ไม่บล็อก response)
-> - **กลไกป้องกันการเรียกถี่เกินไป (Throttle)**: ใช้ตัวแปร module-level `lastRun` (timestamp) และ `inFlight` (Promise reference) — ภายใน 10 วินาทีจะ sweep แค่ครั้งเดียว และหากกำลัง sweep อยู่ การเรียกซ้ำจะ await Promise เดิม ไม่เกิด race condition และไม่ยิง query ซ้ำซ้อนรบกวน Supabase pool
-> - **จุดที่เรียก sweep (Lazy Trigger Strategy)**: เพื่อหลีกเลี่ยงการตั้ง cron job บน Vercel (ซึ่งต้องใช้ Pro plan) จึงใช้แนวทาง lazy sweep — เรียก `sweepExpiredPending()` ในจุดที่ผู้ใช้งานจริงเรียกเข้ามาเองอยู่แล้ว ดังนี้:
+> - **กลไกป้องกันการเรียกถี่เกินไป (Throttle)**: ใช้ตัวแปร module-level `lastRun` (timestamp) และ `inFlight` (Promise reference) — ภายใน 10 วินาทีจะ sweep แค่ครั้งเดียว และหากกำลัง sweep อยู่ การเรียกซ้ำจะ await Promise เดิม ไม่เกิด race condition และไม่ยิง query ซ้ำซ้อนรบกวน PostgreSQL (Local) pool
+> - **จุดที่เรียก sweep (Lazy Trigger Strategy)**: เพื่อหลีกเลี่ยงการตั้ง cron job บน Raspberry Pi (ซึ่งต้องใช้ Pro plan) จึงใช้แนวทาง lazy sweep — เรียก `sweepExpiredPending()` ในจุดที่ผู้ใช้งานจริงเรียกเข้ามาเองอยู่แล้ว ดังนี้:
 >   - [my-app/app/api/students/pending/route.ts](my-app/app/api/students/pending/route.ts) — ทุกครั้งที่แดชบอร์ดแอดมินดึงรายการคิวรออนุมัติ (admin polling ในแดชบอร์ดทุก 5 วินาที)
 >   - [my-app/app/api/students/[id]/route.ts](my-app/app/api/students/[id]/route.ts) — ทุกครั้งที่นักศึกษา poll สถานะของตนเอง (public polling ด้วย bypass_token ทุก 3 วินาที)
 >   - [my-app/app/api/students/[id]/approve/route.ts](my-app/app/api/students/[id]/approve/route.ts) — ป้องกัน race condition: หากแอดมินกดอนุมัติคำขอที่หมดเวลาพอดี ระบบจะ sweep ก่อน ทำให้ UPDATE WHERE status='pending' คืน 0 rows และแสดงข้อความ "นักศึกษานี้ไม่ได้อยู่ในสถานะรอการอนุมัติ"
-> - **เหตุผลที่ไม่ใช้ cron**: ระบบงานจริงมีคำขอเพียงไม่กี่รายการต่อชั่วโมง การมีผู้เรียก API ทั้งฝั่งแอดมินและฝั่งนักศึกษา poll อยู่แล้ว ทำให้ lazy sweep ครอบคลุมเพียงพอ ลด complexity และค่าใช้จ่ายของระบบ (Vercel Hobby tier ไม่รองรับ cron)
+> - **เหตุผลที่ไม่ใช้ cron**: ระบบงานจริงมีคำขอเพียงไม่กี่รายการต่อชั่วโมง การมีผู้เรียก API ทั้งฝั่งแอดมินและฝั่งนักศึกษา poll อยู่แล้ว ทำให้ lazy sweep ครอบคลุมเพียงพอ ลด complexity และค่าใช้จ่ายของระบบ (Raspberry Pi Hobby tier ไม่รองรับ cron)
 >
 > ### (ข) Client-Side Countdown Timer ใน [my-app/app/page.tsx](my-app/app/page.tsx)
 > - เพิ่ม state ใหม่ในหน้าลงทะเบียนนักศึกษา 2 ตัว: `registeredAt: string | null` (เก็บ ISO timestamp ที่ได้จาก server) และ `remainingSeconds: number` (วินาทีที่เหลือ ค่าเริ่มต้น 300)
@@ -8401,7 +8557,7 @@ void handleLocalOTALoop() {
 > - ✅ เพิ่มตาราง `consent_records` ใน [lib/db.ts](my-app/lib/db.ts) (audit trail 3 ปี, SHA-256 IP hash, version tracking)
 > - ✅ สร้าง API endpoint ใหม่ [/api/consent/route.ts](my-app/app/api/consent/route.ts) รองรับ POST/GET/DELETE — แก้ปัญหา C04 (server-side proof) + C03 (withdrawal)
 > - ✅ Rewrite [CookieConsent.tsx](my-app/app/components/CookieConsent.tsx) v2.0 ครบ: Granular Consent 4 ประเภท (Necessary/Functional/Analytics/Marketing), Customize Modal, Toggle Switch UI, ปุ่ม "ตั้งค่า/ปฏิเสธทั้งหมด/ยอมรับทั้งหมด", version 2.0 + timestamp tracking, ปุ่มถอนความยินยอมเชื่อม event `smartaccess_open_consent`, แก้ bug `borderRadius` camelCase ใน plain CSS, เพิ่ม ARIA `role="dialog"` + `aria-modal="true"`, export helper `openConsentSettings()`
-> - ✅ Rewrite [privacy/page.tsx](my-app/app/privacy/page.tsx) v2.0 ครบ PDPA ม.23 (7 รายการ): หัวข้อ 0 Data Controller + DPO contact, 1 Lawful Basis 3 ฐาน, 2 ตารางประเภทข้อมูล + sensitive data disclaimer, 3 วัตถุประสงค์, 4 ตาราง Recipients & Sub-Processors (Supabase/Vercel/Discord), 5 Cross-Border Transfer + Safeguards (SCC, SOC 2, TLS 1.3), 6 ตาราง Retention 5 ประเภท, 7 ตาราง Cookie/Storage 4 รายการ + ปุ่มเปิด Settings, 8 ตารางสิทธิเจ้าของข้อมูลครบ 8 ข้อ (ม.19, 30, 31, 32, 33, 34, 36, 73), 9 Security Measures, 10 Change Log
+> - ✅ Rewrite [privacy/page.tsx](my-app/app/privacy/page.tsx) v2.0 ครบ PDPA ม.23 (7 รายการ): หัวข้อ 0 Data Controller + DPO contact, 1 Lawful Basis 3 ฐาน, 2 ตารางประเภทข้อมูล + sensitive data disclaimer, 3 วัตถุประสงค์, 4 ตาราง Recipients & Sub-Processors (PostgreSQL (Local)/Vercel/Discord), 5 Cross-Border Transfer + Safeguards (SCC, SOC 2, TLS 1.3), 6 ตาราง Retention 5 ประเภท, 7 ตาราง Cookie/Storage 4 รายการ + ปุ่มเปิด Settings, 8 ตารางสิทธิเจ้าของข้อมูลครบ 8 ข้อ (ม.19, 30, 31, 32, 33, 34, 36, 73), 9 Security Measures, 10 Change Log
 > - ✅ Rewrite [terms/page.tsx](my-app/app/terms/page.tsx) v2.0 ครบ 11 หัวข้อ: 0 Definitions 7 คำ, 1 Acceptance (Clickwrap), 2 Access Scope, 3 Anti-Tailgating ที่เป็นธรรม (ลบ "บุคคลสุดท้ายรับผิด" → "ตามสัดส่วน"), 4 Limitation of Liability + disclaimer ขัด พ.ร.บ.ข้อสัญญาไม่เป็นธรรม, 5 Disciplinary Enforcement ตามหลัก Proportionality (ลบ "ขั้นสูงสุด"), 6 PDPA Linkage (T&C ไม่ใช่ consent), 7 Amendment 30 วัน, 8 Governing Law + ศาลปกครองกลาง/แพ่งกรุงเทพใต้, 9 Severability, 10 Contact, 11 Effective Date + Change Log
 > - ✅ TypeScript compile ผ่านสะอาด (npx tsc --noEmit, no errors)
 > - 📊 **Compliance Score: 4/10 → 9/10** (P0+P1 ครบ, P2 บางส่วน)
@@ -8412,31 +8568,31 @@ void handleLocalOTALoop() {
 
 > **อัปเดตก่อนหน้า**: 2026-05-27 21:44:42 +07:00 — เปลี่ยนชื่อโปรเจกต์และระบบทั้งหมดในเอกสารอ้างอิงเชิงวิชาการให้เป็น "Innovative system for managing access rights and controlling classroom access via wireless network", ปรับปรุงลิงก์เป็น Production URL (smartaccess-project.vercel.app), เพิ่มหัวข้อ §71 อธิบายสถาปัตยกรรมเชิงลึกสำหรับการทำเล่มวิทยานิพนธ์รวม 18 บทย่อยเชิงปฏิบัติสมบูรณ์แบบสูงสุดเพื่อรองรับ NotebookLM อย่างเต็มสตรีม ล่าสุดอัปเดตรายละเอียดเรื่องการแบ่งแยกสิทธิ์ของแอดมินรายห้อง (คอลัมน์ allowed_rooms), นโยบายยกระดับรหัสผ่านแอดมินใหม่ (ความยาวอย่างน้อย 12 ตัวอักษร) และปรับโครงสร้างระบบแจ้งเตือนแบบแบ่งแยกตามหมวดหมู่ประเภทเหตุการณ์ลงในเนื้อหาบทเรียนหลักทั้งหมดเรียบร้อย
 
-> **อัปเดตล่าสุด**: 2026-05-28 16:30:00 +07:00 — **คู่มือเชิงลึกและแนวปฏิบัติการอัปโหลดเฟิร์มแวร์ผ่านเว็บด้วย Supabase Storage แบบ 0% Vercel CPU Load (Lightweight & Secure Cloud Firmware OTA Update Center)**
+> **อัปเดตล่าสุด**: 2026-05-28 16:30:00 +07:00 — **คู่มือเชิงลึกและแนวปฏิบัติการอัปโหลดเฟิร์มแวร์ผ่านเว็บด้วย PostgreSQL (Local) Storage แบบ 0% Raspberry Pi CPU Load (Lightweight & Secure Cloud Firmware OTA Update Center)**
 > 
-> เพื่อความสมบูรณ์แบบสูงสุดของระบบและตรงตามขอบเขตโปรดักชันเชิงพาณิชย์ ระบบได้ดำเนินการพัฒนาส่วนต่อประสานและสถาปัตยกรรมจัดเก็บเฟิร์มแวร์เพื่อเลี่ยงข้อจำกัดการอ่านเขียนไฟล์และขจัดภาระแบนด์วิดท์ของระบบฟรี (Vercel & Supabase Free Plan) ดังมีรายละเอียดดังนี้:
+> เพื่อความสมบูรณ์แบบสูงสุดของระบบและตรงตามขอบเขตโปรดักชันเชิงพาณิชย์ ระบบได้ดำเนินการพัฒนาส่วนต่อประสานและสถาปัตยกรรมจัดเก็บเฟิร์มแวร์เพื่อเลี่ยงข้อจำกัดการอ่านเขียนไฟล์และขจัดภาระแบนด์วิดท์ของระบบฟรี (Raspberry Pi & PostgreSQL (Local) Free Plan) ดังมีรายละเอียดดังนี้:
 > 
-> 1. **การย้ายตำแหน่งจัดเก็บไปยัง Supabase Storage (Lightweight Storage Redirection):**
->    - เนื่องจากคลาวด์ Vercel Free Plan มีลักษณะเป็นตู้คอนเทนเนอร์แบบ Ephemeral (ไฟล์เขียนชั่วคราวจะถูกลบทิ้งเมื่อ Container Recycle) ระบบจึงย้ายไปจัดเก็บไฟล์เฟิร์มแวร์ `.bin` บน **Supabase Storage** (พื้นที่เก็บข้อมูลฟรีแยกต่างหากขนาด **1GB** ไม่รวมในโควตา Database)
->    - ตัว API `/api/esp32/firmware-ota` จะไม่ทำหน้าที่ส่งไฟล์ตรงซึ่งจะส่งผลให้แบนด์วิดท์เซิร์ฟเวอร์เต็มเร็ว แต่จะทำหน้าที่ส่งค่า **HTTP 302 Redirect ส่งบอร์ด ESP32 ตรงเข้าดึงข้อมูลจากลิงก์สาธารณะ Supabase Storage** ซึ่งลดทอน CPU Loading ของ Vercel เหลือเพียง 0%
+> 1. **การย้ายตำแหน่งจัดเก็บไปยัง PostgreSQL (Local) Storage (Lightweight Storage Redirection):**
+>    - เนื่องจากคลาวด์ Raspberry Pi Free Plan มีลักษณะเป็นตู้คอนเทนเนอร์แบบ Ephemeral (ไฟล์เขียนชั่วคราวจะถูกลบทิ้งเมื่อ Container Recycle) ระบบจึงย้ายไปจัดเก็บไฟล์เฟิร์มแวร์ `.bin` บน **PostgreSQL (Local) Storage** (พื้นที่เก็บข้อมูลฟรีแยกต่างหากขนาด **1GB** ไม่รวมในโควตา Database)
+>    - ตัว API `/api/esp32/firmware-ota` จะไม่ทำหน้าที่ส่งไฟล์ตรงซึ่งจะส่งผลให้แบนด์วิดท์เซิร์ฟเวอร์เต็มเร็ว แต่จะทำหน้าที่ส่งค่า **HTTP 302 Redirect ส่งบอร์ด ESP32 ตรงเข้าดึงข้อมูลจากลิงก์สาธารณะ PostgreSQL (Local) Storage** ซึ่งลดทอน CPU Loading ของ Raspberry Pi เหลือเพียง 0%
 > 
 > 2. **โครงสร้างและจุดประสงค์ของจุดเชื่อมโยง (Endpoint Actions):**
 >    - **ตารางฐานข้อมูล** `firmware_releases`: เก็บประวัติ ข้อมูลเวอร์ชัน พาร์ธจัดเก็บ ขนาดไฟล์ และ MD5 Checksum
->    - **API GET/DELETE** `/api/system/firmware`: ใช้สำหรับดึงข้อมูลรายการเวอร์ชันที่มีทั้งหมด และให้แอดมินระดับสูงสุดสั่ง "ถอนประวัติ" (Pruning Old Releases) เพื่อลบข้อมูลบน Supabase คืนโควตาพื้นที่ 1GB ฟรีได้อย่างราบรื่น
+>    - **API GET/DELETE** `/api/system/firmware`: ใช้สำหรับดึงข้อมูลรายการเวอร์ชันที่มีทั้งหมด และให้แอดมินระดับสูงสุดสั่ง "ถอนประวัติ" (Pruning Old Releases) เพื่อลบข้อมูลบน PostgreSQL (Local) คืนโควตาพื้นที่ 1GB ฟรีได้อย่างราบรื่น
 >    - **API POST** `/api/system/firmware/upload`: ใช้ตรวจรับการยืนยันไฟล์ ทำการคำนวณ MD5 Checksum ความละเอียดสูง (กันบอร์ดค้างเนื่องจากไฟล์ดาวน์โหลดไม่ครบถ้วน) และอัปเดตสเตตัสในระบบ
 > 
 > 3. **ขั้นตอนปฏิบัติงานจริง (Production Firmware Upload Guide):**
 >    - **ขั้นที่ 1**: แก้ไขโค้ด C++ (เพิ่มเลขเวอร์ชัน) และกด **Export Compiled Binary** ในโปรแกรม Arduino IDE จะได้ไฟล์ `.bin`
->    - **ขั้นที่ 2**: อัปโหลดไฟล์ `.bin` ขึ้นไปเก็บบน **Supabase Storage Console** และคัดลอก **Public URL** ออกมา
+>    - **ขั้นที่ 2**: อัปโหลดไฟล์ `.bin` ขึ้นไปเก็บบน **PostgreSQL (Local) Storage Console** และคัดลอก **Public URL** ออกมา
 >    - **ขั้นที่ 3**: ไปที่หน้าเว็บแดชบอร์ด SmartAccess เมนูตั้งค่าระบบ ระบุรุ่น ป้อน Public URL ที่ได้ เลือกไฟล์บนเครื่องเพื่อให้ระบบบราวเซอร์คำนวณ MD5 Checksum และกดอัปโหลด บอร์ดจะทำกระบวนการตรวจจับ ดึง และอัปเกรดตัวเองทันทีไร้ความเสถียรตกต่ำ!
 
 > **อัปเดตล่าสุด**: 2026-05-28 17:20:00 +07:00 — **คู่มือยกระดับความยืดหยุ่นในการเชื่อมต่อฐานข้อมูลและการดึงข้อมูลสถิติอัตโนมัติของแดชบอร์ด (Enterprise Database Fallback & Zero-Delay Dashboard Analytics System)**
 >
-> เพื่อรองรับเสถียรภาพระดับสูงในสิ่งแวดล้อมที่หลากหลาย (เช่น การสลับระหว่างเครื่องพัฒนาในเครื่องโลคอลกับโปรดักชันบนคลาวด์ Vercel/Supabase) ระบบได้รับการอัปเกรดเพื่อป้องกันปัญหาเซิร์ฟเวอร์ล่ม (500 Internal Server Error) และปัญหาแดชบอร์ดสถิติไม่แสดงข้อมูลในการเปิดหน้าเว็บครั้งแรก ดังรายละเอียดต่อไปนี้:
+> เพื่อรองรับเสถียรภาพระดับสูงในสิ่งแวดล้อมที่หลากหลาย (เช่น การสลับระหว่างเครื่องพัฒนาในเครื่องโลคอลกับโปรดักชันบนคลาวด์ Raspberry Pi/PostgreSQL (Local)) ระบบได้รับการอัปเกรดเพื่อป้องกันปัญหาเซิร์ฟเวอร์ล่ม (500 Internal Server Error) และปัญหาแดชบอร์ดสถิติไม่แสดงข้อมูลในการเปิดหน้าเว็บครั้งแรก ดังรายละเอียดต่อไปนี้:
 >
 > 1. **การสร้างระบบเชื่อมต่อฐานข้อมูลสำรองอัตโนมัติ (Multi-Environment Database Connection Resiliency):**
->    - มีการปรับปรุงโมดูลเชื่อมต่อฐานข้อมูลใน [lib/db.ts](my-app/lib/db.ts) ให้รองรับการอ่านค่าตัวแปร `DATABASE_URL` แบบ Dynamic เป็น Fallback หากไม่ได้มีการตั้งค่าตัวแปรสภาพแวดล้อม `POSTGRES_URL` บน Vercel
->    - ปรับปรุงการตรวจสอบ SSL Handshake ให้ยืดหยุ่นยิ่งขึ้น: หากไม่ได้ระบุใบรับรองความปลอดภัยเฉพาะทาง `SUPABASE_CA_CERT` หรือไม่สามารถถอดรหัสค่าอักขระได้ (เช่น ค่า `\n` ที่พาสต์ลง Vercel ผิดเพี้ยน) ระบบจะทำการตั้งค่าเป็น `rejectUnauthorized: false` แบบอัตโนมัติ เพื่อให้เซิร์ฟเวอร์เชื่อมโยงกับฐานข้อมูล Supabase ต่อไปได้อย่างราบรื่นและไม่เกิดข้อผิดพลาด 500
+>    - มีการปรับปรุงโมดูลเชื่อมต่อฐานข้อมูลใน [lib/db.ts](my-app/lib/db.ts) ให้รองรับการอ่านค่าตัวแปร `DATABASE_URL` แบบ Dynamic เป็น Fallback หากไม่ได้มีการตั้งค่าตัวแปรสภาพแวดล้อม `POSTGRES_URL` บน Raspberry Pi
+>    - ปรับปรุงการตรวจสอบ SSL Handshake ให้ยืดหยุ่นยิ่งขึ้น: หากไม่ได้ระบุใบรับรองความปลอดภัยเฉพาะทาง `PostgreSQL (Local)_CA_CERT` หรือไม่สามารถถอดรหัสค่าอักขระได้ (เช่น ค่า `\n` ที่พาสต์ลง Raspberry Pi ผิดเพี้ยน) ระบบจะทำการตั้งค่าเป็น `rejectUnauthorized: false` แบบอัตโนมัติ เพื่อให้เซิร์ฟเวอร์เชื่อมโยงกับฐานข้อมูล PostgreSQL (Local) ต่อไปได้อย่างราบรื่นและไม่เกิดข้อผิดพลาด 500
 >
 > 2. **การอัปเดตระบบดึงข้อมูลแดชบอร์ดวิเคราะห์สถิติอัจฉริยะ (Zero-Delay SVG Analytics Initialization):**
 >    - แก้ไขข้อผิดพลาดด้านสถานะ (UX State Bug) ในแดชบอร์ดหลักที่ [page.tsx](my-app/app/admin/dashboard/page.tsx) ที่คอยดึงข้อมูลเฉพาะตอนเปิดแท็บทำเนียบ `"all"` เท่านั้น
@@ -8448,7 +8604,7 @@ void handleLocalOTALoop() {
 ---
 
 <a id="sec-71-42"></a>
-## 71.42 ฟีเจอร์ใหม่ระลอก 2 — Edge Runtime, Vercel KV, Keep-alive, Status Page, Mobile Swipe, Analytics
+## 71.42 ฟีเจอร์ใหม่ระลอก 2 — Edge Runtime, Local Cache, Keep-alive, Status Page, Mobile Swipe, Analytics
 
 > **อัปเดต**: 2026-05-28 — ฟีเจอร์ทั้ง 6 รายการนี้ถูกพัฒนาและเพิ่มเข้าระบบพร้อมกัน เพื่อยกระดับความเร็ว UX และการวิเคราะห์ข้อมูล
 
@@ -8456,22 +8612,22 @@ void handleLocalOTALoop() {
 
 ### 71.42.1 Edge Runtime สำหรับ /api/esp32/display (Cold-Start < 50ms)
 
-**ปัญหาเดิม**: `/api/esp32/display` รันบน Node.js Runtime ของ Vercel ซึ่งมี cold-start delay 300–800ms ทำให้ ESP32 ที่ polling ทุก 2–5 วินาทีรอนานกว่าจำเป็น
+**ปัญหาเดิม**: `/api/esp32/display` รันบน Node.js Runtime ของ Raspberry Pi ซึ่งมี cold-start delay 300–800ms ทำให้ ESP32 ที่ polling ทุก 2–5 วินาทีรอนานกว่าจำเป็น
 
-**วิธีแก้**: ย้าย route ไป Vercel Edge Runtime ด้วย `export const runtime = "edge"` และ `export const preferredRegion = "sin1"` (Singapore)
+**วิธีแก้**: ย้าย route ไป Raspberry Pi Edge Runtime ด้วย `export const runtime = "edge"` และ `export const preferredRegion = "sin1"` (Singapore)
 
 **ข้อจำกัดที่ต้องแก้**: Edge Runtime ไม่รองรับ Node.js APIs เช่น pg, crypto module → ต้องสร้างไฟล์ใหม่ 3 ตัว:
 
 | ไฟล์ | หน้าที่ |
 |------|---------|
 | lib/edge-crypto.ts | Web Crypto API (crypto.subtle) แทน Node.js crypto |
-| lib/supabase-edge.ts | Supabase REST API ผ่าน fetch() ล้วน — ไม่ใช้ pg pool เลย |
-| lib/kv-cache.ts | Vercel KV wrapper พร้อม in-memory fallback |
+| lib/PostgreSQL (Local)-edge.ts | PostgreSQL (Local) REST API ผ่าน fetch() ล้วน — ไม่ใช้ pg pool เลย |
+| lib/kv-cache.ts | Local Cache wrapper พร้อม in-memory fallback |
 
 **สิ่งที่ route ทำตอนนี้**:
 1. ตรวจ HMAC ของ X-API-Key header ด้วย Web Crypto
-2. โหลด settings จาก Vercel KV (cache 15 วินาที) — fallback ไป Supabase REST หาก KV ไม่พร้อม
-3. ยิง 4 query Supabase REST พร้อมกัน (Promise.all)
+2. โหลด settings จาก Local Cache (cache 15 วินาที) — fallback ไป PostgreSQL (Local) REST หาก KV ไม่พร้อม
+3. ยิง 4 query PostgreSQL (Local) REST พร้อมกัน (Promise.all)
 4. ส่ง ETag + HTTP 304 ถ้าข้อมูลไม่เปลี่ยน
 5. Rate limit 120 req/min ต่อ IP ผ่าน KV
 
@@ -8479,17 +8635,17 @@ void handleLocalOTALoop() {
 
 ---
 
-### 71.42.2 Vercel KV (Redis) Cache สำหรับ System Settings
+### 71.42.2 Local Cache (Redis) Cache สำหรับ System Settings
 
-**ปัญหาเดิม**: system_settings ถูก cache เฉพาะใน in-memory ของ instance เดียว — ถ้า Vercel scale-out เป็นหลาย instance, instance อื่นไม่รู้ว่า settings เปลี่ยนแล้ว
+**ปัญหาเดิม**: system_settings ถูก cache เฉพาะใน in-memory ของ instance เดียว — ถ้า Raspberry Pi scale-out เป็นหลาย instance, instance อื่นไม่รู้ว่า settings เปลี่ยนแล้ว
 
-**วิธีแก้**: ใช้ Vercel KV (Redis) เป็น shared cache ระดับ cross-instance TTL 15 วินาที
+**วิธีแก้**: ใช้ Local Cache (Redis) เป็น shared cache ระดับ cross-instance TTL 15 วินาที
 
 **การ invalidate**: เมื่อ admin บันทึก settings ใหม่ ระบบเรียก clearSystemSettingsCache() ใน lib/db.ts ซึ่ง dynamic import invalidateSettingsCache() จาก lib/kv-cache.ts — ล้างทั้ง in-memory และ KV พร้อมกัน
 
 **หากไม่ตั้งค่า KV**: ระบบ fallback กลับเป็น in-memory cache อัตโนมัติ ไม่ crash
 
-**Environment variables ที่ต้องเพิ่ม** (ใน Vercel Dashboard → Storage → KV → Connect):
+**Environment variables ที่ต้องเพิ่ม** (ใน Raspberry Pi Dashboard → Storage → KV → Connect):
 ```
 KV_URL
 KV_REST_API_URL
@@ -8602,7 +8758,7 @@ if (format === "dataurl") {
 | ไฟล์ | สถานะ |
 |------|--------|
 | lib/edge-crypto.ts | ใหม่ |
-| lib/supabase-edge.ts | ใหม่ |
+| lib/PostgreSQL (Local)-edge.ts | ใหม่ |
 | lib/kv-cache.ts | ใหม่ |
 | app/api/esp32/display/route.ts | แก้ใหม่ทั้งหมด (Edge Runtime) |
 | app/api/esp32/qr/token/route.ts | ใหม่ |
@@ -8642,7 +8798,7 @@ if (format === "dataurl") {
 
 ### สิ่งที่ยังคงอยู่
 
-ตาราง `room_schedules` ใน Supabase DB ยังคงอยู่ (ไม่ได้ DROP) เพราะไม่มีผลเสียและอาจใช้งานในอนาคตหากต้องการเชื่อม logic จริง
+ตาราง `room_schedules` ใน PostgreSQL (Local) DB ยังคงอยู่ (ไม่ได้ DROP) เพราะไม่มีผลเสียและอาจใช้งานในอนาคตหากต้องการเชื่อม logic จริง
 
 ### การตั้งเวลาเปิด-ปิดห้องที่ใช้งานจริง
 
@@ -8654,16 +8810,16 @@ if (format === "dataurl") {
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
-## 71.44 การปรับแต่งประสิทธิภาพเพื่อลดภาระ Vercel/Supabase (Free Plan Performance Tuning)
+## 71.44 การปรับแต่งประสิทธิภาพเพื่อลดภาระ Raspberry Pi/PostgreSQL (Local) (Free Plan Performance Tuning)
 
-> **อัปเดต**: 2026-05-29 — ปรับ performance ฝั่งเว็บ + API ให้เร็วขึ้นและประหยัดโควตา Vercel Hobby (free) + Supabase free โดย**ไม่ลด**มาตรการความปลอดภัยใด ๆ
+> **อัปเดต**: 2026-05-29 — ปรับ performance ฝั่งเว็บ + API ให้เร็วขึ้นและประหยัดโควตา Raspberry Pi Hobby (free) + PostgreSQL (Local) free โดย**ไม่ลด**มาตรการความปลอดภัยใด ๆ
 
 ### ปัญหาเดิม (ตัวกินทรัพยากร)
 
 | จุด | ปัญหา | ผลกระทบบน Free Plan |
 |-----|-------|---------------------|
-| `/api/sse` | ทุกแท็บ dashboard ถือ serverless function ค้าง + poll DB **ทุก 3 วินาที × 3 query** (~60 query/นาที/แท็บ) และมี query `room_last_seen` ที่ client ไม่ได้ใช้ | เปลือง Vercel GB-hours + Supabase compute สูงสุด |
-| `/api/system/health` | `probeApi` ยิง fetch กลับเข้า endpoint ตัวเอง (รวม `/api/system/health` → เรียกซ้ำตัวเอง) + แยกหลาย COUNT query + เรียก Vercel API ทุกครั้ง; dashboard poll ทุก 30s | invocation ทวีคูณ |
+| `/api/sse` | ทุกแท็บ dashboard ถือ serverless function ค้าง + poll DB **ทุก 3 วินาที × 3 query** (~60 query/นาที/แท็บ) และมี query `room_last_seen` ที่ client ไม่ได้ใช้ | เปลือง Raspberry Pi GB-hours + PostgreSQL (Local) compute สูงสุด |
+| `/api/system/health` | `probeApi` ยิง fetch กลับเข้า endpoint ตัวเอง (รวม `/api/system/health` → เรียกซ้ำตัวเอง) + แยกหลาย COUNT query + เรียก Raspberry Pi API ทุกครั้ง; dashboard poll ทุก 30s | invocation ทวีคูณ |
 | `/api/system/analytics` | 5 aggregation query (heatmap/30 วัน) ยิงสดทุกครั้ง ไม่มี cache | query หนักซ้ำ ๆ |
 | Dashboard | SSE 3s + systemStatus 15s + health 30s ทำงานพร้อมกัน | จำนวน request สูง |
 | Cold start | `initDatabase()` รัน ~25 DDL ทุกครั้งที่ lambda เย็น | latency request แรกสูง |
@@ -8674,17 +8830,17 @@ if (format === "dataurl") {
 - เพิ่ม poll interval **3s → 8s**
 - ลบ query `room_last_seen` (statusRes) ที่ฝั่ง client ไม่ใช้ → จาก 3 เหลือ 2 query
 - logs query `LIMIT 100 → 50`
-- เพิ่ม `export const maxDuration = 60` + ปิด stream อัตโนมัติที่ ~50s ให้ browser EventSource reconnect เอง(กัน Vercel ตัด connection กลางคันแบบ error)
+- เพิ่ม `export const maxDuration = 60` + ปิด stream อัตโนมัติที่ ~50s ให้ browser EventSource reconnect เอง(กัน Raspberry Pi ตัด connection กลางคันแบบ error)
 - ผลลัพธ์: query/นาที/แท็บ จาก ~60 → ~15 (**ลด ~75%**)
 
 **2. Health เบาลง (`app/api/system/health/route.ts`)**
 - รวม COUNT students + COUNT logs + last door_open เป็น **query เดียว** (subquery)
 - ตัด self-probe ออก และทำ API probe เป็น optional — ทำงานเฉพาะเมื่อเรียก `?probe=1`
-- cache ผล Vercel deployment API ด้วย `kv-cache` (TTL 120s)
+- cache ผล Raspberry Pi deployment API ด้วย `kv-cache` (TTL 120s)
 
 **3. Analytics cache (`app/api/system/analytics/route.ts`)**
 - ห่อผลลัพธ์ด้วย `cacheGet/cacheSet` (key = `analytics:{metric}`) TTL **120s** + ส่ง header `Cache-Control: private, max-age=60`
-- ใช้ in-memory fallback ใน `lib/kv-cache.ts` ได้แม้ไม่ตั้งค่า Vercel KV
+- ใช้ in-memory fallback ใน `lib/kv-cache.ts` ได้แม้ไม่ตั้งค่า Local Cache
 
 **4. ลด polling ฝั่ง dashboard (`app/admin/dashboard/DashboardContext.tsx`)**
 - systemStatus **15s → 30s**
@@ -8697,10 +8853,10 @@ if (format === "dataurl") {
 - `compiler.removeConsole` — ตัด `console.*` (ยกเว้น error/warn) ออกจาก bundle production
 
 **6. `/api/esp32/display` — route ที่ ESP32 poll หนักสุด (`app/api/esp32/display/route.ts`)**
-> route นี้ถูก optimize มาดีอยู่แล้ว (Edge runtime, KV cache settings 15s, ETag/304, parallel query) เพิ่มเติม 2 จุดที่ยังกิน Supabase:
+> route นี้ถูก optimize มาดีอยู่แล้ว (Edge runtime, KV cache settings 15s, ETag/304, parallel query) เพิ่มเติม 2 จุดที่ยังกิน PostgreSQL (Local):
 - **Cache firmware version (TTL 60s)** — เวอร์ชันแทบไม่เปลี่ยน เดิม query ทุก poll → ตอนนี้ query เฉพาะตอน cache miss (4 → 3 query/poll ส่วนใหญ่); ล้าง cache อัตโนมัติเมื่ออัปโหลด firmware ใหม่ (`firmware/upload` เรียก `cacheDel("firmware:latest_version")`) → OTA ยังตรวจพบรุ่นใหม่ทันที
 - **Throttle heartbeat write** — `room_last_seen_{room}` เดิมเขียน DB ทุก poll (~30 write/นาที/บอร์ด) → จำกัดเป็นสูงสุดครั้งละ 30s/ห้อง ผ่าน KV marker (การเช็ค online ใช้ความละเอียดระดับนาทีอยู่แล้ว ไม่กระทบ)
-- **หมายเหตุ**: การ throttle/cache ทั้งหมดได้ผลดีสุดเมื่อตั้ง Vercel KV จริง (ข้าม instance); หากไม่ตั้ง จะ fallback เป็น in-memory ต่อ instance ซึ่งยังช่วยลดภาระภายใน warm instance ได้
+- **หมายเหตุ**: การ throttle/cache ทั้งหมดได้ผลดีสุดเมื่อตั้ง Local Cache จริง (ข้าม instance); หากไม่ตั้ง จะ fallback เป็น in-memory ต่อ instance ซึ่งยังช่วยลดภาระภายใน warm instance ได้
 
 **7. Lazy-load แท็บ Dashboard (`app/admin/dashboard/page.tsx`)**
 - เดิม `page.tsx` `import` ตรงทั้ง 8 แท็บ (pending/iot/all/admins/rooms/settings/guide/health) → JS ของ**ทุกแท็บ**ถูกส่งมาพร้อมกันตั้งแต่โหลด dashboard ครั้งแรก
@@ -8727,8 +8883,8 @@ if (format === "dataurl") {
 
 ### คำแนะนำ Production (ตั้งค่าครั้งเดียว)
 
-- ตั้ง env **`SKIP_DB_INIT=true`** ใน Vercel หลัง migrate ตารางครั้งแรกเสร็จ → ข้าม ~25 DDL ทุก cold start (เห็น log `[DB] Fast Path: Skipping schema table checks`)
-- (ทางเลือก) ตั้ง `KV_REST_API_URL` + `KV_REST_API_TOKEN` เพื่อใช้ Vercel KV เป็น cache layer จริง แทน in-memory (ช่วยข้าม instance)
+- ตั้ง env **`SKIP_DB_INIT=true`** ใน Raspberry Pi หลัง migrate ตารางครั้งแรกเสร็จ → ข้าม ~25 DDL ทุก cold start (เห็น log `[DB] Fast Path: Skipping schema table checks`)
+- (ทางเลือก) ตั้ง `KV_REST_API_URL` + `KV_REST_API_TOKEN` เพื่อใช้ Local Cache เป็น cache layer จริง แทน in-memory (ช่วยข้าม instance)
 
 ### สิ่งที่ยังคงไว้ (ไม่แตะ)
 rate-limit, CSP/security headers, parameterized query, role-based field filtering, รูปแบบ JWT/bcrypt, schema และ index เดิม — ไม่มีการลบหรือลดความเข้มงวด
@@ -8853,7 +9009,7 @@ sequenceDiagram
     participant ESP as ESP32 Microcontroller
     participant proxy as client-ip / WAF (Vercel)
     participant Sec as api-security (Next.js Edge)
-    participant DB as Supabase PostgreSQL
+    participant DB as PostgreSQL (Local DB)QL
 
     Note over ESP, Sec: ขั้นตอนเตรียม Timestamp และสร้างลายเซ็น HMAC
     ESP->>ESP: ดึงเวลาปัจจุบัน (timestamp) และพิกัดห้อง
@@ -8883,7 +9039,7 @@ sequenceDiagram
 ฟังก์ชันหลักได้รับการพัฒนาอยู่ใน `lib/api-security.ts` นำเข้าฟังก์ชันความปลอดภัยระบบและรันแบบไร้สถานะ (Stateless Verification) มีรายละเอียดดังนี้:
 
 1. **การกรองที่มาของไอพี (Safe Client IP Identification)**:
-   การใช้งานตัวแปร `req.ip` มักถูกปลอมแปลงผ่าน Header เช่น `X-Forwarded-For` หรือบิดเบือนได้โดยง่าย ระบบจึงสกัดไอพีจาก `getClientIp(req)` ซึ่งจะหยิบเอา XFF ตัวขวาสุดที่คลาวด์ Vercel ประทับตราไว้โดยตรง (ทริกเกอร์จาก Edge) ทำให้ไม่สามารถสวมรอยไอพีต้นทางได้สำเร็จ
+   การใช้งานตัวแปร `req.ip` มักถูกปลอมแปลงผ่าน Header เช่น `X-Forwarded-For` หรือบิดเบือนได้โดยง่าย ระบบจึงสกัดไอพีจาก `getClientIp(req)` ซึ่งจะหยิบเอา XFF ตัวขวาสุดที่คลาวด์ Raspberry Pi ประทับตราไว้โดยตรง (ทริกเกอร์จาก Edge) ทำให้ไม่สามารถสวมรอยไอพีต้นทางได้สำเร็จ
 
 2. **การป้องกันการดักสัญญาณเพื่อส่งข้อมูลซ้ำ (Replay Attack Prevention)**:
    แฮกเกอร์ที่เก็บบันทึก Request ของแท้ไว้ จะถูกบล็อกด้วยระบบการตรวจสอบเวลาจำกัด (Time Window Restriction):
@@ -8926,7 +9082,7 @@ String payload = timestamp + ":" + endpoint;
 - **Door Operator (เจ้าหน้าที่ประจำห้องปฏิบัติการ)**: ถูกกำหนดและจำกัดขอบเขตการทำงานให้อนุมัติ ปฏิเสธ หรือกดเปิดระบบทางไกลได้เฉพาะห้องเรียนที่มีระบุในฟิลด์สิทธิ์ `allowed_rooms` เท่านั้น หากส่งคำขอทำงานข้ามห้อง API จะส่งผลกลับเป็น `HTTP 403 Forbidden` ป้องกันเจ้าหน้าที่ข้ามตึกกดเปิดประตูห้องที่ไม่ได้สิทธิ์ดูแล
 
 ### 71.48.2 โครงสร้างโมเดลความสัมพันธ์ของสิทธิ์ดูแลห้องเรียน
-สิทธิ์การใช้งานของแอดมินยึดโยงผ่านฐานข้อมูล Supabase PostgreSQL โดยในตาราง `admin_users` มีฟิลด์ที่ได้รับการเชื่อมโยงเพิ่มเติมดังนี้:
+สิทธิ์การใช้งานของแอดมินยึดโยงผ่านฐานข้อมูล PostgreSQL (Local DB)QL โดยในตาราง `admin_users` มีฟิลด์ที่ได้รับการเชื่อมโยงเพิ่มเติมดังนี้:
 
 | ฟิลด์ข้อมูล | ประเภทตัวแปร | รายละเอียดเชิงเทคนิค |
 |---|---|---|
@@ -8995,16 +9151,16 @@ UPDATE students
 | **Log Integrity** | Internal DB Check | ตรวจสถานภาพการล้าง Log อัตโนมัติเมื่อครบ 90 วันตาม พ.ร.บ. คอมพิวเตอร์ | ตรวจหาและประเมินแถว log ที่ค้างสะสม |
 
 ### 71.49.2 การแจ้งเตือนสถานะเซิร์ฟเวอร์ผิดปกติและกลไก Degradation (Graceful Degradation)
-หากฐานข้อมูล Supabase เข้าสู่สภาวะล่มชะงักชั่วคราวหรือเน็ตเวิร์กเกิดการดีเลย์สูง ระบบจะทำการสลับการทำงานไปเป็นโหมด **Degraded Operation** โดยมีพฤติกรรมดังนี้:
+หากฐานข้อมูล PostgreSQL (Local) เข้าสู่สภาวะล่มชะงักชั่วคราวหรือเน็ตเวิร์กเกิดการดีเลย์สูง ระบบจะทำการสลับการทำงานไปเป็นโหมด **Degraded Operation** โดยมีพฤติกรรมดังนี้:
 1. **In-Memory Config Cache Fallback**:
    เมื่อติดต่อฐานข้อมูลล้มเหลวขณะ ESP32 ร้องขอรายละเอียดแสดงผล ระบบจะดึงค่าคอนฟิกเกอเรชันเริ่มต้นจาก `getFallbackSettings()` ในไฟล์ `lib/resilience.ts` แทนการระเบิดข้อผิดพลาด (Server Error) ทำให้หน้าจอ TFT ของบอร์ดหน้าห้องไม่เกิดอาการจอขาวหรือดับลง และยังคงแสดงหน้าสถานะจำกัดได้อย่างราบรื่น
 2. **Offline LocalStorage Queue**:
    ฝั่งสมาร์ทโฟนของนักศึกษา หากยิงส่งฟอร์มขอเปิดประตูแล้วคลาวด์ปิดล็อกไม่ตอบสนอง โค้ดฝั่ง Client จะจัดเก็บคำขอดังกล่าวลงใน queue ท้องถิ่น `localStorage` รอจังหวะสัญญานกลับมาเพื่อลองยิงประมวลผลใหม่อีกรอบโดยที่ผู้ใช้งานไม่ต้องพิมพ์รายละเอียดใหม่
 3. **กลไกการแจ้งเตือนสภาวะวิกฤตเชิงรุก (Proactive Outage Alerting):**
-   เมื่อโมดูลตรวจวัดสถานภาพ (Health Checker) ยิงทดสอบระบบแล้วพบค่าความผิดปกติรุนแรง เช่น ฐานข้อมูล Supabase เข้าสู่สภาวะล่มชะงัก (`status: unhealthy`) หรือมีค่าดีเลย์ Latency สูงเกินเกณฑ์มาตรฐานชี้วัดวิกฤต (`status: degraded` เกิน 500ms ติดต่อกัน 3 รอบการคิวรี) ตัวระบบจะส่งคำสั่งด่วนข้ามผ่านไปยัง **Discord Webhook** แจ้งเตือนฉุกเฉินเข้าสู่แผงควบคุมของแอดมินข้ามระบบแบบเรียลไทม์ โดยจะแนบรายละเอียดโค้ดความผิดพลาด (Error Code), ค่าพิกัดเซิร์ฟเวอร์ย่อยที่เกิดปัญหา (Region), และสเตตัสการใช้หน่วยความจำขณะเกิดเหตุ เพื่อกระตุ้นให้วิศวกรควบคุมระบบรับทราบเหตุและเข้ากู้คืนระบบได้ทันท่วงทีโดยไม่ต้องรอให้ผู้ใช้งานมาแจ้งร้องเรียนเข้ามาครับ
+   เมื่อโมดูลตรวจวัดสถานภาพ (Health Checker) ยิงทดสอบระบบแล้วพบค่าความผิดปกติรุนแรง เช่น ฐานข้อมูล PostgreSQL (Local) เข้าสู่สภาวะล่มชะงัก (`status: unhealthy`) หรือมีค่าดีเลย์ Latency สูงเกินเกณฑ์มาตรฐานชี้วัดวิกฤต (`status: degraded` เกิน 500ms ติดต่อกัน 3 รอบการคิวรี) ตัวระบบจะส่งคำสั่งด่วนข้ามผ่านไปยัง **Discord Webhook** แจ้งเตือนฉุกเฉินเข้าสู่แผงควบคุมของแอดมินข้ามระบบแบบเรียลไทม์ โดยจะแนบรายละเอียดโค้ดความผิดพลาด (Error Code), ค่าพิกัดเซิร์ฟเวอร์ย่อยที่เกิดปัญหา (Region), และสเตตัสการใช้หน่วยความจำขณะเกิดเหตุ เพื่อกระตุ้นให้วิศวกรควบคุมระบบรับทราบเหตุและเข้ากู้คืนระบบได้ทันท่วงทีโดยไม่ต้องรอให้ผู้ใช้งานมาแจ้งร้องเรียนเข้ามาครับ
 
 ### 71.49.3 แผนกู้คืนฐานข้อมูลและชุดข้อมูลจำลองอย่างปลอดภัย (Failsafe Database Seeding Runbook)
-กรณีที่ฐานข้อมูลเกิดการเสียหายอย่างหนัก (Data Corruption) หรือจำต้องย้ายสัญญานไปเชื่อมกับเครื่องแม่ข่ายSupabase คอร์ใหม่ในยามวิกฤต วิศวกรควบคุมระบบสามารถใช้สคริปต์สำหรับการล้างและสร้างตารางความสัมพันธ์ขึ้นใหม่ (Schema Initialization & Seeding) ได้ทันทีตามขั้นตอนต่อไปนี้:
+กรณีที่ฐานข้อมูลเกิดการเสียหายอย่างหนัก (Data Corruption) หรือจำต้องย้ายสัญญานไปเชื่อมกับเครื่องแม่ข่ายPostgreSQL (Local) คอร์ใหม่ในยามวิกฤต วิศวกรควบคุมระบบสามารถใช้สคริปต์สำหรับการล้างและสร้างตารางความสัมพันธ์ขึ้นใหม่ (Schema Initialization & Seeding) ได้ทันทีตามขั้นตอนต่อไปนี้:
 
 1. **การตรวจสอบสิทธิ์ความปลอดภัยในตัวแปรระบบ**:
    ฟังก์ชัน `initDatabase()` และฟังก์ชัน Seeding ข้อมูลแอดมินเริ่มต้นจะไม่ทำงานบนสภาพแวดล้อมจริงเด็ดขาดหากไม่ได้ตั้งค่าตัวแปร:
@@ -9012,7 +9168,7 @@ UPDATE students
 2. **ขั้นตอนรันคำสั่งกู้คืนระบบแบบ Step-by-Step**:
    - ปิดการเชื่อมต่อภายนอกชั่วคราวเพื่อเตรียมพื้นที่ฐานข้อมูล
    - อัปโหลด Environment Variables ไปยังพื้นที่คลาวด์ใหม่ (เช่น `DATABASE_URL` ใหม่ที่ครอบคลุมการต่อผ่าน PgBouncer พอร์ต 6543)
-   - ปลดล็อก bypass ชั่วคราวโดยการเรียกหน้า API `GET /api/system/health?init=true` ซึ่งจะเป็นการยิง DDL Script คอนฟิกระดับความปลอดภัย โครงสร้างตาราง และ Index ทั้งหมด 25 โครงสร้างจากไฟล์ `lib/db.ts` เข้าสู่ Supabase ทันทีภายในเวลา 2 วินาที
+   - ปลดล็อก bypass ชั่วคราวโดยการเรียกหน้า API `GET /api/system/health?init=true` ซึ่งจะเป็นการยิง DDL Script คอนฟิกระดับความปลอดภัย โครงสร้างตาราง และ Index ทั้งหมด 25 โครงสร้างจากไฟล์ `lib/db.ts` เข้าสู่ PostgreSQL (Local) ทันทีภายในเวลา 2 วินาที
    - การสกัดสร้างบัญชีเจ้าหน้าที่ควบคุมระบบเริ่มต้น (Owner) จะนำคีย์ `INITIAL_ADMIN_USERNAME` และ `INITIAL_ADMIN_PASSWORD` ที่กรอกไว้ปลอดภัยในระบบ มาแฮชด้วยกลไก `bcryptjs` ความยาวเกลือ 10 rounds บันทึกลงไปเป็นผู้ถือกุญแจหลักคนแรกสำหรับล็อกอินเข้ากู้คืนระบบผ่าน UI ต่อไป
 
 *มาตรการป้องกันความปลอดภัยสูงสุด*: เมื่อรันและสแกนฐานข้อมูลเสร็จสิ้นแล้ว วิศวกร**ต้องเปลี่ยนสถานะตัวแปร** `SKIP_DB_INIT=true` และนำ `ALLOW_DEV_SEED` ออกจากคลาวด์โปรดักชันในทันที เพื่อปิดช่องทางและสกัดกั้นการใช้ API ของระบบภายนอกในการแฝงรันสคริปต์สแกนตาราง (Fast Path Database Protection) ซึ่งช่วยลดเวลา Cold Start ของเซิร์ฟเวอร์ในการรับส่ง Request แรกของวันลงอย่างเห็นได้ชัด
@@ -9253,7 +9409,7 @@ flowchart TD
 ### 71.53.2 เซิร์ฟเวอร์ — แก้รากของอาการเปิดประตูวน (Edge Runtime Pitfall)
 
 จุดสำคัญที่สุดอยู่ที่ `app/api/esp32/display/route.ts` (Edge Runtime):
-- เดิมใช้ `sbUpdate(...)` แบบ **fire-and-forget** (ไม่ `await`) เพื่อ "ล้าง" คำสั่ง `room_cmd_<room>` จาก `"unlock"` → `"consumed"` แต่ใน **Vercel Edge** เมื่อ response ถูกส่งกลับ ฟังก์ชันจะถูก freeze/terminate ทันที งานเบื้องหลังที่ยังไม่ `await` จึง**ไม่ถูกยิงจริง** → ค่าใน DB ค้างเป็น `"unlock"` → ทุก poll ตอบ `open` → บอร์ดเปิดวนไม่จบ
+- เดิมใช้ `sbUpdate(...)` แบบ **fire-and-forget** (ไม่ `await`) เพื่อ "ล้าง" คำสั่ง `room_cmd_<room>` จาก `"unlock"` → `"consumed"` แต่ใน **Raspberry Pi Edge** เมื่อ response ถูกส่งกลับ ฟังก์ชันจะถูก freeze/terminate ทันที งานเบื้องหลังที่ยังไม่ `await` จึง**ไม่ถูกยิงจริง** → ค่าใน DB ค้างเป็น `"unlock"` → ทุก poll ตอบ `open` → บอร์ดเปิดวนไม่จบ
 - การแก้: เปลี่ยนเป็น `await sbFetch(... PATCH ...)` ให้การล้างคำสั่งเสร็จก่อนส่ง response เสมอ คำสั่งจึงถูก consume ครั้งเดียวจริง ๆ
 - บทเรียน: ใน Serverless/Edge **อย่าทำงานเขียน DB แบบไม่ await หลังส่ง response** ถ้างานนั้นต้องเกิดจริง (ใช้ `await` หรือ `waitUntil`)
 
@@ -9285,7 +9441,7 @@ flowchart TD
    ระบบย้ายตรรกะการเขียนประวัติมาที่ฟังก์ชันรวมศูนย์ โดยการเขียน log ถูกหุ้มด้วยบล็อก `try-catch` พิเศษ (Non-blocking & Fault-tolerant Logger) เพื่อรับประกัน 100% ว่าหากระบบบันทึกประวัติล้มเหลว (เช่น ฐานข้อมูลตอบสนองช้าชั่วคราว) จะไม่มีการดีด HTTP 500 หรือขัดจังหวะการเปิดประตูของผู้ใช้งานเป็นอันขาด:
    - `logEvent(opts)`: ฟังก์ชันสร้าง Query Parameterized ยิงเข้าตาราง `access_logs` อัตโนมัติ โดยระบุดัชนีผู้กระทำ (`performed_by`), ห้องเรียน (`room_code`), ข้อมูลเครือข่าย (`ip`), และลายเซ็นไคลเอนต์ (`user_agent`)
    - `logEventFromRequest(req, opts)`: หุ้ม API Response ดึงที่อยู่ IP และ User-Agent จาก HTTP Request Header (`x-forwarded-for` หรือ `request.headers`) เข้าสู่ฟังก์ชันล็อกทันทีแบบปลอดภัย
-   - `getRequestContext(req)`: ฟังก์ชันดึง `{ ip, userAgent }` ออกมาอย่างปลอดภัย รองรับ Cloudflare/Vercel Reverse Proxy `x-forwarded-for`
+   - `getRequestContext(req)`: ฟังก์ชันดึง `{ ip, userAgent }` ออกมาอย่างปลอดภัย รองรับ Cloudflare/Raspberry Pi Reverse Proxy `x-forwarded-for`
    - `parseDevice(ua)`: ฟังก์ชันแปลง User-Agent String ออกมาเป็น `{ device, browser }` เพื่อแสดงผลเข้าใจง่าย
    - `severityForAction(action)`: แผนผังกำหนดระดับความรุนแรงเริ่มต้นสำหรับพฤติกรรมแต่ละประเภทโดยอัตโนมัติ
 
@@ -9304,9 +9460,9 @@ flowchart TD
 
 2. **ระบบการรายงานสรุปกิจกรรมอัตโนมัติรายวัน/รายสัปดาห์ (`system_summary`):**
    - ออกแบบ API ปิดเส้นทางปลอดภัยสูงที่ `/api/system/summary` ซึ่งตรวจสอบยืนยันสิทธิ์ด้วย **`CRON_SECRET`** ผ่าน HTTP Bearer Token
-   - ตั้งเวลาประมวลผลเชิงกำหนดเวลา (Vercel Cron) ผ่าน `vercel.json` โดยกวาดต้อนประวัติทุกรอบเวลา 23:00 น. เพื่อส่งรายงานสถิติกิจกรรมรวม เช่น อัตราส่วนความสำเร็จในการเปิดประตู, ปริมาณการลงทะเบียนใหม่, สถิติการเดารหัสผ่านล้มเหลว, เหตุการณ์ Critical, และระบุอันดับ "ห้องเรียนยอดนิยมสูงสุด" ประจำคาบเวลา
+   - ตั้งเวลาประมวลผลเชิงกำหนดเวลา (Raspberry Pi Cron) ผ่าน `vercel.json` โดยกวาดต้อนประวัติทุกรอบเวลา 23:00 น. เพื่อส่งรายงานสถิติกิจกรรมรวม เช่น อัตราส่วนความสำเร็จในการเปิดประตู, ปริมาณการลงทะเบียนใหม่, สถิติการเดารหัสผ่านล้มเหลว, เหตุการณ์ Critical, และระบุอันดับ "ห้องเรียนยอดนิยมสูงสุด" ประจำคาบเวลา
    - รายงานสรุปนี้จะถูกส่งในรูปแบบ Rich Embed ที่อ่านเข้าใจง่าย พร้อมแยกส่วนด้วย Emoji และสีสัน เพื่อลดภาระการตรวจสอบตารางดิบของผู้ดูแลระบบ
-   - การทำงานผ่าน Vercel Cron กำหนดให้ทำรายงานสรุปรายวัน (`0 16 * * *` หรือเวลา 23:00 น. ตามเวลาประเทศไทย ICT) และสรุปรายสัปดาห์ในทุกคืนวันอาทิตย์ (`0 16 * * 0` หรือเวลา 23:00 น. ICT)
+   - การทำงานผ่าน Raspberry Pi Cron กำหนดให้ทำรายงานสรุปรายวัน (`0 16 * * *` หรือเวลา 23:00 น. ตามเวลาประเทศไทย ICT) และสรุปรายสัปดาห์ในทุกคืนวันอาทิตย์ (`0 16 * * 0` หรือเวลา 23:00 น. ICT)
 
 3. **ตารางโครงสร้าง API Payload สำหรับการส่งข้อมูลแจ้งเตือน (Event-Notification Schema Contract):**
 
@@ -9319,7 +9475,7 @@ flowchart TD
 | `settings_updated` | `adminName`, `ip`, `reason` | 🟡 Orange (0xf39c12) | `admin_audit` | `warning` |
 | `exit_button_pressed` | `room`, `ip` | 🔵 Blue (0x3498db) | `logs_webhook` | `info` (ระบบบันทึกความเคลื่อนไหว) |
 
-> 🔑 หมายเหตุทางปฏิบัติ: ต้องตั้งค่าตัวแปรสภาพแวดล้อม `CRON_SECRET` (ความยาวมากกว่า 32 ตัวอักษร) บนคอนโซล Vercel เพื่อความปลอดภัยสูงสุดในการทริกเกอร์ Cron API ในแต่ละวัน
+> 🔑 หมายเหตุทางปฏิบัติ: ต้องตั้งค่าตัวแปรสภาพแวดล้อม `CRON_SECRET` (ความยาวมากกว่า 32 ตัวอักษร) บนคอนโซล Raspberry Pi เพื่อความปลอดภัยสูงสุดในการทริกเกอร์ Cron API ในแต่ละวัน
 
 ### 71.53.7 แก้ปัญหาการส่งออกเอกสาร PDF/PNG และการเซฟไดอะแกรม Mermaid (PDF/PNG Blank Export & Mermaid Save Fix)
 
@@ -9373,15 +9529,15 @@ flowchart TD
 
 **วันที่ดำเนินการ:** 1 มิถุนายน 2569 (10:28 น. ICT)
 
-พัฒนาความเสถียรและความน่าเชื่อถือให้กับการดาวน์โหลดเฟิร์มแวร์แบบไร้สาย (HTTPS Over-The-Air) บนบอร์ดจริงเพื่อรองรับระบบสับเปลี่ยนและเปลี่ยนโดเมนไฟล์ของ Supabase Storage (Signed URLs):
+พัฒนาความเสถียรและความน่าเชื่อถือให้กับการดาวน์โหลดเฟิร์มแวร์แบบไร้สาย (HTTPS Over-The-Air) บนบอร์ดจริงเพื่อรองรับระบบสับเปลี่ยนและเปลี่ยนโดเมนไฟล์ของ PostgreSQL (Local) Storage (Signed URLs):
 1. **ข้อจำกัดในการย้ายโดเมนข้ามแหล่งข้อมูล (Cross-Domain Redirect):**
-   - **กลไกปัญหา:** โค้ดของ Next.js API `/api/esp32/firmware-ota` ส่งสถานะ `302 Found` เพื่อชี้ทางและเปลี่ยนโดเมนไปยัง Supabase Storage ลิงก์ตรง ซึ่งเป็นการข้ามโดเมน หากบอร์ด ESP32 ไม่ได้ตั้งค่าเปิดการติดตามการเปลี่ยนทิศทาง จะทำให้ตัวอัปเดตยกเลิกกระบวนการทันที ส่งผลให้เกิดบั๊ก `HTTP_UPDATE_FAILED`
+   - **กลไกปัญหา:** โค้ดของ Next.js API `/api/esp32/firmware-ota` ส่งสถานะ `302 Found` เพื่อชี้ทางและเปลี่ยนโดเมนไปยัง PostgreSQL (Local) Storage ลิงก์ตรง ซึ่งเป็นการข้ามโดเมน หากบอร์ด ESP32 ไม่ได้ตั้งค่าเปิดการติดตามการเปลี่ยนทิศทาง จะทำให้ตัวอัปเดตยกเลิกกระบวนการทันที ส่งผลให้เกิดบั๊ก `HTTP_UPDATE_FAILED`
 2. **การปรับแต่งในฝั่งฮาร์ดแวร์ ESP32 และ Generator:**
    - **แนวทางแก้ไข:** เพิ่มการระบุค่าพารามิเตอร์ให้กับไลบรารี `httpUpdate` ใน `esp32.ino` และเทมเพลตโค้ด `ArduinoCode.ts` เพื่อบังคับให้ติดตามทิศทางการโยกย้ายไฟล์เฟิร์มแวร์ทุกกรณี:
      ```cpp
      httpUpdate.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
      ```
-     การกำหนดค่า `HTTPC_FORCE_FOLLOW_REDIRECTS` ช่วยให้ ESP32 บอร์ดจริงสามารถกระโดดเชื่อมต่อและดึงไฟล์ `.bin` ปลายทางจาก Supabase Storage ได้อย่างอัตโนมัติและไร้รอยต่อ
+     การกำหนดค่า `HTTPC_FORCE_FOLLOW_REDIRECTS` ช่วยให้ ESP32 บอร์ดจริงสามารถกระโดดเชื่อมต่อและดึงไฟล์ `.bin` ปลายทางจาก PostgreSQL (Local) Storage ได้อย่างอัตโนมัติและไร้รอยต่อ
 
 ### 71.53.11 การปรับปรุงความเสถียรและความมั่นคงปลอดภัยของเฟิร์มแวร์ ESP32 (Memory Resilience, Non-blocking WiFi & Heap JSON Allocation)
 
@@ -9406,7 +9562,7 @@ flowchart TD
      - ขยายขนาดพื้นที่ของบัฟเฟอร์ประมวลผลคำสั่งโพลล์ในลูปหลักเป็น 1024 ไบต์ ช่วยขจัดปัญหาการถอดรหัสล้มเหลว (JSON Decoding Failures) ได้สมบูรณ์แบบ
 4. **ความสมบูรณ์ในการบิลด์สำหรับบอร์ดฮาร์ดแวร์จริง (Physical Board Compilation Verification):**
    - **กลไกปัญหาเดิม:** ในสภาพแวดล้อมที่ผู้พัฒนาสับเปลี่ยนโหมดจากการรันในจำลอง (Wokwi Sim) ไปยังบอร์ดจริงโดยการนำเครื่องหมาย `#define WOKWI_SIM` ออก จะทำให้คอมไพเลอร์ฟ้องหาตัวแปรใบรับรองความปลอดภัย `root_ca_cert` ซึ่งช่องโหว่นี้เกิดจากไฟล์ `config.h` ขาดการฝังตัวแปรนี้ไว้
-   - **การปรับปรุง:** นำประมวลข้อมูลใบรับรอง Root CA จาก ISRG Root X1 ของ Let's Encrypt จากไฟล์เทมเพลตฝังตัวเข้าสู่ `config.h` ตัวจริง ทำให้บอร์ดสามารถรองรับการตรวจสอบสิทธิ์สัญจรปลายทาง Vercel Next.js ผ่าน HTTPS ได้ทั้งในโหมดจำลอง (ที่มีระบบ setInsecure ใน Wokwi) และบอร์ดจริงได้อย่างสมบูรณ์
+   - **การปรับปรุง:** นำประมวลข้อมูลใบรับรอง Root CA จาก ISRG Root X1 ของ Let's Encrypt จากไฟล์เทมเพลตฝังตัวเข้าสู่ `config.h` ตัวจริง ทำให้บอร์ดสามารถรองรับการตรวจสอบสิทธิ์สัญจรปลายทาง Raspberry Pi Next.js ผ่าน HTTPS ได้ทั้งในโหมดจำลอง (ที่มีระบบ setInsecure ใน Wokwi) และบอร์ดจริงได้อย่างสมบูรณ์
 
 ### 71.53.6 สรุปไฟล์ที่เปลี่ยน (อ้างอิงเร็ว)
 
@@ -9414,7 +9570,7 @@ flowchart TD
 |------|----------------|
 | `my-app/scripts/compile_manual.js` | ปลดล็อก Bug การส่งออกรายงานขาวล้วนของส่วนยื่น PDF/PNG, ฝัง CSS เข้าไปในไฟล์เวกเตอร์ SVG ที่เซฟจากแผนผัง Mermaid, สับเปลี่ยนระบบการเซฟรูป PNG โดยการจับภาพเรนเดอร์ด้วย html2canvas ตรงพิกัด, และสร้างปุ่มคัดลอกโค้ด Mermaid ในแต่ละไดอะแกรม |
 | `esp32/esp32.ino` | ตัด ElegantOTA, `WOKWI_SIM`, แก้ `'\0'`, edge-trigger door, อัปเดต Poll URL พ่วง `&slim=true`, เพิ่มระบบกู้ชีพ NTP Sync Timeout ผ่าน HTTP Fallback, บังคับติดตาม Redirect (302) สำหรับ OTA, จัดระเบียบพารามิเตอร์แบบ `const String&` เพื่อลดแรม, ถอดรหัส Base64 แบบ Heap ครั้งเดียวไร้รอยต่อ, ป้องกัน Null Pointer Dereference ของ malloc, และย้ายขนาด JSON Documents (cacheDoc: 4096, logDoc: 3072, display main loop: 1024) ไปเป็น DynamicJsonDocument บน Heap เพื่อป้องกันสภาวะ Stack/Buffer Overflow |
-| `esp32/config.h` | **ปรับปรุงใหม่** — เพิ่มใบรับรองความปลอดภัย Root CA (`root_ca_cert`) สำหรับ Vercel/HTTPS เพื่อให้บอร์ดจำลองและบอร์ดฮาร์ดแวร์จริงสามารถคอมไพล์ผ่านได้ 100% ไร้รอยต่อ |
+| `esp32/config.h` | **ปรับปรุงใหม่** — เพิ่มใบรับรองความปลอดภัย Root CA (`root_ca_cert`) สำหรับ Raspberry Pi/HTTPS เพื่อให้บอร์ดจำลองและบอร์ดฮาร์ดแวร์จริงสามารถคอมไพล์ผ่านได้ 100% ไร้รอยต่อ |
 | `my-app/app/admin/dashboard/ArduinoCode.ts` | sync เฟิร์มแวร์ (Slim Polling + NTP HTTP Fallback + OTA Redirect 302) + ปลด escape `\\${...}` |
 | `my-app/app/api/esp32/display/route.ts` | `await` consume คำสั่งเปิดประตู และเพิ่มสับเปลี่ยน Slim Polling Mode เมื่อส่ง query parameter `slim=true` |
 | `my-app/app/api/esp32/time/route.ts` | **ไฟล์ใหม่** — บริการซิงค์เวลาผ่าน Edge API สำหรับบอร์ด IoT ที่โดนบล็อกพอร์ต UDP 123 |
@@ -9423,14 +9579,14 @@ flowchart TD
 | `my-app/lib/access-log.ts` | **ไฟล์ใหม่** — helper บันทึก log รวมศูนย์ |
 | `my-app/lib/discord.ts` | event `security_alert`, `system_summary`, device ใน embed |
 | `my-app/app/api/system/summary/route.ts` | **ไฟล์ใหม่** — รายงานสรุปรายวัน/สัปดาห์ |
-| `my-app/vercel.json` | **ไฟล์ใหม่** — Vercel Cron |
+| `my-app/vercel.json` | **ไฟล์ใหม่** — Raspberry Pi Cron |
 | routes: `approve`, `door`, `reject`, `bypass`, `auth/login` | ใช้ `logEvent` เก็บ IP/อุปกรณ์/severity |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ## 71.54 ชุดทดสอบความปลอดภัยและการทำงานแบบอัตโนมัติ (Automated Safety & Security Test Suite)
 
-เพิ่มชุดทดสอบหน่วย (unit test) ด้วย **Vitest** เพื่อป้องกันการถดถอย (regression) ของตรรกะความปลอดภัยที่สำคัญที่สุด โดยเลือกทดสอบเฉพาะฟังก์ชันบริสุทธิ์ (pure functions) ที่ไม่ต้องพึ่งฐานข้อมูล ทำให้รันได้เร็ว (~1.6 วินาที) และไม่ต้องเชื่อมต่อ Supabase
+เพิ่มชุดทดสอบหน่วย (unit test) ด้วย **Vitest** เพื่อป้องกันการถดถอย (regression) ของตรรกะความปลอดภัยที่สำคัญที่สุด โดยเลือกทดสอบเฉพาะฟังก์ชันบริสุทธิ์ (pure functions) ที่ไม่ต้องพึ่งฐานข้อมูล ทำให้รันได้เร็ว (~1.6 วินาที) และไม่ต้องเชื่อมต่อ PostgreSQL (Local)
 
 ### 71.54.1 วิธีรันชุดทดสอบ (Execution Commands)
 
@@ -9489,7 +9645,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 
 2. **การปลอมแปลงไอพีต้นทางผ่าน Proxy Headers (CWE-290)**
    * **ผลการทดสอบ:** เมื่อทำการส่งสเปเชียลเฮดเดอร์ เช่น `X-Forwarded-For` หรือ `X-Real-IP` เพื่อหลอกลวงที่อยู่ไอพี ระบบไม่ยอมจำนนต่อช่องโหว่นี้และสามารถทำการจำกัดอัตราคำขอได้อย่างถูกต้อง
-   * **มาตรการป้องกัน:** CDN (Vercel Core Gateway) และ Middleware ทำการเขียนทับที่อยู่ไอพีของไคลเอนต์จริงเสมอ (Real Client IP Validation) ป้องกันการหลีกเลี่ยงกฎความปลอดภัย
+   * **มาตรการป้องกัน:** CDN (Raspberry Pi Core Gateway) และ Middleware ทำการเขียนทับที่อยู่ไอพีของไคลเอนต์จริงเสมอ (Real Client IP Validation) ป้องกันการหลีกเลี่ยงกฎความปลอดภัย
 
 3. **การปลอมแปลงสิทธิ์และโทเคนช่วงเวลา (CWE-347 & CWE-613)**
    * **ผลการทดสอบ:** การฟอร์จโทเคนคุกกี้ `smartaccess_admin_token` ด้วยคีย์ลับจำลองหรือกรณีโทเคนหมดอายุ (Expired Token) ถูกตอบรับด้วยสถานะสิทธิ์ล้มเหลว (HTTP 401 Unauthorized) เสมอ
@@ -9497,7 +9653,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 
 4. **การฉีดชุดคำสั่งและกรองข้อมูลไม่พึงประสงค์ (CWE-89 & CWE-915 & CWE-79)**
    * **ผลการทดสอบ:** การยิง SQL Injection คำสั่งแสร้งอนุมัติ และพฤทีการส่งฟิลด์อันตรายผ่านช่องทางลงทะเบียนไคลเอนต์ (Mass-Assignment) ไม่สามารถเปลี่ยนแปลงพฤติกรรมฐานข้อมูลได้
-   * **มาตรการป้องกัน:** คอนเนกชันพูล Supabase PostgreSQL ดำเนินการผ่านคิวรีแบบ Parameterized Query ทั้งสิ้น รวมทั้งมีระบบการกรองอักขระแปลกปลอม (Sanitization Filters) ก่อนทำธุรกรรมเชิงข้อมูล
+   * **มาตรการป้องกัน:** คอนเนกชันพูล PostgreSQL (Local DB)QL ดำเนินการผ่านคิวรีแบบ Parameterized Query ทั้งสิ้น รวมทั้งมีระบบการกรองอักขระแปลกปลอม (Sanitization Filters) ก่อนทำธุรกรรมเชิงข้อมูล
 
 ### 71.55.3 บทวิเคราะห์สถานการณ์ภัยคุกคามขั้นสูงและการป้องกันเชิงรุก (Advanced Threat Vector Modeling & Zero-Trust Mitigations)
 
@@ -9518,10 +9674,10 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
      * **Automated Pruning:** ตัวบอร์ดจะดูแลระบบไฟล์ออฟไลน์ให้อยู่ในขนาดที่จำกัดโดยประมวลผลการจัดระเบียบลบข้อมูลโทเคนที่เลยกำหนดเวลาของลายเซ็นออกอัตโนมัติ
 
 3. **สถาปัตยกรรมป้องกันสภาวะเซิร์ฟเวอร์ล่มจากการเรียกใช้ข้อมูลเชื่อมโยงบ่อยครั้ง (Connection Pooling Exhaustion & Memory Gateway Mitigation)**
-   * **ภัยคุกคาม (Threat):** ภายใต้สถาปัตยกรรมคลาวด์เซิร์ฟเวอร์เลส (Vercel Node.js Serverless API) หากห้องเรียนติดตั้งอุปกรณ์ SmartAccess หลายสิบห้องยิงคำขอ HTTPS Polling เพื่ออัปเดตหน้าจอทุก ๆ 2 วินาที (30 คำร้อง/วินาที) คอนเทนเนอร์เซิร์ฟเวอร์เลสที่ถูกสปอว์นขึ้นมาจะแย่งกันสร้างการเชื่อมต่อกับ Supabase PostgreSQL จนเกินขีดจำกัดพูล ส่งผลให้ระบบล่มด้วยอาการ `504 Gateway Timeout` หรือเกิดปัญหาฐานข้อมูลปฏิเสธคำสั่งเชื่อมต่อ
+   * **ภัยคุกคาม (Threat):** ภายใต้สถาปัตยกรรมคลาวด์เซิร์ฟเวอร์เลส (Raspberry Pi Node.js Serverless API) หากห้องเรียนติดตั้งอุปกรณ์ SmartAccess หลายสิบห้องยิงคำขอ HTTPS Polling เพื่ออัปเดตหน้าจอทุก ๆ 2 วินาที (30 คำร้อง/วินาที) คอนเทนเนอร์เซิร์ฟเวอร์เลสที่ถูกสปอว์นขึ้นมาจะแย่งกันสร้างการเชื่อมต่อกับ PostgreSQL (Local DB)QL จนเกินขีดจำกัดพูล ส่งผลให้ระบบล่มด้วยอาการ `504 Gateway Timeout` หรือเกิดปัญหาฐานข้อมูลปฏิเสธคำสั่งเชื่อมต่อ
    * **มาตรการป้องกันเชิงรุก:** ปรับเปลี่ยนแนวทางไปสู่สถาปัตยกรรมกึ่งไร้สถานะ (Hybrid Stateless Middleware Gate):
-     * **PgBouncer Port 6543 (Transaction Mode):** เปลี่ยนเส้นทางการเชื่อมต่อฐานข้อมูล Supabase เข้าสู่พอร์ต 6543 เพื่อทำ Connection Pooling แบบ Transaction-level ช่วยลดปริมาณการผูกขาดคอนเนกชันได้อย่างมีนัยสำคัญ
-     * **In-Memory Cache Cache-Aside:** การเรียกอัปเดตหน้าจอโพล ESP32 จะดึงข้อมูลผ่าน Cache Gateway (เช่น Global Static Variable ใน Vercel Edge Runtime หรือ Redis Cache) แทนการยิง Query ค้นหาตารางโดยตรงบนฐานข้อมูล ช่วยรักษาประสิทธิภาพการประมวลผลสูงและหลีกเลี่ยงภาระโหลดของเครื่องเซิร์ฟเวอร์ได้เกือบทั้งหมด
+     * **PgBouncer Port 6543 (Transaction Mode):** เปลี่ยนเส้นทางการเชื่อมต่อฐานข้อมูล PostgreSQL (Local) เข้าสู่พอร์ต 6543 เพื่อทำ Connection Pooling แบบ Transaction-level ช่วยลดปริมาณการผูกขาดคอนเนกชันได้อย่างมีนัยสำคัญ
+     * **In-Memory Cache Cache-Aside:** การเรียกอัปเดตหน้าจอโพล ESP32 จะดึงข้อมูลผ่าน Cache Gateway (เช่น Global Static Variable ใน Raspberry Pi Edge Runtime หรือ Redis Cache) แทนการยิง Query ค้นหาตารางโดยตรงบนฐานข้อมูล ช่วยรักษาประสิทธิภาพการประมวลผลสูงและหลีกเลี่ยงภาระโหลดของเครื่องเซิร์ฟเวอร์ได้เกือบทั้งหมด
 
 4. **การเสริมเกราะป้องกันช่องทางดักฟังวิทยุบนเครือข่ายท้องถิ่น (Local HTTP Sniffing Mitigation via OTP-Signature Handshake)**
    * **ภัยคุกคาม (Threat):** ในโหมดออฟไลน์ บอร์ด ESP32 มีทรัพยากรที่จำกัดทำให้รันเฉพาะโลคอลเว็บเซิร์ฟเวอร์บนพอร์ต 80 (HTTP) แฮกเกอร์ที่เชื่อมโยงบนวง Wi-Fi เครือข่ายการศึกษาเดียวกันสามารถใช้อุปกรณ์ Wi-Fi Sniffer ดักฟังทราฟฟิกและล่วงรู้ข้อความของ Offline Grant ที่ถูกส่งตรงจากโทรศัพท์ไปยังบอร์ดทางพอร์ต 80 ในรูปแบบ plaintext
@@ -9556,7 +9712,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 <a id="sec-71-57"></a>
 ## 71.57 รายงานการทดลองและประเมินประสิทธิภาพระบบรับโหลดหนาแน่นเชิงตัวเลข (High-Throughput Load Testing & DB Index Telemetry Report)
 
-การวิจัยเชิงลึกด้านเสถียรภาพในการจัดการสัญจรเครือข่ายและการเข้าถึงพร้อมกัน (Concurrency control) ของระบบ SmartAccess ได้ทำการจำลองการสแกนในสภาวะวิกฤต (**Stress Test**) ด้วยจำนวนผู้ใช้จำลอง 200 คน ยิงถล่มคำขอลงทะเบียนเข้าประตูพร้อมกันที่มิลลิวินาทีเดียวกัน โดยมีผลการทดสอบเชิงตัวเลขและประสิทธิภาพฐานข้อมูล Supabase PostgreSQL ดังรายละเอียดด้านล่าง:
+การวิจัยเชิงลึกด้านเสถียรภาพในการจัดการสัญจรเครือข่ายและการเข้าถึงพร้อมกัน (Concurrency control) ของระบบ SmartAccess ได้ทำการจำลองการสแกนในสภาวะวิกฤต (**Stress Test**) ด้วยจำนวนผู้ใช้จำลอง 200 คน ยิงถล่มคำขอลงทะเบียนเข้าประตูพร้อมกันที่มิลลิวินาทีเดียวกัน โดยมีผลการทดสอบเชิงตัวเลขและประสิทธิภาพฐานข้อมูล PostgreSQL (Local DB)QL ดังรายละเอียดด้านล่าง:
 
 อัปเดตสถิติการทดลองล่าสุด ณ วันที่: `2026-05-30 07:02:09 (+07:00)`
 
@@ -9595,7 +9751,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 จากการทดลองจำลองโหลดวิกฤตพร้อมกัน 200 คำสั่ง ผลเชิงตัวเลขยืนยันความแข็งแกร่งของสถาปัตยกรรม SmartAccess ในด้านวิศวกรรมหลัก 3 ประการ:
 1. **การจำกัดการชนข้อมูลแบบไร้รอยต่อ (Race Condition Mitigation):** ระบบใช้กลไกการเขียนคิวแบบ Atomic Database Transaction (UPDATE ... WHERE) ทำให้มีผู้ชนะสิทธิ์เข้าใช้โทเคนเพียงคนเดียว และคัดกรองปัดสถานะผู้ที่ชนสแกนซ้ำเป็น 403 Forbidden ได้อย่างสมบูรณ์แบบโดยไม่ต้องใช้แคชภายนอกที่ซับซ้อน
 2. **การป้องกันคอขวด PgBouncer connection queue:** การจูนแคชของ Edge/Redis settings (KV Cache) เป็นเวลา 15 วินาที ช่วยลดการคิวรี่ดึงประวัติการตั้งค่าโดยตรงลงได้กว่า 70% ส่งผลให้ค่า Median Latency ต่ำเป็นพิเศษเฉลี่ยไม่ถึง `200ms` ภายใต้สภาวะโหลดหนาแน่น
-3. **การทำงานที่แม่นยำของดัชนีระบบ (Database Index Efficiency):** อัตราสแกนดัชนีที่เพิ่มขึ้นของ `idx_token_lookup` แสดงให้เห็นว่าเครื่องประมวลผลฐานข้อมูล Supabase PostgreSQL สามารถดึงและเปรียบเทียบข้อมูลได้โดยตรงทันที หลีกเลี่ยงการสแกนแบบกวาดตารางทั้งหมด (Full Table Scan) ส่งผลให้ความเสถียรในการทำงานไม่ถดถอยลงเลยแม้ผู้ใช้งานจะมีจำนวนเพิ่มขึ้นเป็นหลักหมื่นคน
+3. **การทำงานที่แม่นยำของดัชนีระบบ (Database Index Efficiency):** อัตราสแกนดัชนีที่เพิ่มขึ้นของ `idx_token_lookup` แสดงให้เห็นว่าเครื่องประมวลผลฐานข้อมูล PostgreSQL (Local DB)QL สามารถดึงและเปรียบเทียบข้อมูลได้โดยตรงทันที หลีกเลี่ยงการสแกนแบบกวาดตารางทั้งหมด (Full Table Scan) ส่งผลให้ความเสถียรในการทำงานไม่ถดถอยลงเลยแม้ผู้ใช้งานจะมีจำนวนเพิ่มขึ้นเป็นหลักหมื่นคน
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
@@ -9625,7 +9781,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 ### 72.3 อัปเดตเพิ่มเติม (รอบที่ 3 — เสร็จสมบูรณ์)
 แทนที่อิโมจิที่เหลือทั้งหมดในแดชบอร์ดด้วยไอคอน lucide-react จนครบ (ผ่าน tsc --noEmit และ eslint โดยไม่มี error):
 - rooms/page.tsx: หัวข้อสถิติ/KPI (BarChart3, Clock, Target, GraduationCap, Flame), KPI icons (FileText/CheckCircle2/DoorOpen/XCircle/Clock/Zap), ตั้งค่า ESP32 (Settings/Lock), OTA log (ClipboardList/RefreshCw/Download/Trash2/Rocket), ปุ่มบันทึก/Deploy (Save/Loader2/UploadCloud/FolderOpen)
-- health/page.tsx: section tabs (BarChart3/Cloud/Plug/Settings), header (Zap), refresh (RotateCw/RefreshCw), MetricCards (Database/ShieldCheck/MemoryStick/Clock/Smartphone/Globe), Vercel (Cloud/MapPin/Rocket), API (Plug), runtime info array (Server/Laptop/Cpu/Timer/Hash/BarChart3/Calculator/Package/Link2), Lightbulb (tips)
+- health/page.tsx: section tabs (BarChart3/Cloud/Plug/Settings), header (Zap), refresh (RotateCw/RefreshCw), MetricCards (Database/ShieldCheck/MemoryStick/Clock/Smartphone/Globe), Raspberry Pi (Cloud/MapPin/Rocket), API (Plug), runtime info array (Server/Laptop/Cpu/Timer/Hash/BarChart3/Calculator/Package/Link2), Lightbulb (tips)
 - all/page.tsx: log severity (AlertOctagon/AlertTriangle), IP/device (Globe/Laptop), compliance (ShieldCheck/Scale), ออกการ์ด PDF (FileSpreadsheet), เปิดประตู (Unlock)
 
 สรุป: ไฟล์แดชบอร์ดทั้ง 5 (settings, all, pending, rooms, health) + หน้า page.tsx ปลอดอิโมจิในส่วน UI ที่ผู้ใช้เห็น เปลี่ยนเป็นเวกเตอร์ lucide-react ครบถ้วน
@@ -9658,7 +9814,7 @@ npm run test:watch # โหมดเฝ้าดูไฟล์เปลี่�
 
 ### 73.1 สถาปัตยกรรมภาพรวมและการไหลของคำขอ (System-wide Request Flow)
 
-ระบบ SmartAccess ประกอบด้วยผู้กระทำ (actors) หลัก 4 กลุ่ม ได้แก่ นักศึกษา (เบราว์เซอร์มือถือ), ผู้ดูแลระบบ (แดชบอร์ด), บอร์ด ESP32 (IoT polling client) และบริการภายนอก (Discord/Telegram/LINE) โดยทั้งหมดสื่อสารผ่านชั้น Next.js API Route บน Vercel ซึ่งเชื่อมต่อกับ PostgreSQL (Supabase) ทั้งผ่าน `pg` connection pool (Node runtime) และผ่าน Supabase REST API (Edge runtime)
+ระบบ SmartAccess ประกอบด้วยผู้กระทำ (actors) หลัก 4 กลุ่ม ได้แก่ นักศึกษา (เบราว์เซอร์มือถือ), ผู้ดูแลระบบ (แดชบอร์ด), บอร์ด ESP32 (IoT polling client) และบริการภายนอก (Discord/Telegram/LINE) โดยทั้งหมดสื่อสารผ่านชั้น Next.js API Route บน Raspberry Pi ซึ่งเชื่อมต่อกับ PostgreSQL (PostgreSQL (Local)) ทั้งผ่าน `pg` connection pool (Node runtime) และผ่าน PostgreSQL (Local) REST API (Edge runtime)
 
 ```mermaid
 flowchart TB
@@ -9667,14 +9823,14 @@ flowchart TB
         ADM["ผู้ดูแลระบบ (Dashboard)"]
         ESP["บอร์ด ESP32 (Polling Client)"]
     end
-    subgraph Vercel["Next.js บน Vercel"]
+    subgraph Raspberry Pi["Next.js บน Raspberry Pi"]
         EDGE["Edge Runtime /api/esp32/display"]
         NODE["Node Runtime API Routes อื่น ๆ"]
         LIB["lib/ helpers (auth, qr, esp32, notify...)"]
     end
     subgraph Data["ชั้นข้อมูลและบริการ"]
-        PG[("PostgreSQL Supabase")]
-        KV[("Vercel KV Redis Cache")]
+        PG[("PostgreSQL PostgreSQL (Local)")]
+        KV[("Local Cache Redis Cache")]
         EXT["Discord / Telegram / LINE"]
     end
     STU -->|HTTPS| NODE
@@ -9687,7 +9843,7 @@ flowchart TB
     LIB --> EXT
 ```
 
-**หลักการสำคัญของสถาปัตยกรรม** คือการแยก runtime ตามภาระงาน: เส้นทาง `/api/esp32/display` ซึ่งถูก poll ถี่ที่สุด (ทุก 0.2–5 วินาทีต่อบอร์ด) ทำงานบน **Edge Runtime** (`runtime = "edge"`, `preferredRegion = "sin1"` สิงคโปร์) เพื่อให้ cold-start ต่ำกว่า 50 ms และใช้ Supabase REST + Web Crypto แทน `pg` pool ส่วนเส้นทางที่เหลือทำงานบน Node runtime ปกติเพื่อใช้ความสามารถของ `pg`, `bcryptjs`, `jsonwebtoken` และ `pdfkit`
+**หลักการสำคัญของสถาปัตยกรรม** คือการแยก runtime ตามภาระงาน: เส้นทาง `/api/esp32/display` ซึ่งถูก poll ถี่ที่สุด (ทุก 0.2–5 วินาทีต่อบอร์ด) ทำงานบน **Edge Runtime** (`runtime = "edge"`, `preferredRegion = "sin1"` สิงคโปร์) เพื่อให้ cold-start ต่ำกว่า 50 ms และใช้ PostgreSQL (Local) REST + Web Crypto แทน `pg` pool ส่วนเส้นทางที่เหลือทำงานบน Node runtime ปกติเพื่อใช้ความสามารถของ `pg`, `bcryptjs`, `jsonwebtoken` และ `pdfkit`
 
 ### 73.2 โครงสร้างฐานข้อมูลครบทุกตาราง (Complete Database Schema)
 
@@ -9709,7 +9865,7 @@ flowchart TB
 
 **ดัชนีเพื่อประสิทธิภาพ (Performance Indexes)** ที่สร้างผ่าน PL/pgSQL `DO` block: `idx_token_lookup`, `idx_active_token`, `idx_room_status`, `idx_room_timestamp`, `idx_logs_action`, `idx_logs_timestamp_desc`, `idx_logs_severity`, `idx_students_status`, `idx_students_room_status`, `idx_consent_ip_time`, `idx_consent_uuid`, `idx_firmware_uploaded_at`, `idx_schedule_room`
 
-> **หมายเหตุเรื่อง RLS:** ระบบเชื่อมต่อ PostgreSQL ผ่าน connection string ตรง (`pg` pool) และ Supabase Service Role Key (Edge) ซึ่งทั้งคู่ทำงานในบทบาทที่ **ข้าม Row-Level Security (RLS)** การควบคุมสิทธิ์การเข้าถึงข้อมูลจึงบังคับใช้ที่ชั้น **Application Layer** (ตรวจ JWT + role + `allowed_rooms` ในทุก API route) ไม่ใช่ที่ชั้นฐานข้อมูล จึงไม่ต้องนิยาม RLS policy บนตาราง
+> **หมายเหตุเรื่อง RLS:** ระบบเชื่อมต่อ PostgreSQL ผ่าน connection string ตรง (`pg` pool) และ PostgreSQL (Local) Service Role Key (Edge) ซึ่งทั้งคู่ทำงานในบทบาทที่ **ข้าม Row-Level Security (RLS)** การควบคุมสิทธิ์การเข้าถึงข้อมูลจึงบังคับใช้ที่ชั้น **Application Layer** (ตรวจ JWT + role + `allowed_rooms` ในทุก API route) ไม่ใช่ที่ชั้นฐานข้อมูล จึงไม่ต้องนิยาม RLS policy บนตาราง
 
 ### 73.3 ความปลอดภัยการตรวจสอบสิทธิ์แอดมิน (JWT + bcrypt + Active-check Cache)
 
@@ -9756,7 +9912,7 @@ sequenceDiagram
 
 ### 73.4 ตัวจำกัดอัตราแบบ Atomic บน PostgreSQL (Serverless Rate Limiting)
 
-เนื่องจาก Vercel เป็น serverless (in-memory Map ไม่ persist ข้าม lambda) ระบบจึงย้าย rate limiter มาเก็บใน PostgreSQL ด้วย single-statement upsert ที่ปลอดภัยจาก race condition:
+เนื่องจาก Raspberry Pi เป็น serverless (in-memory Map ไม่ persist ข้าม lambda) ระบบจึงย้าย rate limiter มาเก็บใน PostgreSQL ด้วย single-statement upsert ที่ปลอดภัยจาก race condition:
 
 ```sql
 INSERT INTO rate_limits (key, count, reset_time) VALUES ($1, 1, $2)
@@ -9815,7 +9971,7 @@ sequenceDiagram
 
 ### 73.6 เส้นทาง Edge `/api/esp32/display` — หัวใจการสื่อสาร IoT
 
-นี่คือเส้นทางที่ถูกเรียกถี่ที่สุดและออกแบบให้เบาที่สุด ทำงานบน Edge runtime ใช้ Supabase REST + KV cache
+นี่คือเส้นทางที่ถูกเรียกถี่ที่สุดและออกแบบให้เบาที่สุด ทำงานบน Edge runtime ใช้ PostgreSQL (Local) REST + KV cache
 
 **Headers ที่บอร์ดต้องส่ง:**
 
@@ -9830,9 +9986,9 @@ sequenceDiagram
 **ลำดับการทำงานภายใน GET:**
 1. **Edge rate limit** ผ่าน KV (`rl:esp32display:{ip}` 120/นาที)
 2. **verifyEdgeSecurity** — ตรวจ API key (`secureEqual`), timestamp window ±60 วิ, HMAC ผ่าน Web Crypto (`hmacSHA256`)
-3. **อ่าน system_settings จาก KV** (cache 15 วิ) — cache miss จึงดึงจาก Supabase REST
+3. **อ่าน system_settings จาก KV** (cache 15 วิ) — cache miss จึงดึงจาก PostgreSQL (Local) REST
 4. **Parallel queries** (`Promise.all`): นับ pending, ดึง last approved, ดึง active token, ดึง firmware version (cache 60 วิ)
-5. **ตรวจคิวคำสั่งประตู** `room_cmd_{room}` — ถ้า `= "unlock"` ตั้ง `door_trigger="open"` แล้ว **PATCH เป็น "consumed" แบบ await จริง** (สำคัญมาก: ถ้าไม่ await Edge function จะถูก terminate ก่อน PATCH ถึง Supabase ทำให้บอร์ดเปิดประตูวนไม่จบ)
+5. **ตรวจคิวคำสั่งประตู** `room_cmd_{room}` — ถ้า `= "unlock"` ตั้ง `door_trigger="open"` แล้ว **PATCH เป็น "consumed" แบบ await จริง** (สำคัญมาก: ถ้าไม่ await Edge function จะถูก terminate ก่อน PATCH ถึง PostgreSQL (Local) ทำให้บอร์ดเปิดประตูวนไม่จบ)
 6. **Heartbeat throttle** — เขียน `room_last_seen_{room}` ลง DB ได้สูงสุด 30 วิ/ห้อง (ใช้ KV marker `hb:{room}`)
 7. **ETag** — เมื่อ idle จะคำนวณ SHA-1 ของ `pending|studentId|token|update|version` แล้วส่ง 304 ถ้าตรงกับ `If-None-Match`
 
@@ -9877,7 +10033,7 @@ stateDiagram-v2
 โมดูล `lib/api-security.ts` (`verifyEsp32Security`) บังคับใช้ defense-in-depth สำหรับ Node-runtime ESP32 endpoints:
 
 1. **API Key check** — ต้องตั้ง `ESP32_API_KEY` (ไม่มี fallback; ถ้าไม่ตั้งตอบ 503) และ header `x-api-key` ต้องตรง
-2. **IP Allowlist** (optional) — `ALLOWED_IP_RANGES` (ใช้ `getClientIp()` = rightmost XFF ที่ Vercel เติม ป้องกัน spoof; V04 fix)
+2. **IP Allowlist** (optional) — `ALLOWED_IP_RANGES` (ใช้ `getClientIp()` = rightmost XFF ที่ Raspberry Pi เติม ป้องกัน spoof; V04 fix)
 3. **HMAC-SHA256 anti-replay** — payload `"{timestamp}:{endpointPath}"` เซ็นด้วย apiKey, window ±60 วินาที
 4. **(ยกเลิก) User-Agent filtering** — V08 fix ถอดออกเพราะ bypass ได้ง่ายและให้ความปลอดภัยลวง
 
@@ -9895,7 +10051,7 @@ stateDiagram-v2
 ### 73.10 การปฏิบัติตาม พ.ร.บ.คอมพิวเตอร์ฯ — การล้าง Log (Retention Policy)
 
 `/api/system/logs/cleanup` รองรับ 2 โหมด สอดคล้อง พ.ร.บ.ว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์ มาตรา 26 (เก็บ log ≥ 90 วัน):
-- **`type="expired"`** — ลบเฉพาะ log อายุ > 90 วัน (ถูกกฎหมาย ไม่ต้องใส่รหัสผ่าน) เรียกได้ทั้งโดยแอดมิน (owner) และ **Vercel Cron** (GET + `Authorization: Bearer CRON_SECRET` ตอนเที่ยงวัน/เที่ยงคืน)
+- **`type="expired"`** — ลบเฉพาะ log อายุ > 90 วัน (ถูกกฎหมาย ไม่ต้องใส่รหัสผ่าน) เรียกได้ทั้งโดยแอดมิน (owner) และ **Raspberry Pi Cron** (GET + `Authorization: Bearer CRON_SECRET` ตอนเที่ยงวัน/เที่ยงคืน)
 - **`type="all"`** — ลบทั้งหมดรวมที่อายุ < 90 วัน (เหตุการณ์ critical) ต้อง **ยืนยันรหัสผ่าน owner ซ้ำ** ผ่าน `bcrypt.compare` แล้วบันทึก audit trail + แจ้งเตือนทุกช่องทางระดับ critical
 
 ระบบแจ้งเตือน "เฉพาะเมื่อมีการลบจริง (> 0 รายการ)" เพื่อไม่ให้ cron เด้งแจ้งเตือนเปล่า
@@ -10042,7 +10198,7 @@ flowchart TD
 3. **การยกระดับการแจ้งเตือนสัญญะทำความสะอาดระบบไปสู่ช่องทางแบบรวมศูนย์ (Unified Multi-channel System Cleanup Notifications & Spam Guard):**
    - **การย้ายระบบสื่อสารรวมศูนย์:** ตรวจพบการเรียกใช้โมดูลอ้างอิง `sendDiscordNotification` ตัวเดิมจาก `lib/discord.ts` ภายในฟังก์ชันจัดการ API ล้างข้อมูลจราจรคอมพิวเตอร์ที่หมดอายุ `/api/system/logs/cleanup` ส่งผลให้ข้อมูลประวัติการทำงานบำรุงรักษาระบบ (Maintenance Cleanup) ข้อมูลถูกจำกัดการส่งไปเฉพาะบนแผง Discord Webhook เท่านั้น โดยไม่มีการส่งต่อไปยัง LINE และ Telegram
    - ดำเนินการอัปเกรดระบบสื่อสารความปลอดภัยของ API โดยเปลี่ยนตัวสถาปัตยกรรมตัวยิงข้อความเป็น `sendNotification` จาก `@/lib/notify` ส่งผลให้การยิงแจ้งเตือนการล้างประวัติ (ทั้งการกดลบมือ POST และการรันอัตโนมัติ GET) จะกระจายตัวออกไปยังทั้ง **Discord Webhook, LINE Messaging API และ Telegram Bot API** ขนานพร้อมกันทันที
-   - **การออกแบบกลไกป้องกันขยะแจ้งเตือน (Notification Spam Guard):** เพื่อป้องกันไม่ให้ช่องแจ้งเตือนแอดมินเกิดสภาวะขยะแจ้งเตือน (Notification Spamming) จากกระบวนการทำงานอัตโนมัติของเซิร์ฟเวอร์ (Vercel Cron) ทุก 12 ชั่วโมง ระบบจึงถูกออกแบบให้ทำการประมวลผลลบอย่างนุ่มนวลและตอบกลับสถานะเสร็จสิ้นแบบปกติโดยไม่ต้องสั่งยิงแจ้งเตือนและประทับล็อกบันทึกเหตุการณ์ลงระบบ **ในกรณีที่ไม่มีข้อมูล Log หมดอายุเลย (ลบออก 0 รายการ)** ระบบจะจัดส่งข้อความแจ้งเตือนความปลอดภัยและความก้าวหน้าไปทุกกลุ่มช่องทางและประทับล็อก Audit log **เฉพาะเมื่อมีผลลัพธ์การลบจริงที่มากกว่า 0 รายการเท่านั้น (`affectedRows > 0`)**
+   - **การออกแบบกลไกป้องกันขยะแจ้งเตือน (Notification Spam Guard):** เพื่อป้องกันไม่ให้ช่องแจ้งเตือนแอดมินเกิดสภาวะขยะแจ้งเตือน (Notification Spamming) จากกระบวนการทำงานอัตโนมัติของเซิร์ฟเวอร์ (Raspberry Pi Cron) ทุก 12 ชั่วโมง ระบบจึงถูกออกแบบให้ทำการประมวลผลลบอย่างนุ่มนวลและตอบกลับสถานะเสร็จสิ้นแบบปกติโดยไม่ต้องสั่งยิงแจ้งเตือนและประทับล็อกบันทึกเหตุการณ์ลงระบบ **ในกรณีที่ไม่มีข้อมูล Log หมดอายุเลย (ลบออก 0 รายการ)** ระบบจะจัดส่งข้อความแจ้งเตือนความปลอดภัยและความก้าวหน้าไปทุกกลุ่มช่องทางและประทับล็อก Audit log **เฉพาะเมื่อมีผลลัพธ์การลบจริงที่มากกว่า 0 รายการเท่านั้น (`affectedRows > 0`)**
 
 4. **สัมฤทธิผลของการแสดงผล UI Themes และโครงสร้างเลย์เอาต์การตอบสนองในหน้าจอใช้งานจริง (Premium Responsive Visual Outcomes & Theme Stability):**
    - **ความสมบูรณ์แบบของเลย์เอาต์แบบตอบสนอง (Complete Responsive Layout Consistency):**
@@ -10211,7 +10367,7 @@ if (!sidebar.matches(':hover')) {
 
 #### 73.21.2 โครงสร้างฐานข้อมูลเพิ่มเติม (Database Schema Modification)
 
-การเชื่อมต่อความสัมพันธ์ระหว่างบัญชีผู้ใช้งาน (ผู้ดูแลระบบ/นักศึกษา) กับอุปกรณ์เครื่องปลายทาง ทำได้ผ่านการเพิ่มตาราง `fcm_tokens` ในฐานข้อมูล Supabase PostgreSQL โดยมีรายละเอียดโครงสร้างตารางและดัชนี (Indexes) ดังนี้:
+การเชื่อมต่อความสัมพันธ์ระหว่างบัญชีผู้ใช้งาน (ผู้ดูแลระบบ/นักศึกษา) กับอุปกรณ์เครื่องปลายทาง ทำได้ผ่านการเพิ่มตาราง `fcm_tokens` ในฐานข้อมูล PostgreSQL (Local DB)QL โดยมีรายละเอียดโครงสร้างตารางและดัชนี (Indexes) ดังนี้:
 
 ```sql
 CREATE TABLE IF NOT EXISTS fcm_tokens (
@@ -10499,7 +10655,7 @@ export function getVapidKey(): string {
 
 #### 73.21.5 สถาปัตยกรรมการส่งแจ้งเตือนฝั่ง Server-Side (Dependency-Free REST-based Firebase Admin SDK)
 
-เนื่องจากการใช้งานบนเซิร์ฟเวอร์แบบ Serverless ของ Vercel มีการนับทรัพยากรการคำนวณและประเมินประสิทธิภาพความเร็วเป็นหัวใจหลัก เพื่อลด Bundle Size และป้องกันปัญหา Dependency เข้ากันไม่ได้กับ Next.js 15+ & React 19 จึงได้คิดค้นกลไกส่งแจ้งเตือนผ่าน **REST v1 APIs** ของ Google Cloud ด้วยการลงนามกุญแจด้วยมือ (Pure Web Crypto)
+เนื่องจากการใช้งานบนเซิร์ฟเวอร์แบบ Serverless ของ Raspberry Pi มีการนับทรัพยากรการคำนวณและประเมินประสิทธิภาพความเร็วเป็นหัวใจหลัก เพื่อลด Bundle Size และป้องกันปัญหา Dependency เข้ากันไม่ได้กับ Next.js 15+ & React 19 จึงได้คิดค้นกลไกส่งแจ้งเตือนผ่าน **REST v1 APIs** ของ Google Cloud ด้วยการลงนามกุญแจด้วยมือ (Pure Web Crypto)
 
 ##### 1. การตรวจสอบและลงนามสิทธิ์การเชื่อมต่อ (`lib/firebase-admin.ts`)
 โมดูลจะแยกกุญแจลับจาก Private Key ของ Service Account จากนั้นทำการลงนามโครงสร้างความปลอดภัย (RS256 JWT Claim) โดยอาศัยความสามารถระดับดั้งเดิมของ **Web Crypto API (V8 Engine)** เพื่อเข้าใช้มาตรฐาน Google OAuth2:
@@ -10688,12 +10844,12 @@ flowchart TD
 ทีมพัฒนาได้ระบุและเปลี่ยนจุดแสดงผลโลโก้และไอคอนทั้งหมดในระบบ Next.js และ HTML Manual ดังต่อไปนี้:
 
 1. **Favicon และ Browser Tab Web App (`my-app/app/layout.tsx`):**
-   - เปลี่ยนชุดรูปภาพ Favicon ของแท็บเบราว์เซอร์จากค่าเริ่มต้นของ Vercel ให้ชี้ไปที่รูปภาพอัตลักษณ์ใหม่ `/icons/icon-128x128.png` (และ `/icons/icon-192x192.png` สำหรับไอคอนลอยบนหน้าจอ iOS) เพื่อคงอัตลักษณ์เมื่อผู้ใช้เข้าผ่าน URL
+   - เปลี่ยนชุดรูปภาพ Favicon ของแท็บเบราว์เซอร์จากค่าเริ่มต้นของ Raspberry Pi ให้ชี้ไปที่รูปภาพอัตลักษณ์ใหม่ `/icons/icon-128x128.png` (และ `/icons/icon-192x192.png` สำหรับไอคอนลอยบนหน้าจอ iOS) เพื่อคงอัตลักษณ์เมื่อผู้ใช้เข้าผ่าน URL
 
 2. **Favicon หน้าคู่มือวิทยานิพนธ์ (`my-app/scripts/compile_manual.js`):**
-   - เพิ่มคำสั่งระบุ Favicon ในส่วน `<head>` ของโครงสร้าง HTML Template เพื่อป้องกันไม่ให้คู่มือเว็บขึ้นไอคอนสามเหลี่ยมสีดำของ Vercel โดยระบุแท็ก:
+   - เพิ่มคำสั่งระบุ Favicon ในส่วน `<head>` ของโครงสร้าง HTML Template เพื่อป้องกันไม่ให้คู่มือเว็บขึ้นไอคอนสามเหลี่ยมสีดำของ Raspberry Pi โดยระบุแท็ก:
      `<link rel="icon" type="image/png" href="/icons/icon-128x128.png">`
-     ส่งผลให้เมื่อเปิดหน้าคู่มือระบบออนไลน์ผ่าน Vercel จะแสดงไอคอนแม่กุญแจเรืองแสงบนแท็บเบราว์เซอร์อย่างเป็นเอกภาพ
+     ส่งผลให้เมื่อเปิดหน้าคู่มือระบบออนไลน์ผ่าน Raspberry Pi จะแสดงไอคอนแม่กุญแจเรืองแสงบนแท็บเบราว์เซอร์อย่างเป็นเอกภาพ
 
 3. **หน้าจอหลักสำหรับนักศึกษา (Student Portal Landing Page - `my-app/app/page.tsx`):**
    - **จุดที่ 1 (Navbar Logo):** แทนที่กล่องอักษรสีม่วง `S` ดั้งเดิมด้วยแท็ก `<img>` ชี้ไปยัง `/icons/icon-128x128.png` ขนาด 32px พร้อมมุมโค้ง 8px (`borderRadius: 8`) ให้มีสไตล์หรูหราเข้ากัน
@@ -10838,7 +10994,7 @@ because it violates the Content Security Policy directive: "connect-src ..."
 ```
 
 * **สาเหตุ:** `connect-src` ใน `my-app/next.config.ts` อนุญาตเฉพาะ `fcm.googleapis.com` และ `oauth2.googleapis.com` แต่ FCM Web SDK ต้องเรียกอีกหลายโดเมนที่ไม่ได้อยู่ในรายการ จึงถูก CSP บล็อก
-* **การแก้ไข (Patched):** เพิ่มโดเมนที่จำเป็นทั้งหมดเข้าใน `connect-src` ได้แก่ `https://firebaseinstallations.googleapis.com` (FID), `https://fcmregistrations.googleapis.com` (ออกโทเคน), `https://www.googleapis.com`, และ `wss://*.supabase.co` (รองรับ Realtime) — ตรวจสอบแล้วว่า HTTP Header ที่เซิร์ฟเวอร์ส่งออกมามีโดเมนครบถ้วน
+* **การแก้ไข (Patched):** เพิ่มโดเมนที่จำเป็นทั้งหมดเข้าใน `connect-src` ได้แก่ `https://firebaseinstallations.googleapis.com` (FID), `https://fcmregistrations.googleapis.com` (ออกโทเคน), `https://www.googleapis.com`, และ `wss://*.PostgreSQL (Local).co` (รองรับ Realtime) — ตรวจสอบแล้วว่า HTTP Header ที่เซิร์ฟเวอร์ส่งออกมามีโดเมนครบถ้วน
 
 > [!NOTE]
 > สำหรับเบราว์เซอร์ Brave ยังคงต้องเปิด `brave://settings/privacy` → "Use Google services for push messaging" เพิ่มเติม เพราะ Brave บล็อกบริการพุชของ Google แยกต่างหากจาก CSP
@@ -10859,7 +11015,7 @@ because it violates the Content Security Policy directive: "connect-src ..."
 
 | ลำดับ | รายชื่อไฟล์ | ประเภท | คำอธิบายรายละเอียด |
 |---|---|---|---|
-| 1 | `my-app/next.config.ts` | **[MODIFY]** | เพิ่มโดเมน FCM (firebaseinstallations, fcmregistrations, www.googleapis) และ wss supabase เข้าใน CSP `connect-src` |
+| 1 | `my-app/next.config.ts` | **[MODIFY]** | เพิ่มโดเมน FCM (firebaseinstallations, fcmregistrations, www.googleapis) และ wss PostgreSQL (Local) เข้าใน CSP `connect-src` |
 | 2 | `my-app/lib/db.ts` | **[MODIFY]** | เพิ่ม `applyIdempotentMigrations()` ที่รันแม้ในโหมด Fast Path เพื่อเติมคอลัมน์ access_logs และสร้าง fcm_tokens ที่ตกหล่น |
 | 3 | `my-app/app/admin/dashboard/layout.tsx` | **[MODIFY]** | แทนโลโก้ภาพ raster ด้วยคอมโพเนนต์ `BrandMark` (inline SVG) คมชัดทุกหน้าจอ |
 | 4 | `.claude/launch.json` | **[MODIFY]** | เพิ่มคอนฟิก `next-dev` สำหรับรัน Next.js dev server เพื่อทดสอบ |
@@ -11153,7 +11309,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 วันที่บันทึก: 31 พฤษภาคม 2026
 
 #### 73.23.1 บริบทและเป้าหมาย (Context & Goals)
-สถาปัตยกรรมเดิมของบอร์ด ESP32 พึ่งพาการเชื่อมต่ออินเทอร์เน็ตเพื่อสื่อสารกับ Supabase และ Vercel Edge API หากเกิดเหตุการณ์ไฟดับหรือเครือข่ายขัดข้อง ประตูจะถูกล็อกโดยไม่มีกลไกสำรอง นอกจากนี้ ระบบแจกจ่ายเฟิร์มแวร์อัปเดตแบบ OTA อาศัยลิงก์สาธารณะ (Public URL) ซึ่งอาจถูกดาวน์โหลดโดยผู้ไม่ประสงค์ดีเพื่อทำ Reverse Engineering ได้
+สถาปัตยกรรมเดิมของบอร์ด ESP32 พึ่งพาการเชื่อมต่ออินเทอร์เน็ตเพื่อสื่อสารกับ PostgreSQL (Local) และ Raspberry Pi Edge API หากเกิดเหตุการณ์ไฟดับหรือเครือข่ายขัดข้อง ประตูจะถูกล็อกโดยไม่มีกลไกสำรอง นอกจากนี้ ระบบแจกจ่ายเฟิร์มแวร์อัปเดตแบบ OTA อาศัยลิงก์สาธารณะ (Public URL) ซึ่งอาจถูกดาวน์โหลดโดยผู้ไม่ประสงค์ดีเพื่อทำ Reverse Engineering ได้
 
 เพื่อยกระดับระบบให้เป็นมาตรฐาน Enterprise IoT ได้มีการปรับปรุงสถาปัตยกรรมด้านความปลอดภัยและความทนทานต่อสภาวะออฟไลน์ (Resilience) ตามที่วางแผนไว้ใน `/goal`
 
@@ -11164,10 +11320,10 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 3. ก่อนเกิดสภาวะออฟไลน์ ระบบได้ทำการดาวน์โหลด **Offline PIN** จากเซิร์ฟเวอร์แบบลับๆ ตลอดเวลาและเก็บถาวรลงในหน่วยความจำแฟลชภายใน (SPIFFS) เรียบร้อยแล้ว (อัปเดตตัวแปรนี้จาก `app/api/esp32/display/route.ts`)
 4. เมื่อผู้ดูแลระบบเชื่อมต่อสัญญาณฉุกเฉินและกรอก PIN ตรงกับค่าที่บันทึกไว้ใน SPIFFS รีเลย์ประตูจะถูกกระตุ้นให้เปิดแบบ Override โดยไม่ต้องมีอินเทอร์เน็ต
 
-#### 73.23.3 การรักษาความปลอดภัยเฟิร์มแวร์ด้วย Supabase Signed URLs (OTA Security)
+#### 73.23.3 การรักษาความปลอดภัยเฟิร์มแวร์ด้วย PostgreSQL (Local) Signed URLs (OTA Security)
 อัปเกรดความปลอดภัยของเซิร์ฟเวอร์ตัวกระจายอัปเดต (`app/api/esp32/firmware-ota/route.ts`):
 - ยกเลิกการแจกจ่ายลิงก์ตรงจาก CDN สาธารณะ
-- ใช้ `@supabase/supabase-js` เพื่อสร้างและตรวจสอบการลงนามลิงก์ชั่วคราว (Signed URL)
+- ใช้ `@PostgreSQL (Local)/PostgreSQL (Local)-js` เพื่อสร้างและตรวจสอบการลงนามลิงก์ชั่วคราว (Signed URL)
 - โค้ดจะสร้าง Signed URL ที่มีอายุขัยพียง 60 วินาที เมื่อบอร์ดร้องขอ OTA เท่านั้น
 - ส่งคืนสถานะ `302 Found` เพื่อชี้เป้าหมายดาวน์โหลดไปที่ URL ชั่วคราวดังกล่าว วิธีการนี้สอดคล้องกับพ.ร.บ. ว่าด้วยการกระทำความผิดเกี่ยวกับคอมพิวเตอร์และ PDPA ป้องกันมิให้บุคคลภายนอกลอบเข้ามาคัดลอกระบบของมหาวิทยาลัยได้
 
@@ -11176,7 +11332,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
 |---|---|---|---|
 | 1 | `app/api/esp32/display/route.ts` | **[MODIFY]** | ผนวกกลไก Heartbeat อัปเดต `esp32_heartbeats` และแนบ `offline_pin` ใน Payload อัตโนมัติ |
-| 2 | `app/api/esp32/firmware-ota/route.ts` | **[MODIFY]** | แปลงการ Redirect สู่ Supabase Signed URL อายุขัย 60 วินาที เพิ่มระดับการปกป้อง IP (Intellectual Property) |
+| 2 | `app/api/esp32/firmware-ota/route.ts` | **[MODIFY]** | แปลงการ Redirect สู่ PostgreSQL (Local) Signed URL อายุขัย 60 วินาที เพิ่มระดับการปกป้อง IP (Intellectual Property) |
 | 3 | `esp32/esp32.ino` | **[MODIFY]** | พัฒนาสถาปัตยกรรม Local AP Fallback บันทึก PIN ลง SPIFFS และจัดการฟอร์ม HTML ออฟไลน์ |
 
 <p align="right"><a href="#toc">กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
@@ -11189,12 +11345,12 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 วันที่บันทึก: 31 พฤษภาคม 2026
 
 #### 73.24.1 บริบทและเป้าหมาย (Context & Goals)
-จากการทำ Security Audit ผ่านกระบวนการ /grill-me พบว่าสถาปัตยกรรมดั้งเดิมใช้การดึงข้อมูลจาก Database ผ่าน PostgreSQL Pool ธรรมดาด้วยสิทธิ์ระดับผู้ดูแลระบบ (Superuser) ส่งผลให้ Row-Level Security (RLS) ของ Supabase ถูกข้าม (Bypassed) โดยสมบูรณ์ 
+จากการทำ Security Audit ผ่านกระบวนการ /grill-me พบว่าสถาปัตยกรรมดั้งเดิมใช้การดึงข้อมูลจาก Database ผ่าน PostgreSQL Pool ธรรมดาด้วยสิทธิ์ระดับผู้ดูแลระบบ (Superuser) ส่งผลให้ Row-Level Security (RLS) ของ PostgreSQL (Local) ถูกข้าม (Bypassed) โดยสมบูรณ์ 
 
 เพื่อยกระดับความปลอดภัยให้เป็นไปตามมาตรฐานการจัดการข้อมูลส่วนบุคคล (PDPA) และอุดช่องโหว่ Insecure Direct Object Reference (IDOR) จึงได้มีการอัปเกรดฐานข้อมูลให้บังคับใช้สิทธิ์การเข้าถึงข้อมูลรายบรรทัดอย่างเข้มงวด
 
-#### 73.24.2 การสร้าง Supabase Authenticated Client
-แทนที่จะใช้ `pg` pool ตลอดเวลา ได้มีการเพิ่มไลบรารีใหม่ `lib/supabase-client.ts` เพื่อสร้าง Supabase Client ที่ทำการผูกติด (Attach) JWT Token ของ Session ผู้ใช้ (นักศึกษาหรือผู้ดูแลระบบ) ไปกับทุก HTTP Request เข้าหา Database ทำให้ Database รับรู้สิทธิ์ของผู้ใช้คนนั้น ๆ และปฏิเสธการดึงข้อมูลที่อยู่นอกเหนือขอบเขตได้ทันที
+#### 73.24.2 การสร้าง PostgreSQL (Local) Authenticated Client
+แทนที่จะใช้ `pg` pool ตลอดเวลา ได้มีการเพิ่มไลบรารีใหม่ `lib/PostgreSQL (Local)-client.ts` เพื่อสร้าง PostgreSQL (Local) Client ที่ทำการผูกติด (Attach) JWT Token ของ Session ผู้ใช้ (นักศึกษาหรือผู้ดูแลระบบ) ไปกับทุก HTTP Request เข้าหา Database ทำให้ Database รับรู้สิทธิ์ของผู้ใช้คนนั้น ๆ และปฏิเสธการดึงข้อมูลที่อยู่นอกเหนือขอบเขตได้ทันที
 
 #### 73.24.3 การประกาศนโยบาย RLS (Row-Level Security Policies)
 ได้มีการดำเนินการรันสคริปต์ `scripts/apply-rls.js` เพื่อล็อกความปลอดภัยตารางที่สำคัญดังนี้:
@@ -11206,7 +11362,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 
 | ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
 |---|---|---|---|
-| 1 | `lib/supabase-client.ts` | **[NEW]** | สคริปต์ตัวกลางสำหรับสร้าง Supabase Client ที่แนบ JWT ของระบบเดิมเข้าสู่ Context ของ Database |
+| 1 | `lib/PostgreSQL (Local)-client.ts` | **[NEW]** | สคริปต์ตัวกลางสำหรับสร้าง PostgreSQL (Local) Client ที่แนบ JWT ของระบบเดิมเข้าสู่ Context ของ Database |
 | 2 | `scripts/apply-rls.js` | **[NEW]** | สคริปต์แบบใช้งานครั้งเดียวสำหรับการส่งคำสั่ง SQL เปิดใช้ฟังก์ชัน `ENABLE ROW LEVEL SECURITY` และ `CREATE POLICY` |
 | 3 | `app/api/auth/me/route.ts` | **[MODIFY]** | ทำการ Refactor เปลี่ยนให้ API นำเข้า `createAuthenticatedClient` เพื่อพิสูจน์การทำงานของ RLS ว่าบล็อกและอนุญาตการเข้าถึงได้ถูกต้อง |
 
@@ -11272,17 +11428,17 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 #### 73.32.2 การป้องกันการสวมสิทธิ์ไอพี (Anti-IP Spoofing Security Engine)
 โมดูลการหาไอพี `lib/client-ip.ts` ได้รับการตรวจสอบและทดสอบการทำงานบน Edge Runtime โดยตัวตรวจจับมีตรรกะจัดลำดับความน่าเชื่อถือดังนี้:
 1. **Local Host Check:** หากมีคำขอมาจากเครือข่ายภายใน (localhost/127.0.0.1) จะผูกไอพีไว้ที่ `127.0.0.1` เสมอ เพื่อตัดปัญหาวนรอบแบบสปูฟ
-2. **Platform Native IP:** บนแพลตฟอร์ม Vercel ระบบจะให้สิทธิ์ความน่าเชื่อถือสูงสุดแก่ฟิลด์ `request.ip` ซึ่งถูกแนบมาจากระดับ Socket Connection ของ Cloud Infrastructure โดยตรง ไม่สามารถปลอมแปลงได้
+2. **Platform Native IP:** บนแพลตฟอร์ม Raspberry Pi ระบบจะให้สิทธิ์ความน่าเชื่อถือสูงสุดแก่ฟิลด์ `request.ip` ซึ่งถูกแนบมาจากระดับ Socket Connection ของ Cloud Infrastructure โดยตรง ไม่สามารถปลอมแปลงได้
 3. **Verified Fallback (Rightmost X-Forwarded-For):** ในกรณีที่ผ่าน Reverse Proxy ระบบจะหยิบเฉพาะค่าฝั่งขวาสุด (Rightmost) ของฟิลด์ `X-Forwarded-For` ซึ่งมีเพียง Proxy Server ตัวหน้าสุดของโครงข่ายปลายทางเท่านั้นที่มีสิทธิ์แนบค่านี้มา ป้องกันแฮกเกอร์เขียน Header ตัวแรกๆ มาหลอกระบบ
 
-#### 73.32.3 การทำงานของ Edge-Compatible Rate Limiting (Supabase PostgREST Connection)
+#### 73.32.3 การทำงานของ Edge-Compatible Rate Limiting (PostgreSQL (Local DB)T Connection)
 เนื่องจาก Next.js Middleware บังคับทำงานบนสภาพแวดล้อมจำกัด (Edge Runtime) ซึ่งไม่สนับสนุนตัวเชื่อมต่อ TCP ปกติ (`pg` pool) ทีมพัฒนาจึงได้สร้างสถาปัตยกรรมแบบเบา (Lightweight Client) ขึ้นมาใหม่ใน `lib/rate-limit-edge.ts` โดย:
-- ใช้ฟังก์ชัน `fetch` บนระดับ HTTP/REST (Supabase PostgREST) ในการเรียกใช้ข้อมูลตาราง `rate_limits`
+- ใช้ฟังก์ชัน `fetch` บนระดับ HTTP/REST (PostgreSQL (Local DB)T) ในการเรียกใช้ข้อมูลตาราง `rate_limits`
 - มีกลไกตรวจสอบเวลาหมดอายุในหน่วยมิลลิวินาที (Epoch reset_time) ป้องกันสภาวะการแย่งชิงข้อมูล (Race Conditions)
 - หากเกิดข้อผิดพลาดในการเชื่อมต่อเครือข่ายฐานข้อมูล ระบบจะเปิดโหมด **Fail-Open** ทันที เพื่อไม่ให้เกิดภาวะระบบล่ม (Service Outage) โดยนักศึกษายังคงทำรายการเข้าห้องเรียนต่อได้
 
 #### 73.32.4 การแบ่งระดับขอบเขตการป้องกัน (Sensitive API Rate Limit Matrix)
-เพื่อความสมดุลระหว่างความปลอดภัยสูงสุดและขีดจำกัดความเร็วของ Supabase Database Pool ระบบเลือกรองรับเฉพาะเส้นทาง API ที่มีความละเอียดอ่อนสูง (Sensitive API Routes) แทนการรันประมวลผลคำขอสาธารณะทั้งหมด โดยจำกัดสิทธิ์ดังตาราง:
+เพื่อความสมดุลระหว่างความปลอดภัยสูงสุดและขีดจำกัดความเร็วของ PostgreSQL (Local) Database Pool ระบบเลือกรองรับเฉพาะเส้นทาง API ที่มีความละเอียดอ่อนสูง (Sensitive API Routes) แทนการรันประมวลผลคำขอสาธารณะทั้งหมด โดยจำกัดสิทธิ์ดังตาราง:
 
 | เส้นทาง API (Prefix) | วัตถุประสงค์ | ขีดจำกัดความเร็ว (Rate Limit) | หน้าที่ในการป้องกัน |
 |---|---|---|---|
@@ -11438,7 +11594,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 
 #### 73.36.3 การประยุกต์ใช้งานใน Edge Runtime และ Node Serverless APIs
 ความปลอดภัยระดับ Zero-Trust นี้ถูกเขียนขึ้นให้สามารถทำงานร่วมกันได้ดี (Cross-Runtime Compatibility) บน Next.js:
-- **ชั้นการทำงานระดับ Edge Runtime (`/api/esp32/display`):** ประมวลผลและตรวจสอบ Nonce ผ่าน REST API (Supabase PostgREST) ไปยังตาราง `api_nonces` โดยตรวจสอบสถานะความขัดแย้ง `409 Conflict` และใช้ Web Crypto API ในการสกัดคีย์ (KDF) และตรวจสอบ Signature โดยไม่ติดปัญหาความเข้ากันได้
+- **ชั้นการทำงานระดับ Edge Runtime (`/api/esp32/display`):** ประมวลผลและตรวจสอบ Nonce ผ่าน REST API (PostgreSQL (Local DB)T) ไปยังตาราง `api_nonces` โดยตรวจสอบสถานะความขัดแย้ง `409 Conflict` และใช้ Web Crypto API ในการสกัดคีย์ (KDF) และตรวจสอบ Signature โดยไม่ติดปัญหาความเข้ากันได้
 - **ชั้นการทำงานระดับ Node Runtime (`lib/api-security.ts`):** ปรับใช้การตรวจสอบสิทธิ์ `verifyEsp32Security` ให้สนับสนุนการตรวจสอบแบบ async-await ดึงสิทธิ์ Pool การเชื่อมต่อของ PostgreSQL ปกติเพื่อประสิทธิภาพสูงสุดและมีการล้าง Nonce ในตัวอย่างรวดเร็ว
 
 #### 73.36.4 ตารางสรุปไฟล์ที่แก้ไขและสร้างใหม่
@@ -11835,7 +11991,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
    แก้ไขตรรกะในเฟิร์มแวร์เมื่อเซิร์ฟเวอร์ส่งชุดข้อมูลคำตอบแบบย่อ (Slim Payload: ซึ่งไม่มีตัวแปร `register_url` และ `requested_room`) โดยกำหนดให้บอร์ดประเมินดึงชื่อห้องจากค่าตัวแปรในบอร์ด และทำการสกัดแยกเอา Base URL (เช่น `https://smartaccess-project.vercel.app` หรือ `http://localhost:3000`) ออกมาจากตัวแปร `server_url` หลัก เพื่อนำมาประกอบร่วมกับ `active_token` สร้าง QR Target URL ขึ้นมาวาดบนหน้าจอได้อย่างสมบูรณ์ ป้องกันหน้าจอค้างอยู่ที่สถานะ `Loading QR...`
 4. **การแก้ไขตารางข้อมูลสัญญาณชีพเชื่อมต่อและความคลาดเคลื่อนของเวลา (Heartbeat Database Mapping & Timezone Drift Fix):**
    - แก้ไขระบบตรวจสอบสถานะของห้องเรียน ( getESP32Status ใน `my-app/lib/esp32.ts` ) เนื่องจากระบบดั้งเดิมทำการตรวจสอบสัญญาณชีพของบอร์ดโดยการเรียกดูจากตาราง `system_settings` ( คีย์ `room_last_seen_${room}` ) แต่ส่วนขยายระบบ Edge API ได้ย้ายการอัปเดตไปที่ตาราง `esp32_heartbeats` แทน จึงเปลี่ยนมาอ่านจากตาราง `esp32_heartbeats`
-   - แก้ปัญหาระบบแสดงสถานะเป็น `OFFLINE` ตลอดเวลาบนเซิร์ฟเวอร์โลคอลไทย (UTC+7) ซึ่งเกิดจากความขัดแย้งในการแปลงเขตเวลาของตารางประเภท `TIMESTAMP` ที่ไม่มีเขตเวลากำกับ (node-postgres ตีความเป็นเวลาท้องถิ่น ทำให้ค่าติดลบไป 7 ชั่วโมงหรือ 25,200 วินาที เกินขีดจำกัดออนไลน์ 120 วินาที) โดยอัปเกรดคำสั่งคิวรีให้ใช้ดึงผ่าน **`EXTRACT(EPOCH FROM last_seen)`** ซึ่งเป็นมาตรฐานวิเคราะห์สัญจรแบบสากล ทำให้คำนวณผลต่างเวลาได้อย่างแม่นยำระดับวินาทีตรงกัน 100% ทั้งบน Local Dev และ Vercel Production
+   - แก้ปัญหาระบบแสดงสถานะเป็น `OFFLINE` ตลอดเวลาบนเซิร์ฟเวอร์โลคอลไทย (UTC+7) ซึ่งเกิดจากความขัดแย้งในการแปลงเขตเวลาของตารางประเภท `TIMESTAMP` ที่ไม่มีเขตเวลากำกับ (node-postgres ตีความเป็นเวลาท้องถิ่น ทำให้ค่าติดลบไป 7 ชั่วโมงหรือ 25,200 วินาที เกินขีดจำกัดออนไลน์ 120 วินาที) โดยอัปเกรดคำสั่งคิวรีให้ใช้ดึงผ่าน **`EXTRACT(EPOCH FROM last_seen)`** ซึ่งเป็นมาตรฐานวิเคราะห์สัญจรแบบสากล ทำให้คำนวณผลต่างเวลาได้อย่างแม่นยำระดับวินาทีตรงกัน 100% ทั้งบน Local Dev และ Raspberry Pi Production
 
 #### 73.45.3 ตารางสรุปไฟล์แก้ไข
 | ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
@@ -11854,16 +12010,16 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 
 ตรวจพบปัญหาที่ทำให้แผงควบคุมระบบ (Dashboard) ระบุสถานะบอร์ดเป็น `OFFLINE` ตลอดเวลา แม้ว่าบอร์ดควบคุม ESP32 จะเชื่อมต่อและเรียกใช้ API โครงสร้างแสดงผลได้ปกติ จากการวิเคราะห์ล็อกและการทำงานเชิงลึกพบว่าเกิดจากการตัดคำขอเชื่อมต่อในส่วนการประมวลผลบนเซิร์ฟเวอร์ Edge Runtime:
 
-#### 73.46.1 ปัญหาเรื่อง Fire-and-Forget บน Vercel Edge Runtime
+#### 73.46.1 ปัญหาเรื่อง Fire-and-Forget บน Raspberry Pi Edge Runtime
 - **อาการของปัญหา:** 
-  - บนเครื่องเซิร์ฟเวอร์คลาวด์ Vercel ซึ่งทำหน้าที่รันส่วนของ Edge API เส้นทาง `/api/esp32/display` ตัวเก็บสัญจร API ได้มีการเรียกใช้ฟังก์ชันช่วยงาน `sbUpsert` เพื่อส่งข้อมูลสัญญาณชีพ (Heartbeat) บันทึกลงตาราง `esp32_heartbeats` เพื่อเก็บประวัติการออนไลน์ของบอร์ด
-  - เนื่องจากฟังก์ชัน `sbUpsert` และ `sbUpdate` ใน `my-app/lib/supabase-edge.ts` ตลอดจนการเรียกใช้ใน `display/route.ts` ไม่ได้มีการใส่คำสั่ง `await` (ทำงานในโหมดไม่บล็อกหรือ Fire-and-Forget) 
-  - ตามพฤติกรรมมาตรฐานของระบบ Serverless/Edge Runtime เมื่อการประมวลผลส่งคืน JSON Payload กลับไปยังฝั่ง Client แล้ว สภาพแวดล้อมประมวลผลจะเข้าสู่สถานะ Freeze หรือ Terminate ทันทีเพื่อประหยัดทรัพยากร ส่งผลให้คำสั่ง `fetch` เบื้องหลังเพื่อไปเพิ่มหรืออัปเดตข้อมูลบน Supabase API ถูกตัดขาดและล้มเหลวโดยไม่แจ้งข้อผิดพลาดใด ๆ (Silent Failure) ทำให้อัตราความถี่การเขียนค่าลงในตาราง `esp32_heartbeats` เป็นศูนย์
+  - บนเครื่องเซิร์ฟเวอร์คลาวด์ Raspberry Pi ซึ่งทำหน้าที่รันส่วนของ Edge API เส้นทาง `/api/esp32/display` ตัวเก็บสัญจร API ได้มีการเรียกใช้ฟังก์ชันช่วยงาน `sbUpsert` เพื่อส่งข้อมูลสัญญาณชีพ (Heartbeat) บันทึกลงตาราง `esp32_heartbeats` เพื่อเก็บประวัติการออนไลน์ของบอร์ด
+  - เนื่องจากฟังก์ชัน `sbUpsert` และ `sbUpdate` ใน `my-app/lib/PostgreSQL (Local)-edge.ts` ตลอดจนการเรียกใช้ใน `display/route.ts` ไม่ได้มีการใส่คำสั่ง `await` (ทำงานในโหมดไม่บล็อกหรือ Fire-and-Forget) 
+  - ตามพฤติกรรมมาตรฐานของระบบ Serverless/Edge Runtime เมื่อการประมวลผลส่งคืน JSON Payload กลับไปยังฝั่ง Client แล้ว สภาพแวดล้อมประมวลผลจะเข้าสู่สถานะ Freeze หรือ Terminate ทันทีเพื่อประหยัดทรัพยากร ส่งผลให้คำสั่ง `fetch` เบื้องหลังเพื่อไปเพิ่มหรืออัปเดตข้อมูลบน PostgreSQL (Local) API ถูกตัดขาดและล้มเหลวโดยไม่แจ้งข้อผิดพลาดใด ๆ (Silent Failure) ทำให้อัตราความถี่การเขียนค่าลงในตาราง `esp32_heartbeats` เป็นศูนย์
 - **ผลกระทบ:** ตาราง `esp32_heartbeats` ค้างข้อมูลสถานะเก่าของบอร์ด และตัวฟังก์ชันคำนวณออนไลน์ `getESP32Status` ใน `/lib/esp32` จึงตีความผลต่างเวลาล่าช้าว่าบอร์ดไม่ได้เชื่อมต่อและแสดงผลเป็น `OFFLINE`
 
 #### 73.46.2 วิธีการแก้ไขปัญหาอย่างถาวร
-1. **การปรับแต่งในส่วน Utility Edge (`my-app/lib/supabase-edge.ts`):**
-   - ทำการแก้ไขฟังก์ชัน `sbUpdate` และ `sbUpsert` ให้รองรับกลไก `async/await` อย่างสมบูรณ์ โดยการดักจับข้อผิดพลาดผ่าน `try/catch` และ `await fetch` คำขอที่ส่งไปเพื่อให้แน่ใจว่ากระบวนการสร้างและส่งทราฟฟิกไปยัง Supabase ประสบความสำเร็จก่อนจบฟังก์ชัน
+1. **การปรับแต่งในส่วน Utility Edge (`my-app/lib/PostgreSQL (Local)-edge.ts`):**
+   - ทำการแก้ไขฟังก์ชัน `sbUpdate` และ `sbUpsert` ให้รองรับกลไก `async/await` อย่างสมบูรณ์ โดยการดักจับข้อผิดพลาดผ่าน `try/catch` และ `await fetch` คำขอที่ส่งไปเพื่อให้แน่ใจว่ากระบวนการสร้างและส่งทราฟฟิกไปยัง PostgreSQL (Local) ประสบความสำเร็จก่อนจบฟังก์ชัน
 2. **การปรับปรุงตัวประมวลผล Edge API (`my-app/app/api/esp32/display/route.ts`):**
    - เปลี่ยนคำสั่งเรียกใช้จากเดิม `sbUpsert(...)` เป็น `await sbUpsert(...)` เพื่อบังคับให้ Edge Runtime รอจนกระทั่งคำคิวรีอัปเดตสัญญาณชีพและฟิลด์เวลา `last_seen` ในตาราง `esp32_heartbeats` ตอบกลับสถานะสำเร็จ (Status: 200) จึงค่อยส่งค่าตอบกลับไปยังบอร์ด ESP32
    - การแก้ไขนี้นอกจากทำให้การแสดงผลบอร์ดถูกต้องแล้ว ยังช่วยให้ฟังก์ชันย่อยสำหรับการเช็ค Offline Heartbeats แจ้งเตือนความปลอดภัยทำงานได้ตรงจุด
@@ -11874,7 +12030,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 
 | ลำดับ | ชื่อไฟล์ | ประเภท | คำอธิบายการแก้ไข |
 |---|---|---|---|
-| 1 | `my-app/lib/supabase-edge.ts` | **[MODIFY]** | อัปเกรดฟังก์ชัน `sbUpdate` และ `sbUpsert` ให้รองรับกลไก `await fetch` แก้ไขปัญหาคำขอเบื้องหลังโดนตัด |
+| 1 | `my-app/lib/PostgreSQL (Local)-edge.ts` | **[MODIFY]** | อัปเกรดฟังก์ชัน `sbUpdate` และ `sbUpsert` ให้รองรับกลไก `await fetch` แก้ไขปัญหาคำขอเบื้องหลังโดนตัด |
 | 2 | `my-app/app/api/esp32/display/route.ts` | **[MODIFY]** | เพิ่มคำสั่ง `await` ก่อนการเรียกใช้ `sbUpsert` เพื่อดึงสัญญาณชีพ (Heartbeat) ของบอร์ดเข้าสู่ระบบฐานข้อมูลอย่างแท้จริง |
 | 3 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดเชิงลึกและอัปเดตคู่มือระบบเรื่องการแก้ไขสถานะ OFFLINE ที่เกิดจากสถาปัตยกรรมของ Edge Runtime (§73.46) |
 
@@ -12084,11 +12240,11 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 ตรวจพบปัญหาบอร์ด ESP32 ปลดล็อกประตูซ้ำ 2–3 รอบเมื่อแอดมินกดอนุมัติ (Approve) สิทธิ์เข้าห้องเรียนจากหน้าเว็บแดชบอร์ด โดยมีสาเหตุเชิงลึกมาจากตรรกะการเก็บแคชฝั่งเซิร์ฟเวอร์ร่วมกับสถาปัตยกรรมขนานของโปรโตคอลการรับคำสั่ง (Coexisting Protocols & Cache Race Condition):
 1. **การสั่งการสองช่องทางขนานกัน (Dual-path Commands):** Next.js Server สั่งเปิดประตูพร้อมกันสองทาง:
    - สัญญาณที่ 1: ส่งคำสั่ง `"unlock"` ผ่าน MQTT (HiveMQ Cloud Broker) แบบ Real-time Push
-   - สัญญาณที่ 2: เขียนคำสั่ง `room_cmd_<room> = "unlock"` ลงในฐานข้อมูล Supabase (`system_settings`) เพื่อเป็นช่องทางสำรอง (HTTP Polling Fallback)
+   - สัญญาณที่ 2: เขียนคำสั่ง `room_cmd_<room> = "unlock"` ลงในฐานข้อมูล PostgreSQL (Local) (`system_settings`) เพื่อเป็นช่องทางสำรอง (HTTP Polling Fallback)
 2. **การทำงานของบอร์ดในรอบแรก (MQTT Trigger):** บอร์ดได้รับสัญญาณผ่าน MQTT และปลดล็อกประตูทันที (รอบที่ 1) บอร์ดจะทำแอนิเมชันนับถอยหลัง (บล็อกลูป 3.8 วินาที) โดยในเฟิร์มแวร์รุ่นแก้ไขแรกได้ตั้งสถานะ `last_door_trigger = "open"`
 3. **ปัญหาบั๊กแคชลอยลำ (Stale settings cache):** 
-   - เซิร์ฟเวอร์ Next.js มีการประยุกต์ใช้แคช Vercel KV (Redis) ในคีย์ `system_settings:all` เป็นเวลา 15 วินาที เพื่อลดภาระการคิวรีฐานข้อมูลโดยตรง
-   - ทว่า ฟังก์ชัน `openDoor` ใน `my-app/lib/esp32.ts` มีการเขียนค่าลงในตาราง DB ของ Supabase โดยตรง แต่**ไม่มีการสั่งล้างแคช (Cache Invalidation)**
+   - เซิร์ฟเวอร์ Next.js มีการประยุกต์ใช้แคช Local Cache (Redis) ในคีย์ `system_settings:all` เป็นเวลา 15 วินาที เพื่อลดภาระการคิวรีฐานข้อมูลโดยตรง
+   - ทว่า ฟังก์ชัน `openDoor` ใน `my-app/lib/esp32.ts` มีการเขียนค่าลงในตาราง DB ของ PostgreSQL (Local) โดยตรง แต่**ไม่มีการสั่งล้างแคช (Cache Invalidation)**
    - ส่งผลให้ใน 15 วินาทีแรกหลังจากอนุมัติ การส่ง HTTP Polling จากบอร์ดขึ้นไปถามที่เซิร์ฟเวอร์จะยังคงดึงค่าข้อมูลจากระบบแคชเดิม ซึ่งมีค่าของตัวแปร `room_cmd_<room>` เป็น `"consumed"` หรือ `"idle"` ส่งผลให้เซิร์ฟเวอร์ตอบบอร์ดกลับไปด้วยคำสั่ง `door_trigger = "idle"`
    - เมื่อบอร์ดเห็นผลลัพธ์ Polling รอบแรก ๆ เป็น `"idle"` ตรรกะของบอร์ดจะทำการรีเซ็ตตัวแปรสถานะ `last_door_trigger = "idle"` คืนกลับไปทันที
 4. **การทริกเกอร์เปิดซ้ำรอบที่ 2 (Cache Expiration Trigger):** 
@@ -12101,7 +12257,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 เพื่อแก้ไขปัญหานี้ให้เบ็ดเสร็จสมบูรณ์ทั้งระบบ ได้มีการพัฒนาการแก้ไขสองมิติควบคู่กัน:
 1. **การล้างแคชฝั่งเซิร์ฟเวอร์ทันทีเมื่อมีการปลดล็อก (Active Cache Invalidation):**
    - อัปเกรดฟังก์ชัน `openDoor` ใน [my-app/lib/esp32.ts](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/lib/esp32.ts) ให้เรียกใช้ฟังก์ชัน `clearSystemSettingsCache()` จากโมดูล `lib/db.ts` ทันทีหลังจากเขียนคิวเปิดประตู `"unlock"` ลงฐานข้อมูลเสร็จสิ้น
-   - การเรียกใช้ฟังก์ชันนี้จะบังคับล้างแคชทั้งใน in-memory ของเซิร์ฟเวอร์และแคช Vercel KV (Redis) โดยทันที ทำให้การ Polling รอบแรกสุดของบอร์ด (หลังหลุดจากบล็อกลูป 3.8 วินาที) สามารถอ่านค่า `"unlock"` จริงจากฐานข้อมูลและตอบกลับคำสั่ง `door_trigger = "open"` เพื่อให้บอร์ด consume และล้างค่าเป็น `"consumed"` ในฐานข้อมูลทันที
+   - การเรียกใช้ฟังก์ชันนี้จะบังคับล้างแคชทั้งใน in-memory ของเซิร์ฟเวอร์และแคช Local Cache (Redis) โดยทันที ทำให้การ Polling รอบแรกสุดของบอร์ด (หลังหลุดจากบล็อกลูป 3.8 วินาที) สามารถอ่านค่า `"unlock"` จริงจากฐานข้อมูลและตอบกลับคำสั่ง `door_trigger = "open"` เพื่อให้บอร์ด consume และล้างค่าเป็น `"consumed"` ในฐานข้อมูลทันที
 2. **การผูกสถานะดักจับฝั่งบอร์ด (Global State Integration):**
    - ตรึงตรรกะในเฟิร์มแวร์ [esp32/esp32.ino](file:///c:/Users/aunkh/OneDrive/Desktop/Project/esp32/esp32.ino) และ [my-app/app/admin/dashboard/ArduinoCode.ts](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts) ในจุดรับการปลดล็อก (MQTT, Offline QR/PIN, Local HTTP POST) ให้เก็บสถานะ `last_door_trigger = "open"` เพื่อให้ตรรกะ Edge-triggered ทำงานข้ามการเปิดซ้ำเมื่อตรวจพบคำสั่ง `"open"` ที่เซิร์ฟเวอร์ตอบกลับมาล้างสถานะ
 
@@ -12109,7 +12265,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 | ลำดับ | ตำแหน่งไฟล์ | สถานะ | คำอธิบายการเปลี่ยนแปลงทางสถาปัตยกรรม |
 |---|---|---|---|
 | 1 | `esp32/esp32.ino` | **[MODIFY]** | อัปเกรดฟังก์ชัน `triggerDoorOpenInstant`, `triggerDoorOpenOffline` และ local HTTP Server ให้เซ็ต `last_door_trigger = "open"` ทันทีเมื่อเปิด เพื่อทำลายการเบิ้ลของ Polling Fallback |
-| 2 | `my-app/lib/esp32.ts` | **[MODIFY]** | นำเข้าและเรียกใช้งาน `clearSystemSettingsCache()` ภายหลังการเขียนคำสั่งปลดล็อกประตูลงใน DB เพื่อล้างแคช Vercel KV ทันที ป้องกันปัญหาระบบตอบกลับคำสั่งล่าช้าจนเกิดการเปิดซ้ำ |
+| 2 | `my-app/lib/esp32.ts` | **[MODIFY]** | นำเข้าและเรียกใช้งาน `clearSystemSettingsCache()` ภายหลังการเขียนคำสั่งปลดล็อกประตูลงใน DB เพื่อล้างแคช Local Cache ทันที ป้องกันปัญหาระบบตอบกลับคำสั่งล่าช้าจนเกิดการเปิดซ้ำ |
 | 3 | `my-app/app/admin/dashboard/ArduinoCode.ts` | **[MODIFY]** | อัปเดตเทมเพลตในฟังก์ชัน `getArduinoCode` ให้เพิ่ม `last_door_trigger = "open"` ให้สอดคล้องกัน เพื่อไม่ให้โค้ดที่แอดมินคัดลอกจากแดชบอร์ดมีบั๊กตัวเดิมกลับมา |
 | 4 | `complete_system_manual_th.md` | **[MODIFY]** | บันทึกรายละเอียดของปัญหารวมถึงวิธีการแก้ไขและตารางสรุปการเปลี่ยนแปลง §71.58 |
 
@@ -12124,7 +12280,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 #### 71.59.1 สาเหตุของปัญหา (Root Cause Analysis)
 ผู้ใช้งานรายงานอาการบอร์ด ESP32 รีบูตวนรอบอย่างไม่สิ้นสุด (Boot loop) และหน้าจอแสดงผล ILI9341 เกิดอาการกระพริบเนื่องจากการรีเซ็ตฮาร์ดแวร์ซ้ำ ๆ โดยจากการวิเคราะห์รหัสความผิดพลาดจาก Serial Monitor (Guru Meditation Error: Core 1 panic'ed (StoreProhibited) ที่ EXCVADDR: 0x00000000) พบต้นตอและสาเหตุเชิงลึกดังนี้:
 1. **คอขวดหน่วยความจำแรมจากการทำ Double Buffering (RAM Heap Exhaustion):** เฟิร์มแวร์เดิมประกาศใช้งาน `GFXcanvas16 canvas(320, 240);` เพื่อทำหน้าที่เป็น Frame buffer สำรองสำหรับลดความกระพริบขณะวาด ซึ่งจำเป็นต้องจองพื้นที่แรมบน Heap เป็นจำนวนสูงถึง `320 * 240 * 2 = 153.6 KB` ในช่วงเริ่มต้นทำงาน
-2. **การชนกันของหน่วยความจำ (Memory Contention with Network Stack):** บอร์ด ESP32 มีหน่วยความจำ SRAM ที่ใช้งานได้จำกัด (~320 KB) และเมื่อบอร์ดทำการเริ่มต้นเชื่อมต่อ Wi-Fi, ทำการเมาท์ SPIFFS, และเปิดใช้งาน `WiFiClientSecure` เพื่อเชื่อมต่อ HTTPS ไปยังคลาวด์ Vercel ไลบรารี SSL/TLS ของเครือข่ายจะต้องขอจองบัฟเฟอร์รับส่งข้อมูลอีกประมาณ 40–50 KB ส่งผลให้ Heap แตกเป็นเสี่ยง ๆ และหน่วยความจำแรมไม่เพียงพอที่จะจัดสรรให้บล็อกต่อเนื่องขนาด 153.6 KB ได้สำเร็จ
+2. **การชนกันของหน่วยความจำ (Memory Contention with Network Stack):** บอร์ด ESP32 มีหน่วยความจำ SRAM ที่ใช้งานได้จำกัด (~320 KB) และเมื่อบอร์ดทำการเริ่มต้นเชื่อมต่อ Wi-Fi, ทำการเมาท์ SPIFFS, และเปิดใช้งาน `WiFiClientSecure` เพื่อเชื่อมต่อ HTTPS ไปยังคลาวด์ Raspberry Pi ไลบรารี SSL/TLS ของเครือข่ายจะต้องขอจองบัฟเฟอร์รับส่งข้อมูลอีกประมาณ 40–50 KB ส่งผลให้ Heap แตกเป็นเสี่ยง ๆ และหน่วยความจำแรมไม่เพียงพอที่จะจัดสรรให้บล็อกต่อเนื่องขนาด 153.6 KB ได้สำเร็จ
 3. **การชี้ไปยังหน่วยความจำว่างเปล่า (Null Pointer Dereference):** เมื่อการจัดสรรหน่วยความจำผ่าน `malloc` ในตัวสร้างออบเจกต์ `GFXcanvas16` ล้มเหลว ตัวแปรชี้ตำแหน่งบัฟเฟอร์ภายในแคนวาสจะกลายเป็น `nullptr` (0x00000000) แต่เมื่อโปรแกรมพยายามดันภาพออกจอผ่านคำสั่ง `tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);` ไลบรารี Adafruit_GFX จะพยายามเข้าถึงค่าในอาเรย์ตำแหน่งดังกล่าวโดยตรง ทำให้เกิดข้อยกเว้นฮาร์ดแวร์ `StoreProhibited` (หรือ `LoadProhibited`) ที่แอดเดรสศูนย์และทำการรีบูตบอร์ดทันที
 
 #### 71.59.2 สถาปัตยกรรมการแก้ไขและการวาดลงฮาร์ดแวร์โดยตรง (Zero-Allocation Wrapper Implementation)
@@ -12209,7 +12365,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 
 **อาการ:** สแกน QR Code ที่แสดงบนจอ ESP32 แล้วระบบแจ้งว่า token ไม่ถูกต้อง/หมดอายุทุกครั้ง ทำให้เข้าหน้าลงทะเบียนไม่ได้
 
-**สาเหตุที่แท้จริง (Root Cause):** ใน [my-app/app/api/esp32/display/route.ts](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts) คำสั่งดึง token ผ่าน Supabase REST กรองเพียง `is_consumed=eq.false` โดย **ไม่ได้กรองอายุของ token** และจะสร้าง token ใหม่ก็ต่อเมื่อไม่มี token ที่ยังไม่ถูกใช้เหลืออยู่เลยเท่านั้น ผลคือเมื่อมี token หนึ่งถูกสร้างและแสดงบนจอ ระบบจะคืน token เดิมนั้นซ้ำไปเรื่อย ๆ ไม่หมุนเปลี่ยน แต่ฟังก์ชัน `consumeQRToken` ใน `lib/qr.ts` จะปฏิเสธ token ที่อายุเกิน `TOKEN_EXPIRY_SECONDS` (300 วินาที) ดังนั้นหลังผ่านไป 5 นาที QR บนจอจะหมดอายุถาวรแต่ยังถูกแสดงอยู่ → สแกนแล้วล้มเหลวทุกครั้ง
+**สาเหตุที่แท้จริง (Root Cause):** ใน [my-app/app/api/esp32/display/route.ts](file:///c:/Users/aunkh/OneDrive/Desktop/Project/my-app/app/admin/dashboard/ArduinoCode.ts) คำสั่งดึง token ผ่าน PostgreSQL (Local) REST กรองเพียง `is_consumed=eq.false` โดย **ไม่ได้กรองอายุของ token** และจะสร้าง token ใหม่ก็ต่อเมื่อไม่มี token ที่ยังไม่ถูกใช้เหลืออยู่เลยเท่านั้น ผลคือเมื่อมี token หนึ่งถูกสร้างและแสดงบนจอ ระบบจะคืน token เดิมนั้นซ้ำไปเรื่อย ๆ ไม่หมุนเปลี่ยน แต่ฟังก์ชัน `consumeQRToken` ใน `lib/qr.ts` จะปฏิเสธ token ที่อายุเกิน `TOKEN_EXPIRY_SECONDS` (300 วินาที) ดังนั้นหลังผ่านไป 5 นาที QR บนจอจะหมดอายุถาวรแต่ยังถูกแสดงอยู่ → สแกนแล้วล้มเหลวทุกครั้ง
 
 **การแก้ไข (Patched):**
 - เพิ่มตัวกรองช่วงเวลาหมุน token (`TOKEN_ROTATION_SECONDS = 60`) ลงใน query โดยเพิ่มเงื่อนไข `created_at=gte.{cutoff}` ทำให้ระบบ reuse เฉพาะ token ที่อายุไม่เกิน 60 วินาทีเท่านั้น
@@ -12321,7 +12477,7 @@ React ผูก `onTouchMove` ให้เป็น **passive listener** โด�
 **อาการ:** ทำงานปกติไปสักพักแล้วบอร์ดเด้งเข้าออฟไลน์โหมดเอง และไม่กลับมาออนไลน์จนกว่าจะรีบูต
 
 **สาเหตุที่แท้จริง (2 จุดทำงานร่วมกัน):**
-1. **TLS keep-alive ตายแล้ว poll ล้มต่อเนื่อง:** โค้ดใช้ `persistentTlsClient` + `http.setReuse(true)` เพื่อ reuse การเชื่อมต่อ HTTPS เดิมข้ามรอบ poll (ลด TLS handshake) แต่เซิร์ฟเวอร์ Vercel Edge จะปิด connection ที่ idle ทิ้งหลังไม่กี่วินาที โดยเฉพาะช่วง `POLL_SLOW` (3 วิ) เมื่อ socket ถูกปิด รอบถัดไป `http.GET()` ล้มเหลว และเพราะ**ไม่เคยรีเซ็ต socket เก่าที่ตายแล้ว** ทุกรอบถัดไปจึงล้มซ้ำบน socket เดิม ทำให้ `api_fail_count` แตะเกณฑ์ภายในไม่กี่วินาที → เด้งเข้าออฟไลน์
+1. **TLS keep-alive ตายแล้ว poll ล้มต่อเนื่อง:** โค้ดใช้ `persistentTlsClient` + `http.setReuse(true)` เพื่อ reuse การเชื่อมต่อ HTTPS เดิมข้ามรอบ poll (ลด TLS handshake) แต่เซิร์ฟเวอร์ Raspberry Pi Edge จะปิด connection ที่ idle ทิ้งหลังไม่กี่วินาที โดยเฉพาะช่วง `POLL_SLOW` (3 วิ) เมื่อ socket ถูกปิด รอบถัดไป `http.GET()` ล้มเหลว และเพราะ**ไม่เคยรีเซ็ต socket เก่าที่ตายแล้ว** ทุกรอบถัดไปจึงล้มซ้ำบน socket เดิม ทำให้ `api_fail_count` แตะเกณฑ์ภายในไม่กี่วินาที → เด้งเข้าออฟไลน์
 2. **ออฟไลน์แล้วติดถาวร:** เงื่อนไข poll เดิมคือ `if (WiFi.status()==WL_CONNECTED && !is_offline_mode)` เมื่อ `is_offline_mode=true` แล้วจะ**เลิก poll ถาวร** จึงไม่มีทางได้ HTTP 200 มาเคลียร์สถานะออฟไลน์ (ทั้งที่เส้นทาง 200 มี logic กู้คืนอยู่แต่ไม่มีวันได้ทำงาน)
 
 **การแก้ไข (Patched):**
