@@ -1,7 +1,7 @@
 # คู่มือระบบควบคุมประตูโครงการ Innovative system for managing access rights and controlling classroom access via wireless network ฉบับละเอียด
 
 วันที่จัดทำ: 26 พฤษภาคม 2026
-อัปเดตล่าสุด: 2026-06-08 00:15:00 (+07:00)
+อัปเดตล่าสุด: 2026-06-16 21:04:50 (+07:00)
 โปรเจกต์อ้างอิง: Innovative system for managing access rights and controlling classroom access via wireless network  
 ขอบเขตคู่มือ: วิธีใช้งานเว็บ, วิธีใช้งานบอร์ด ESP32, วิธีต่อวงจร, วิธีทำชุดจำลองประตู, และคำอธิบายโค้ดรายฟังก์ชัน
 
@@ -5700,6 +5700,9 @@ voltage    ────┐                     ┌───┐
    - พัฒนาระบบประมวลผลข้อมูล IP แอดเดรสของผู้ใช้งานผ่าน `x-forwarded-for` ของ Raspberry Pi Trusted Proxy Chain เพื่อแยกแยะและดึงข้อมูล IP แอดเดรสที่แท้จริงของผู้ใช้ (Right-most client IP) ส่งผลให้การควบคุมการจำกัดปริมาณคำขอ (Rate Limiting) จากสปามเมอร์มีความแม่นยำสูง
 6. **การป้องกันข้อผิดพลาดการแปลงชนิดข้อมูลใน API (NaN Checking):**
    - เพิ่มระบบสกัดกั้นและตรวจสอบประเภทข้อมูลใน API `/api/students/[id]` และ `/api/admin-users/[id]` ป้องกันกรณีผู้โจมตีเจตนาส่งค่าที่ไม่ใช่ตัวเลข (NaN) เพื่อหวังผลให้ฐานข้อมูลประมวลผลผิดพลาด
+7. **การตรวจสอบและอุดช่องโหว่ความมั่นคงปลอดภัยเมื่อใช้งานบน Public IP (June 2026 Hardening Audit):**
+   - ทำการวิเคราะห์และตรวจสอบการไหลของข้อมูลตามมาตรฐานความปลอดภัย OWASP API Top 10 ทั้งโครงการ
+   - จัดทำเอกสารคำแนะนำเชิงวิศวกรรมโครงสร้างพื้นฐานในการอุดรอยรั่วจากการรันระบบบน Raspberry Pi ด้วย Public IP (เช่น การซ่อน IP สาธารณะผ่าน Cloudflare Tunnel, การยกเลิก SSH Password Authentication, การตั้งค่า Firewall UFW และการจำกัดสิทธิ์ PM2 process ให้ไม่ใช่ root)
 
 <a id="sec-71-2"></a>
 ### 71.2 ผลการวัดประสิทธิภาพบนโปรดักชัน (Live Benchmarking)
