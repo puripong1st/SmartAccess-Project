@@ -416,7 +416,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (pathname) {
       const endPath = pathname.split("/").pop();
-      if (endPath && ["pending", "all", "admins", "settings", "rooms", "guide", "iot", "health"].includes(endPath)) {
+      if (endPath && ["pending", "all", "admins", "settings", "rooms", "guide", "iot"].includes(endPath)) {
         setTab(endPath as any);
       }
       // Reset open modal states when changing route/tab
@@ -445,7 +445,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   // การ prefetch ตอน mount ทำให้คอมไพล์/โหลด chunk เสร็จล่วงหน้า → แตะครั้งเดียวเปลี่ยนหน้าทันที
   useEffect(() => {
     if (!user) return;
-    const ids = ["pending", "rooms", "all", "admins", "settings", "health", "guide"];
+    const ids = ["pending", "rooms", "all", "admins", "settings", "guide"];
     const t = setTimeout(() => {
       ids.forEach(id => { try { router.prefetch(`/admin/dashboard/${id}`); } catch {} });
     }, 300); // หน่วงเล็กน้อยเพื่อไม่แย่งทรัพยากรกับการ render หน้าแรก
@@ -1483,7 +1483,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                 { id: "admins", icon: <KeyIcon />, label: "ผู้ดูแลระบบ", badge: 0 },
                 { id: "settings", icon: <SettingsIcon />, label: "ตั้งค่าการแจ้งเตือน", badge: 0 },
               ] : []),
-              { id: "health", icon: <ActivityIcon />, label: "สถานะเซิร์ฟเวอร์ & DB", badge: 0 },
               { id: "guide", icon: <FileTextIcon />, label: "คู่มือการใช้งานระบบ", badge: 0 },
             ].map(item => (
               <button
@@ -1638,12 +1637,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                       <span>คู่มือการใช้งานระบบ & IoT</span>
                     </span>
                   )}
-                  {tab === "health" && (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      <ActivityIcon />
-                      <span>สถานะและความเสถียรของระบบ (System Health)</span>
-                    </span>
-                  )}
+
                 </h2>
                 <div style={{ fontSize: 11.5, color: "var(--text-secondary)", fontWeight: 500, marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
                   <ClockIcon />

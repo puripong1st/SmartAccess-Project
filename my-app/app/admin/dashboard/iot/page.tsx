@@ -4,7 +4,6 @@ import { useDashboard } from "../DashboardContext";
 
 export default function IotPage() {
   const {
-    healthData,
     systemStatus,
     testingRoom,
     unlockingRoom,
@@ -21,43 +20,6 @@ export default function IotPage() {
         <h3 style={{ fontSize: 16.5, fontWeight: 900, color: "var(--text-primary)", borderBottom: "1px solid var(--border)", paddingBottom: 12, marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
           🌐 แผงตรวจสภาพฮาร์ดแวร์ & ประตูห้องเรียนอัจฉริยะ (ESP32 Live Controller Grid)
         </h3>
-
-        {/* Health status banner */}
-        {healthData && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14, marginBottom: 24, padding: 18, background: "rgba(124,58,237,0.02)", border: "1.5px dashed var(--border)", borderRadius: 12 }}>
-            <div>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--text-secondary)", display: "block" }}>API Health Status:</span>
-              <span style={{
-                fontSize: 13, fontWeight: 900, display: "inline-flex", alignItems: "center", gap: 5, marginTop: 4,
-                color: healthData.status === "healthy" ? "#10B981" : healthData.status === "degraded" ? "#F59E0B" : "#EF4444"
-              }}>
-                <span
-                  style={{ width: 8, height: 8, borderRadius: "50%", background: healthData.status === "healthy" ? "#10B981" : "#EF4444" }}
-                  className={healthData.status === "healthy" ? "pulse-green" : "pulse-red"}
-                />
-                {healthData.status === "healthy" ? "ระบบปกติ (HEALTHY)" : "มีปัญหาบางส่วน (DEGRADED)"}
-              </span>
-            </div>
-            <div>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--text-secondary)", display: "block" }}>Supabase DB Latency:</span>
-              <span style={{ fontSize: 13, fontWeight: 900, color: "var(--text-primary)", display: "inline-block", marginTop: 4 }}>
-                ⏱️ {healthData.components?.database?.latency_ms || 0} ms
-              </span>
-            </div>
-            <div>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--text-secondary)", display: "block" }}>Server Memory RSS:</span>
-              <span style={{ fontSize: 13, fontWeight: 900, color: "var(--text-primary)", display: "inline-block", marginTop: 4 }}>
-                💾 {healthData.components?.memory?.rss_mb || 0} MB
-              </span>
-            </div>
-            <div>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--text-secondary)", display: "block" }}>นาฬิกาเวอร์ชันระบบ:</span>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--smartaccess-purple-dark)", display: "inline-block", marginTop: 4 }}>
-                🕒 {healthData.server_time || "ไม่ทราบเวลา"}
-              </span>
-            </div>
-          </div>
-        )}
 
         {/* Grid of rooms */}
         {!systemStatus?.esp32Devices || systemStatus.esp32Devices.length === 0 ? (

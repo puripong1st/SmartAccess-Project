@@ -132,51 +132,72 @@ npm install
 ### 2. ตั้งค่าไฟล์สภาพแวดล้อม `.env.local`
 สร้างไฟล์ `.env.local` ไว้ที่โฟลเดอร์ `my-app/` และกำหนดค่าดังนี้:
 ```env
-# ฐานข้อมูล Supabase PostgreSQL (ใช้พอร์ต PgBouncer 6543)
-DATABASE_URL="postgres://postgres.xxxx:password@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+# ── PostgreSQL Connection (Supabase / Local PG) ──
+POSTGRES_URL="postgres://postgres.<your-project-ref>:<your-db-password>@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&supa=base-pooler.x"
+POSTGRES_HOST="db.<your-project-ref>.supabase.co"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="<your-db-password>"
+POSTGRES_DATABASE="postgres"
+POSTGRES_POOL_MAX=5
+SUPABASE_CA_CERT="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 
-# ความปลอดภัยเซสชัน JWT (บังคับ — แอปจะ throw ทันทีถ้าไม่ตั้งค่า)
+# ── Supabase Client (For Edge API Routing / RLS Testing) ──
+NEXT_PUBLIC_SUPABASE_URL="https://<your-project-ref>.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="<your-supabase-anon-jwt>"
+SUPABASE_SERVICE_ROLE_KEY="<your-supabase-service-role-jwt>"
+
+# ── Secrets (บังคับ — แอปจะ throw ทันทีถ้าไม่ตั้งค่า) ──
 JWT_SECRET="สุ่มข้อความยาวๆความปลอดภัยของคุณ"
-
-# กุญแจลงนาม QR offline grant (บังคับ — lib/qr.ts จะ throw ถ้าไม่ตั้งค่า; ต้องแยกจาก JWT_SECRET)
 QR_SIGNING_KEY="สุ่มข้อความยาวๆอีกชุดสำหรับ QR"
 
-# Pre-shared key ระหว่าง server ↔ ESP32 (ต้องตรงกับ api_key ใน config.h ของบอร์ด)
-ESP32_API_KEY="สุ่มข้อความยาวๆสำหรับ ESP32"
+# ── Database Initialization Control ──
+SKIP_DB_INIT=true
+ALLOW_DEV_SEED=true
 
-# ตัวกำหนดค่าฮาร์ดแวร์บอร์ด
-ESP32_IP="192.168.1.100"   # ใช้สำหรับ ping ตรวจสถานะเท่านั้น (การเปิดประตูใช้ Cloud Polling)
+# ── Initial Administrator (ใช้เฉพาะตอน seed ครั้งแรก) ──
+INITIAL_ADMIN_USERNAME="admin"
+INITIAL_ADMIN_PASSWORD="<choose-a-strong-password>"
+INITIAL_ADMIN_FULL_NAME="System Administrator"
+
+# ── ESP32 Controller Configuration ──
+ESP32_IP="192.168.1.100"
 ESP32_PORT="80"
-ESP32_MOCK_MODE="false"    # =true เปิดโหมดจำลองไม่ต้องมีฮาร์ดแวร์
-ESP32_WOKWI="false"        # =true เมื่อใช้ Wokwi Simulator
+ESP32_MOCK_MODE=false
+ESP32_WOKWI=false
+ESP32_API_KEY="สุ่มข้อความยาวๆสำหรับ ESP32"
+ALLOWED_IP_RANGES="*"
 
-# ลิงก์แจ้งเตือนบอท Discord หลัก (ทางเลือก — รองรับ Telegram/LINE เพิ่มผ่านหน้า Settings)
-DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+# ── Ops & Webhooks ──
+NEXT_PUBLIC_APP_URL="https://your-domain.duckdns.org"
+DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/xxxxxx"
+CRON_SECRET="สุ่มข้อความยาวๆ ป้องกัน endpoint สรุปรายวัน/สัปดาห์"
+VERCEL_TOKEN=""
+VERCEL_PROJECT_ID=""
 
-# Cron / Vercel Ops (ทางเลือก)
-CRON_SECRET="สุ่มข้อความยาวๆ ≥ 32 ตัว ป้องกัน endpoint สรุปรายวัน/สัปดาห์"
-VERCEL_TOKEN=""        # ดึงสถานะ deployment จาก Vercel API
-VERCEL_PROJECT_ID=""   # รหัสโปรเจกต์ Vercel
-
-# Vercel KV (Redis) cache (ทางเลือก — ถ้าเว้นว่าง fallback เป็น in-memory)
-KV_URL=""
+# ── Vercel KV (Redis) cache (ทางเลือก — ถ้าเว้นว่าง fallback เป็น in-memory) ──
 KV_REST_API_URL=""
 KV_REST_API_TOKEN=""
-KV_REST_API_READ_ONLY_TOKEN=""
 
-# Firebase Cloud Messaging (PWA Push Notifications) — ได้จาก Firebase Console Web App
-NEXT_PUBLIC_FIREBASE_API_KEY="คีย์ API Key จาก Firebase Web App"
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="smartaccess-xxxx.firebaseapp.com"
-NEXT_PUBLIC_FIREBASE_PROJECT_ID="smartaccess-xxxx"
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="smartaccess-xxxx.firebasestorage.app"
+# ── Firebase Cloud Messaging (PWA Push Notifications) ──
+NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSy..."
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="<your-app>.firebaseapp.com"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID="<your-app>"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="<your-app>.firebasestorage.app"
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="เลขผู้ส่งสาร"
 NEXT_PUBLIC_FIREBASE_APP_ID="เลขไอดีแอป 1:xxxx:web:xxxx"
-NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="ไอดีวิเคราะห์ (มีหรือไม่มีก็ได้)"
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-XXXXXX"
 NEXT_PUBLIC_FIREBASE_VAPID_KEY="คีย์ Web Push Certificates Key Pair"
 
-# Firebase Admin (Server-side Push Dispatch) — ได้จาก Private Key JSON ของ Service Account
-FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@smartaccess.iam.gserviceaccount.com"
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nคีย์ลับยาวบรรทัดเดียวคั่นด้วย\n-----END PRIVATE KEY-----"
+# ── Firebase Admin (Server-side Push Dispatch) ──
+FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@<your-app>.iam.gserviceaccount.com"
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# ── MQTT Broker Configuration (Systems Real-Time Unlock) ──
+MQTT_BROKER_HOST="xxxxxx.s1.eu.hivemq.cloud"
+MQTT_PORT=8084
+MQTT_PATH="/mqtt"
+MQTT_USERNAME="esp32_client"
+MQTT_PASSWORD="your_secure_password"
 ```
 
 > ดูตัวแปรครบทุกตัวพร้อมคำอธิบายได้ใน [`my-app/.env.example`](my-app/.env.example) — **ห้ามใส่ค่าจริงในไฟล์ตัวอย่าง ใส่เฉพาะใน `.env.local` (ถูก gitignore ไว้)**

@@ -84,8 +84,8 @@ export const defaultRoomConfig = (): RoomConfig => ({
 });
 
 interface DashboardContextType {
-  tab: "pending" | "all" | "admins" | "settings" | "rooms" | "guide" | "iot" | "health";
-  setTab: React.Dispatch<React.SetStateAction<"pending" | "all" | "admins" | "settings" | "rooms" | "guide" | "iot" | "health">>;
+  tab: "pending" | "all" | "admins" | "settings" | "rooms" | "guide" | "iot";
+  setTab: React.Dispatch<React.SetStateAction<"pending" | "all" | "admins" | "settings" | "rooms" | "guide" | "iot">>;
   user: CurrentUser | null;
   setUser: React.Dispatch<React.SetStateAction<CurrentUser | null>>;
   pending: Student[];
@@ -288,8 +288,6 @@ interface DashboardContextType {
   setFirmwareLogs: React.Dispatch<React.SetStateAction<any[]>>;
   firmwareLogsLoading: boolean;
   setFirmwareLogsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  healthData: any;
-  setHealthData: React.Dispatch<React.SetStateAction<any>>;
   unlockingRoom: string | null;
   setUnlockingRoom: React.Dispatch<React.SetStateAction<string | null>>;
   recentlyUnlockedRooms: Record<string, boolean>;
@@ -297,7 +295,6 @@ interface DashboardContextType {
   handleAddRoom: (e?: React.FormEvent | React.MouseEvent) => Promise<void>;
   handleRemoveRoom: (roomCode: string) => Promise<void>;
   fetchSystemStatus: () => Promise<void>;
-  fetchHealthData: (runProbes?: boolean) => Promise<void>;
   fetchFirmwares: () => Promise<void>;
   fetchFirmwareLogs: () => Promise<void>;
   saveSingleRoomSettings: (roomCode: string, ipAddress: string) => Promise<void>;
@@ -311,7 +308,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // DECLARE ALL STATE HOOKS AT THE VERY TOP
-  const [tab, setTab] = useState<"pending" | "all" | "admins" | "settings" | "rooms" | "guide" | "iot" | "health">("pending");
+  const [tab, setTab] = useState<"pending" | "all" | "admins" | "settings" | "rooms" | "guide" | "iot">("pending");
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [pending, setPending] = useState<Student[]>([]);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -410,7 +407,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [firmwareLogs, setFirmwareLogs] = useState<any[]>([]);
   const [firmwareLogsLoading, setFirmwareLogsLoading] = useState(false);
 
-  const [healthData, setHealthData] = useState<any>(null);
   const [unlockingRoom, setUnlockingRoom] = useState<string | null>(null);
   const [recentlyUnlockedRooms, setRecentlyUnlockedRooms] = useState<Record<string, boolean>>({});
 
@@ -837,17 +833,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const fetchHealthData = useCallback(async (runProbes = false) => {
-    try {
-      const url = runProbes ? "/api/system/health?probe=1" : "/api/system/health";
-      const r = await fetch(url);
-      if (r.ok) {
-        setHealthData(await r.json());
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
 
   useEffect(() => {
     if (user?.role === "owner") {
@@ -934,12 +919,6 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [fetchSystemStatus, user]);
 
-  useEffect(() => {
-    if (!user) return;
-    fetchHealthData();
-    const interval = setInterval(fetchHealthData, 60000);
-    return () => clearInterval(interval);
-  }, [fetchHealthData, user]);
 
   useEffect(() => {
     if (settingsLoaded || roomsList.length > 0 || !systemStatus?.esp32Devices?.length) return;
@@ -1736,13 +1715,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       firmwareFile, setFirmwareFile,
       firmwareLogs, setFirmwareLogs,
       firmwareLogsLoading, setFirmwareLogsLoading,
-      healthData, setHealthData,
       unlockingRoom, setUnlockingRoom,
       recentlyUnlockedRooms, setRecentlyUnlockedRooms,
       handleAddRoom,
       handleRemoveRoom,
       fetchSystemStatus,
-      fetchHealthData,
       fetchFirmwares,
       fetchFirmwareLogs,
       saveSingleRoomSettings,

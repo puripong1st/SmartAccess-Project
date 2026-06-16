@@ -50,18 +50,14 @@ async function probe(label, url, opts = {}) {
   const results = [];
 
   // Scenario A: Vercel reachable, query an endpoint that needs Supabase
-  results.push(await probe("A.1 Vercel up + Supabase up: /api/esp32/display",
+  results.push(await probe("A. Vercel up + Supabase up: /api/esp32/display",
     `${REAL_HOST}/api/esp32/display?room=CE-401`));
 
-  // Scenario B: Vercel reachable, query system/status (also needs DB)
-  results.push(await probe("A.2 Vercel up + Supabase up: /api/system/health",
-    `${REAL_HOST}/api/system/health`));
-
-  // Scenario C: Simulated Vercel unreachable (bad host)
+  // Scenario B: Simulated Vercel unreachable (bad host)
   results.push(await probe("B. Vercel UNREACHABLE simulation",
     `${BAD_HOST}/api/esp32/display`));
 
-  // Scenario D: Static asset (CDN cache) — should survive Supabase outage
+  // Scenario C: Static asset (CDN cache) — should survive Supabase outage
   results.push(await probe("C. Static favicon (CDN)",
     `${REAL_HOST}/favicon.ico`));
 
@@ -80,8 +76,6 @@ async function probe(label, url, opts = {}) {
    - In Supabase dashboard pause the project, OR temporarily set POSTGRES_URL on
      Vercel to an invalid host and redeploy.
    - Visit ${REAL_HOST}/admin/login — should show graceful 500 page (not stacktrace).
-   - VERIFY:  curl -i "${REAL_HOST}/api/system/health"
-                 → status should be "unhealthy", not crash.
    - getFallbackSettings() in lib/resilience.ts kicks in for read paths.
 
 3. Full Vercel outage (everything down):

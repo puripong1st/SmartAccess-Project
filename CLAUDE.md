@@ -78,16 +78,19 @@ Three modes controlled by `ESP32_MODE` env var: `mock` (no hardware needed), `wo
 Copy `my-app/.env.example` to `my-app/.env.local`. Key variables:
 
 ```
-DATABASE_URL              Supabase PostgreSQL connection string (with pgbouncer pooling)
-DATABASE_URL_DIRECT       Direct connection (used for migrations/DDL)
-JWT_SECRET                Random secret for token signing
-ESP32_MODE                mock | wokwi | physical
+POSTGRES_URL              PostgreSQL connection string (with pooler)
+POSTGRES_HOST / USER / PASSWORD / DATABASE / PORT   Individual fallbacks if POSTGRES_URL is not set
+SUPABASE_CA_CERT          CA Certificate for TLS DB connections
+JWT_SECRET                Random secret for admin session JWT signing
+QR_SIGNING_KEY            Secret for dynamic QR token HMAC signing
+ESP32_MOCK_MODE           true | false (enable software mock mode)
+ESP32_WOKWI               true | false (enable Wokwi Simulator mode)
 ESP32_IP / ESP32_PORT     Hardware device address (physical mode only)
 ESP32_API_KEY             Pre-shared key for ESP32 ↔ server auth
-QR_SIGNING_KEY            Secret for QR token signing
-DISCORD_WEBHOOK_URL       Optional alert channel
-NEXT_PUBLIC_SUPABASE_URL  Supabase project URL
-SUPABASE_SERVICE_ROLE_KEY Server-side Supabase key
+NEXT_PUBLIC_SUPABASE_URL  Supabase project URL (edge routing / RLS)
+SUPABASE_SERVICE_ROLE_KEY Server-side Supabase key (edge routes / admin tasks)
+DISCORD_WEBHOOK_URL       Optional Discord alert channel
+CRON_SECRET               Random secret to authenticate auto-reject sweeps/stats
 ```
 
 ## Security Constraints

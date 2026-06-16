@@ -18,7 +18,6 @@ const AdminsPage = dynamic(() => import("./admins/page"), { loading: Loading });
 const RoomsPage = dynamic(() => import("./rooms/page"), { loading: Loading });
 const SettingsPage = dynamic(() => import("./settings/page"), { loading: Loading });
 const GuidePage = dynamic(() => import("./guide/page"), { loading: Loading });
-const HealthPage = dynamic(() => import("./health/page"), { loading: Loading });
 
 export default function DashboardIndexPage() {
   const { tab, user } = useDashboard();
@@ -35,7 +34,6 @@ export default function DashboardIndexPage() {
       {tab === "rooms" && isOwner && <RoomsPage />}
       {tab === "settings" && isOwner && <SettingsPage />}
       {tab === "guide" && <GuidePage />}
-      {tab === "health" && <HealthPage />}
     </>
   );
 }

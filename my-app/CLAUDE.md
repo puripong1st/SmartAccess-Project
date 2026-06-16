@@ -145,22 +145,25 @@ CREATE TABLE dynamic_qr_tokens (
 ## การตั้งค่าสภาพแวดล้อม
 ไฟล์ `.env.local` ควรมีตัวแปรดังต่อไปนี้:
 ```env
-# postgreSQL
+# Database connection
+POSTGRES_URL="postgres://postgres:admin@localhost:5432/smartaccess"
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=admin
-POSTGRES_DATABASE=smartaccess_access
+POSTGRES_DATABASE=smartaccess
 
-# JWT
+# JWT & Security
 JWT_SECRET=your_super_secret_key_here_change_in_production
+QR_SIGNING_KEY=another_secure_key_for_signing_qr_tokens
 
-# ESP32
+# ESP32 Controller
 ESP32_IP=192.168.1.100
 ESP32_PORT=80
 ESP32_MOCK_MODE=true  # ตั้งเป็น false เมื่อใช้ฮาร์ดแวร์จริง
 ESP32_WOKWI=true      # ตั้งเป็น true เมื่อใช้ Wokwi Simulator
 ESP32_API_KEY=YOUR_ESP32_API_KEY_HERE
+ALLOWED_IP_RANGES="*"
 
 # Next.js
 NEXT_PUBLIC_APP_URL=http://localhost:3000

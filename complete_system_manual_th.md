@@ -292,11 +292,9 @@ Project/
         all/page.tsx                   แท็บทำเนียบ & ประวัติเข้าออก
         admins/page.tsx                แท็บผู้ดูแลระบบ
         settings/page.tsx              แท็บตั้งค่า Discord Webhook
-        health/page.tsx                แท็บสถานะเซิร์ฟเวอร์ & DB
         guide/page.tsx                 แท็บคู่มือการใช้งานระบบ
       esp32-preview/page.tsx           หน้าจำลองจอ ESP32
       api/                             API ทั้งหมดของระบบ
-        system/health/route.ts         Health check API (DB, Memory, Raspberry Pi, API probes)
     lib/
       db.ts                            เชื่อม PostgreSQL และสร้างตาราง
       auth.ts                          JWT และ cookie session ของ Admin
@@ -459,7 +457,12 @@ POSTGRES_DATABASE=smartaccess
 # กำหนดขนาด Pool สูงสุด (แนะนำ 15-20 เนื่องจากทำงานแบบ Persistent Server การแชร์ connection ทำได้มีประสิทธิภาพ)
 POSTGRES_POOL_MAX=20
 # บนระบบโลคอลไม่จำเป็นต้องใส่ CA certificate
-PostgreSQL (Local)_CA_CERT=
+SUPABASE_CA_CERT=
+
+# ── Supabase Client (สำหรับ Edge API Routing / RLS Testing) ──
+NEXT_PUBLIC_SUPABASE_URL="https://your-project-ref.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 
 # ── ความปลอดภัย & รหัสลับ (บังคับตั้งค่าห้ามใช้ค่า default ในสายผลิต) ──
 # รหัสสุ่มลับสำหรับการลงชื่อเข้าใช้ JWT Session (สุ่มใหม่โดยรัน openssl rand -hex 32 ในคอมมานด์ไลน์)
@@ -468,6 +471,7 @@ JWT_SECRET=f8c9b207a6a4d7d8e9526a57b2e3fc5aefbc81a2f3e4d5c6b7a8d9e0f1a2b3c4
 QR_SIGNING_KEY=a51d9e23b1c8f4d9a2e6f7c8d9e0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8
 # กุญแจ API ความปลอดภัยสูงของระบบ IoT (ต้องตรงกับ api_key ใน config.h ของบอร์ด ESP32)
 ESP32_API_KEY=your_super_secret_esp32_api_key
+ALLOWED_IP_RANGES="*"
 
 # ── การตั้งค่าเซิร์ฟเวอร์บอร์ดควบคุมประตู ──
 # หมายเลข IP ของบอร์ด ESP32 ที่ประตูกายภาพจริง (ใช้กรณีที่เซิร์ฟเวอร์จะสั่งยิงเปิดประตูตรงทาง LAN)
@@ -489,7 +493,7 @@ INITIAL_ADMIN_FULL_NAME="System Administrator"
 # ── การทำงานระบายข้อมูลและระบบเครือข่าย ──
 # URL หลักของเซิร์ฟเวอร์ Raspberry Pi (ตัวอย่างเช่น โดเมน DDNS หรือ Public IP ที่ตั้งค่าไว้)
 NEXT_PUBLIC_APP_URL=http://smartaccess.duckdns.org:3000
-DISCORD_WEBHOOK_URL=
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/xxxxxx
 CRON_SECRET=my-cron-scheduler-secret-key-123
 ```
 
@@ -696,7 +700,6 @@ https://smartaccess-project.vercel.app/admin/login
 | ทำเนียบ & ประวัติเข้าออก | ค้นหานักศึกษา, เปิดประตูรายบุคคล, export PDF, ดู access logs |
 | ผู้ดูแลระบบ | เพิ่มหรือลบ admin, จัดการสิทธิ์ห้องเรียน |
 | ตั้งค่าระบบ & Webhook | ตั้งค่า Discord Webhook ส่วนกลาง 4 หมวดหมู่ |
-| สถานะเซิร์ฟเวอร์ & DB | ตรวจสอบสุขภาพระบบ, Database latency, Raspberry Pi deployment, API status, Memory |
 | คู่มือการใช้งานระบบ | คู่มือย่อใน dashboard |
 
 ### 5.4 อนุมัติคำขอ
@@ -1942,17 +1945,6 @@ flowchart TD
 - ใช้สำหรับเคสนักศึกษาโดน rate-limit (เช่น พยายามใช้ bypass เกิน 3 ครั้ง/นาที)
 - เรียก endpoint reset rate-limit ตาม `student_id` + IP
 
-### 23.7 สถานะเซิร์ฟเวอร์ & DB (Health Monitor)
-
-แท็บสถานะเซิร์ฟเวอร์แสดงข้อมูลสุขภาพระบบแบบเรียลไทม์ แบ่งเป็น 4 ส่วนย่อย:
-
-1. **ภาพรวม (Overview)**: แสดงสถานะฐานข้อมูล (Online/Offline + Latency), Rate Limiter, Memory (RSS/Heap), เวลาเซิร์ฟเวอร์, QR Scan ล่าสุด, สภาพแวดล้อมการทำงาน (Production/Development)
-2. **Vercel**: แสดงข้อมูล Runtime (Region, Git SHA, Git Branch), สถานะ Deployment ล่าสุด (URL, เวลาสร้าง, Git commit), ต้องตั้งค่า Raspberry Pi_TOKEN และ Raspberry Pi_PROJECT_ID
-3. **API Status**: ทดสอบความเร็ว (Latency) ของ API endpoints หลักอัตโนมัติ พร้อม Progress bar แสดงผล
-4. **Runtime**: ข้อมูล Node.js version, Platform, Architecture, Process uptime, Memory breakdown แบบกราฟ
-
-ข้อมูลจะรีเฟรชอัตโนมัติทุก 30 วินาที ดึงจาก `/api/system/health`
-
 ---
 
 
@@ -2825,7 +2817,7 @@ T+4100    | resetCache → loop() ปกติ
 <a id="sec-37"></a>
 ## 37. รายการ Environment Variables ทุกตัว
 
-> ตารางนี้อ้างอิงตามไฟล์ `my-app/.env.local` จริง คอลัมน์ "โค้ดอ่าน?" ระบุว่า source code มีการอ่านตัวแปรนั้นจริงหรือไม่ (บางตัวที่ PostgreSQL (Local) Integration ใส่มาให้อัตโนมัติ แอปไม่ได้อ่าน — เก็บไว้ได้แต่ไม่จำเป็น)
+> ตารางนี้อ้างอิงตามไฟล์ `my-app/.env.local` จริง ซึ่งแสดงเฉพาะตัวแปรที่มีการเรียกใช้งานจริงใน Source Code เท่านั้น ตัวแปรที่ไม่ได้ใช้ (เช่น คีย์สาธารณะหรือความลับที่ซ้ำซ้อนจากชุดบูรณาการระบบ) ได้ถูกคัดกรองออกเพื่อรักษาความคลีนและความปลอดภัยของระบบ
 
 #### กลุ่ม 1 — ฐานข้อมูล (Database Connection)
 
@@ -2834,29 +2826,29 @@ T+4100    | resetCache → loop() ปกติ
 | `POSTGRES_URL` | ✅ **หลัก** | ✅ `lib/db.ts` | connection string หลัก (pooler 6543) — `lib/db.ts` parse host/user/password/database/port จากตัวนี้ก่อน |
 | `POSTGRES_HOST` `POSTGRES_USER` `POSTGRES_PASSWORD` `POSTGRES_DATABASE` `POSTGRES_PORT` | ทางเลือก | ✅ fallback | ใช้เมื่อไม่ได้ตั้ง `POSTGRES_URL` (db.ts อ่านเป็น fallback) |
 | `POSTGRES_POOL_MAX` | ทางเลือก | ✅ `lib/db.ts` | ขนาด pool สูงสุด (ค่าเริ่มต้น 5) — สำคัญบน serverless |
-| `PostgreSQL (Local)_CA_CERT` | ทางเลือก | ✅ `lib/db.ts` | PEM cert สำหรับ TLS verify (ใส่ `\n` คั่นบรรทัด) |
-| `POSTGRES_URL_NON_POOLING` `POSTGRES_PRISMA_URL` | — | ❌ ไม่อ่าน | PostgreSQL (Local) Integration ใส่มาให้ — โค้ดปัจจุบันไม่ได้ใช้ |
+| `SUPABASE_CA_CERT` | ทางเลือก | ✅ `lib/db.ts` | PEM cert สำหรับ TLS verify (ใส่ `\n` คั่นบรรทัด) |
 
 #### กลุ่ม 2 — ความปลอดภัย/Secret (บังคับ)
 
 | ตัวแปร | จำเป็น | โค้ดอ่าน? | คำอธิบาย |
 |--------|--------|-----------|-----------|
 | `JWT_SECRET` | ✅ | ✅ `lib/auth.ts` | ≥ 32 chars; **throw ทันทีถ้าไม่ตั้ง** (ไม่มี fallback) |
-| `QR_SIGNING_KEY` | ✅ | ✅ `lib/qr.ts` | sign offline grant ด้วย HMAC; **throw ถ้าไม่ตั้ง** (ไม่ fallback ไป `JWT_SECRET` แล้ว) |
+| `QR_SIGNING_KEY` | ✅ | ✅ `lib/qr.ts` | sign offline grant ด้วย HMAC; **throw ถ้าไม่ตั้ง** (ไม่ fallback ไป `JWT_SECRET`) |
 | `ESP32_API_KEY` | ✅ | ✅ `lib/esp32.ts` | ต้องตรงกับ `api_key` ใน `config.h`; production ห้ามใช้ placeholder |
-| `PostgreSQL (Local)_SERVICE_ROLE_KEY` | ✅* | ✅ `api/esp32/display` | ใช้ตอนอัปโหลด/ดึงไฟล์ firmware ผ่าน PostgreSQL (Local) Storage |
-| `NEXT_PUBLIC_PostgreSQL (Local)_URL` | ✅* | ✅ `api/esp32/display` | project URL ของ PostgreSQL (Local) (ใช้คู่กับ service role) |
-| `PostgreSQL (Local)_ANON_KEY` `NEXT_PUBLIC_PostgreSQL (Local)_PUBLISHABLE_KEY` `PostgreSQL (Local)_JWT_SECRET` `PostgreSQL (Local)_SECRET_KEY` | — | ❌ ไม่อ่าน | PostgreSQL (Local) Integration ใส่มาให้ — โค้ดปัจจุบันไม่ได้ใช้ (ใช้ `pg` ต่อตรง ไม่ผ่าน PostgreSQL (Local) JS) |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅* | ✅ `api/esp32/display` | ใช้สำหรับสิทธิ์ Bypass / API call ในส่วนติดต่อ Supabase Server-side |
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅* | ✅ `api/esp32/display` | project URL ของ Supabase (ใช้คู่กับ service role ใน edge routes) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | ✅ `lib/supabase-client.ts` | ANON key สำหรับ RLS testing บน client-side |
 
-#### กลุ่ม 3 — ESP32
+#### กลุ่ม 3 — ESP32 & Controller
 
 | ตัวแปร | จำเป็น | โค้ดอ่าน? | คำอธิบาย |
 |--------|--------|-----------|-----------|
 | `ESP32_MOCK_MODE` | ⚠️ | ✅ | `=true` เปิดโหมดจำลอง (ไม่ต้องมีฮาร์ดแวร์) |
 | `ESP32_WOKWI` | ⚠️ | ✅ | `=true` ใช้ Wokwi Simulator |
-| `ESP32_WOKWI_URL` | ทางเลือก | ✅ | ค่าเริ่มต้น `http://localhost:8180` (ไม่มีใน `.env.local` — ใช้ default) |
-| `ESP32_IP` | ⚠️ | ✅ | IP บอร์ด — ใช้ **ping ตรวจสถานะ** เท่านั้น (เปิดประตูใช้ Cloud Polling) |
+| `ESP32_WOKWI_URL` | ทางเลือก | ✅ | ค่าเริ่มต้น `http://localhost:8180` (ไม่มีใน `.env.local` — ใช้ default ในโค้ด) |
+| `ESP32_IP` | ⚠️ | ✅ | IP บอร์ด — ใช้ **ping ตรวจสถานะ** เท่านั้น (เปิดประตูใช้ Cloud Polling/MQTT) |
 | `ESP32_PORT` | ⚠️ | ✅ | port บอร์ด (default 80) |
+| `ALLOWED_IP_RANGES` | ทางเลือก | ✅ `lib/api-security.ts` | กำหนด IP whitelist (เช่น `192.168.1.*` หรือ IP สาธารณะ) ที่ ESP32 จะต่อเข้ามาได้ |
 
 #### กลุ่ม 4 — Admin Seed / DB Init
 
@@ -2864,17 +2856,16 @@ T+4100    | resetCache → loop() ปกติ
 |--------|--------|-----------|-----------|
 | `ALLOW_DEV_SEED` | dev | ✅ | `true` = สร้าง admin จาก env ครั้งแรก (production ต้อง `false`) |
 | `INITIAL_ADMIN_USERNAME` `INITIAL_ADMIN_PASSWORD` `INITIAL_ADMIN_FULL_NAME` | dev | ✅ | ใช้ตอน seed บัญชีแรก |
-| `SKIP_DB_INIT` | ทางเลือก | ✅ | `true` = ข้าม `initDatabase()` ลด ~25 DDL/cold start — ตั้งหลังรัน DDL §35 ครบ |
+| `SKIP_DB_INIT` | ทางเลือก | ✅ | `true` = ข้าม `initDatabase()` ลด ~25 DDL/cold start — ตั้งหลังรัน DDL ครบ |
 
-#### กลุ่ม 5 — Ops (Raspberry Pi / KV / Cron / Notification)
+#### กลุ่ม 5 — Ops (Vercel / Cron / Notification)
 
 | ตัวแปร | จำเป็น | โค้ดอ่าน? | คำอธิบาย |
 |--------|--------|-----------|-----------|
-| `CRON_SECRET` | ทางเลือก* | ✅ `summary`/`cleanup` | รหัสลับ (≥ 32 chars) ป้องกัน Cron endpoint; ถ้าเว้นว่าง Cron ถูกปฏิเสธ 401 (owner ยังกดเองได้) |
-| `VERCEL_TOKEN` `VERCEL_PROJECT_ID` | ทางเลือก | ✅ | ดึงสถานะ Deployment จาก Raspberry Pi API |
-| `KV_URL` `KV_REST_API_URL` `KV_REST_API_TOKEN` `KV_REST_API_READ_ONLY_TOKEN` | ทางเลือก | ✅ (`In-memory Cache`) | Local Cache (Redis) cache ข้ามอินสแตนซ์; ถ้าไม่ตั้ง → fallback in-memory อัตโนมัติ |
-| `DISCORD_WEBHOOK_URL` | ทางเลือก | ✅ `api/system/status` | webhook กลาง (ปัจจุบันแนะนำตั้งผ่านแท็บ "ตั้งค่าระบบ" แทน — **ไม่มีใน `.env.local`**) |
-| `NEXT_PUBLIC_APP_URL` | ทางเลือก | ✅ `api/esp32/display` | ใช้สร้าง register URL ใน QR (ปัจจุบัน**ไม่มีใน `.env.local`** — ใช้ค่า default ในโค้ด) |
+| `CRON_SECRET` | ทางเลือก* | ✅ `summary`/`cleanup` | รหัสลับ ป้องกัน Cron endpoint; ถ้าเว้นว่าง Cron จะถูกปฏิเสธ 401 |
+| `VERCEL_TOKEN` `VERCEL_PROJECT_ID` | ทางเลือก | ✅ | ดึงสถานะ Deployment จาก Vercel API บน Dashboard |
+| `DISCORD_WEBHOOK_URL` | ทางเลือก | ✅ `api/system/status` | webhook กลางสำหรับส่งแจ้งเตือนกิจกรรมระบบไปยังแชนเนล Discord |
+| `NEXT_PUBLIC_APP_URL` | ทางเลือก | ✅ `api/esp32/display` | ใช้สร้าง register URL ใน QR (ถ้าเว้นว่างจะหาค่าโฮสต์จาก header คำขอ) |
 
 #### กลุ่ม 6 — MQTT Broker (ระบบเรียลไทม์)
 
@@ -2886,11 +2877,17 @@ T+4100    | resetCache → loop() ปกติ
 | `MQTT_USERNAME` | ✅ | ✅ `lib/mqtt.ts` | ชื่อผู้ใช้ในการยืนยันตัวตนสำหรับสิทธิ์การ Publish/Subscribe |
 | `MQTT_PASSWORD` | ✅ | ✅ `lib/mqtt.ts` | รหัสผ่านในการเข้าใช้งาน MQTT Broker |
 
+#### กลุ่ม 7 — Firebase Cloud Messaging & Admin (ระบบแจ้งเตือนพุช PWA)
+
+| ตัวแปร | จำเป็น | โค้ดอ่าน? | คำอธิบาย |
+|--------|--------|-----------|-----------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` ... `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | ✅ | ✅ `lib/firebase.ts` | คีย์สำหรับเชื่อมต่อระบบ Cloud Messaging ฝั่งเว็บเบราว์เซอร์ เพื่อรอรับ push notification |
+| `FIREBASE_CLIENT_EMAIL` `FIREBASE_PRIVATE_KEY` | ✅ | ✅ `lib/firebase-admin.ts` | คีย์ Service Account เข้าหลังบ้าน Firebase เพื่อกระจายสัญญาณพุช (Push Dispatcher) |
+
 > **กฎเหล็ก**: ใน production ต้องตั้ง `ALLOW_DEV_SEED=false` และ `JWT_SECRET`/`QR_SIGNING_KEY`/`ESP32_API_KEY` ต้องเป็นค่าสุ่ม ≥ 32 ตัวอักษร แยกกันคนละชุด
 >
 > **เรื่อง notification**: token/id ของ Telegram & LINE **ไม่ใช่ env** — ตั้งผ่านแท็บ "ตั้งค่าระบบ" บนเว็บ (เก็บใน `system_settings`)
->
-> **ตัวแปรที่ PostgreSQL (Local) ใส่มาให้แต่โค้ดไม่อ่าน** (`PostgreSQL (Local)_ANON_KEY`, `NEXT_PUBLIC_PostgreSQL (Local)_PUBLISHABLE_KEY`, `PostgreSQL (Local)_JWT_SECRET`, `PostgreSQL (Local)_SECRET_KEY`, `POSTGRES_URL_NON_POOLING`, `POSTGRES_PRISMA_URL`) — เก็บไว้ใน `.env.local` ได้โดยไม่กระทบการทำงาน แต่ลบออกก็ได้
+
 
 ---
 
@@ -4064,59 +4061,6 @@ await fetch('/api/system/settings', {
 ### 47.8 Tab "คู่มือ"
 
 แสดง markdown ที่อธิบายระบบให้ admin ใหม่ — แต่จริง ๆ คู่มือที่คุณกำลังอ่านนี่ละเอียดกว่ามาก
-
-### 47.9 Tab "สถานะเซิร์ฟเวอร์ & DB" (Health Monitor)
-
-หน้าตรวจสอบสุขภาพระบบเรียลไทม์ ใช้ API `/api/system/health` ดึงข้อมูลทุก 30 วินาที
-
-**API Response Structure:**
-```json
-{
-  "status": "healthy | degraded | unhealthy",
-  "components": {
-    "database": { "status": "up|down", "latency_ms": 12, "total_students": 50, "total_logs": 200 },
-    "rate_limiter": { "status": "up|down" },
-    "memory": { "rss_mb": 85, "heap_used_mb": 45, "heap_total_mb": 64, "external_mb": 2 }
-  },
-  "vercel_runtime": { "region": "sin1", "environment": "production", "git_sha": "abc123", "is_vercel": true },
-  "node_runtime": { "version": "v20.x", "platform": "linux", "uptime_seconds": 3600 },
-  "vercel_deployment": { "state": "READY", "url": "...", "created": "...", "git_sha": "..." },
-  "api_probes": [ { "endpoint": "/api/system/health", "status": "up", "latency_ms": 50 } ]
-}
-```
-
-**UI แบ่ง 4 แท็บย่อย:**
-1. ภาพรวม — แสดง Metric cards 6 ใบ (Database, Rate Limiter, Memory, Server Time, Last QR Scan, Environment)
-2. Raspberry Pi — แสดง Runtime info + Deployment status ล่าสุด
-3. API Status — แสดง API endpoint latency พร้อม progress bar
-4. Runtime — แสดง Node.js info + Memory breakdown กราฟ
-
-**กลไกการเขียนโค้ดตรวจสอบสถานะฐานข้อมูลแบบเรียลไทม์ (Database Health Checking Mechanics):**
-ในการประเมินประสิทธิภาพของ PostgreSQL (Local DB)QL ตัวระบบหลังบ้าน Next.js (`my-app/app/api/system/health/route.ts`) จะทำการยิงชุดทดสอบไปที่ฐานข้อมูลหลักโดยตรงเพื่อวิเคราะห์ค่าสถิติ 3 ประการ:
-1. **การตรวจสอบความเร็วการตอบรับ (Ping Latency check):**
-   ใช้ไลบรารี `pg` ยิงคิวรี SQL พื้นฐาน `SELECT 1` พร้อมการจับเวลาด้วยฟังก์ชันประสิทธิภาพสูง `performance.now()` เพื่อหาความเร็ว Latency ในหน่วยมิลลิวินาที (ms) ของ Connection Pool ปัจจุบัน
-2. **การวัดปริมาณและความถูกต้องของข้อมูล (Metric count & Data validation):**
-   ทำการยิงคิวรีนับสถิติจำนวนแถวทั้งหมดในตาราง เช่น `SELECT COUNT(*) FROM students` และ `SELECT COUNT(*) FROM access_logs` เพื่อประเมินความพร้อมใช้งานและวัดปริมาณภาระงานในระบบ
-3. **การประเมินทรัพยากรรันไทม์หลังบ้าน (Node.js Memory Probe):**
-   ใช้ฟังก์ชัน `process.memoryUsage()` เพื่อวิเคราะห์การใช้หน่วยความจำหลักแบ่งเป็น RSS, Heap Used, Heap Total และ External Memory เพื่อใช้เป็นข้อมูลชี้วัดและป้องกันปัญหา Memory Leak ในอนาคต
-
-**สถานะรวมระบบ:**
-- 🟢 healthy: DB ปกติ + latency < 500ms
-- 🟡 degraded: DB ปกติแต่ latency > 500ms หรือ rate limiter ล่ม
-- 🔴 unhealthy: DB ล่ม
-
-**ผลการดำเนินงานจากการเชื่อมโยง API เข้าสู่หน้าแดชบอร์ดความพร้อมใช้งาน (Dashboard Health Monitor Integration Outcomes):**
-จากการนำเส้นทาง API `/api/system/health` มาเชื่อมต่อร่วมกับส่วนต่อประสานผู้ใช้แอดมินแดชบอร์ด แท็บ "สถานะเซิร์ฟเวอร์ & DB" ผลลัพธ์การจัดวางและเรนเดอร์ข้อมูลสุขภาพระบบเชิงลึกเสร็จสิ้นสมบูรณ์อย่างสวยงามดังนี้:
-1. **การเรนเดอร์ระดับความหน่วงของฐานข้อมูล (Database Latency Observability):**
-   * ระบบสามารถแสดงผลตัวเลขนับเวลาการโต้ตอบกับ PostgreSQL (Local DB)QL ได้อย่างแม่นยำในหน่วยมิลลิวินาที (เช่น `12ms` หรือ `15ms`)
-   * โดยแสดงผลคู่กับสัญญาณไฟสถานะกระพริบพลวัต (Glowing Indicator Dot) สื่อสารความปลอดภัยเป็นสีเขียวตระการตาภายใต้สถานะ `healthy` และระบบจะปรับสีไฟแจ้งเตือนเป็นสีเหลืองทันทีหากความหน่วงพุ่งเกิน 500ms หรือปรับเป็นสีแดงพร้อมป้ายแจ้งเตือน "การเชื่อมต่อฐานข้อมูลล้มเหลว" หากไม่สามารถติดต่อ PostgreSQL (Local) ได้
-2. **การดึงและแสดงผลข้อมูลการ Deploy บนระบบคลาวด์ Raspberry Pi (Raspberry Pi Deployment Integration):**
-   * หน้าแผงควบคุมสามารถเชื่อมต่อข้อมูล API หลังบ้านเพื่อดึงรายละเอียด Raspberry Pi Deployment สถานะปัจจุบัน ออกมาเรนเดอร์แสดงบนการ์ดอย่างชัดเจน เช่น เลขรหัส Git Commit SHA ล่าสุด, วันที่ผลิตสร้างโครงสร้างเว็บ (Deployment Time) และภูมิภาคโหนดปลายทาง (เช่น `sin1` สิงคโปร์ Edge) ช่วยให้ผู้ดูแลระบบมั่นใจได้ว่าโค้ดชุดล่าสุดได้ถูกปรับใช้จริงอย่างถูกต้อง
-3. **การแตกข้อมูลเชิงลึกของสภาพแวดล้อมระบบรันไทม์ (Server Runtime & Node.js Metrics):**
-   * แสดงค่าเฉลี่ยสเปคของ Node.js รันไทม์ที่ทำงานอยู่ รวมถึงการวาดกราฟวงกลมและแถบความคืบหน้าแสดงสัดส่วนทรัพยากรหน่วยความจำของโฮสต์ เช่น การใช้ Heap Memory, RSS (Resident Set Size) และค่า Uptime ของเซิร์ฟเวอร์
-   * ข้อมูลเหล่านี้แสดงผลแยกหมวดหมู่และสวยงาม มีความเป็นระเบียบเรียบร้อย รองรับสัญจรอัจฉริยะ (Responsive Layout) อย่างสมบูรณ์แบบ แอดมินสามารถเปิดดูเพื่อทำการวิเคราะห์หาสาเหตุอาการระบบอืดหรือคอขวดของฐานข้อมูลได้อย่างมั่นใจผ่านสมาร์ตโฟนหรือเดสก์ท็อปในทันที
-
-<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p>
 
 ---
 
@@ -9142,19 +9086,16 @@ UPDATE students
 <a id="sec-71-49"></a>
 ## 71.49 กลไกการตรวจวัดสุขภาพระบบและการกู้คืนภัยพิบัติเชิงรุก (Proactive Health Diagnostics & Disaster Recovery Playbook)
 
-> **อัปเดต**: 2026-05-29 — ปรับปรุงแท็บตรวจวัดสถานะระบบและระบบรายงานข้อผิดพลาด พร้อมสร้างกลไก Seeding แบบ Failsafe เพื่อให้ระบบสามารถฟื้นฟูกลไกทำงานได้อย่างรวดเร็วหลังผ่านพ้นภัยพิบัติฐานข้อมูล (Database Outage / Data Corruption)
+> **อัปเดต**: 2026-06-16 — นำแท็บ "สถานะเซิร์ฟเวอร์ & DB" และเส้นทาง `/api/system/health` ออกจากหน้าเว็บเพื่อความกะทัดรัดและลดทราฟฟิก/โอเวอร์เฮดบนเซิร์ฟเวอร์ โดยเปลี่ยนการตรวจวัดสุขภาพไปใช้ชุดทดสอบคอมมานด์ไลน์และกลไก Graceful Degradation ฝั่งเซิร์ฟเวอร์และไคลเอนต์แทน
 
-### 71.49.1 ตารางวิเคราะห์สถานะระบบและเกณฑ์การจำแนกสุขภาพ (Health Probing Matrix)
-ในแท็บ "สถานะเซิร์ฟเวอร์ & DB" แอดมินและวิศวกรโครงข่ายสามารถสังเกตความก้าวหน้าและการทดสอบประสิทธิภาพของเซิร์ฟเวอร์ย่อยผ่านเกณฑ์ชี้วัดหลัก:
+### 71.49.1 กลไกตรวจสถานภาพแบบสคริปต์ (CLI Diagnostics & Health Auditing)
+วิศวกรผู้ดูแลระบบสามารถตรวจสอบความเสถียรและระบบความปลอดภัยผ่านสคริปต์อัตโนมัติที่จัดเตรียมไว้ในโครงการ เช่น:
+1. **Security Audit Suite (`my-app/scripts/security-audit-suite.mjs`):** รันการวิเคราะห์จุดบกพร่อง โจมตีทดลองแบบ Replay attack และประเมิน RLS/SQL injection
+2. **Zero Trust Verification (`my-app/scripts/test-zero-trust-security.mjs`):** ทดสอบการจับคู่คีย์และการยืนยันลายเซ็น HMAC ระหว่างอุปกรณ์และ Next.js API
+3. **Database Health Metrics (CLI queries):** ใช้คิวรี SQL พื้นฐานเพื่อนับรายการประวัติและตรวจสอบความคงอยู่ของ Pool
 
-| หัวข้อทดสอบ | จุดปลายทาง (Endpoints) | วัตถุประสงค์ในการตรวจเช็ค | เกณฑ์ผ่านความปลอดภัย (SLA) |
-|---|---|---|---|
-| **Database Latency** | `/api/system/health` | ตรวจเวลาในการยิง query พื้นฐาน และสถานภาพของ Connection Pooling | $\le 100 \text{ ms}$ (ดีเลิศ)<br>$100 - 300 \text{ ms}$ (ทำงานช้า)<br>$\ge 300 \text{ ms}$ (ฐานข้อมูลมีภาระหนัก) |
-| **API Status Probe** | `/api/system/health?probe=1` | ทดสอบความเร็วในการตอบรับ HTTP Status 200 ของเซิร์ฟเวอร์หลังรันโค้ด Edge Runtime | $\le 200 \text{ ms}$ |
-| **Log Integrity** | Internal DB Check | ตรวจสถานภาพการล้าง Log อัตโนมัติเมื่อครบ 90 วันตาม พ.ร.บ. คอมพิวเตอร์ | ตรวจหาและประเมินแถว log ที่ค้างสะสม |
-
-### 71.49.2 การแจ้งเตือนสถานะเซิร์ฟเวอร์ผิดปกติและกลไก Degradation (Graceful Degradation)
-หากฐานข้อมูล PostgreSQL (Local) เข้าสู่สภาวะล่มชะงักชั่วคราวหรือเน็ตเวิร์กเกิดการดีเลย์สูง ระบบจะทำการสลับการทำงานไปเป็นโหมด **Degraded Operation** โดยมีพฤติกรรมดังนี้:
+### 71.49.2 การกู้คืนสภาวะผิดปกติและกลไก Degradation (Graceful Degradation)
+หากฐานข้อมูล PostgreSQL (Local) เข้าสู่สภาวะล่มชะงักชั่วคราวหรือเน็ตเวิร์กเกิดการดีเลย์สูง ระบบจะทำการสลับการทำงานไปเป็นโหมด **Degraded Operation** โดยมีพฤทีพฤติกรรมดังนี้:
 1. **In-Memory Config Cache Fallback**:
    เมื่อติดต่อฐานข้อมูลล้มเหลวขณะ ESP32 ร้องขอรายละเอียดแสดงผล ระบบจะดึงค่าคอนฟิกเกอเรชันเริ่มต้นจาก `getFallbackSettings()` ในไฟล์ `lib/resilience.ts` แทนการระเบิดข้อผิดพลาด (Server Error) ทำให้หน้าจอ TFT ของบอร์ดหน้าห้องไม่เกิดอาการจอขาวหรือดับลง และยังคงแสดงหน้าสถานะจำกัดได้อย่างราบรื่น
 2. **Offline LocalStorage Queue**:
@@ -9171,7 +9112,7 @@ UPDATE students
 2. **ขั้นตอนรันคำสั่งกู้คืนระบบแบบ Step-by-Step**:
    - ปิดการเชื่อมต่อภายนอกชั่วคราวเพื่อเตรียมพื้นที่ฐานข้อมูล
    - อัปโหลด Environment Variables ไปยังพื้นที่คลาวด์ใหม่ (เช่น `DATABASE_URL` ใหม่ที่ครอบคลุมการต่อผ่าน PgBouncer พอร์ต 6543)
-   - ปลดล็อก bypass ชั่วคราวโดยการเรียกหน้า API `GET /api/system/health?init=true` ซึ่งจะเป็นการยิง DDL Script คอนฟิกระดับความปลอดภัย โครงสร้างตาราง และ Index ทั้งหมด 25 โครงสร้างจากไฟล์ `lib/db.ts` เข้าสู่ PostgreSQL (Local) ทันทีภายในเวลา 2 วินาที
+   - ปลดล็อก bypass ชั่วคราวโดยการเรียกใช้งานหน้าเว็บหรือส่งคำขอ HTTP (เช่น การเรียกเปิดหน้าล็อคอินแอดมิน `/admin/login`) ซึ่งระบบหลังบ้านจะตรวจพบว่ายังไม่มีตาราง และจะสั่งทำงานฟังก์ชัน `initDatabase()` เพื่อยิง DDL Script คอนฟิกระดับความปลอดภัย โครงสร้างตาราง และ Index ทั้งหมด 25 โครงสร้างจากไฟล์ `lib/db.ts` เข้าสู่ PostgreSQL (Local) ทันทีภายในเวลา 2 วินาที
    - การสกัดสร้างบัญชีเจ้าหน้าที่ควบคุมระบบเริ่มต้น (Owner) จะนำคีย์ `INITIAL_ADMIN_USERNAME` และ `INITIAL_ADMIN_PASSWORD` ที่กรอกไว้ปลอดภัยในระบบ มาแฮชด้วยกลไก `bcryptjs` ความยาวเกลือ 10 rounds บันทึกลงไปเป็นผู้ถือกุญแจหลักคนแรกสำหรับล็อกอินเข้ากู้คืนระบบผ่าน UI ต่อไป
 
 *มาตรการป้องกันความปลอดภัยสูงสุด*: เมื่อรันและสแกนฐานข้อมูลเสร็จสิ้นแล้ว วิศวกร**ต้องเปลี่ยนสถานะตัวแปร** `SKIP_DB_INIT=true` และนำ `ALLOW_DEV_SEED` ออกจากคลาวด์โปรดักชันในทันที เพื่อปิดช่องทางและสกัดกั้นการใช้ API ของระบบภายนอกในการแฝงรันสคริปต์สแกนตาราง (Fast Path Database Protection) ซึ่งช่วยลดเวลา Cold Start ของเซิร์ฟเวอร์ในการรับส่ง Request แรกของวันลงอย่างเห็นได้ชัด

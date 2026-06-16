@@ -1406,11 +1406,9 @@
         all<span class="token operator">/</span>page.tsx                   แท็บทำเนียบ <span class="token operator">&amp;</span> ประวัติเข้าออก
         admins<span class="token operator">/</span>page.tsx                แท็บผู้ดูแลระบบ
         settings<span class="token operator">/</span>page.tsx              แท็บตั้งค่า Discord Webhook
-        health<span class="token operator">/</span>page.tsx                แท็บสถานะเซิร์ฟเวอร์ <span class="token operator">&amp;</span> DB
         guide<span class="token operator">/</span>page.tsx                 แท็บคู่มือการใช้งานระบบ
       esp32<span class="token operator">-</span>preview<span class="token operator">/</span>page.tsx           หน้าจำลองจอ ESP32
       api<span class="token operator">/</span>                             API ทั้งหมดของระบบ
-        system<span class="token operator">/</span>health<span class="token operator">/</span>route.ts         Health check <span class="token function">API</span> (DB, Memory, Raspberry Pi, API probes)
     lib<span class="token operator">/</span>
       db.ts                            เชื่อม PostgreSQL และสร้างตาราง
       auth.ts                          JWT และ cookie session ของ Admin
@@ -1809,7 +1807,12 @@ GRANT ALL PRIVILEGES <span class="token keyword">ON</span> DATABASE smartaccess 
 <span class="token comment"># กำหนดขนาด Pool สูงสุด (แนะนำ 15-20 เนื่องจากทำงานแบบ Persistent Server การแชร์ connection ทำได้มีประสิทธิภาพ)</span>
 <span class="token attr-name">POSTGRES_POOL_MAX</span><span class="token operator">=</span><span class="token string">20</span>
 <span class="token comment"># บนระบบโลคอลไม่จำเป็นต้องใส่ CA certificate</span>
-<span class="token attr-name">PostgreSQL (Local)_CA_CERT</span><span class="token operator">=</span><span class="token string"></span>
+<span class="token attr-name">SUPABASE_CA_CERT</span><span class="token operator">=</span><span class="token string"></span>
+
+<span class="token comment"># ── Supabase Client (สำหรับ Edge API Routing / RLS Testing) ──</span>
+<span class="token attr-name">NEXT_PUBLIC_SUPABASE_URL</span><span class="token operator">=</span><span class="token string">&quot;https://your-project-ref.supabase.co&quot;</span>
+<span class="token attr-name">NEXT_PUBLIC_SUPABASE_ANON_KEY</span><span class="token operator">=</span><span class="token string">&quot;your-anon-key&quot;</span>
+<span class="token attr-name">SUPABASE_SERVICE_ROLE_KEY</span><span class="token operator">=</span><span class="token string">&quot;your-service-role-key&quot;</span>
 
 <span class="token comment"># ── ความปลอดภัย &amp; รหัสลับ (บังคับตั้งค่าห้ามใช้ค่า default ในสายผลิต) ──</span>
 <span class="token comment"># รหัสสุ่มลับสำหรับการลงชื่อเข้าใช้ JWT Session (สุ่มใหม่โดยรัน openssl rand -hex 32 ในคอมมานด์ไลน์)</span>
@@ -1818,6 +1821,7 @@ GRANT ALL PRIVILEGES <span class="token keyword">ON</span> DATABASE smartaccess 
 <span class="token attr-name">QR_SIGNING_KEY</span><span class="token operator">=</span><span class="token string">a51d9e23b1c8f4d9a2e6f7c8d9e0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8</span>
 <span class="token comment"># กุญแจ API ความปลอดภัยสูงของระบบ IoT (ต้องตรงกับ api_key ใน config.h ของบอร์ด ESP32)</span>
 <span class="token attr-name">ESP32_API_KEY</span><span class="token operator">=</span><span class="token string">your_super_secret_esp32_api_key</span>
+<span class="token attr-name">ALLOWED_IP_RANGES</span><span class="token operator">=</span><span class="token string">&quot;*&quot;</span>
 
 <span class="token comment"># ── การตั้งค่าเซิร์ฟเวอร์บอร์ดควบคุมประตู ──</span>
 <span class="token comment"># หมายเลข IP ของบอร์ด ESP32 ที่ประตูกายภาพจริง (ใช้กรณีที่เซิร์ฟเวอร์จะสั่งยิงเปิดประตูตรงทาง LAN)</span>
@@ -1839,7 +1843,7 @@ GRANT ALL PRIVILEGES <span class="token keyword">ON</span> DATABASE smartaccess 
 <span class="token comment"># ── การทำงานระบายข้อมูลและระบบเครือข่าย ──</span>
 <span class="token comment"># URL หลักของเซิร์ฟเวอร์ Raspberry Pi (ตัวอย่างเช่น โดเมน DDNS หรือ Public IP ที่ตั้งค่าไว้)</span>
 <span class="token attr-name">NEXT_PUBLIC_APP_URL</span><span class="token operator">=</span><span class="token string">http://smartaccess.duckdns.org:3000</span>
-<span class="token attr-name">DISCORD_WEBHOOK_URL</span><span class="token operator">=</span><span class="token string"></span>
+<span class="token attr-name">DISCORD_WEBHOOK_URL</span><span class="token operator">=</span><span class="token string">https://discord.com/api/webhooks/xxxxxx</span>
 <span class="token attr-name">CRON_SECRET</span><span class="token operator">=</span><span class="token string">my-cron-scheduler-secret-key-123</span>
 </code></pre>
   </div>
@@ -2217,10 +2221,6 @@ sudo certbot --nginx -d smartaccess.duckdns.org
 <tr>
 <td>ตั้งค่าระบบ &amp; Webhook</td>
 <td>ตั้งค่า Discord Webhook ส่วนกลาง 4 หมวดหมู่</td>
-</tr>
-<tr>
-<td>สถานะเซิร์ฟเวอร์ &amp; DB</td>
-<td>ตรวจสอบสุขภาพระบบ, Database latency, Raspberry Pi deployment, API status, Memory</td>
 </tr>
 <tr>
 <td>คู่มือการใช้งานระบบ</td>
@@ -4338,15 +4338,6 @@ Buck 5V GND ----------- ESP32 GND
 <li>ใช้สำหรับเคสนักศึกษาโดน rate-limit (เช่น พยายามใช้ bypass เกิน 3 ครั้ง/นาที)</li>
 <li>เรียก endpoint reset rate-limit ตาม <code>student_id</code> + IP</li>
 </ul>
-<h3>23.7 สถานะเซิร์ฟเวอร์ &amp; DB (Health Monitor)</h3>
-<p>แท็บสถานะเซิร์ฟเวอร์แสดงข้อมูลสุขภาพระบบแบบเรียลไทม์ แบ่งเป็น 4 ส่วนย่อย:</p>
-<ol>
-<li><strong>ภาพรวม (Overview)</strong>: แสดงสถานะฐานข้อมูล (Online/Offline + Latency), Rate Limiter, Memory (RSS/Heap), เวลาเซิร์ฟเวอร์, QR Scan ล่าสุด, สภาพแวดล้อมการทำงาน (Production/Development)</li>
-<li><strong>Vercel</strong>: แสดงข้อมูล Runtime (Region, Git SHA, Git Branch), สถานะ Deployment ล่าสุด (URL, เวลาสร้าง, Git commit), ต้องตั้งค่า Raspberry Pi_TOKEN และ Raspberry Pi_PROJECT_ID</li>
-<li><strong>API Status</strong>: ทดสอบความเร็ว (Latency) ของ API endpoints หลักอัตโนมัติ พร้อม Progress bar แสดงผล</li>
-<li><strong>Runtime</strong>: ข้อมูล Node.js version, Platform, Architecture, Process uptime, Memory breakdown แบบกราฟ</li>
-</ol>
-<p>ข้อมูลจะรีเฟรชอัตโนมัติทุก 30 วินาที ดึงจาก <code>/api/system/health</code></p>
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-24"></a></p>
 <h2>24. หน้าจอ TFT บน ESP32 — เจาะลึก State Machine</h2>
@@ -5504,7 +5495,7 @@ T<span class="token operator">+</span><span class="token number">4100</span>    
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-37"></a></p>
 <h2>37. รายการ Environment Variables ทุกตัว</h2>
 <blockquote>
-<p>ตารางนี้อ้างอิงตามไฟล์ <code>my-app/.env.local</code> จริง คอลัมน์ &quot;โค้ดอ่าน?&quot; ระบุว่า source code มีการอ่านตัวแปรนั้นจริงหรือไม่ (บางตัวที่ PostgreSQL (Local) Integration ใส่มาให้อัตโนมัติ แอปไม่ได้อ่าน — เก็บไว้ได้แต่ไม่จำเป็น)</p>
+<p>ตารางนี้อ้างอิงตามไฟล์ <code>my-app/.env.local</code> จริง ซึ่งแสดงเฉพาะตัวแปรที่มีการเรียกใช้งานจริงใน Source Code เท่านั้น ตัวแปรที่ไม่ได้ใช้ (เช่น คีย์สาธารณะหรือความลับที่ซ้ำซ้อนจากชุดบูรณาการระบบ) ได้ถูกคัดกรองออกเพื่อรักษาความคลีนและความปลอดภัยของระบบ</p>
 </blockquote>
 <h4>กลุ่ม 1 — ฐานข้อมูล (Database Connection)</h4>
 <table>
@@ -5535,16 +5526,10 @@ T<span class="token operator">+</span><span class="token number">4100</span>    
 <td>ขนาด pool สูงสุด (ค่าเริ่มต้น 5) — สำคัญบน serverless</td>
 </tr>
 <tr>
-<td><code>PostgreSQL (Local)_CA_CERT</code></td>
+<td><code>SUPABASE_CA_CERT</code></td>
 <td>ทางเลือก</td>
 <td>✅ <code>lib/db.ts</code></td>
 <td>PEM cert สำหรับ TLS verify (ใส่ <code>\n</code> คั่นบรรทัด)</td>
-</tr>
-<tr>
-<td><code>POSTGRES_URL_NON_POOLING</code> <code>POSTGRES_PRISMA_URL</code></td>
-<td>—</td>
-<td>❌ ไม่อ่าน</td>
-<td>PostgreSQL (Local) Integration ใส่มาให้ — โค้ดปัจจุบันไม่ได้ใช้</td>
 </tr>
 </tbody></table>
 <h4>กลุ่ม 2 — ความปลอดภัย/Secret (บังคับ)</h4>
@@ -5567,7 +5552,7 @@ T<span class="token operator">+</span><span class="token number">4100</span>    
 <td><code>QR_SIGNING_KEY</code></td>
 <td>✅</td>
 <td>✅ <code>lib/qr.ts</code></td>
-<td>sign offline grant ด้วย HMAC; <strong>throw ถ้าไม่ตั้ง</strong> (ไม่ fallback ไป <code>JWT_SECRET</code> แล้ว)</td>
+<td>sign offline grant ด้วย HMAC; <strong>throw ถ้าไม่ตั้ง</strong> (ไม่ fallback ไป <code>JWT_SECRET</code>)</td>
 </tr>
 <tr>
 <td><code>ESP32_API_KEY</code></td>
@@ -5576,25 +5561,25 @@ T<span class="token operator">+</span><span class="token number">4100</span>    
 <td>ต้องตรงกับ <code>api_key</code> ใน <code>config.h</code>; production ห้ามใช้ placeholder</td>
 </tr>
 <tr>
-<td><code>PostgreSQL (Local)_SERVICE_ROLE_KEY</code></td>
+<td><code>SUPABASE_SERVICE_ROLE_KEY</code></td>
 <td>✅*</td>
 <td>✅ <code>api/esp32/display</code></td>
-<td>ใช้ตอนอัปโหลด/ดึงไฟล์ firmware ผ่าน PostgreSQL (Local) Storage</td>
+<td>ใช้สำหรับสิทธิ์ Bypass / API call ในส่วนติดต่อ Supabase Server-side</td>
 </tr>
 <tr>
-<td><code>NEXT_PUBLIC_PostgreSQL (Local)_URL</code></td>
+<td><code>NEXT_PUBLIC_SUPABASE_URL</code></td>
 <td>✅*</td>
 <td>✅ <code>api/esp32/display</code></td>
-<td>project URL ของ PostgreSQL (Local) (ใช้คู่กับ service role)</td>
+<td>project URL ของ Supabase (ใช้คู่กับ service role ใน edge routes)</td>
 </tr>
 <tr>
-<td><code>PostgreSQL (Local)_ANON_KEY</code> <code>NEXT_PUBLIC_PostgreSQL (Local)_PUBLISHABLE_KEY</code> <code>PostgreSQL (Local)_JWT_SECRET</code> <code>PostgreSQL (Local)_SECRET_KEY</code></td>
-<td>—</td>
-<td>❌ ไม่อ่าน</td>
-<td>PostgreSQL (Local) Integration ใส่มาให้ — โค้ดปัจจุบันไม่ได้ใช้ (ใช้ <code>pg</code> ต่อตรง ไม่ผ่าน PostgreSQL (Local) JS)</td>
+<td><code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code></td>
+<td>✅</td>
+<td>✅ <code>lib/supabase-client.ts</code></td>
+<td>ANON key สำหรับ RLS testing บน client-side</td>
 </tr>
 </tbody></table>
-<h4>กลุ่ม 3 — ESP32</h4>
+<h4>กลุ่ม 3 — ESP32 &amp; Controller</h4>
 <table>
 <thead>
 <tr>
@@ -5620,19 +5605,25 @@ T<span class="token operator">+</span><span class="token number">4100</span>    
 <td><code>ESP32_WOKWI_URL</code></td>
 <td>ทางเลือก</td>
 <td>✅</td>
-<td>ค่าเริ่มต้น <code>http://localhost:8180</code> (ไม่มีใน <code>.env.local</code> — ใช้ default)</td>
+<td>ค่าเริ่มต้น <code>http://localhost:8180</code> (ไม่มีใน <code>.env.local</code> — ใช้ default ในโค้ด)</td>
 </tr>
 <tr>
 <td><code>ESP32_IP</code></td>
 <td>⚠️</td>
 <td>✅</td>
-<td>IP บอร์ด — ใช้ <strong>ping ตรวจสถานะ</strong> เท่านั้น (เปิดประตูใช้ Cloud Polling)</td>
+<td>IP บอร์ด — ใช้ <strong>ping ตรวจสถานะ</strong> เท่านั้น (เปิดประตูใช้ Cloud Polling/MQTT)</td>
 </tr>
 <tr>
 <td><code>ESP32_PORT</code></td>
 <td>⚠️</td>
 <td>✅</td>
 <td>port บอร์ด (default 80)</td>
+</tr>
+<tr>
+<td><code>ALLOWED_IP_RANGES</code></td>
+<td>ทางเลือก</td>
+<td>✅ <code>lib/api-security.ts</code></td>
+<td>กำหนด IP whitelist (เช่น <code>192.168.1.*</code> หรือ IP สาธารณะ) ที่ ESP32 จะต่อเข้ามาได้</td>
 </tr>
 </tbody></table>
 <h4>กลุ่ม 4 — Admin Seed / DB Init</h4>
@@ -5661,10 +5652,10 @@ T<span class="token operator">+</span><span class="token number">4100</span>    
 <td><code>SKIP_DB_INIT</code></td>
 <td>ทางเลือก</td>
 <td>✅</td>
-<td><code>true</code> = ข้าม <code>initDatabase()</code> ลด ~25 DDL/cold start — ตั้งหลังรัน DDL §35 ครบ</td>
+<td><code>true</code> = ข้าม <code>initDatabase()</code> ลด ~25 DDL/cold start — ตั้งหลังรัน DDL ครบ</td>
 </tr>
 </tbody></table>
-<h4>กลุ่ม 5 — Ops (Raspberry Pi / KV / Cron / Notification)</h4>
+<h4>กลุ่ม 5 — Ops (Vercel / Cron / Notification)</h4>
 <table>
 <thead>
 <tr>
@@ -5678,31 +5669,25 @@ T<span class="token operator">+</span><span class="token number">4100</span>    
 <td><code>CRON_SECRET</code></td>
 <td>ทางเลือก*</td>
 <td>✅ <code>summary</code>/<code>cleanup</code></td>
-<td>รหัสลับ (≥ 32 chars) ป้องกัน Cron endpoint; ถ้าเว้นว่าง Cron ถูกปฏิเสธ 401 (owner ยังกดเองได้)</td>
+<td>รหัสลับ ป้องกัน Cron endpoint; ถ้าเว้นว่าง Cron จะถูกปฏิเสธ 401</td>
 </tr>
 <tr>
 <td><code>VERCEL_TOKEN</code> <code>VERCEL_PROJECT_ID</code></td>
 <td>ทางเลือก</td>
 <td>✅</td>
-<td>ดึงสถานะ Deployment จาก Raspberry Pi API</td>
-</tr>
-<tr>
-<td><code>KV_URL</code> <code>KV_REST_API_URL</code> <code>KV_REST_API_TOKEN</code> <code>KV_REST_API_READ_ONLY_TOKEN</code></td>
-<td>ทางเลือก</td>
-<td>✅ (<code>In-memory Cache</code>)</td>
-<td>Local Cache (Redis) cache ข้ามอินสแตนซ์; ถ้าไม่ตั้ง → fallback in-memory อัตโนมัติ</td>
+<td>ดึงสถานะ Deployment จาก Vercel API บน Dashboard</td>
 </tr>
 <tr>
 <td><code>DISCORD_WEBHOOK_URL</code></td>
 <td>ทางเลือก</td>
 <td>✅ <code>api/system/status</code></td>
-<td>webhook กลาง (ปัจจุบันแนะนำตั้งผ่านแท็บ &quot;ตั้งค่าระบบ&quot; แทน — <strong>ไม่มีใน <code>.env.local</code></strong>)</td>
+<td>webhook กลางสำหรับส่งแจ้งเตือนกิจกรรมระบบไปยังแชนเนล Discord</td>
 </tr>
 <tr>
 <td><code>NEXT_PUBLIC_APP_URL</code></td>
 <td>ทางเลือก</td>
 <td>✅ <code>api/esp32/display</code></td>
-<td>ใช้สร้าง register URL ใน QR (ปัจจุบัน<strong>ไม่มีใน <code>.env.local</code></strong> — ใช้ค่า default ในโค้ด)</td>
+<td>ใช้สร้าง register URL ใน QR (ถ้าเว้นว่างจะหาค่าโฮสต์จาก header คำขอ)</td>
 </tr>
 </tbody></table>
 <h4>กลุ่ม 6 — MQTT Broker (ระบบเรียลไทม์)</h4>
@@ -5746,10 +5731,32 @@ T<span class="token operator">+</span><span class="token number">4100</span>    
 <td>รหัสผ่านในการเข้าใช้งาน MQTT Broker</td>
 </tr>
 </tbody></table>
+<h4>กลุ่ม 7 — Firebase Cloud Messaging &amp; Admin (ระบบแจ้งเตือนพุช PWA)</h4>
+<table>
+<thead>
+<tr>
+<th>ตัวแปร</th>
+<th>จำเป็น</th>
+<th>โค้ดอ่าน?</th>
+<th>คำอธิบาย</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>NEXT_PUBLIC_FIREBASE_API_KEY</code> ... <code>NEXT_PUBLIC_FIREBASE_VAPID_KEY</code></td>
+<td>✅</td>
+<td>✅ <code>lib/firebase.ts</code></td>
+<td>คีย์สำหรับเชื่อมต่อระบบ Cloud Messaging ฝั่งเว็บเบราว์เซอร์ เพื่อรอรับ push notification</td>
+</tr>
+<tr>
+<td><code>FIREBASE_CLIENT_EMAIL</code> <code>FIREBASE_PRIVATE_KEY</code></td>
+<td>✅</td>
+<td>✅ <code>lib/firebase-admin.ts</code></td>
+<td>คีย์ Service Account เข้าหลังบ้าน Firebase เพื่อกระจายสัญญาณพุช (Push Dispatcher)</td>
+</tr>
+</tbody></table>
 <blockquote>
 <p><strong>กฎเหล็ก</strong>: ใน production ต้องตั้ง <code>ALLOW_DEV_SEED=false</code> และ <code>JWT_SECRET</code>/<code>QR_SIGNING_KEY</code>/<code>ESP32_API_KEY</code> ต้องเป็นค่าสุ่ม ≥ 32 ตัวอักษร แยกกันคนละชุด</p>
 <p><strong>เรื่อง notification</strong>: token/id ของ Telegram &amp; LINE <strong>ไม่ใช่ env</strong> — ตั้งผ่านแท็บ &quot;ตั้งค่าระบบ&quot; บนเว็บ (เก็บใน <code>system_settings</code>)</p>
-<p><strong>ตัวแปรที่ PostgreSQL (Local) ใส่มาให้แต่โค้ดไม่อ่าน</strong> (<code>PostgreSQL (Local)_ANON_KEY</code>, <code>NEXT_PUBLIC_PostgreSQL (Local)_PUBLISHABLE_KEY</code>, <code>PostgreSQL (Local)_JWT_SECRET</code>, <code>PostgreSQL (Local)_SECRET_KEY</code>, <code>POSTGRES_URL_NON_POOLING</code>, <code>POSTGRES_PRISMA_URL</code>) — เก็บไว้ใน <code>.env.local</code> ได้โดยไม่กระทบการทำงาน แต่ลบออกก็ได้</p>
 </blockquote>
 <hr>
 <p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><p><a id="sec-38"></a></p>
@@ -7694,73 +7701,7 @@ PostgreSQL (Local DB)QL (Singapore, free tier):
   </div>
 <h3>47.8 Tab &quot;คู่มือ&quot;</h3>
 <p>แสดง markdown ที่อธิบายระบบให้ admin ใหม่ — แต่จริง ๆ คู่มือที่คุณกำลังอ่านนี่ละเอียดกว่ามาก</p>
-<h3>47.9 Tab &quot;สถานะเซิร์ฟเวอร์ &amp; DB&quot; (Health Monitor)</h3>
-<p>หน้าตรวจสอบสุขภาพระบบเรียลไทม์ ใช้ API <code>/api/system/health</code> ดึงข้อมูลทุก 30 วินาที</p>
-<p><strong>API Response Structure:</strong></p>
-<div class="code-window">
-    <div class="code-header">
-      <div class="code-dots">
-        <span class="dot red"></span>
-        <span class="dot yellow"></span>
-        <span class="dot green"></span>
-      </div>
-      <div class="code-title">package.json</div>
-      <div class="code-actions">
-        <button class="code-save-btn" onclick="window.saveCodeAsPng(this.closest('.code-window'), 'package.json')">🖼️ เซฟรูป</button>
-        <div class="code-lang-badge">JSON</div>
-      </div>
-    </div>
-    <pre class="line-numbers"><code class="language-json">{
-  <span class="token attr-name">&quot;status&quot;:</span> <span class="token string">&quot;healthy | degraded | unhealthy&quot;</span>,
-  <span class="token attr-name">&quot;components&quot;:</span> {
-    <span class="token attr-name">&quot;database&quot;:</span> { <span class="token attr-name">&quot;status&quot;:</span> <span class="token string">&quot;up|down&quot;</span>, <span class="token attr-name">&quot;latency_ms&quot;:</span> <span class="token number">12</span>, <span class="token attr-name">&quot;total_students&quot;:</span> <span class="token number">50</span>, <span class="token attr-name">&quot;total_logs&quot;:</span> <span class="token number">200</span> },
-    <span class="token attr-name">&quot;rate_limiter&quot;:</span> { <span class="token attr-name">&quot;status&quot;:</span> <span class="token string">&quot;up|down&quot;</span> },
-    <span class="token attr-name">&quot;memory&quot;:</span> { <span class="token attr-name">&quot;rss_mb&quot;:</span> <span class="token number">85</span>, <span class="token attr-name">&quot;heap_used_mb&quot;:</span> <span class="token number">45</span>, <span class="token attr-name">&quot;heap_total_mb&quot;:</span> <span class="token number">64</span>, <span class="token attr-name">&quot;external_mb&quot;:</span> <span class="token number">2</span> }
-  },
-  <span class="token attr-name">&quot;vercel_runtime&quot;:</span> { <span class="token attr-name">&quot;region&quot;:</span> <span class="token string">&quot;sin1&quot;</span>, <span class="token attr-name">&quot;environment&quot;:</span> <span class="token string">&quot;production&quot;</span>, <span class="token attr-name">&quot;git_sha&quot;:</span> <span class="token string">&quot;abc123&quot;</span>, <span class="token attr-name">&quot;is_vercel&quot;:</span> <span class="token boolean">true</span> },
-  <span class="token attr-name">&quot;node_runtime&quot;:</span> { <span class="token attr-name">&quot;version&quot;:</span> <span class="token string">&quot;v20.x&quot;</span>, <span class="token attr-name">&quot;platform&quot;:</span> <span class="token string">&quot;linux&quot;</span>, <span class="token attr-name">&quot;uptime_seconds&quot;:</span> <span class="token number">3600</span> },
-  <span class="token attr-name">&quot;vercel_deployment&quot;:</span> { <span class="token attr-name">&quot;state&quot;:</span> <span class="token string">&quot;READY&quot;</span>, <span class="token attr-name">&quot;url&quot;:</span> <span class="token string">&quot;...&quot;</span>, <span class="token attr-name">&quot;created&quot;:</span> <span class="token string">&quot;...&quot;</span>, <span class="token attr-name">&quot;git_sha&quot;:</span> <span class="token string">&quot;...&quot;</span> },
-  <span class="token attr-name">&quot;api_probes&quot;:</span> [ { <span class="token attr-name">&quot;endpoint&quot;:</span> <span class="token string">&quot;/api/system/health&quot;</span>, <span class="token attr-name">&quot;status&quot;:</span> <span class="token string">&quot;up&quot;</span>, <span class="token attr-name">&quot;latency_ms&quot;:</span> <span class="token number">50</span> } ]
-}
-</code></pre>
-  </div>
-<p><strong>UI แบ่ง 4 แท็บย่อย:</strong></p>
-<ol>
-<li>ภาพรวม — แสดง Metric cards 6 ใบ (Database, Rate Limiter, Memory, Server Time, Last QR Scan, Environment)</li>
-<li>Raspberry Pi — แสดง Runtime info + Deployment status ล่าสุด</li>
-<li>API Status — แสดง API endpoint latency พร้อม progress bar</li>
-<li>Runtime — แสดง Node.js info + Memory breakdown กราฟ</li>
-</ol>
-<p><strong>กลไกการเขียนโค้ดตรวจสอบสถานะฐานข้อมูลแบบเรียลไทม์ (Database Health Checking Mechanics):</strong><br>ในการประเมินประสิทธิภาพของ PostgreSQL (Local DB)QL ตัวระบบหลังบ้าน Next.js (<code>my-app/app/api/system/health/route.ts</code>) จะทำการยิงชุดทดสอบไปที่ฐานข้อมูลหลักโดยตรงเพื่อวิเคราะห์ค่าสถิติ 3 ประการ:</p>
-<ol>
-<li><strong>การตรวจสอบความเร็วการตอบรับ (Ping Latency check):</strong><br>ใช้ไลบรารี <code>pg</code> ยิงคิวรี SQL พื้นฐาน <code>SELECT 1</code> พร้อมการจับเวลาด้วยฟังก์ชันประสิทธิภาพสูง <code>performance.now()</code> เพื่อหาความเร็ว Latency ในหน่วยมิลลิวินาที (ms) ของ Connection Pool ปัจจุบัน</li>
-<li><strong>การวัดปริมาณและความถูกต้องของข้อมูล (Metric count &amp; Data validation):</strong><br>ทำการยิงคิวรีนับสถิติจำนวนแถวทั้งหมดในตาราง เช่น <code>SELECT COUNT(*) FROM students</code> และ <code>SELECT COUNT(*) FROM access_logs</code> เพื่อประเมินความพร้อมใช้งานและวัดปริมาณภาระงานในระบบ</li>
-<li><strong>การประเมินทรัพยากรรันไทม์หลังบ้าน (Node.js Memory Probe):</strong><br>ใช้ฟังก์ชัน <code>process.memoryUsage()</code> เพื่อวิเคราะห์การใช้หน่วยความจำหลักแบ่งเป็น RSS, Heap Used, Heap Total และ External Memory เพื่อใช้เป็นข้อมูลชี้วัดและป้องกันปัญหา Memory Leak ในอนาคต</li>
-</ol>
-<p><strong>สถานะรวมระบบ:</strong></p>
-<ul>
-<li>🟢 healthy: DB ปกติ + latency &lt; 500ms</li>
-<li>🟡 degraded: DB ปกติแต่ latency &gt; 500ms หรือ rate limiter ล่ม</li>
-<li>🔴 unhealthy: DB ล่ม</li>
-</ul>
-<p><strong>ผลการดำเนินงานจากการเชื่อมโยง API เข้าสู่หน้าแดชบอร์ดความพร้อมใช้งาน (Dashboard Health Monitor Integration Outcomes):</strong><br>จากการนำเส้นทาง API <code>/api/system/health</code> มาเชื่อมต่อร่วมกับส่วนต่อประสานผู้ใช้แอดมินแดชบอร์ด แท็บ &quot;สถานะเซิร์ฟเวอร์ &amp; DB&quot; ผลลัพธ์การจัดวางและเรนเดอร์ข้อมูลสุขภาพระบบเชิงลึกเสร็จสิ้นสมบูรณ์อย่างสวยงามดังนี้:</p>
-<ol>
-<li><strong>การเรนเดอร์ระดับความหน่วงของฐานข้อมูล (Database Latency Observability):</strong><ul>
-<li>ระบบสามารถแสดงผลตัวเลขนับเวลาการโต้ตอบกับ PostgreSQL (Local DB)QL ได้อย่างแม่นยำในหน่วยมิลลิวินาที (เช่น <code>12ms</code> หรือ <code>15ms</code>)</li>
-<li>โดยแสดงผลคู่กับสัญญาณไฟสถานะกระพริบพลวัต (Glowing Indicator Dot) สื่อสารความปลอดภัยเป็นสีเขียวตระการตาภายใต้สถานะ <code>healthy</code> และระบบจะปรับสีไฟแจ้งเตือนเป็นสีเหลืองทันทีหากความหน่วงพุ่งเกิน 500ms หรือปรับเป็นสีแดงพร้อมป้ายแจ้งเตือน &quot;การเชื่อมต่อฐานข้อมูลล้มเหลว&quot; หากไม่สามารถติดต่อ PostgreSQL (Local) ได้</li>
-</ul>
-</li>
-<li><strong>การดึงและแสดงผลข้อมูลการ Deploy บนระบบคลาวด์ Raspberry Pi (Raspberry Pi Deployment Integration):</strong><ul>
-<li>หน้าแผงควบคุมสามารถเชื่อมต่อข้อมูล API หลังบ้านเพื่อดึงรายละเอียด Raspberry Pi Deployment สถานะปัจจุบัน ออกมาเรนเดอร์แสดงบนการ์ดอย่างชัดเจน เช่น เลขรหัส Git Commit SHA ล่าสุด, วันที่ผลิตสร้างโครงสร้างเว็บ (Deployment Time) และภูมิภาคโหนดปลายทาง (เช่น <code>sin1</code> สิงคโปร์ Edge) ช่วยให้ผู้ดูแลระบบมั่นใจได้ว่าโค้ดชุดล่าสุดได้ถูกปรับใช้จริงอย่างถูกต้อง</li>
-</ul>
-</li>
-<li><strong>การแตกข้อมูลเชิงลึกของสภาพแวดล้อมระบบรันไทม์ (Server Runtime &amp; Node.js Metrics):</strong><ul>
-<li>แสดงค่าเฉลี่ยสเปคของ Node.js รันไทม์ที่ทำงานอยู่ รวมถึงการวาดกราฟวงกลมและแถบความคืบหน้าแสดงสัดส่วนทรัพยากรหน่วยความจำของโฮสต์ เช่น การใช้ Heap Memory, RSS (Resident Set Size) และค่า Uptime ของเซิร์ฟเวอร์</li>
-<li>ข้อมูลเหล่านี้แสดงผลแยกหมวดหมู่และสวยงาม มีความเป็นระเบียบเรียบร้อย รองรับสัญจรอัจฉริยะ (Responsive Layout) อย่างสมบูรณ์แบบ แอดมินสามารถเปิดดูเพื่อทำการวิเคราะห์หาสาเหตุอาการระบบอืดหรือคอขวดของฐานข้อมูลได้อย่างมั่นใจผ่านสมาร์ตโฟนหรือเดสก์ท็อปในทันที</li>
-</ul>
-</li>
-</ol>
-<p align="right"><a href="#toc">⬆ กลับไปที่หัวข้อสำหรับนำไปจัดทำเล่มโครงงาน</a></p><hr>
+<hr>
 <p><a id="sec-48"></a></p>
 <h2>48. React Hydration &amp; SSR Lifecycle</h2>
 <h3>48.1 Next.js App Router Rendering Pipeline</h3>
@@ -16147,40 +16088,17 @@ String payload <span class="token operator">=</span> timestamp <span class="toke
 <p><a id="sec-71-49"></a></p>
 <h2>71.49 กลไกการตรวจวัดสุขภาพระบบและการกู้คืนภัยพิบัติเชิงรุก (Proactive Health Diagnostics &amp; Disaster Recovery Playbook)</h2>
 <blockquote>
-<p><strong>อัปเดต</strong>: 2026-05-29 — ปรับปรุงแท็บตรวจวัดสถานะระบบและระบบรายงานข้อผิดพลาด พร้อมสร้างกลไก Seeding แบบ Failsafe เพื่อให้ระบบสามารถฟื้นฟูกลไกทำงานได้อย่างรวดเร็วหลังผ่านพ้นภัยพิบัติฐานข้อมูล (Database Outage / Data Corruption)</p>
+<p><strong>อัปเดต</strong>: 2026-06-16 — นำแท็บ &quot;สถานะเซิร์ฟเวอร์ &amp; DB&quot; และเส้นทาง <code>/api/system/health</code> ออกจากหน้าเว็บเพื่อความกะทัดรัดและลดทราฟฟิก/โอเวอร์เฮดบนเซิร์ฟเวอร์ โดยเปลี่ยนการตรวจวัดสุขภาพไปใช้ชุดทดสอบคอมมานด์ไลน์และกลไก Graceful Degradation ฝั่งเซิร์ฟเวอร์และไคลเอนต์แทน</p>
 </blockquote>
-<h3>71.49.1 ตารางวิเคราะห์สถานะระบบและเกณฑ์การจำแนกสุขภาพ (Health Probing Matrix)</h3>
-<p>ในแท็บ &quot;สถานะเซิร์ฟเวอร์ &amp; DB&quot; แอดมินและวิศวกรโครงข่ายสามารถสังเกตความก้าวหน้าและการทดสอบประสิทธิภาพของเซิร์ฟเวอร์ย่อยผ่านเกณฑ์ชี้วัดหลัก:</p>
-<table>
-<thead>
-<tr>
-<th>หัวข้อทดสอบ</th>
-<th>จุดปลายทาง (Endpoints)</th>
-<th>วัตถุประสงค์ในการตรวจเช็ค</th>
-<th>เกณฑ์ผ่านความปลอดภัย (SLA)</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><strong>Database Latency</strong></td>
-<td><code>/api/system/health</code></td>
-<td>ตรวจเวลาในการยิง query พื้นฐาน และสถานภาพของ Connection Pooling</td>
-<td>$\le 100 \text{ ms}$ (ดีเลิศ)<br>$100 - 300 \text{ ms}$ (ทำงานช้า)<br>$\ge 300 \text{ ms}$ (ฐานข้อมูลมีภาระหนัก)</td>
-</tr>
-<tr>
-<td><strong>API Status Probe</strong></td>
-<td><code>/api/system/health?probe=1</code></td>
-<td>ทดสอบความเร็วในการตอบรับ HTTP Status 200 ของเซิร์ฟเวอร์หลังรันโค้ด Edge Runtime</td>
-<td>$\le 200 \text{ ms}$</td>
-</tr>
-<tr>
-<td><strong>Log Integrity</strong></td>
-<td>Internal DB Check</td>
-<td>ตรวจสถานภาพการล้าง Log อัตโนมัติเมื่อครบ 90 วันตาม พ.ร.บ. คอมพิวเตอร์</td>
-<td>ตรวจหาและประเมินแถว log ที่ค้างสะสม</td>
-</tr>
-</tbody></table>
-<h3>71.49.2 การแจ้งเตือนสถานะเซิร์ฟเวอร์ผิดปกติและกลไก Degradation (Graceful Degradation)</h3>
-<p>หากฐานข้อมูล PostgreSQL (Local) เข้าสู่สภาวะล่มชะงักชั่วคราวหรือเน็ตเวิร์กเกิดการดีเลย์สูง ระบบจะทำการสลับการทำงานไปเป็นโหมด <strong>Degraded Operation</strong> โดยมีพฤติกรรมดังนี้:</p>
+<h3>71.49.1 กลไกตรวจสถานภาพแบบสคริปต์ (CLI Diagnostics &amp; Health Auditing)</h3>
+<p>วิศวกรผู้ดูแลระบบสามารถตรวจสอบความเสถียรและระบบความปลอดภัยผ่านสคริปต์อัตโนมัติที่จัดเตรียมไว้ในโครงการ เช่น:</p>
+<ol>
+<li><strong>Security Audit Suite (<code>my-app/scripts/security-audit-suite.mjs</code>):</strong> รันการวิเคราะห์จุดบกพร่อง โจมตีทดลองแบบ Replay attack และประเมิน RLS/SQL injection</li>
+<li><strong>Zero Trust Verification (<code>my-app/scripts/test-zero-trust-security.mjs</code>):</strong> ทดสอบการจับคู่คีย์และการยืนยันลายเซ็น HMAC ระหว่างอุปกรณ์และ Next.js API</li>
+<li><strong>Database Health Metrics (CLI queries):</strong> ใช้คิวรี SQL พื้นฐานเพื่อนับรายการประวัติและตรวจสอบความคงอยู่ของ Pool</li>
+</ol>
+<h3>71.49.2 การกู้คืนสภาวะผิดปกติและกลไก Degradation (Graceful Degradation)</h3>
+<p>หากฐานข้อมูล PostgreSQL (Local) เข้าสู่สภาวะล่มชะงักชั่วคราวหรือเน็ตเวิร์กเกิดการดีเลย์สูง ระบบจะทำการสลับการทำงานไปเป็นโหมด <strong>Degraded Operation</strong> โดยมีพฤทีพฤติกรรมดังนี้:</p>
 <ol>
 <li><strong>In-Memory Config Cache Fallback</strong>:<br>เมื่อติดต่อฐานข้อมูลล้มเหลวขณะ ESP32 ร้องขอรายละเอียดแสดงผล ระบบจะดึงค่าคอนฟิกเกอเรชันเริ่มต้นจาก <code>getFallbackSettings()</code> ในไฟล์ <code>lib/resilience.ts</code> แทนการระเบิดข้อผิดพลาด (Server Error) ทำให้หน้าจอ TFT ของบอร์ดหน้าห้องไม่เกิดอาการจอขาวหรือดับลง และยังคงแสดงหน้าสถานะจำกัดได้อย่างราบรื่น</li>
 <li><strong>Offline LocalStorage Queue</strong>:<br>ฝั่งสมาร์ทโฟนของนักศึกษา หากยิงส่งฟอร์มขอเปิดประตูแล้วคลาวด์ปิดล็อกไม่ตอบสนอง โค้ดฝั่ง Client จะจัดเก็บคำขอดังกล่าวลงใน queue ท้องถิ่น <code>localStorage</code> รอจังหวะสัญญานกลับมาเพื่อลองยิงประมวลผลใหม่อีกรอบโดยที่ผู้ใช้งานไม่ต้องพิมพ์รายละเอียดใหม่</li>
@@ -16193,7 +16111,7 @@ String payload <span class="token operator">=</span> timestamp <span class="toke
 <li><strong>ขั้นตอนรันคำสั่งกู้คืนระบบแบบ Step-by-Step</strong>:<ul>
 <li>ปิดการเชื่อมต่อภายนอกชั่วคราวเพื่อเตรียมพื้นที่ฐานข้อมูล</li>
 <li>อัปโหลด Environment Variables ไปยังพื้นที่คลาวด์ใหม่ (เช่น <code>DATABASE_URL</code> ใหม่ที่ครอบคลุมการต่อผ่าน PgBouncer พอร์ต 6543)</li>
-<li>ปลดล็อก bypass ชั่วคราวโดยการเรียกหน้า API <code>GET /api/system/health?init=true</code> ซึ่งจะเป็นการยิง DDL Script คอนฟิกระดับความปลอดภัย โครงสร้างตาราง และ Index ทั้งหมด 25 โครงสร้างจากไฟล์ <code>lib/db.ts</code> เข้าสู่ PostgreSQL (Local) ทันทีภายในเวลา 2 วินาที</li>
+<li>ปลดล็อก bypass ชั่วคราวโดยการเรียกใช้งานหน้าเว็บหรือส่งคำขอ HTTP (เช่น การเรียกเปิดหน้าล็อคอินแอดมิน <code>/admin/login</code>) ซึ่งระบบหลังบ้านจะตรวจพบว่ายังไม่มีตาราง และจะสั่งทำงานฟังก์ชัน <code>initDatabase()</code> เพื่อยิง DDL Script คอนฟิกระดับความปลอดภัย โครงสร้างตาราง และ Index ทั้งหมด 25 โครงสร้างจากไฟล์ <code>lib/db.ts</code> เข้าสู่ PostgreSQL (Local) ทันทีภายในเวลา 2 วินาที</li>
 <li>การสกัดสร้างบัญชีเจ้าหน้าที่ควบคุมระบบเริ่มต้น (Owner) จะนำคีย์ <code>INITIAL_ADMIN_USERNAME</code> และ <code>INITIAL_ADMIN_PASSWORD</code> ที่กรอกไว้ปลอดภัยในระบบ มาแฮชด้วยกลไก <code>bcryptjs</code> ความยาวเกลือ 10 rounds บันทึกลงไปเป็นผู้ถือกุญแจหลักคนแรกสำหรับล็อกอินเข้ากู้คืนระบบผ่าน UI ต่อไป</li>
 </ul>
 </li>
