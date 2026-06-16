@@ -215,9 +215,9 @@ export default function SettingsPage() {
 
   return (
     <div className="animate-fade-in w-full" style={{ display: "block", maxWidth: 780, width: "100%", overflowX: "hidden" }}>
-      <div className="premium-card w-full" style={{ padding: 0, overflow: "hidden", maxWidth: "100%" }}>
+      <div className="glass-container w-full" style={{ padding: 0, overflow: "hidden", maxWidth: "100%" }}>
         {/* Header แถบสีแบรนด์ */}
-        <div className="notif-pad-lg" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(219,39,119,0.05))", borderBottom: "1px solid var(--border)" }}>
+        <div className="notif-pad-lg" style={{ background: "rgba(255, 255, 255, 0.03)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--border)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div>
               <h3 style={{ fontSize: 18, fontWeight: 900, color: "var(--text-primary)", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -227,7 +227,7 @@ export default function SettingsPage() {
                 ส่งข้อความเดียวกันไปยังทุกช่องที่เปิดไว้พร้อมกัน — ตั้ง override รายห้องได้ที่แท็บ &quot;ห้องเรียน &amp; ESP32&quot;
               </p>
             </div>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: configuredCount > 0 ? "rgba(16,185,129,0.12)" : "rgba(148,163,184,0.15)", border: `1px solid ${configuredCount > 0 ? "rgba(16,185,129,0.35)" : "var(--border)"}`, color: configuredCount > 0 ? "#059669" : "var(--text-secondary)", fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: configuredCount > 0 ? "rgba(16,185,129,0.12)" : "rgba(148,163,184,0.15)", border: `1px solid ${configuredCount > 0 ? "rgba(16,185,129,0.35)" : "var(--border)"}`, color: configuredCount > 0 ? "#10B981" : "var(--text-secondary)", fontSize: 12, fontWeight: 800, whiteSpace: "nowrap" }}>
               {configuredCount > 0 ? <CheckCircle2 size={13} /> : <Circle size={13} />} เปิดใช้ {configuredCount}/4 ช่องทาง
             </div>
           </div>
@@ -245,23 +245,11 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setProvider(p)}
                   aria-pressed={sel}
+                  className={`glass-tab-btn ${sel ? "active" : ""}`}
                   style={{
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 5,
-                    padding: "10px 6px",
-                    borderRadius: 12,
-                    fontSize: 12.5,
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    transition: "all 0.18s",
-                    background: sel ? PROVIDERS[p].color : "var(--bg-primary)",
-                    color: sel ? "#fff" : "var(--text-secondary)",
-                    border: `1.5px solid ${sel ? PROVIDERS[p].color : "var(--border)"}`,
-                    boxShadow: sel ? `0 6px 16px ${PROVIDERS[p].tint}` : "none",
-                  }}
+                    "--provider-color": PROVIDERS[p].color,
+                    "--provider-tint": PROVIDERS[p].tint,
+                  } as React.CSSProperties}
                 >
                   <span style={{ display: "inline-flex", flexShrink: 0 }}>{PROVIDERS[p].icon}</span>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{PROVIDERS[p].name}</span>
@@ -279,11 +267,11 @@ export default function SettingsPage() {
           </div>
 
           {/* การ์ดของช่องที่เลือก */}
-          <div style={{ borderRadius: 14, border: `1px solid ${active.color}33`, overflow: "hidden" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: active.tint, borderBottom: `1px solid ${active.color}22` }}>
-              <span style={{ fontSize: 18 }}>{active.icon}</span>
-              <span style={{ fontSize: 14, fontWeight: 900, color: active.color }}>{active.name}</span>
-              <span style={{ marginLeft: "auto", fontSize: 11.5, fontWeight: 700, color: isConfigured(provider) ? "#059669" : "var(--text-muted)" }}>
+          <div className="glass-subcard">
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 18px", background: "rgba(255,255,255,0.02)", borderBottom: `1px solid ${active.color}18` }}>
+              <span style={{ fontSize: 18, color: active.color, display: "inline-flex" }}>{active.icon}</span>
+              <span style={{ fontSize: 14.5, fontWeight: 900, color: active.color }}>{active.name}</span>
+              <span style={{ marginLeft: "auto", fontSize: 11.5, fontWeight: 800, color: isConfigured(provider) ? "#10B981" : "var(--text-muted)" }}>
                 {isConfigured(provider) ? "● พร้อมใช้งาน" : "○ ยังไม่เปิดใช้งาน"}
               </span>
             </div>
@@ -305,7 +293,7 @@ export default function SettingsPage() {
                           {deviceToken ? `Token: ${deviceToken.substring(0, 20)}...` : "คลิกปุ่มกระดิ่งบริเวณมุมขวาของหน้าต่างเพื่อเปิดสิทธิ์รับแจ้งเตือนพุช"}
                         </span>
                       </div>
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 8, background: pwaActive ? "rgba(16, 185, 129, 0.1)" : "rgba(220, 38, 38, 0.1)", border: `1px solid ${pwaActive ? "#10B981" : "#EF4444"}`, color: pwaActive ? "#059669" : "#DC2626", fontSize: 11.5, fontWeight: 700 }}>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 8, background: pwaActive ? "rgba(16, 185, 129, 0.1)" : "rgba(220, 38, 38, 0.1)", border: `1px solid ${pwaActive ? "#10B981" : "#EF4444"}`, color: pwaActive ? "#10B981" : "#DC2626", fontSize: 11.5, fontWeight: 700 }}>
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: pwaActive ? "#10B981" : "#EF4444" }} />
                         {pwaActive ? "เปิดใช้งานพุชแล้ว" : "ยังไม่ได้เปิดสิทธิ์เครื่องนี้"}
                       </div>
@@ -317,8 +305,21 @@ export default function SettingsPage() {
                           type="button"
                           onClick={handleSendTestPush}
                           disabled={testPushLoading}
-                          className="btn-primary"
-                          style={{ padding: "8px 16px", borderRadius: 10, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", border: "none", color: "#FFFFFF", fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)" }}
+                          className="glass-btn-save"
+                          style={{
+                            padding: "10px 18px",
+                            borderRadius: 10,
+                            fontSize: 12.5,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                            border: "none",
+                            color: "#FFFFFF",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            boxShadow: "0 4px 12px rgba(16, 185, 129, 0.2)"
+                          }}
                         >
                           {testPushLoading ? "กำลังส่งข้อความพุช..." : <><Bell size={13} /> ทดสอบส่งการแจ้งเตือนพุชเข้าอุปกรณ์นี้</>}
                         </button>
@@ -335,10 +336,15 @@ export default function SettingsPage() {
                   <div>
                     <label style={labelStyle}>1. แจ้งเตือนแอดมินเมื่อมีนักศึกษาลงทะเบียนใหม่</label>
                     <select
-                      className="smartaccess-input"
+                      className="glass-input"
                       value={raw("fcm_notify_register") === "0" ? "0" : "1"}
                       onChange={e => setRaw("fcm_notify_register", e.target.value)}
-                      style={{ padding: "10px 14px", fontSize: 12.5 }}
+                      style={{
+                        "--provider-color": active.color,
+                        "--provider-tint": active.tint,
+                        padding: "10px 14px",
+                        fontSize: "12.5px"
+                      } as React.CSSProperties}
                     >
                       <option value="1">🔔 เปิดใช้งานแจ้งเตือนพุช (Enabled)</option>
                       <option value="0">🔕 ปิดใช้งานแจ้งเตือนพุช (Disabled)</option>
@@ -349,10 +355,15 @@ export default function SettingsPage() {
                   <div>
                     <label style={labelStyle}>2. แจ้งเตือนเมื่อมีการปลดล็อกประตูสำเร็จ (Door Open)</label>
                     <select
-                      className="smartaccess-input"
+                      className="glass-input"
                       value={raw("fcm_notify_door_open") === "0" ? "0" : "1"}
                       onChange={e => setRaw("fcm_notify_door_open", e.target.value)}
-                      style={{ padding: "10px 14px", fontSize: 12.5 }}
+                      style={{
+                        "--provider-color": active.color,
+                        "--provider-tint": active.tint,
+                        padding: "10px 14px",
+                        fontSize: "12.5px"
+                      } as React.CSSProperties}
                     >
                       <option value="1">🔔 เปิดใช้งานแจ้งเตือนพุช (Enabled)</option>
                       <option value="0">🔕 ปิดใช้งานแจ้งเตือนพุช (Disabled)</option>
@@ -363,10 +374,15 @@ export default function SettingsPage() {
                   <div>
                     <label style={labelStyle}>3. แจ้งเตือนเมื่อสถานะคำขอลงทะเบียนของนักศึกษาถูกอนุมัติหรือปฏิเสธ</label>
                     <select
-                      className="smartaccess-input"
+                      className="glass-input"
                       value={raw("fcm_notify_status_change") === "0" ? "0" : "1"}
                       onChange={e => setRaw("fcm_notify_status_change", e.target.value)}
-                      style={{ padding: "10px 14px", fontSize: 12.5 }}
+                      style={{
+                        "--provider-color": active.color,
+                        "--provider-tint": active.tint,
+                        padding: "10px 14px",
+                        fontSize: "12.5px"
+                      } as React.CSSProperties}
                     >
                       <option value="1">🔔 เปิดใช้งานแจ้งเตือนพุช (Enabled)</option>
                       <option value="0">🔕 ปิดใช้งานแจ้งเตือนพุช (Disabled)</option>
@@ -377,10 +393,15 @@ export default function SettingsPage() {
                   <div>
                     <label style={labelStyle}>4. แจ้งเตือนภัยคุกคามและความปลอดภัยระดับวิกฤต (Security Alerts)</label>
                     <select
-                      className="smartaccess-input"
+                      className="glass-input"
                       value={raw("fcm_notify_security_alert") === "0" ? "0" : "1"}
                       onChange={e => setRaw("fcm_notify_security_alert", e.target.value)}
-                      style={{ padding: "10px 14px", fontSize: 12.5 }}
+                      style={{
+                        "--provider-color": active.color,
+                        "--provider-tint": active.tint,
+                        padding: "10px 14px",
+                        fontSize: "12.5px"
+                      } as React.CSSProperties}
                     >
                       <option value="1">🔔 เปิดใช้งานแจ้งเตือนพุช (Enabled)</option>
                       <option value="0">🔕 ปิดใช้งานแจ้งเตือนพุช (Disabled)</option>
@@ -410,7 +431,20 @@ export default function SettingsPage() {
                       </div>
                       <div style={{ background: active.tint, padding: "12px 14px", borderRadius: 10, border: `1px solid ${active.color}22` }}>
                         <label style={labelStyle}><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Key size={13} /> {tokenField.label} *</span></label>
-                        <input className="smartaccess-input" type="text" placeholder={tokenField.ph} value={raw(tokenField.key)} onChange={e => setRaw(tokenField.key, e.target.value)} style={{ width: "100%", padding: "10px 14px", fontSize: 12.5 }} />
+                        <input
+                          className="glass-input"
+                          type="text"
+                          placeholder={tokenField.ph}
+                          value={raw(tokenField.key)}
+                          onChange={e => setRaw(tokenField.key, e.target.value)}
+                          style={{
+                            "--provider-color": active.color,
+                            "--provider-tint": active.tint,
+                            width: "100%",
+                            padding: "10px 14px",
+                            fontSize: "12.5px"
+                          } as React.CSSProperties}
+                        />
                       </div>
                     </>
                   )}
@@ -429,13 +463,35 @@ export default function SettingsPage() {
                       <div key={row.type}>
                         <label style={labelStyle}>
                           <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ width: 7, height: 7, borderRadius: 999, background: filled ? "#22C55E" : "var(--border-medium)" }} />
+                            <span style={{ width: 7, height: 7, borderRadius: 999, background: filled ? "#10B981" : "var(--border-medium)" }} />
                             {row.icon} {row.label}
                           </span>
                         </label>
                         <div className="notif-row">
-                          <input className="smartaccess-input" type="text" placeholder={f.ph} value={f.value} onChange={e => f.onChange(e.target.value)} style={{ flex: 1, minWidth: 0, padding: "10px 14px", fontSize: 12.5 }} />
-                          <button type="button" onClick={f.test} className="btn-ghost" style={{ padding: "10px 14px", fontSize: 11.5, borderRadius: 10, flexShrink: 0, fontWeight: 700, borderColor: `${active.color}66`, color: active.color, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                          <input
+                            className="glass-input"
+                            type="text"
+                            placeholder={f.ph}
+                            value={f.value}
+                            onChange={e => f.onChange(e.target.value)}
+                            style={{
+                              "--provider-color": active.color,
+                              "--provider-tint": active.tint,
+                              flex: 1,
+                              minWidth: 0,
+                              padding: "10px 14px",
+                              fontSize: "12.5px"
+                            } as React.CSSProperties}
+                          />
+                          <button
+                            type="button"
+                            onClick={f.test}
+                            className="glass-btn-test"
+                            style={{
+                              "--provider-color": active.color,
+                              "--provider-tint": active.tint,
+                            } as React.CSSProperties}
+                          >
                             <FlaskConical size={13} /> ทดสอบ
                           </button>
                         </div>
@@ -448,22 +504,12 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={settingsLoading}
-                className="btn-success notif-save-btn"
+                className="glass-btn-save notif-save-btn"
                 style={{
-                  padding: "12px 22px",
-                  borderRadius: 10,
-                  fontSize: 13,
-                  fontWeight: 800,
-                  background: "linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%)",
-                  color: "#fff",
-                  border: "none",
-                  cursor: "pointer",
-                  boxShadow: "0 6px 16px rgba(124,58,237,0.25)",
+                  "--provider-color": active.color,
+                  "--provider-tint": active.tint,
                   marginTop: 4,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6
-                }}
+                } as React.CSSProperties}
               >
                 {settingsLoading ? (
                   <><Loader2 size={14} className="animate-spin" /> กำลังบันทึก...</>

@@ -1349,3 +1349,235 @@ button, a, [role="button"], input, select, textarea, label {
     box-shadow: var(--shadow-sm) !important;
   }
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Glassmorphism & Micro-interactions Theme Styles
+   ────────────────────────────────────────────────────────────── */
+
+/* Glass container card */
+.glass-container {
+  background: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(124, 58, 237, 0.12) !important;
+  box-shadow: 0 8px 32px 0 rgba(124, 58, 237, 0.08) !important;
+  border-radius: 20px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+[data-theme="dark"] .glass-container {
+  background: rgba(20, 16, 32, 0.45) !important;
+  border: 1px solid rgba(167, 139, 250, 0.15) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Glow bar at the top of the glass container */
+.glass-container::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 3px !important;
+  background: linear-gradient(90deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%) !important;
+  opacity: 0.9 !important;
+  z-index: 10 !important;
+}
+
+/* Glass sub-card panel */
+.glass-subcard {
+  background: rgba(255, 255, 255, 0.35) !important;
+  backdrop-filter: blur(12px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+  border: 1px solid rgba(124, 58, 237, 0.18) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+[data-theme="dark"] .glass-subcard {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(167, 139, 250, 0.1) !important;
+}
+
+/* Tab button selector with Glassmorphic styles & Hover Micro-interactions */
+.glass-tab-btn {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 12px 14px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid rgba(124, 58, 237, 0.1) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  outline: none !important;
+}
+
+[data-theme="dark"] .glass-tab-btn {
+  background: rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Hover effect with custom properties passed dynamically */
+.glass-tab-btn:hover {
+  background: var(--provider-tint) !important;
+  border-color: var(--provider-color) !important;
+  color: var(--text-primary) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 15px -3px var(--provider-tint) !important;
+}
+
+.glass-tab-btn:active {
+  transform: translateY(0) scale(0.97) !important;
+}
+
+/* Selected active tab button */
+.glass-tab-btn.active {
+  background: var(--provider-color) !important;
+  border-color: var(--provider-color) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px -3px var(--provider-tint), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Glass Input design (focused with atmospheric inner glow) */
+.glass-input {
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.3) !important;
+  border: 1px solid rgba(124, 58, 237, 0.18) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  color: var(--text-primary) !important;
+  font-family: inherit !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  outline: none !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+[data-theme="dark"] .glass-input {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(167, 139, 250, 0.15) !important;
+}
+
+@media (min-width: 768px) {
+  .glass-input { font-size: 14px !important; }
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.45) !important;
+  border-color: var(--provider-color, var(--smartaccess-purple)) !important;
+  box-shadow: 0 0 12px var(--provider-tint, rgba(124, 58, 237, 0.15)), inset 0 1px 2px rgba(255, 255, 255, 0.05) !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-theme="dark"] .glass-input:focus {
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+
+.glass-input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7 !important;
+}
+
+/* Test ghost buttons with scale animations */
+.glass-btn-test {
+  padding: 10px 16px !important;
+  font-size: 11.5px !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: var(--provider-color) !important;
+  border: 1px solid rgba(124, 58, 237, 0.2) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  outline: none !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+[data-theme="dark"] .glass-btn-test {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.glass-btn-test:hover {
+  background: var(--provider-color) !important;
+  border-color: var(--provider-color) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 6px 15px -3px var(--provider-tint) !important;
+}
+
+.glass-btn-test:active {
+  transform: translateY(0) scale(0.97) !important;
+}
+
+/* Save settings action button with glowing shifting gradient */
+.glass-btn-save {
+  padding: 12px 24px !important;
+  border-radius: 12px !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  background: linear-gradient(135deg, var(--smartaccess-purple) 0%, var(--edu-pink) 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 15px -3px rgba(124, 58, 237, 0.4) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  outline: none !important;
+}
+
+.glass-btn-save::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent) !important;
+}
+
+.glass-btn-save:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 8px 25px -4px rgba(124, 58, 237, 0.55), 0 0 15px rgba(219, 39, 119, 0.3) !important;
+}
+
+.glass-btn-save:hover::after {
+  left: 100% !important;
+  transition: all 0.6s ease !important;
+}
+
+.glass-btn-save:active {
+  transform: translateY(-1px) scale(0.98) !important;
+}
+
+/* Reduced Motion Compliance */
+@media (prefers-reduced-motion: reduce) {
+  .glass-container, .glass-subcard, .glass-tab-btn, .glass-input, .glass-btn-test, .glass-btn-save {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .glass-btn-save::after {
+    display: none !important;
+  }
+}
