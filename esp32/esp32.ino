@@ -444,14 +444,20 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.fillRect(0, 220, 320, 20, tft.color565(10, 11, 16));
   canvas.drawFastHLine(0, 220, 320, tft.color565(30, 30, 40));
 
-  canvas.setTextColor(tft.color565(107, 122, 112));
-  canvas.setCursor(8, 226);
-  canvas.print("SmartAccess System");
+  if (is_offline_mode) {
+    canvas.setTextColor(tft.color565(245, 158, 11)); // Amber
+    canvas.setCursor(8, 226);
+    canvas.print("AP: SmartAccess_Offline_" + String(room_code) + " | Web: 192.168.4.1");
+  } else {
+    canvas.setTextColor(tft.color565(107, 122, 112));
+    canvas.setCursor(8, 226);
+    canvas.print("SmartAccess System");
 
-  // แสดงค่าหมายเลขไอพีแอดเดรสของอุปกรณ์
-  canvas.setTextColor(tft.color565(16, 185, 129));
-  canvas.setCursor(240, 226);
-  canvas.print(ip_address_str);
+    // แสดงค่าหมายเลขไอพีแอดเดรสของอุปกรณ์
+    canvas.setTextColor(tft.color565(16, 185, 129));
+    canvas.setCursor(240, 226);
+    canvas.print(ip_address_str);
+  }
 
   // ดันแคนวาสออกหน้าจอ ILI9341
   if (canvas.getBuffer() != nullptr) {
@@ -601,6 +607,9 @@ const char *cache_students_file = "/student_cache.json";
 const char *cache_logs_file = "/offline_logs.json";
 const char *cache_key_file = "/qr_key.bin";
 String cached_offline_pin = "123456"; // Default PIN
+String active_ssid = "";
+String active_password = "";
+const char *wifi_creds_file = "/wifi_credentials.json";
 
 // Forward declarations
 bool validateOfflineQR(const String &grant);
@@ -871,6 +880,40 @@ void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
   http.addHeader("x-timestamp", timestampStr);
   http.addHeader("x-nonce", nonce);
   http.addHeader("x-hmac-signature", signature);
+}
+
+String urlDecode(const String &src) {
+  String decoded = "";
+  unsigned int i = 0;
+  while (i < src.length()) {
+    if (src[i] == '%') {
+      if (i + 2 < src.length()) {
+        char hex[3] = { src[i+1], src[i+2], 0 };
+        decoded += (char)strtol(hex, nullptr, 16);
+        i += 3;
+      } else {
+        decoded += src[i];
+        i++;
+      }
+    } else if (src[i] == '+') {
+      decoded += ' ';
+      i++;
+    } else {
+      decoded += src[i];
+      i++;
+    }
+  }
+  return decoded;
+}
+
+String getFormParam(const String &body, const String &key) {
+  int keyIdx = body.indexOf(key + "=");
+  if (keyIdx == -1) return "";
+  int valStart = keyIdx + key.length() + 1;
+  int valEnd = body.indexOf("&", valStart);
+  if (valEnd == -1) valEnd = body.length();
+  String val = body.substring(valStart, valEnd);
+  return urlDecode(val);
 }
 
 bool validateOfflineQR(const String &grant) {
@@ -1235,27 +1278,142 @@ void handleLocalValidation() {
       client.println();
       client.println("<h1>Bad Request</h1><p>Missing PIN parameter.</p>");
     }
+  } else if (req.indexOf("POST /change-wifi") != -1) {
+    int bodyIdx = req.indexOf("\r\n\r\n");
+    String body = "";
+    if (bodyIdx != -1) {
+      body = req.substring(bodyIdx + 4);
+    }
+    String newSsid = getFormParam(body, "ssid");
+    String newPass = getFormParam(body, "password");
+
+    if (newSsid.length() > 0) {
+      DynamicJsonDocument credsDoc(256);
+      credsDoc["ssid"] = newSsid;
+      credsDoc["password"] = newPass;
+      File f = SPIFFS.open(wifi_creds_file, "w");
+      if (f) {
+        serializeJson(credsDoc, f);
+        f.close();
+        DBG("Saved new Wi-Fi credentials to SPIFFS.");
+      }
+      active_ssid = newSsid;
+      active_password = newPass;
+
+      client.println("HTTP/1.1 200 OK");
+      client.println("Content-Type: text/html; charset=utf-8");
+      client.println("Connection: close");
+      client.println();
+      client.println("<!DOCTYPE html><html><head><meta charset='utf-8'>");
+      client.println("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+      client.println("<title>Wi-Fi Configured</title>");
+      client.println("<style>");
+      client.println("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 20px; text-align: center; }");
+      client.println(".container { max-width: 500px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }");
+      client.println("h1 { color: #10B981; font-size: 24px; margin-bottom: 20px; }");
+      client.println("p { font-size: 16px; color: #4b5563; line-height: 1.5; }");
+      client.println("</style></head>");
+      client.println("<body><div class='container'>");
+      client.println("<h1>💾 บันทึกตั้งค่า Wi-Fi สำเร็จ!</h1>");
+      client.println("<p>กำลังรีสตาร์ทบอร์ดเพื่อเชื่อมต่อเครือข่ายใหม่...</p>");
+      client.println("<p>ระบบจะลองเชื่อมต่อกับ Wi-Fi: <strong>" + newSsid + "</strong></p>");
+      client.println("</div></body></html>");
+      client.flush();
+      delay(10);
+      client.stop();
+      delay(1000);
+      ESP.restart();
+      return;
+    } else {
+      client.println("HTTP/1.1 400 Bad Request");
+      client.println("Content-Type: text/html; charset=utf-8");
+      client.println("Connection: close");
+      client.println();
+      client.println("<h1>Bad Request</h1><p>Missing SSID parameter.</p>");
+    }
   } else {
+    int n = WiFi.scanNetworks();
+    String wifi_options = "";
+    if (n <= 0) {
+      wifi_options = "<option value=''>ไม่พบเครือข่าย Wi-Fi ในบริเวณนี้</option>";
+    } else {
+      wifi_options = "<option value=''>-- เลือกเครือข่าย Wi-Fi --</option>";
+      String seen_ssids[20];
+      int seen_count = 0;
+      for (int i = 0; i < n && seen_count < 20; ++i) {
+        String s = WiFi.SSID(i);
+        if (s.length() == 0) continue;
+        bool dup = false;
+        for (int j = 0; j < seen_count; ++j) {
+          if (seen_ssids[j] == s) {
+            dup = true;
+            break;
+          }
+        }
+        if (!dup) {
+          seen_ssids[seen_count++] = s;
+          wifi_options += "<option value='" + s + "'>" + s + " (" + String(WiFi.RSSI(i)) + " dBm)</option>";
+        }
+      }
+    }
+
     client.println("HTTP/1.1 200 OK");
     client.println("Content-Type: text/html; charset=utf-8");
     client.println("Connection: close");
     client.println();
-    client.println(
-        "<!DOCTYPE html><html><head><meta charset='utf-8'><title>SmartAccess "
-        "Offline Mode</title></head>");
-    client.println("<body style='font-family:sans-serif; text-align:center; "
-                   "padding:50px;'>");
-    client.println("<h1 style='color:#F59E0B;'>⚠️ OFFLINE MODE ACTIVE</h1>");
-    client.println("<p>ระบบอยู่ในโหมดออฟไลน์ (อินเทอร์เน็ตขัดข้อง)</p>");
-    client.println("<p>กรุณาสแกนคีย์ QR โค้ดปลดล็อกของท่าน หรือกรอก Offline PIN</p>");
+    client.println("<!DOCTYPE html><html><head><meta charset='utf-8'>");
+    client.println("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+    client.println("<title>SmartAccess Offline Mode</title>");
+    client.println("<style>");
+    client.println("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 15px; text-align: center; }");
+    client.println(".container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }");
+    client.println("h1 { color: #f59e0b; margin-bottom: 10px; font-size: 22px; }");
+    client.println(".desc { color: #4b5563; font-size: 14px; margin-bottom: 20px; }");
+    client.println(".card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 15px; background-color: #fafafa; text-align: left; }");
+    client.println(".card-title { font-weight: bold; margin-bottom: 10px; font-size: 15px; color: #374151; }");
+    client.println("input, select { width: 100%; padding: 8px 10px; margin: 6px 0 12px 0; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 14px; }");
+    client.println("button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; }");
+    client.println("button:hover { background: #059669; }");
+    client.println(".warn { color: #dc2626; font-size: 12px; font-weight: bold; margin-top: -6px; margin-bottom: 12px; line-height: 1.4; }");
+    client.println(".info { color: #6b7280; font-size: 12px; margin-top: 15px; }");
+    client.println("</style></head>");
+    client.println("<body><div class='container'>");
+    client.println("<h1>⚠️ OFFLINE MODE ACTIVE</h1>");
+    client.println("<p class='desc'>ระบบอยู่ในโหมดออฟไลน์ (อินเทอร์เน็ตขัดข้อง)</p>");
+    
+    // Form 1: PIN Unlock
+    client.println("<div class='card'>");
+    client.println("<div class='card-title'>🚪 ปลดล็อกประตูด้วยรหัส PIN</div>");
     client.println("<form method='POST' action='/unlock-pin'>");
-    client.println("<input type='password' name='pin' placeholder='Enter PIN' "
-                   "style='padding:10px;font-size:16px;'><br><br>");
-    client.println("<button type='submit' style='padding:10px "
-                   "20px;font-size:16px;background:#10B981;color:white;border:"
-                   "none;'>Unlock Door</button>");
-    client.println("</form>");
-    client.println("</body></html>");
+    client.println("<input type='password' name='pin' placeholder='ป้อนรหัสผ่านออฟไลน์ (PIN)' required>");
+    client.println("<button type='submit'>ยืนยันรหัสเพื่อปลดล็อก</button>");
+    client.println("</form></div>");
+    
+    // Form 2: Wi-Fi Config
+    client.println("<div class='card'>");
+    client.println("<div class='card-title'>⚙️ ตั้งค่าเครือข่าย Wi-Fi ใหม่</div>");
+    client.println("<form method='POST' action='/change-wifi'>");
+    
+    client.println("<label style='font-size: 12px; color: #4b5563;'>เลือก Wi-Fi ที่สแกนได้:</label>");
+    client.println("<select onchange=\"document.getElementById('wifi_ssid').value = this.value\">");
+    client.println(wifi_options.c_str());
+    client.println("</select>");
+    
+    client.println("<label style='font-size: 12px; color: #4b5563;'>หรือพิมพ์ SSID เอง:</label>");
+    client.println("<input type='text' name='ssid' id='wifi_ssid' placeholder='SSID / ชื่อ Wi-Fi' required>");
+    
+    client.println("<label style='font-size: 12px; color: #4b5563;'>รหัสผ่าน Wi-Fi:</label>");
+    client.println("<input type='password' name='password' placeholder='รหัสผ่าน Wi-Fi (ถ้ามี)'>");
+    
+    client.println("<div class='warn'>");
+    client.println("⚠️ เครื่อง ESP32 รองรับเฉพาะ Wi-Fi คลื่นความถี่ 2.4GHz เท่านั้น! ไม่รองรับคลื่นความถี่ 5GHz");
+    client.println("</div>");
+    
+    client.println("<button type='submit' style='background: #3b82f6;'>บันทึกและเชื่อมต่อใหม่</button>");
+    client.println("</form></div>");
+    
+    client.println("<div class='info'>สถานะบอร์ด: ออฟไลน์ | IP: " + WiFi.softAPIP().toString() + "</div>");
+    client.println("</div></body></html>");
   }
   delay(1);
   client.stop();
@@ -1404,6 +1562,23 @@ void setup() {
         DBG("Loaded cached offline PIN from SPIFFS.");
       }
     }
+    if (SPIFFS.exists(wifi_creds_file)) {
+      File f = SPIFFS.open(wifi_creds_file, "r");
+      if (f) {
+        StaticJsonDocument<256> credsDoc;
+        DeserializationError err = deserializeJson(credsDoc, f);
+        f.close();
+        if (!err) {
+          active_ssid = credsDoc["ssid"].as<String>();
+          active_password = credsDoc["password"].as<String>();
+          DBG("Loaded cached Wi-Fi credentials from SPIFFS.");
+        }
+      }
+    }
+    if (active_ssid.length() == 0) {
+      active_ssid = String(ssid);
+      active_password = String(password);
+    }
   }
 
   // Pin modes
@@ -1440,14 +1615,14 @@ void setup() {
   canvas.setTextColor(tft.color565(156, 163, 175));
   canvas.setCursor(40, 140);
   canvas.print("SSID: ");
-  canvas.print(ssid);
+  canvas.print(active_ssid);
 
   if (canvas.getBuffer() != nullptr) {
     tft.drawRGBBitmap(0, 0, canvas.getBuffer(), 320, 240);
   }
 
   DBG("Connecting to Wi-Fi...");
-  WiFi.begin(ssid, password);
+  WiFi.begin(active_ssid.c_str(), active_password.c_str());
 
   bool wifi_led_state = false;
   while (WiFi.status() != WL_CONNECTED) {
@@ -1630,13 +1805,14 @@ void loop() {
         }
         printCentered("OFFLINE MODE", 142, &FreeSansBold12pt7b,
                       tft.color565(239, 68, 68));
-        canvas.setTextSize(1);
-        canvas.setTextColor(ILI9341_WHITE);
-        canvas.setCursor(88, 166);
-        canvas.print("No cached data available");
-        canvas.setTextColor(tft.color565(156, 163, 175));
-        canvas.setCursor(98, 186);
-        canvas.print("Waiting for network...");
+        printCentered("No cached data available", 165, NULL,
+                      tft.color565(239, 68, 68));
+        printCentered("Connect AP: SmartAccess_Offline_" + String(room_code), 185, NULL,
+                      ILI9341_WHITE);
+        printCentered("Web Config: http://192.168.4.1/", 205, NULL,
+                      tft.color565(16, 185, 129));
+        printCentered("To configure Wi-Fi / Enter PIN", 222, NULL,
+                      tft.color565(156, 163, 175));
       }
     }
   }
@@ -1701,6 +1877,7 @@ void loop() {
         api_fail_count = 0;
         if (is_offline_mode) {
           is_offline_mode = false;
+          currentScreen = SCREEN_BOOT; // Force full redraw
           WiFi.mode(WIFI_STA);
           DBG("Restored online mode. AP stopped.");
         }
@@ -1891,6 +2068,7 @@ void loop() {
           if (api_fail_count >= 8 && (millis() - firstFailAt) > 15000 &&
               !is_offline_mode) {
             is_offline_mode = true;
+            currentScreen = SCREEN_BOOT; // Force full redraw
             DBG("Entering offline fallback mode. Starting AP.");
             String ap_ssid = "SmartAccess_Offline_" + String(room_code);
             WiFi.mode(WIFI_AP_STA);
@@ -1917,7 +2095,7 @@ void loop() {
       Serial.println(
           "[WIFI] Connection lost. Attempting non-blocking reconnect...");
       WiFi.disconnect();
-      WiFi.begin(ssid, password);
+      WiFi.begin(active_ssid.c_str(), active_password.c_str());
     }
   }
 }
