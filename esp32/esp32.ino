@@ -22,10 +22,11 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_ILI9341.h>
 // ฟอนต์ FreeSansBold (อยู่ใน Adafruit_GFX, เก็บใน flash ไม่กิน RAM) สำหรับหัวข้อใหญ่
-#include <Fonts/FreeSansBold12pt7b.h>
 #include <ArduinoJson.h> // ติดตั้งผ่าน Library Manager (เวอร์ชัน 6.x)
 #include <FS.h>
+#include <Fonts/FreeSansBold12pt7b.h>
 #include <HTTPClient.h>
+
 #ifndef WOKWI_SIM
 #include <HTTPUpdate.h> // สำหรับระบบดึงข้อมูลอัปเดต HTTPS OTA (เฉพาะบอร์ดจริง)
 #include <PubSubClient.h>
@@ -44,7 +45,8 @@
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
 const char *CURRENT_VERSION = "1.0.0";
 const char *FIRMWARE_URL =
-    "https://smartaccess-project.vercel.app/api/esp32/firmware-ota";
+    "https://homotaxic-rayford-supersecure.ngrok-free.dev/api/esp32/"
+    "firmware-ota";
 
 WiFiServer localServer(80); // เว็บเซิร์ฟเวอร์ LAN สำหรับคิวเปิดประตู/โหมดออฟไลน์
 bool localServerStarted = false;
@@ -71,30 +73,41 @@ bool localServerStarted = false;
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
-// Custom zero-allocation wrapper class to redirect Adafruit_GFX drawing operations
-// directly to hardware TFT, avoiding the 153.6 KB RAM heap allocation of GFXcanvas16
-// which causes ESP32 out-of-memory crashes (StoreProhibited/LoadProhibited loop)
-// when SPIFFS and HTTPS (WiFiClientSecure TLS buffers) are active.
+// Custom zero-allocation wrapper class to redirect Adafruit_GFX drawing
+// operations directly to hardware TFT, avoiding the 153.6 KB RAM heap
+// allocation of GFXcanvas16 which causes ESP32 out-of-memory crashes
+// (StoreProhibited/LoadProhibited loop) when SPIFFS and HTTPS (WiFiClientSecure
+// TLS buffers) are active.
 class TFT_DirectCanvas : public Adafruit_GFX {
 private:
   Adafruit_ILI9341 &tft;
+
 public:
-  TFT_DirectCanvas(Adafruit_ILI9341 &_tft) : Adafruit_GFX(320, 240), tft(_tft) {}
-  
+  TFT_DirectCanvas(Adafruit_ILI9341 &_tft)
+      : Adafruit_GFX(320, 240), tft(_tft) {}
+
   void drawPixel(int16_t x, int16_t y, uint16_t color) override {
     tft.drawPixel(x, y, color);
   }
-  
+
   void fillScreen(uint16_t color) override { tft.fillScreen(color); }
-  void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) override { tft.drawFastVLine(x, y, h, color); }
-  void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override { tft.drawFastHLine(x, y, w, color); }
-  void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override { tft.fillRect(x, y, w, h, color); }
-  
-  void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w, int16_t h) {
+  void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) override {
+    tft.drawFastVLine(x, y, h, color);
+  }
+  void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override {
+    tft.drawFastHLine(x, y, w, color);
+  }
+  void fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
+                uint16_t color) override {
+    tft.fillRect(x, y, w, h, color);
+  }
+
+  void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w,
+                     int16_t h) {
     tft.drawRGBBitmap(x, y, bitmap, w, h);
   }
 
-  uint16_t* getBuffer() { return nullptr; }
+  uint16_t *getBuffer() { return nullptr; }
 };
 
 TFT_DirectCanvas canvas(tft);
@@ -138,7 +151,7 @@ unsigned long doorOpenStartTime =
     0; // Timestamp when door sensor detected open state
 // กันเปิดประตูซ้ำข้ามช่องทาง (MQTT + DB poll + LAN push ส่งคำสั่งเดียวกันมาหลายทาง)
 unsigned long lastUnlockAt = 0;
-const unsigned long UNLOCK_COOLDOWN_MS = 8000;
+const unsigned long UNLOCK_COOLDOWN_MS = 15000;
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
 void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
@@ -180,7 +193,8 @@ void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
 unsigned long qrShownAt = 0; // เวลาที่ QR ปัจจุบันถูกวาด (คำนวณแถบความสด ~60 วิ)
 
 // พิมพ์ข้อความกึ่งกลางจอแนวนอนด้วยฟอนต์ที่กำหนด (y = baseline) แล้วคืนฟอนต์เดิม
-void printCentered(const String &s, int y, const GFXfont *font, uint16_t color) {
+void printCentered(const String &s, int y, const GFXfont *font,
+                   uint16_t color) {
   canvas.setFont(font);
   canvas.setTextSize(1);
   canvas.setTextColor(color);
@@ -209,8 +223,8 @@ void drawWifiIcon(int x, int y, int rssi, bool connected) {
     int bh = 3 + i * 2;
     int bx = x + i * 4;
     int by = y + (9 - bh);
-    uint16_t c = (i < bars) ? tft.color565(16, 185, 129)
-                            : tft.color565(55, 65, 75);
+    uint16_t c =
+        (i < bars) ? tft.color565(16, 185, 129) : tft.color565(55, 65, 75);
     canvas.fillRect(bx, by, 3, bh, c);
   }
 }
@@ -272,7 +286,8 @@ void drawClockRegion(const String &timeStr) {
   last_clock_str = timeStr;
 }
 
-// ─── Dirty-region state + helpers สำหรับหน้าหลัก (วาดเฉพาะส่วนที่เปลี่ยน กันจอแฟลชทั้งจอ) ───
+// ─── Dirty-region state + helpers สำหรับหน้าหลัก (วาดเฉพาะส่วนที่เปลี่ยน กันจอแฟลชทั้งจอ)
+// ───
 int rendered_queue = -999;
 String rendered_id = "\x01"; // sentinel ค่าเริ่มต้นที่ไม่มีทางตรงกับค่าจริง
 String rendered_qr = "\x01";
@@ -393,7 +408,7 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.setTextColor(tft.color565(240, 244, 240));
   canvas.setCursor(145, 36);
   canvas.print("Room: " + String(room_code));
-  
+
   canvas.setTextColor(tft.color565(59, 130, 246));
   canvas.setCursor(145, 50);
   canvas.print("Door Control System");
@@ -406,7 +421,7 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.setTextColor(tft.color565(245, 158, 11));
   canvas.setCursor(153, 78);
   canvas.print("Pending Requests");
-  
+
   canvas.setTextColor(tft.color565(156, 163, 175));
   canvas.setCursor(153, 98);
   canvas.print("Queue Count");
@@ -447,7 +462,8 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   if (is_offline_mode) {
     canvas.setTextColor(tft.color565(245, 158, 11)); // Amber
     canvas.setCursor(8, 226);
-    canvas.print("AP: SmartAccess_Offline_" + String(room_code) + " | Web: 192.168.4.1");
+    canvas.print("AP: SmartAccess_Offline_" + String(room_code) +
+                 " | Web: 192.168.4.1");
   } else {
     canvas.setTextColor(tft.color565(107, 122, 112));
     canvas.setCursor(8, 226);
@@ -484,7 +500,8 @@ void drawScanningScreen() {
   canvas.drawCircle(160, 70, 31, tft.color565(59, 130, 246));
   canvas.fillCircle(160, 70, 8, tft.color565(59, 130, 246));
 
-  printCentered("Processing", 122, &FreeSansBold12pt7b, tft.color565(59, 130, 246));
+  printCentered("Processing", 122, &FreeSansBold12pt7b,
+                tft.color565(59, 130, 246));
 
   canvas.setTextSize(1);
   canvas.setTextColor(ILI9341_WHITE);
@@ -521,7 +538,8 @@ void drawUnlockedScreen(const String &approvedName, const String &studentId) {
   // วงแหวนนับถอยหลัง (เริ่มที่เต็มวง) — จะถูกอนิเมตตอนนับเวลาประตูเปิด
   drawCountdownRing(100);
 
-  printCentered("ACCESS GRANTED", 132, &FreeSansBold12pt7b, tft.color565(16, 185, 129));
+  printCentered("ACCESS GRANTED", 132, &FreeSansBold12pt7b,
+                tft.color565(16, 185, 129));
 
   canvas.setTextSize(1);
   canvas.setTextColor(tft.color565(255, 215, 0));
@@ -567,7 +585,8 @@ void drawRejectedScreen() {
     canvas.drawLine(171, 54 + t, 149, 76 + t, ILI9341_WHITE);
   }
 
-  printCentered("ACCESS DENIED", 132, &FreeSansBold12pt7b, tft.color565(239, 68, 68));
+  printCentered("ACCESS DENIED", 132, &FreeSansBold12pt7b,
+                tft.color565(239, 68, 68));
 
   canvas.setTextSize(1);
   canvas.setTextColor(tft.color565(255, 199, 199));
@@ -880,6 +899,7 @@ void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
   http.addHeader("x-timestamp", timestampStr);
   http.addHeader("x-nonce", nonce);
   http.addHeader("x-hmac-signature", signature);
+  http.addHeader("ngrok-skip-browser-warning", "true");
 }
 
 String urlDecode(const String &src) {
@@ -888,7 +908,7 @@ String urlDecode(const String &src) {
   while (i < src.length()) {
     if (src[i] == '%') {
       if (i + 2 < src.length()) {
-        char hex[3] = { src[i+1], src[i+2], 0 };
+        char hex[3] = {src[i + 1], src[i + 2], 0};
         decoded += (char)strtol(hex, nullptr, 16);
         i += 3;
       } else {
@@ -908,10 +928,12 @@ String urlDecode(const String &src) {
 
 String getFormParam(const String &body, const String &key) {
   int keyIdx = body.indexOf(key + "=");
-  if (keyIdx == -1) return "";
+  if (keyIdx == -1)
+    return "";
   int valStart = keyIdx + key.length() + 1;
   int valEnd = body.indexOf("&", valStart);
-  if (valEnd == -1) valEnd = body.length();
+  if (valEnd == -1)
+    valEnd = body.length();
   String val = body.substring(valStart, valEnd);
   return urlDecode(val);
 }
@@ -1305,18 +1327,27 @@ void handleLocalValidation() {
       client.println("Connection: close");
       client.println();
       client.println("<!DOCTYPE html><html><head><meta charset='utf-8'>");
-      client.println("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+      client.println("<meta name='viewport' content='width=device-width, "
+                     "initial-scale=1.0'>");
       client.println("<title>Wi-Fi Configured</title>");
       client.println("<style>");
-      client.println("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 20px; text-align: center; }");
-      client.println(".container { max-width: 500px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }");
-      client.println("h1 { color: #10B981; font-size: 24px; margin-bottom: 20px; }");
-      client.println("p { font-size: 16px; color: #4b5563; line-height: 1.5; }");
+      client.println(
+          "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', "
+          "Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; "
+          "color: #1f2937; padding: 20px; text-align: center; }");
+      client.println(".container { max-width: 500px; margin: 50px auto; "
+                     "background: white; padding: 30px; border-radius: 12px; "
+                     "box-shadow: 0 4px 6px rgba(0,0,0,0.05); }");
+      client.println(
+          "h1 { color: #10B981; font-size: 24px; margin-bottom: 20px; }");
+      client.println(
+          "p { font-size: 16px; color: #4b5563; line-height: 1.5; }");
       client.println("</style></head>");
       client.println("<body><div class='container'>");
       client.println("<h1>💾 บันทึกตั้งค่า Wi-Fi สำเร็จ!</h1>");
       client.println("<p>กำลังรีสตาร์ทบอร์ดเพื่อเชื่อมต่อเครือข่ายใหม่...</p>");
-      client.println("<p>ระบบจะลองเชื่อมต่อกับ Wi-Fi: <strong>" + newSsid + "</strong></p>");
+      client.println("<p>ระบบจะลองเชื่อมต่อกับ Wi-Fi: <strong>" + newSsid +
+                     "</strong></p>");
       client.println("</div></body></html>");
       client.flush();
       delay(10);
@@ -1342,7 +1373,8 @@ void handleLocalValidation() {
       int seen_count = 0;
       for (int i = 0; i < n && seen_count < 20; ++i) {
         String s = WiFi.SSID(i);
-        if (s.length() == 0) continue;
+        if (s.length() == 0)
+          continue;
         bool dup = false;
         for (int j = 0; j < seen_count; ++j) {
           if (seen_ssids[j] == s) {
@@ -1352,7 +1384,8 @@ void handleLocalValidation() {
         }
         if (!dup) {
           seen_ssids[seen_count++] = s;
-          wifi_options += "<option value='" + s + "'>" + s + " (" + String(WiFi.RSSI(i)) + " dBm)</option>";
+          wifi_options += "<option value='" + s + "'>" + s + " (" +
+                          String(WiFi.RSSI(i)) + " dBm)</option>";
         }
       }
     }
@@ -1362,57 +1395,86 @@ void handleLocalValidation() {
     client.println("Connection: close");
     client.println();
     client.println("<!DOCTYPE html><html><head><meta charset='utf-8'>");
-    client.println("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+    client.println("<meta name='viewport' content='width=device-width, "
+                   "initial-scale=1.0'>");
     client.println("<title>SmartAccess Offline Mode</title>");
     client.println("<style>");
-    client.println("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 15px; text-align: center; }");
-    client.println(".container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }");
-    client.println("h1 { color: #f59e0b; margin-bottom: 10px; font-size: 22px; }");
-    client.println(".desc { color: #4b5563; font-size: 14px; margin-bottom: 20px; }");
-    client.println(".card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 15px; background-color: #fafafa; text-align: left; }");
-    client.println(".card-title { font-weight: bold; margin-bottom: 10px; font-size: 15px; color: #374151; }");
-    client.println("input, select { width: 100%; padding: 8px 10px; margin: 6px 0 12px 0; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 14px; }");
-    client.println("button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; }");
+    client.println(
+        "body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', "
+        "Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; "
+        "color: #1f2937; padding: 15px; text-align: center; }");
+    client.println(".container { max-width: 500px; margin: 0 auto; background: "
+                   "white; padding: 25px; border-radius: 12px; box-shadow: 0 "
+                   "4px 6px rgba(0,0,0,0.05); }");
+    client.println(
+        "h1 { color: #f59e0b; margin-bottom: 10px; font-size: 22px; }");
+    client.println(
+        ".desc { color: #4b5563; font-size: 14px; margin-bottom: 20px; }");
+    client.println(
+        ".card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; "
+        "margin-bottom: 15px; background-color: #fafafa; text-align: left; }");
+    client.println(".card-title { font-weight: bold; margin-bottom: 10px; "
+                   "font-size: 15px; color: #374151; }");
+    client.println("input, select { width: 100%; padding: 8px 10px; margin: "
+                   "6px 0 12px 0; border: 1px solid #d1d5db; border-radius: "
+                   "6px; box-sizing: border-box; font-size: 14px; }");
+    client.println("button { width: 100%; padding: 10px; font-size: 14px; "
+                   "font-weight: bold; background: #10b981; color: white; "
+                   "border: none; border-radius: 6px; cursor: pointer; }");
     client.println("button:hover { background: #059669; }");
-    client.println(".warn { color: #dc2626; font-size: 12px; font-weight: bold; margin-top: -6px; margin-bottom: 12px; line-height: 1.4; }");
-    client.println(".info { color: #6b7280; font-size: 12px; margin-top: 15px; }");
+    client.println(
+        ".warn { color: #dc2626; font-size: 12px; font-weight: bold; "
+        "margin-top: -6px; margin-bottom: 12px; line-height: 1.4; }");
+    client.println(
+        ".info { color: #6b7280; font-size: 12px; margin-top: 15px; }");
     client.println("</style></head>");
     client.println("<body><div class='container'>");
     client.println("<h1>⚠️ OFFLINE MODE ACTIVE</h1>");
     client.println("<p class='desc'>ระบบอยู่ในโหมดออฟไลน์ (อินเทอร์เน็ตขัดข้อง)</p>");
-    
+
     // Form 1: PIN Unlock
     client.println("<div class='card'>");
     client.println("<div class='card-title'>🚪 ปลดล็อกประตูด้วยรหัส PIN</div>");
     client.println("<form method='POST' action='/unlock-pin'>");
-    client.println("<input type='password' name='pin' placeholder='ป้อนรหัสผ่านออฟไลน์ (PIN)' required>");
+    client.println("<input type='password' name='pin' "
+                   "placeholder='ป้อนรหัสผ่านออฟไลน์ (PIN)' required>");
     client.println("<button type='submit'>ยืนยันรหัสเพื่อปลดล็อก</button>");
     client.println("</form></div>");
-    
+
     // Form 2: Wi-Fi Config
     client.println("<div class='card'>");
     client.println("<div class='card-title'>⚙️ ตั้งค่าเครือข่าย Wi-Fi ใหม่</div>");
     client.println("<form method='POST' action='/change-wifi'>");
-    
-    client.println("<label style='font-size: 12px; color: #4b5563;'>เลือก Wi-Fi ที่สแกนได้:</label>");
-    client.println("<select onchange=\"document.getElementById('wifi_ssid').value = this.value\">");
+
+    client.println("<label style='font-size: 12px; color: #4b5563;'>เลือก Wi-Fi "
+                   "ที่สแกนได้:</label>");
+    client.println(
+        "<select onchange=\"document.getElementById('wifi_ssid').value = "
+        "this.value\">");
     client.println(wifi_options.c_str());
     client.println("</select>");
-    
-    client.println("<label style='font-size: 12px; color: #4b5563;'>หรือพิมพ์ SSID เอง:</label>");
-    client.println("<input type='text' name='ssid' id='wifi_ssid' placeholder='SSID / ชื่อ Wi-Fi' required>");
-    
-    client.println("<label style='font-size: 12px; color: #4b5563;'>รหัสผ่าน Wi-Fi:</label>");
-    client.println("<input type='password' name='password' placeholder='รหัสผ่าน Wi-Fi (ถ้ามี)'>");
-    
+
+    client.println("<label style='font-size: 12px; color: #4b5563;'>หรือพิมพ์ "
+                   "SSID เอง:</label>");
+    client.println("<input type='text' name='ssid' id='wifi_ssid' "
+                   "placeholder='SSID / ชื่อ Wi-Fi' required>");
+
+    client.println("<label style='font-size: 12px; color: #4b5563;'>รหัสผ่าน "
+                   "Wi-Fi:</label>");
+    client.println("<input type='password' name='password' placeholder='รหัสผ่าน "
+                   "Wi-Fi (ถ้ามี)'>");
+
     client.println("<div class='warn'>");
-    client.println("⚠️ เครื่อง ESP32 รองรับเฉพาะ Wi-Fi คลื่นความถี่ 2.4GHz เท่านั้น! ไม่รองรับคลื่นความถี่ 5GHz");
+    client.println("⚠️ เครื่อง ESP32 รองรับเฉพาะ Wi-Fi คลื่นความถี่ 2.4GHz เท่านั้น! "
+                   "ไม่รองรับคลื่นความถี่ 5GHz");
     client.println("</div>");
-    
-    client.println("<button type='submit' style='background: #3b82f6;'>บันทึกและเชื่อมต่อใหม่</button>");
+
+    client.println("<button type='submit' style='background: "
+                   "#3b82f6;'>บันทึกและเชื่อมต่อใหม่</button>");
     client.println("</form></div>");
-    
-    client.println("<div class='info'>สถานะบอร์ด: ออฟไลน์ | IP: " + WiFi.softAPIP().toString() + "</div>");
+
+    client.println("<div class='info'>สถานะบอร์ด: ออฟไลน์ | IP: " +
+                   WiFi.softAPIP().toString() + "</div>");
     client.println("</div></body></html>");
   }
   delay(1);
@@ -1477,6 +1539,7 @@ void syncOfflineLogs() {
   http.begin(*client, logUrl);
   http.addHeader("Content-Type", "application/json");
   http.addHeader("x-api-key", api_key);
+  http.addHeader("ngrok-skip-browser-warning", "true");
   int httpCode = http.POST(content);
   if (httpCode == 200 || httpCode == 201) {
     SPIFFS.remove(cache_logs_file);
@@ -1494,8 +1557,8 @@ void syncTimeViaHTTP() {
   if (displayIdx != -1) {
     timeUrl = timeUrl.substring(0, displayIdx) + "/time";
   } else {
-    timeUrl =
-        "https://smartaccess-project.vercel.app/api/esp32/time"; // Fallback
+    timeUrl = "https://homotaxic-rayford-supersecure.ngrok-free.dev/api/esp32/"
+              "time"; // Fallback
   }
 
   DBG("Attempting HTTP Time Sync Fallback via: " + timeUrl);
@@ -1516,6 +1579,7 @@ void syncTimeViaHTTP() {
   }
 
   http.setTimeout(4000);
+  http.addHeader("ngrok-skip-browser-warning", "true");
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
@@ -1807,8 +1871,8 @@ void loop() {
                       tft.color565(239, 68, 68));
         printCentered("No cached data available", 165, NULL,
                       tft.color565(239, 68, 68));
-        printCentered("Connect AP: SmartAccess_Offline_" + String(room_code), 185, NULL,
-                      ILI9341_WHITE);
+        printCentered("Connect AP: SmartAccess_Offline_" + String(room_code),
+                      185, NULL, ILI9341_WHITE);
         printCentered("Web Config: http://192.168.4.1/", 205, NULL,
                       tft.color565(16, 185, 129));
         printCentered("To configure Wi-Fi / Enter PIN", 222, NULL,

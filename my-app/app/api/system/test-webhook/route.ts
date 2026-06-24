@@ -55,10 +55,10 @@ export async function POST(req: NextRequest) {
 
     const testUrl = url.trim();
     const roomLabel = room && room !== "default" ? `ห้องเรียน ${room}` : "ระบบส่วนกลาง";
-    const typeLabel = 
+    const typeLabel =
       type === "register" ? "📢 คำขอลงทะเบียนนักศึกษาใหม่" :
-      type === "approve" ? "🔓 บันทึกเปิดประตู/อนุมัติสิทธิ์เข้าห้อง" :
-      "📊 บันทึก Log และความปลอดภัย";
+        type === "approve" ? "🔓 บันทึกเปิดประตู/อนุมัติสิทธิ์เข้าห้อง" :
+          "📊 บันทึก Log และความปลอดภัย";
 
     const embed = {
       title: "🧪 ผลการทดสอบการเชื่อมต่อ Discord Webhook",
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
       ],
       footer: {
         text: `ทดสอบระบบโดยแอดมิน: ${admin.full_name} | SmartAccess`,
-        icon_url: "https://smartaccess-project.vercel.app/favicon.ico"
+        icon_url: "https://homotaxic-rayford-supersecure.ngrok-free.dev/favicon.ico"
       },
       timestamp: new Date().toISOString(),
     };
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         username: "SmartAccess BOT",
-        avatar_url: "https://smartaccess-project.vercel.app/favicon.ico",
+        avatar_url: "https://homotaxic-rayford-supersecure.ngrok-free.dev/favicon.ico",
         embeds: [embed],
       }),
     });

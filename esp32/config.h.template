@@ -17,7 +17,7 @@ const char *password = "";
 
 // --- IoT Cloud Server Configuration ---
 // URL of your Vercel Next.js deployment API endpoint.
-const char *server_url = "https://smartaccess-project.vercel.app/api/esp32/display?room=CE-402";
+const char *server_url = "https://homotaxic-rayford-supersecure.ngrok-free.dev/api/esp32/display?room=CE-402";
 
 // Room code designated for this physical device.
 const char *room_code = "CE-402";

@@ -1,12 +1,13 @@
-// app/api/esp32/display/route.ts — Edge Runtime (Vercel CDN Edge, cold start < 50ms)
-// ใช้ Supabase REST API + Web Crypto แทน pg + Node crypto
-export const runtime = "edge";
-export const preferredRegion = "sin1"; // Singapore — ใกล้ประเทศไทยที่สุด
+// app/api/esp32/display/route.ts — Local Node.js Runtime for Raspberry Pi self-hosted deployment
+// เชื่อมต่อตรงไปยังฐานข้อมูล PostgreSQL ท้องถิ่นแทน Supabase Cloud REST API
 
 import { NextRequest, NextResponse } from "next/server";
 import { hmacSHA256, sha1Hex, secureEqual } from "@/lib/edge-crypto";
-import { sbUpsert } from "@/lib/supabase-edge";
 import { cacheGet, cacheSet } from "@/lib/kv-cache";
+import { initDatabase, getPool } from "@/lib/db";
+
+// นำ Edge runtime ออกเพื่อให้รันบน Node.js runtime เสมอ ป้องกันข้อผิดพลาดการเชื่อมต่อ pg pool
+// export const runtime = "edge";
 
 const ALLOWED_ORIGIN = (
   process.env.NEXT_PUBLIC_APP_URL || "https://smartaccess-project.vercel.app"
@@ -19,16 +20,19 @@ const CORS = {
   Vary: "Origin",
 } as const;
 
-const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const SB_HEADERS = {
-  apikey: SUPABASE_KEY,
-  Authorization: `Bearer ${SUPABASE_KEY}`,
-  "Content-Type": "application/json",
-};
+let dbInitialized = false;
+async function ensureDb() {
+  if (!dbInitialized) {
+    await initDatabase();
+    dbInitialized = true;
+  }
+}
 
-// ─── Edge-compatible HMAC security check (Zero-Trust V2) ─────────────────────
-async function verifyEdgeSecurity(
+// แคชสำหรับกรองสแปมการบันทึกสัญญาณชีพ (Heartbeat throttle) บนโลคอลเซิร์ฟเวอร์
+const localHeartbeatCache = new Map<string, number>();
+
+// ─── Zero-Trust HMAC security check using local database ─────────────────────
+async function verifyLocalSecurity(
   req: NextRequest,
   endpointPath: string
 ): Promise<{ allowed: boolean; error?: NextResponse }> {
@@ -54,29 +58,30 @@ async function verifyEdgeSecurity(
     return { allowed: false, error: NextResponse.json({ error: "Token Expired" }, { status: 401, headers: CORS }) };
   }
 
-  // 3. Database Nonce Verification via Supabase REST API (POST to api_nonces)
-  const nonceRes = await sbFetch("api_nonces", {
-    method: "POST",
-    headers: { Prefer: "return=minimal" },
-    body: JSON.stringify({ nonce }),
-  });
-
-  if (nonceRes.status === 409 || !nonceRes.ok) {
-    console.warn(`[Edge Security] Replay attack blocked or database error! Nonce: ${nonce}`);
-    return { allowed: false, error: NextResponse.json({ error: "Replay Detected" }, { status: 401, headers: CORS }) };
+  // 3. Database Nonce Verification via local PG pool
+  const pool = getPool();
+  try {
+    await pool.query(
+      `INSERT INTO api_nonces (nonce) VALUES ($1)`,
+      [nonce]
+    );
+  } catch (err: any) {
+    // หากเกิด unique constraint (code '23505') แสดงว่าเป็นการส่งซ้ำ (Replay Attack)
+    if (err && err.code === '23505') {
+      console.warn(`[Security] Replay attack blocked! Nonce: ${nonce}`);
+      return { allowed: false, error: NextResponse.json({ error: "Replay Detected" }, { status: 401, headers: CORS }) };
+    }
+    console.error("[Security] Nonce DB error:", err);
+    return { allowed: false, error: NextResponse.json({ error: "Database error" }, { status: 500, headers: CORS }) };
   }
 
-  // Asynchronously prune expired nonces (older than 2 minutes) to keep database tidy
-  const twoMinutesAgo = new Date(Date.now() - 120_000).toISOString();
-  sbFetch(`api_nonces?created_at=lt.${encodeURIComponent(twoMinutesAgo)}`, {
-    method: "DELETE",
-    headers: { Prefer: "return=minimal" }
-  }).catch(e => console.error("[Edge Security] Nonce pruning error:", e));
+  // ล้าง Nonce เก่าทิ้งหลังจากผ่านไป 2 นาที (ทำงานเบื้องหลัง)
+  pool.query(`DELETE FROM api_nonces WHERE created_at < NOW() - INTERVAL '2 minutes'`).catch(e => console.error("[Security] Nonce pruning error:", e));
 
-  // 4. Key Derivation Function (KDF): Derive unique device key on Edge
+  // 4. Key Derivation Function (KDF): Derive unique device key
   const deviceSecret = await hmacSHA256(deviceId, apiKey);
 
-  // 5. Request Body Hashing on Edge
+  // 5. Request Body Hashing
   let bodyText = "";
   if (req.method === "POST" || req.method === "PUT" || req.method === "PATCH") {
     try {
@@ -92,7 +97,6 @@ async function verifyEdgeSecurity(
   const bodyHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
   // 6. Signature Verification
-  // Format: "deviceId:timestampStr:nonce:endpointPath:bodyHash"
   const payloadToSign = `${deviceId}:${timestampStr}:${nonce}:${endpointPath}:${bodyHash}`;
   const expected = await hmacSHA256(payloadToSign, deviceSecret);
 
@@ -103,30 +107,19 @@ async function verifyEdgeSecurity(
   return { allowed: true };
 }
 
-// ─── Simple edge rate limiter via KV (bucket per API key, 60 req/min) ────────
+// ─── Simple edge rate limiter via KV (bucket per IP, 360 req/min) ────────
 async function edgeRateLimit(req: NextRequest): Promise<boolean> {
-  // For authenticated ESP32 devices (HMAC-verified), rate limiting is secondary
-  // Vercel Edge already handles DDoS at infrastructure level
-  // We do a lightweight check via KV if available
   try {
     const ip = req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() || "unknown";
     const key = `rl:esp32display:${ip}`;
     const cached = await cacheGet<number>(key);
     const count = (cached ?? 0) + 1;
-    if (count > 360) return false; // 360 req/min max per IP (6 requests/sec)
+    if (count > 360) return false;
     await cacheSet(key, count, 60);
     return true;
   } catch {
-    return true; // always allow if KV unavailable
+    return true; // fail-open
   }
-}
-
-// ─── Supabase REST query helpers ──────────────────────────────────────────────
-async function sbFetch(path: string, options?: RequestInit) {
-  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...options,
-    headers: { ...SB_HEADERS, ...(options?.headers as Record<string, string> || {}) },
-  });
 }
 
 export async function OPTIONS() {
@@ -135,13 +128,15 @@ export async function OPTIONS() {
 
 export async function GET(req: NextRequest) {
   try {
-    // Rate limit check (lightweight)
+    await ensureDb();
+
+    // ตรวจสอบความถี่ของ Request
     if (!(await edgeRateLimit(req))) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": "60", ...CORS } });
     }
 
-    // HMAC Security
-    const sec = await verifyEdgeSecurity(req, "/api/esp32/display");
+    // ตรวจสอบความถูกต้อง HMAC Security
+    const sec = await verifyLocalSecurity(req, "/api/esp32/display");
     if (!sec.allowed) return sec.error!;
 
     const host = req.headers.get("host") || "localhost:3000";
@@ -150,98 +145,72 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const room = (searchParams.get("room") || "default").trim();
 
-    // ─── QR token rotation window ─────────────────────────────────────────
-    // ต้องตรงกับ TOKEN_ROTATION_SECONDS ใน lib/qr.ts — เราจะ reuse เฉพาะ token
-    // ที่อายุไม่เกิน 60 วินาที เพื่อให้ QR บนจอสดใหม่เสมอ และยังอยู่ในช่วงที่
-    // consumeQRToken ยอมรับได้ (5 นาที) ป้องกันอาการสแกนแล้วขึ้น "token ไม่ถูกต้อง"
-    const TOKEN_ROTATION_SECONDS = 60;
-    const tokenFreshCutoff = new Date(Date.now() - TOKEN_ROTATION_SECONDS * 1000).toISOString();
+    const pool = getPool();
 
-    // ─── [KV Cache] อ่าน system_settings จาก Redis ก่อน ──────────────────
-    const SETTINGS_TTL = 15; // 15s cache — สั้นพอให้ per-room settings อัปเดตทันใช้
+    // ดึงค่าการตั้งค่าแบบแคช 15 วินาที
     const cacheKey = "system_settings:all";
-    let allSettings = await cacheGet<Record<string, string>>(cacheKey);
+    const cachedSettings = await cacheGet<Record<string, string>>(cacheKey);
+    let allSettings: Record<string, string>;
 
-    if (!allSettings) {
-      // Cache miss → ดึงจาก Supabase
-      const settRes = await sbFetch("system_settings?select=setting_key,setting_value");
-      if (settRes.ok) {
-        const rows: { setting_key: string; setting_value: string }[] = await settRes.json();
-        allSettings = Object.fromEntries(rows.map((r) => [r.setting_key, r.setting_value]));
-        await cacheSet(cacheKey, allSettings, SETTINGS_TTL);
-      } else {
-        allSettings = {};
-      }
+    if (cachedSettings) {
+      allSettings = cachedSettings;
+    } else {
+      const settRes = await pool.query("SELECT setting_key, setting_value FROM system_settings");
+      allSettings = Object.fromEntries(settRes.rows.map((r) => [r.setting_key, r.setting_value]));
+      await cacheSet(cacheKey, allSettings, 15);
     }
 
-    // ─── Firmware version (cached) — แทบไม่เปลี่ยน จึง cache 60s ลด query ─────
-    // ลด query บน route ที่ ESP32 poll ถี่สุดลงจาก 4 → 3 ต่อ poll (ส่วนใหญ่)
-    const FIRMWARE_TTL = 60;
+    // เลขรุ่นเฟิร์มแวร์แคช 60 วินาที
     const fwCacheKey = "firmware:latest_version";
     let serverVer = await cacheGet<string>(fwCacheKey);
 
-    // ─── [Parallel DB queries via Supabase REST] ──────────────────────────
+    // คิวรี่ฐานข้อมูลโลคอลแบบขนานผ่าน PG Pool
     const [pendingRes, lastApprovedRes, tokenRes, firmwareRes] = await Promise.all([
-      // 1. Count pending students for this room
-      sbFetch(`students?status=eq.pending&requested_room=eq.${encodeURIComponent(room)}&select=count`, {
-        headers: { Prefer: "count=exact" },
-      }),
-      // 2. Last approved student
-      sbFetch(
-        `students?status=eq.approved&requested_room=eq.${encodeURIComponent(room)}&approved_at=not.is.null&select=first_name,last_name,student_id,approved_at&order=approved_at.desc&limit=1`
+      pool.query(
+        `SELECT COUNT(*)::int FROM students WHERE status = 'pending' AND requested_room = $1`,
+        [room]
       ),
-      // 3. Active QR token
-      sbFetch(
-        `dynamic_qr_tokens?is_consumed=eq.false&room_code=eq.${encodeURIComponent(room)}&created_at=gte.${encodeURIComponent(tokenFreshCutoff)}&select=token&order=created_at.desc&limit=1`
+      pool.query(
+        `SELECT first_name, last_name, student_id, approved_at FROM students 
+         WHERE status = 'approved' AND requested_room = $1 AND approved_at IS NOT NULL 
+         ORDER BY approved_at DESC LIMIT 1`,
+        [room]
       ),
-      // 4. Latest firmware version — เฉพาะตอน cache miss
-      serverVer
-        ? Promise.resolve(null)
-        : sbFetch("firmware_releases?select=version&order=uploaded_at.desc&limit=1"),
+      pool.query(
+        `SELECT token FROM dynamic_qr_tokens 
+         WHERE is_consumed = false AND room_code = $1 AND created_at >= NOW() - INTERVAL '60 seconds' 
+         ORDER BY created_at DESC LIMIT 1`,
+        [room]
+      ),
+      serverVer ? Promise.resolve(null) : pool.query(
+        `SELECT version FROM firmware_releases ORDER BY uploaded_at DESC LIMIT 1`
+      )
     ]);
 
-    // ─── Door command check ───────────────────────────────────────────────
+    // ตรวจสอบคำสั่งเปิดประตูฉุกเฉิน
     const doorCmdKey = `room_cmd_${room}`;
     const doorCmd = allSettings[doorCmdKey];
     let doorTrigger = "idle";
     if (doorCmd === "unlock") {
       doorTrigger = "open";
-      // Consume command — ต้อง await จริง ไม่งั้นใน Edge runtime ฟังก์ชันจะถูก
-      // terminate ก่อน PATCH จะถึง Supabase ทำให้ค่ายังเป็น "unlock" → บอร์ดเปิดวนไม่จบ
       try {
-        await sbFetch(`system_settings?setting_key=eq.${encodeURIComponent(doorCmdKey)}`, {
-          method: "PATCH",
-          headers: { Prefer: "return=minimal" },
-          body: JSON.stringify({
-            setting_value: "consumed",
-            updated_at: new Date().toISOString(),
-          }),
-        });
+        await pool.query(
+          `UPDATE system_settings SET setting_value = 'consumed', updated_at = NOW() WHERE setting_key = $1`,
+          [doorCmdKey]
+        );
       } catch (e) {
         console.error("[ESP32/Display] consume door cmd failed:", e);
       }
-      // Invalidate cache so next poll sees consumed state immediately
-      await cacheSet(cacheKey, { ...allSettings, [doorCmdKey]: "consumed" }, SETTINGS_TTL);
+      await cacheSet(cacheKey, { ...allSettings, [doorCmdKey]: "consumed" }, 15);
     }
 
-    // ─── Parse pending count ──────────────────────────────────────────────
-    let pendingCount = 0;
-    if (pendingRes.ok) {
-      const countHeader = pendingRes.headers.get("content-range"); // "0-0/5"
-      if (countHeader) {
-        pendingCount = parseInt(countHeader.split("/")[1] || "0", 10);
-      } else {
-        const rows: unknown[] = await pendingRes.json();
-        pendingCount = Array.isArray(rows) ? rows.length : 0;
-      }
-    }
+    // ดึงจำนวนรออนุมัติ
+    const pendingCount = pendingRes.rows[0]?.count || 0;
 
-    // ─── Last approved student ────────────────────────────────────────────
-    const lastApprovedRows: { first_name: string; last_name: string; student_id: string; approved_at: string }[] =
-      lastApprovedRes.ok ? await lastApprovedRes.json() : [];
-    const lastStudent = lastApprovedRows[0];
+    // ประวัตินักศึกษาอนุมัติคนล่าสุด
+    const lastStudent = lastApprovedRes.rows[0];
 
-    // ─── Student ID display mode (per-room → fallback global) ────────────
+    // โหมดการแสดงผลรหัสนักศึกษาบนหน้าจอ
     const displayMode =
       allSettings[`rcfg_${room}_student_id_display_mode`] ||
       allSettings["student_id_display_mode"] ||
@@ -260,12 +229,10 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // ─── Active QR token ──────────────────────────────────────────────────
-    const tokenRows: { token: string }[] = tokenRes.ok ? await tokenRes.json() : [];
-    let activeToken = tokenRows[0]?.token;
+    // โทเคน QR ที่ยังไม่ถูกใช้
+    let activeToken = tokenRes.rows[0]?.token;
 
     if (!activeToken) {
-      // Generate new token via internal API (avoids pg dependency in Edge)
       try {
         const genRes = await fetch(
           `${appUrl}/api/esp32/qr/token?room=${encodeURIComponent(room)}`,
@@ -278,33 +245,33 @@ export async function GET(req: NextRequest) {
       } catch { /* use undefined */ }
     }
 
-    // ─── Firmware OTA check ───────────────────────────────────────────────
+    // การตรวจสอบอัปเดตบอร์ด
     const clientVer = req.headers.get("x-esp32-version") || "1.0.0";
     if (!serverVer) {
-      const fwRows: { version: string }[] = firmwareRes && firmwareRes.ok ? await firmwareRes.json() : [];
-      serverVer = fwRows[0]?.version || "1.0.0";
-      await cacheSet(fwCacheKey, serverVer, FIRMWARE_TTL);
+      serverVer = firmwareRes?.rows[0]?.version || "1.0.0";
+      await cacheSet(fwCacheKey, serverVer, 60);
     }
     const updateAvailable = clientVer !== serverVer;
 
-    // ─── Heartbeat (awaited, throttled) ───────────────────────────
-    // ESP32 poll ทุก ~2s แต่การเช็ค online ใช้ความละเอียดระดับนาที จึงเขียน
-    // DB ได้สูงสุดครั้งละ 30s/ห้อง (ใช้ KV marker) — ลด write หนัก ๆ บน Supabase
+    // บันทึกสัญญาณชีพ (Heartbeat) อุปกรณ์ลงฐานข้อมูลโลคอล
     const hbKey = `hb:${room}`;
-    const hbRecent = await cacheGet<number>(hbKey);
-    if (!hbRecent) {
-      await cacheSet(hbKey, Date.now(), 30);
-      await sbUpsert("esp32_heartbeats", {
-        room_code: room,
-        last_seen: new Date().toISOString(),
-        status: 'online'
-      }, "room_code");
+    const nowMs = Date.now();
+    const cachedHb = localHeartbeatCache.get(hbKey);
+    if (!cachedHb || nowMs - cachedHb > 30000) {
+      localHeartbeatCache.set(hbKey, nowMs);
+      await pool.query(
+        `INSERT INTO esp32_heartbeats (room_code, last_seen, status)
+         VALUES ($1, NOW(), 'online')
+         ON CONFLICT (room_code)
+         DO UPDATE SET last_seen = NOW(), status = 'online'`,
+        [room]
+      );
     }
 
-    // ─── Server time (Bangkok UTC+7) ──────────────────────────────────────
-    const now = new Date();
-    const serverTimeIso = now.toISOString();
-    const serverTimeText = now.toLocaleTimeString("th-TH", {
+    // เวลาเซิร์ฟเวอร์
+    const nowTime = new Date();
+    const serverTimeIso = nowTime.toISOString();
+    const serverTimeText = nowTime.toLocaleTimeString("th-TH", {
       timeZone: "Asia/Bangkok",
       hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
     });
@@ -360,7 +327,7 @@ export async function GET(req: NextRequest) {
           },
         };
 
-    // ─── ETag (skip when door open) ───────────────────────────────────────
+    // ETag (ข้ามการ ETag เช็คเมื่อมีคำสั่งเปิดประตู)
     if (doorTrigger === "idle") {
       const etagSrc = `${pendingCount}|${lastStudent?.student_id || ""}|${activeToken || ""}|${updateAvailable}|${serverVer}`;
       const etagHex = await sha1Hex(etagSrc);
@@ -379,13 +346,14 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(payload, { headers: { "Cache-Control": "no-store", ...CORS } });
   } catch (error) {
-    console.error("[ESP32/Display Edge]", error);
+    console.error("[ESP32/Display Node]", error);
     return NextResponse.json({ error: "ระบบไม่พร้อม" }, { status: 503, headers: CORS });
   }
 }
 
 export async function POST(req: NextRequest) {
-  const sec = await verifyEdgeSecurity(req, "/api/esp32/display");
+  await ensureDb();
+  const sec = await verifyLocalSecurity(req, "/api/esp32/display");
   if (!sec.allowed) return sec.error!;
   try {
     const { searchParams } = new URL(req.url);
@@ -398,7 +366,6 @@ export async function POST(req: NextRequest) {
       const proto = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`;
 
-      // Call internal API asynchronously
       fetch(`${appUrl}/api/esp32/display/notify-exit`, {
         method: "POST",
         headers: {

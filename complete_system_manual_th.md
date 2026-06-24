@@ -677,7 +677,7 @@ CRON_SECRET=my-cron-scheduler-secret-key-123
 เปิด
 
 ```text
-https://smartaccess-project.vercel.app/admin/login
+https://homotaxic-rayford-supersecure.ngrok-free.dev/admin/login
 ```
 
 กรอก username/password ที่มีในตาราง `admin_users`
@@ -5863,7 +5863,7 @@ RETURNING *;
    ```
 2. รันแอปพลิเคชันหรือยิงคำร้องแบบ GET ไปหา API ระบบเพื่อกระตุ้นฟังก์ชันตรวจสอบตัวแปร:
    ```bash
-   curl -I https://smartaccess-project.vercel.app/api/system/settings?seed=true
+   curl -I https://homotaxic-rayford-supersecure.ngrok-free.dev/api/system/settings?seed=true
    ```
 3. ตัวฟังก์ชัน in `lib/db.ts` จะเข้ารหัสลับรหัสผ่านและสร้างแถวข้อมูล `owner` ลงในตาราง `admin_users` อัตโนมัติ
 4. **มาตรการป้องกันความปลอดภัยสูงสุด (Security Rollback):** หลังจากได้รับข้อความตอบรับการสร้างแอดมินเริ่มต้นสำเร็จ ให้ปรับเปลี่ยนสลับค่าตัวแปร `ALLOW_DEV_SEED=false` ในระบบทันทีเพื่อล็อกช่องทาง Seeding และเริ่มใช้งานล็อกอินระบบตามปกติ
@@ -7222,7 +7222,7 @@ allow from 10.30.0.0/16 to *.vercel.app:443   (Student → form)
 
 **ขั้นตอนการอนุมัตินักศึกษา:**
 
-1. เข้า `https://smartaccess-project.vercel.app/admin/login`
+1. เข้า `https://homotaxic-rayford-supersecure.ngrok-free.dev/admin/login`
 2. กรอก username/password ที่ได้รับ
 3. ดูแท็บ "คิวรอตรวจสอบ" — เห็นรายชื่อนักศึกษารอผ่าน
 4. กดปุ่ม ✅ **อนุมัติ** หรือ ❌ **ปฏิเสธ** ข้างชื่อ
@@ -8154,7 +8154,7 @@ sequenceDiagram
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
 const char* CURRENT_VERSION = "1.0.0";
-const char* FIRMWARE_URL = "https://smartaccess-project.vercel.app/api/esp32/firmware-ota";
+const char* FIRMWARE_URL = "https://homotaxic-rayford-supersecure.ngrok-free.dev/api/esp32/firmware-ota";
 const char* API_KEY = "SUPER_SECURE_ESP32_ACCESS_TOKEN";
 
 // ฟังก์ชันดึงและติดตั้ง Root Certificate เพื่อทำ HTTPS Verification (SSL Handshake ป้องกันการสวมรอย)

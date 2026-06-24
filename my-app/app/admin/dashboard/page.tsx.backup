@@ -1031,7 +1031,7 @@ ${wokwiDefine}
 
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
 const char* CURRENT_VERSION = "1.0.0";
-const char* FIRMWARE_URL = "https://smartaccess-project.vercel.app/api/esp32/firmware-ota";
+const char* FIRMWARE_URL = "https://homotaxic-rayford-supersecure.ngrok-free.dev/api/esp32/firmware-ota";
 
 #ifndef WOKWI_SIM
 WebServer localServer(80); // พอร์ตเว็บเซิร์ฟเวอร์สำหรับคิวและ ElegantOTA

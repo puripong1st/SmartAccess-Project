@@ -234,7 +234,8 @@ unsigned long doorOpenStartTime =
     0; // Timestamp when door sensor detected open state
 // กันเปิดประตูซ้ำข้ามช่องทาง (MQTT + DB poll + LAN push ส่งคำสั่งเดียวกันมาหลายทาง)
 unsigned long lastUnlockAt = 0;
-const unsigned long UNLOCK_COOLDOWN_MS = 8000;
+const unsigned long UNLOCK_COOLDOWN_MS = 15000;
+
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
 void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
@@ -1591,7 +1592,7 @@ void syncTimeViaHTTP() {
     timeUrl = timeUrl.substring(0, displayIdx) + "/time";
   } else {
     timeUrl =
-        "https://smartaccess-project.vercel.app/api/esp32/time"; // Fallback
+        "https://homotaxic-rayford-supersecure.ngrok-free.dev/api/esp32/time"; // Fallback
   }
 
   DBG("Attempting HTTP Time Sync Fallback via: " + timeUrl);
