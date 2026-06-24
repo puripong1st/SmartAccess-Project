@@ -556,35 +556,28 @@ export async function initDatabase(): Promise<void> {
         // ข้าม dev seed ใน production เสมอ
       }
 
-      if (isProd) {
-        // Production: secure initial admin provisioning via environment variables
-        const initialUsername = process.env.INITIAL_ADMIN_USERNAME;
-        const initialPassword = process.env.INITIAL_ADMIN_PASSWORD;
-        const initialFullName = process.env.INITIAL_ADMIN_FULL_NAME || "System Administrator (Owner)";
+      const initialUsername = process.env.INITIAL_ADMIN_USERNAME;
+      const initialPassword = process.env.INITIAL_ADMIN_PASSWORD;
+      const initialFullName = process.env.INITIAL_ADMIN_FULL_NAME || "System Administrator (Owner)";
 
-        if (!initialUsername || !initialPassword) {
-          throw new Error(
-            "Production Database Initialization Error: No admin users found in the 'admin_users' table. " +
-            "To seed the initial production administrator, you MUST configure the environment variables: " +
-            "INITIAL_ADMIN_USERNAME and INITIAL_ADMIN_PASSWORD."
-          );
-        }
-
-        // Enforce strong password policy for production admin
-        if (initialPassword.length < 12) {
-          throw new Error(
-            "Production Database Initialization Error: INITIAL_ADMIN_PASSWORD must be at least 12 characters."
-          );
-        }
-        if (!/[A-Z]/.test(initialPassword)) {
-          throw new Error(
-            "Production Database Initialization Error: INITIAL_ADMIN_PASSWORD must contain uppercase letter."
-          );
-        }
-        if (!/[0-9]/.test(initialPassword)) {
-          throw new Error(
-            "Production Database Initialization Error: INITIAL_ADMIN_PASSWORD must contain a number."
-          );
+      if (initialUsername && initialPassword) {
+        // Enforce strong password policy ONLY for production environment
+        if (isProd) {
+          if (initialPassword.length < 12) {
+            throw new Error(
+              "Production Database Initialization Error: INITIAL_ADMIN_PASSWORD must be at least 12 characters."
+            );
+          }
+          if (!/[A-Z]/.test(initialPassword)) {
+            throw new Error(
+              "Production Database Initialization Error: INITIAL_ADMIN_PASSWORD must contain uppercase letter."
+            );
+          }
+          if (!/[0-9]/.test(initialPassword)) {
+            throw new Error(
+              "Production Database Initialization Error: INITIAL_ADMIN_PASSWORD must contain a number."
+            );
+          }
         }
 
         const hash = await bcrypt.hash(initialPassword, 12);
@@ -592,21 +585,32 @@ export async function initDatabase(): Promise<void> {
           `INSERT INTO admin_users (username, password_hash, full_name, role) VALUES ($1, $2, $3, $4)`,
           [initialUsername, hash, initialFullName, "owner"]
         );
-        console.log(`[DB] Successfully seeded initial production administrator: '${initialUsername}' (Credentials validated securely, password hidden)`);
+        console.log(`[DB] Successfully seeded initial administrator: '${initialUsername}' (Credentials validated securely, password hidden)`);
       } else {
-        // Development: only seed the insecure default credentials if ALLOW_DEV_SEED is explicitly enabled
-        if (process.env.ALLOW_DEV_SEED === "true") {
-          const hash = await bcrypt.hash("admin123", 12);
-          await initPool.query(
-            `INSERT INTO admin_users (username, password_hash, full_name, role) VALUES ($1, $2, $3, $4)`,
-            ["admin", hash, "ผู้ดูแลระบบ (Owner)", "owner"]
+        if (isProd) {
+          throw new Error(
+            "Production Database Initialization Error: No admin users found in the 'admin_users' table. " +
+            "To seed the initial production administrator, you MUST configure the environment variables: " +
+            "INITIAL_ADMIN_USERNAME and INITIAL_ADMIN_PASSWORD."
           );
-          console.log("[DB] Seeded default development admin user: admin / admin123 (ALLOW_DEV_SEED is true)");
         } else {
-          console.log("[DB] Skipping default admin seeding in development. Set ALLOW_DEV_SEED=true to seed default dev credentials (admin/admin123).");
+          // Development: only seed the insecure default credentials if ALLOW_DEV_SEED is explicitly enabled
+          if (process.env.ALLOW_DEV_SEED === "true") {
+            const hash = await bcrypt.hash("admin123", 12);
+            await initPool.query(
+              `INSERT INTO admin_users (username, password_hash, full_name, role) VALUES ($1, $2, $3, $4)`,
+              ["admin", hash, "ผู้ดูแลระบบ (Owner)", "owner"]
+            );
+            console.log("[DB] Seeded default development admin user: admin / admin123 (ALLOW_DEV_SEED is true)");
+          } else {
+            console.log("[DB] Skipping default admin seeding in development. Set ALLOW_DEV_SEED=true to seed default dev credentials (admin/admin123).");
+          }
         }
       }
     }
+
+    // Apply migrations to ensure all newer columns and tables exist in both paths
+    await applyIdempotentMigrations(initPool);
 
     console.log("[DB] Database initialized successfully");
 

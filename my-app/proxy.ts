@@ -4,7 +4,40 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "./lib/auth";
 import { getClientIp } from "./lib/client-ip";
-import { rateLimitEdge } from "./lib/rate-limit-edge";
+
+// ในกรณีที่รันบน self-hosted server (เช่น Raspberry Pi) การเก็บ Rate limit ใน Memory จะเร็วที่สุด
+// และช่วยถนอมอายุการใช้งานของ SD Card ได้อย่างมหาศาล เนื่องจากไม่ต้องบันทึกลงฐานข้อมูลหรือเชื่อมต่อคลาวด์ทุกครั้งที่มี Request
+const rateLimitCache = new Map<string, { count: number; resetTime: number }>();
+
+// ล้างข้อมูลที่หมดอายุเป็นระยะเพื่อป้องกัน Memory leak
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of rateLimitCache.entries()) {
+      if (now >= value.resetTime) {
+        rateLimitCache.delete(key);
+      }
+    }
+  }, 60 * 1000).unref?.();
+}
+
+function checkRateLimitInMemory(key: string, limit: number, windowMs: number) {
+  const now = Date.now();
+  const cached = rateLimitCache.get(key);
+
+  if (!cached || now >= cached.resetTime) {
+    const resetTime = now + windowMs;
+    rateLimitCache.set(key, { count: 1, resetTime });
+    return { success: true, count: 1, resetTime };
+  }
+
+  cached.count += 1;
+  return {
+    success: cached.count <= limit,
+    count: cached.count,
+    resetTime: cached.resetTime,
+  };
+}
 
 // V07 fix: security headers applied to all non-ESP32 responses
 const SECURITY_HEADERS: Record<string, string> = {
@@ -40,7 +73,7 @@ const SENSITIVE_ROUTES = [
   },
   {
     prefix: "/api/students",
-    limit: 20,
+    limit: 120,
     windowMs: 60 * 1000,
     endpointName: "students-limit",
   },
@@ -59,13 +92,13 @@ export async function proxy(request: NextRequest) {
       // Resolve the client's actual IP securely (anti-spoofing)
       const ip = getClientIp(request);
 
-      // Apply rate limiting
+      // Apply rate limiting in memory
       const rateLimitKey = `${routeConfig.endpointName}:${ip}`;
-      const { success, count, resetTime } = await rateLimitEdge({
-        key: rateLimitKey,
-        limit: routeConfig.limit,
-        windowMs: routeConfig.windowMs,
-      });
+      const { success, count, resetTime } = checkRateLimitInMemory(
+        rateLimitKey,
+        routeConfig.limit,
+        routeConfig.windowMs
+      );
 
       if (!success) {
         console.warn(

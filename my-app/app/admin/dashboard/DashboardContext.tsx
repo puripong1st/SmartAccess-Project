@@ -855,16 +855,24 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       if (isCleanedUp) return;
       if (Array.isArray(data.pending)) setPending(data.pending);
       if (Array.isArray(data.logs)) setLogs(data.logs);
+
+      // Clear fallback polling interval when SSE connection is active and working
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+        fallbackInterval = null;
+        console.log("[SSE] SSE connection restored, cleared fallback polling.");
+      }
     };
 
     const startFallbackPolling = () => {
       if (fallbackInterval || isCleanedUp) return;
-      // Fast fallback polling (every 3 seconds) for a real-time experience when SSE is unstable/fails
+      console.log("[SSE] Starting fallback polling (15s interval) to prevent rate limits...");
+      // Relaxed interval (15s) to avoid 429 errors and high CPU load on Raspberry Pi
       fallbackInterval = setInterval(async () => {
         if (!isCleanedUp) {
           await Promise.all([fetchPending(), fetchLogs()]);
         }
-      }, 3000);
+      }, 15000);
     };
 
     try {
@@ -887,7 +895,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       });
 
       es.onerror = () => {
-        if (es) {
+        if (!es) return;
+        // If connection is closed permanently, dispose it
+        if (es.readyState === EventSource.CLOSED) {
           es.close();
           es = null;
         }

@@ -28,7 +28,7 @@ const cspDirectives = [
   "manifest-src 'self'",
   "media-src 'self'",
   "worker-src 'self' blob:",
-  "upgrade-insecure-requests",
+  ...(process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://") ? ["upgrade-insecure-requests"] : []),
 ];
 
 const securityHeaders = [
@@ -48,7 +48,7 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: cspDirectives.join("; "),
   },
-  ...(isProduction
+  ...(isProduction && process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://")
     ? [
         {
           key: "Strict-Transport-Security",
@@ -59,7 +59,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.2.49"],
+  allowedDevOrigins: ["192.168.2.49", "192.168.1.126"],
   serverExternalPackages: ["pg", "pdfkit", "bcryptjs", "jsonwebtoken", "qrcode"],
   // gzip responses to cut bandwidth on the free Vercel tier
   compress: true,
