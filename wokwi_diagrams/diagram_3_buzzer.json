@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "author": "SmartAccess Project",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 160,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": 200,
+      "left": 250,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [
+      "esp:D27",
+      "buzzer:1",
+      "orange",
+      []
+    ],
+    [
+      "buzzer:2",
+      "esp:GND.3",
+      "black",
+      []
+    ]
+  ],
+  "dependencies": {}
+}

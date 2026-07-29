@@ -185,6 +185,41 @@ export async function openDoor(studentId?: string, roomCode?: string): Promise<E
 }
 
 /**
+ * Send access rejection command to ESP32.
+ */
+export async function rejectDoor(roomCode?: string): Promise<boolean> {
+  verifyApiKeySecurity();
+  const sanitizedRoom = (roomCode || "default").trim();
+
+  // 1. Write "reject" to DB command queue
+  try {
+    const pool = getPool();
+    await pool.query(
+      `INSERT INTO system_settings (setting_key, setting_value, updated_at) 
+       VALUES ($1, $2, CURRENT_TIMESTAMP) 
+       ON CONFLICT (setting_key) DO UPDATE SET setting_value = $3, updated_at = CURRENT_TIMESTAMP`,
+      [`room_cmd_${sanitizedRoom}`, "reject", "reject"]
+    );
+    clearSystemSettingsCache();
+    console.log(`[IoT Cloud] Command 'reject' queued in DB for room: ${sanitizedRoom}`);
+  } catch (dbErr) {
+    console.error("[IoT Cloud] Failed to queue reject command in DB:", dbErr);
+  }
+
+  // 2. Publish "reject" to MQTT
+  const topic = `smartaccess/rooms/${sanitizedRoom}/command`;
+  const payload = JSON.stringify({
+    action: "reject",
+  });
+  publishMqttMessage(topic, payload).catch((err) =>
+    console.error("[MQTT Push] Direct publish error (reject):", err)
+  );
+
+  return true;
+}
+
+
+/**
  * Get ESP32 / Wokwi status.
  *
  * OPTIMIZED: When running in cloud env with private LAN IPs, skip direct ping entirely

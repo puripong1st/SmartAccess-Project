@@ -1191,6 +1191,19 @@ void triggerDoorOpenInstant(String name, String studentId) {
   last_active_token = "FORCE_REDRAW";
 }
 
+void triggerDoorRejectInstant() {
+  Serial.println("[INFO] Access denied/rejected");
+  digitalWrite(LED_REJECT, HIGH);
+  drawRejectedScreen();
+  tone(BUZZER_PIN, 500, 1000); // 500Hz rejection tone for 1 second
+  delay(3000);                 // Show screen for 3 seconds
+  digitalWrite(LED_REJECT, LOW);
+
+  last_queue_count = -1;
+  last_approved_name = "FORCE_REDRAW";
+  last_active_token = "FORCE_REDRAW";
+}
+
 #ifndef WOKWI_SIM
 void mqttCallback(char *topic, byte *payload, unsigned int length) {
   Serial.print("[MQTT] Message arrived on topic: ");
@@ -1224,6 +1237,8 @@ void mqttCallback(char *topic, byte *payload, unsigned int length) {
 
   if (action == "unlock") {
     triggerDoorOpenInstant(name, studentId);
+  } else if (action == "reject") {
+    triggerDoorRejectInstant();
   }
 }
 #endif
@@ -2116,7 +2131,10 @@ void loop() {
             last_queue_count = -1;
             last_approved_name = "FORCE_REDRAW";
             last_active_token = "FORCE_REDRAW";
+          } else if (door_trigger && String(door_trigger) == "reject") {
+            triggerDoorRejectInstant();
           } else if (pending_count != last_queue_count ||
+
                      studentId != last_approved_name ||
                      (active_token &&
                       String(active_token) != last_active_token)) {

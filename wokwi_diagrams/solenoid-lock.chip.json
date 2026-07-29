@@ -1,0 +1,7 @@
+{
+  "name": "solenoid-lock",
+  "pins": [
+    "L+",
+    "L-"
+  ]
+}

@@ -18,13 +18,13 @@ const cspDirectives = [
   // blocking those inline scripts and leaving the app stuck on a loading spinner.
   // 'unsafe-eval' เปิดเฉพาะตอน dev เท่านั้น — Next.js/React ใช้ eval() สำหรับ error overlay/source map
   // ในโหมด dev (production ไม่ใช้ eval) จึงไม่กระทบความปลอดภัยของระบบจริง
-  `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"} https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.gstatic.com`,
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob:",
+  `script-src 'self' 'unsafe-inline'${isProduction ? "" : " 'unsafe-eval'"} https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.gstatic.com https://cdn.ngrok.com https://*.ngrok-free.dev https://*.ngrok.com`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.ngrok.com https://*.ngrok-free.dev https://*.ngrok.com",
+  "font-src 'self' data: https://fonts.gstatic.com https://cdn.ngrok.com",
+  "img-src 'self' data: blob: https://cdn.ngrok.com https://*.ngrok-free.dev https://*.ngrok.com",
   // FCM Web SDK ต้องต่อหลาย endpoint: firebaseinstallations (FID), fcmregistrations (ออกโทเคน),
   // fcm/googleapis (ส่งข้อความ), oauth2 (token), และ wss สำหรับ Realtime/SSE บางกรณี
-  `connect-src 'self' ${supabaseHost} https://*.supabase.co wss://*.supabase.co https://fcm.googleapis.com https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://oauth2.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com`,
+  `connect-src 'self' ${supabaseHost} https://*.supabase.co wss://*.supabase.co https://fcm.googleapis.com https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com https://www.googleapis.com https://oauth2.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.ngrok.com https://*.ngrok-free.dev https://*.ngrok.com wss://*.ngrok-free.dev wss://*.ngrok.com`,
   "manifest-src 'self'",
   "media-src 'self'",
   "worker-src 'self' blob:",
@@ -59,7 +59,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.2.49", "192.168.1.126"],
+  allowedDevOrigins: ["192.168.2.49", "192.168.1.126", "homotaxic-rayford-supersecure.ngrok-free.dev"],
   serverExternalPackages: ["pg", "pdfkit", "bcryptjs", "jsonwebtoken", "qrcode"],
   // gzip responses to cut bandwidth on the free Vercel tier
   compress: true,
@@ -74,13 +74,6 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders,
-      },
-      // ป้องกันการแคชคู่มือฉบับสมบูรณ์ เพื่อให้กด F5 ธรรมดาก็ได้รับการอัปเดตทันที
-      {
-        source: "/complete_system_manual_th.html",
-        headers: [
-          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
-        ],
       },
       // Service Worker ต้องส่งด้วย correct scope — ไม่ cache
       {

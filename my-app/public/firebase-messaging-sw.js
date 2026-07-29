@@ -134,8 +134,10 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // ข้ามเส้นทางที่เป็น API, หน้าเว็บ Next.js ภายใน, คู่มือระบบเล่มหนา, หรือ Chrome-extension
+  // ข้ามคำขอที่ไม่ใช่ Same-Origin (เช่น cdn.ngrok.com, firebase, googleapis)
+  // หรือเส้นทางที่เป็น API, หน้าเว็บ Next.js ภายใน, คู่มือระบบ, หรือ Chrome-extension
   if (
+    url.origin !== self.location.origin ||
     url.pathname.startsWith('/api/') ||
     url.pathname.startsWith('/_next/') ||
     url.pathname.startsWith('/complete_system_manual_th') ||
@@ -146,7 +148,7 @@ self.addEventListener('fetch', (event) => {
     fetch(request)
       .then((response) => {
         // แคชเฉพาะการดาวน์โหลดหน้าเว็บที่สำเร็จเท่านั้น
-        if (response.status === 200) {
+        if (response && response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseClone);
@@ -154,9 +156,18 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => {
+      .catch(async () => {
         // หากเน็ตหลุด (Offline) ดึงเอาแคชที่บันทึกไว้ในเครื่องมาใช้งานแทน
-        return caches.match(request);
+        const cachedResponse = await caches.match(request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // ป้องกัน Uncaught (in promise) TypeError: Failed to convert value to 'Response'
+        return new Response('Network error or resource unavailable', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'text/plain' },
+        });
       })
   );
 });

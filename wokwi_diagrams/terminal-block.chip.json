@@ -1,0 +1,7 @@
+{
+  "name": "terminal-block",
+  "pins": [
+    "12V+",
+    "GND"
+  ]
+}

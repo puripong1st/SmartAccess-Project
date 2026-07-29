@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool, initDatabase, StudentRow } from "@/lib/db";
 import { getAdminFromCookie, canOperateRoom } from "@/lib/auth";
+import { rejectDoor } from "@/lib/esp32";
+
 import { sendDiscordNotification } from "@/lib/discord";
 import { notifyStudentStatusChange } from "@/lib/push-notify";
 import { logEvent, getRequestContext } from "@/lib/access-log";
@@ -52,7 +54,13 @@ export async function POST(
       [admin.id, finalReason, studentId]
     );
 
+    // Notify ESP32 of rejection
+    await rejectDoor(student.requested_room).catch((err) =>
+      console.error("[Reject ESP32] failed to notify board:", err)
+    );
+
     const { ip, userAgent } = getRequestContext(req);
+
     await logEvent({
       action: "rejected",
       studentId,

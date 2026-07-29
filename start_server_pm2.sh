@@ -22,7 +22,14 @@ echo " 4. Launching/Restarting Server via PM2"
 echo "============================================="
 # ลบงานเดิมใน PM2 ออกก่อน (ถ้ามี) แล้วเริ่มต้นรันระบบแบบอัตโนมัติ
 pm2 delete smartaccess || true
-pm2 start npm --name "smartaccess" -- run start
+
+if [ -f ".next/standalone/server.js" ]; then
+  echo "Detected Next.js standalone build. Starting via node .next/standalone/server.js..."
+  pm2 start .next/standalone/server.js --name "smartaccess" --cwd ~/smartaccess/my-app
+else
+  echo "Starting via npm run start..."
+  pm2 start npm --name "smartaccess" --cwd ~/smartaccess/my-app -- run start
+fi
 
 echo "============================================="
 echo " SUCCESS: Server is managed by PM2!"

@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "author": "SmartAccess Project",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 160,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ili9341",
+      "id": "lcd",
+      "top": -150,
+      "left": 200,
+      "rotate": 90,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [
+      "lcd:VCC",
+      "esp:3V3",
+      "red",
+      []
+    ],
+    [
+      "lcd:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "lcd:CS",
+      "esp:D15",
+      "orange",
+      []
+    ],
+    [
+      "lcd:RST",
+      "esp:D4",
+      "gray",
+      []
+    ],
+    [
+      "lcd:D/C",
+      "esp:D2",
+      "green",
+      []
+    ],
+    [
+      "lcd:MOSI",
+      "esp:D23",
+      "blue",
+      []
+    ],
+    [
+      "lcd:SCK",
+      "esp:D18",
+      "yellow",
+      []
+    ],
+    [
+      "lcd:MISO",
+      "esp:D19",
+      "purple",
+      []
+    ],
+    [
+      "lcd:LED",
+      "esp:3V3",
+      "red",
+      []
+    ]
+  ],
+  "dependencies": {}
+}

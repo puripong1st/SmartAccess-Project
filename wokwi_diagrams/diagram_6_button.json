@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "author": "SmartAccess Project",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 160,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn-exit",
+      "top": 200,
+      "left": 250,
+      "attrs": {
+        "color": "green",
+        "label": "Exit Button"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "btn-exit:1.l",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "btn-exit:2.l",
+      "esp:D13",
+      "green",
+      []
+    ]
+  ],
+  "dependencies": {}
+}

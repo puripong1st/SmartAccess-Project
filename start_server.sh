@@ -29,7 +29,13 @@ echo " 5. Launching Server in Background"
 echo "============================================="
 # ใช้ nohup รันแทน & ปกติ เพื่อป้องกันไม่ให้โปรเซสปิดตัวลงเมื่อปิดหน้าต่าง Terminal 
 # และทำการโยนประวัติ Log ไปเก็บไว้ที่ไฟล์ next.log ในเครื่อง
-nohup npm run start > next.log 2>&1 &
+if [ -f ".next/standalone/server.js" ]; then
+  echo "Detected Next.js standalone build. Starting via node .next/standalone/server.js..."
+  nohup node .next/standalone/server.js > next.log 2>&1 &
+else
+  echo "Starting via npm run start..."
+  nohup npm run start > next.log 2>&1 &
+fi
 
 echo "============================================="
 echo " SUCCESS: Server is running on port 3000!"

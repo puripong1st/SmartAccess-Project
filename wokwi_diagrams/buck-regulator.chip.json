@@ -1,0 +1,9 @@
+{
+  "name": "buck-regulator",
+  "pins": [
+    "IN+",
+    "IN-",
+    "OUT+",
+    "OUT-"
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "author": "SmartAccess Project",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp",
+      "top": 160,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-vcc",
+      "id": "vcc12v",
+      "top": 0,
+      "left": -150,
+      "attrs": {
+        "label": "12V DC Input"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "regulator",
+      "top": 0,
+      "left": 150,
+      "attrs": {
+        "label": "12V-to-5V Buck Regulator"
+      }
+    },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay",
+      "top": 150,
+      "left": 350,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dc-motor",
+      "id": "solenoid",
+      "top": 0,
+      "left": 500,
+      "attrs": {
+        "label": "12V Solenoid Lock"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led-door",
+      "top": 100,
+      "left": 650,
+      "attrs": {
+        "color": "green",
+        "label": "Door_Lock_Status"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r-door",
+      "top": 140,
+      "left": 600,
+      "attrs": {
+        "value": "220"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "vcc12v:VCC",
+      "regulator:VCC",
+      "red",
+      []
+    ],
+    [
+      "vcc12v:VCC",
+      "relay:COM",
+      "red",
+      []
+    ],
+    [
+      "regulator:SIG",
+      "esp:VIN",
+      "red",
+      []
+    ],
+    [
+      "regulator:SIG",
+      "relay:VCC",
+      "red",
+      []
+    ],
+    [
+      "regulator:GND",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "relay:GND",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "solenoid:-",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "led-door:C",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "esp:D12",
+      "relay:IN",
+      "orange",
+      []
+    ],
+    [
+      "relay:NO",
+      "solenoid:+",
+      "green",
+      []
+    ],
+    [
+      "relay:NO",
+      "r-door:1",
+      "green",
+      []
+    ],
+    [
+      "r-door:2",
+      "led-door:A",
+      "green",
+      []
+    ]
+  ],
+  "dependencies": {}
+}

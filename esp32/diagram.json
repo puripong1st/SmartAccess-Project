@@ -88,6 +88,25 @@
       "attrs": {
         "value": "220"
       }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn-exit",
+      "top": 450,
+      "left": 100,
+      "attrs": {
+        "color": "green",
+        "label": "Exit Button"
+      }
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw-door",
+      "top": 450,
+      "left": 200,
+      "attrs": {
+        "label": "Door Sensor"
+      }
     }
   ],
   "connections": [
@@ -233,6 +252,30 @@
       "buzzer:2",
       "esp:GND.3",
       "black",
+      []
+    ],
+    [
+      "btn-exit:1.l",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "btn-exit:2.l",
+      "esp:D13",
+      "green",
+      []
+    ],
+    [
+      "sw-door:1",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "sw-door:2",
+      "esp:D32",
+      "green",
       []
     ]
   ],

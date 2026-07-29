@@ -202,7 +202,19 @@ export async function GET(req: NextRequest) {
         console.error("[ESP32/Display] consume door cmd failed:", e);
       }
       await cacheSet(cacheKey, { ...allSettings, [doorCmdKey]: "consumed" }, 15);
+    } else if (doorCmd === "reject") {
+      doorTrigger = "reject";
+      try {
+        await pool.query(
+          `UPDATE system_settings SET setting_value = 'consumed', updated_at = NOW() WHERE setting_key = $1`,
+          [doorCmdKey]
+        );
+      } catch (e) {
+        console.error("[ESP32/Display] consume door cmd failed:", e);
+      }
+      await cacheSet(cacheKey, { ...allSettings, [doorCmdKey]: "consumed" }, 15);
     }
+
 
     // ดึงจำนวนรออนุมัติ
     const pendingCount = pendingRes.rows[0]?.count || 0;
