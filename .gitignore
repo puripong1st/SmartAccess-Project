@@ -17,6 +17,10 @@ my-app/scratch/
 skills-lock.json
 my-app/.claude/
 
+# Generated poster screenshots and exports (keep local, never commit)
+/my-app/poster_assets/
+smartaccess_poster_a4.*
+
 # Logs
 *.log
 my-app/dev.log
