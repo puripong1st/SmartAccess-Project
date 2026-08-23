@@ -64,6 +64,7 @@ export interface CurrentUser {
 }
 
 export interface RoomConfig {
+  offline_pin: string;
   auto_approve_enabled: boolean;
   auto_approve_start_time: string;
   auto_approve_end_time: string;
@@ -74,6 +75,7 @@ export interface RoomConfig {
 }
 
 export const defaultRoomConfig = (): RoomConfig => ({
+  offline_pin: "",
   auto_approve_enabled: false,
   auto_approve_start_time: "09:00",
   auto_approve_end_time: "16:00",
@@ -539,6 +541,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
           const configs: Record<string, RoomConfig> = {};
           rooms.forEach(({ room: rm }: { room: string }) => {
             configs[rm] = {
+              offline_pin: data.settings[`offline_pin_${rm}`] || "",
               auto_approve_enabled: data.settings[`rcfg_${rm}_auto_approve_enabled`] === "1",
               auto_approve_start_time: data.settings[`rcfg_${rm}_auto_approve_start_time`] || "09:00",
               auto_approve_end_time: data.settings[`rcfg_${rm}_auto_approve_end_time`] || "16:00",
@@ -1250,6 +1253,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     custom_settings[`room_ip_${roomCode}`] = ipAddress;
 
     const cfg = roomConfigs[roomCode] ?? defaultRoomConfig();
+    custom_settings[`offline_pin_${roomCode}`] = cfg.offline_pin;
     custom_settings[`rcfg_${roomCode}_auto_approve_enabled`] = cfg.auto_approve_enabled ? "1" : "0";
     custom_settings[`rcfg_${roomCode}_auto_approve_start_time`] = cfg.auto_approve_start_time;
     custom_settings[`rcfg_${roomCode}_auto_approve_end_time`] = cfg.auto_approve_end_time;
@@ -1292,6 +1296,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     roomsList.forEach(r => {
       custom_settings[`room_ip_${r.room}`] = r.ip;
       const cfg = roomConfigs[r.room] ?? defaultRoomConfig();
+      custom_settings[`offline_pin_${r.room}`] = cfg.offline_pin;
       custom_settings[`rcfg_${r.room}_auto_approve_enabled`] = cfg.auto_approve_enabled ? "1" : "0";
       custom_settings[`rcfg_${r.room}_auto_approve_start_time`] = cfg.auto_approve_start_time;
       custom_settings[`rcfg_${r.room}_auto_approve_end_time`] = cfg.auto_approve_end_time;

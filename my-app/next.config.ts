@@ -71,6 +71,11 @@ function buildNextConfig(): NextConfig {
       removeConsole: isProdEnv ? { exclude: ["error", "warn"] } : false,
     },
     async headers() {
+      const documentNoStoreHeaders = [
+        { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, max-age=0" },
+        { key: "Pragma", value: "no-cache" },
+        { key: "Expires", value: "0" },
+      ];
       return [
         {
           source: "/:path*",
@@ -91,6 +96,14 @@ function buildNextConfig(): NextConfig {
             { key: "Service-Worker-Allowed", value: "/" },
           ],
         },
+        // Never retain HTML across deployments. Hashed /_next/static assets
+        // keep Next.js' own immutable caching policy.
+        { source: "/", headers: documentNoStoreHeaders },
+        { source: "/admin/:path*", headers: documentNoStoreHeaders },
+        { source: "/status", headers: documentNoStoreHeaders },
+        { source: "/privacy", headers: documentNoStoreHeaders },
+        { source: "/terms", headers: documentNoStoreHeaders },
+        { source: "/esp32-preview", headers: documentNoStoreHeaders },
       ];
     },
     turbopack: {

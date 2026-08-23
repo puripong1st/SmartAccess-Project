@@ -5,6 +5,7 @@ import CookieConsent from "./components/CookieConsent";
 import { ThemeProvider } from "./components/ThemeProvider";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import PushNotificationManager from "./components/PushNotificationManager";
+import CacheRecoveryScript from "./components/CacheRecoveryScript";
 
 // Self-hosted via next/font — ตัด render-blocking @import จาก Google Fonts CDN
 // และ preload อัตโนมัติ (เร็วกว่า + ลด external request)
@@ -50,6 +51,7 @@ export default function RootLayout({
   return (
     <html lang="th" className={`${notoSansThai.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
+        <CacheRecoveryScript />
         {/* PWA — Apple Touch Icons */}
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />

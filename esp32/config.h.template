@@ -28,6 +28,17 @@ const char *room_code = "CE-402";
 // WARNING: NEVER use the default placeholder key in production.
 const char *api_key = "YOUR_UNIQUE_ESP32_API_KEY_HERE";
 
+// Optional initial PIN for the local offline portal (6-16 digits).
+// Provision a unique value per room. Leave blank only if the server will send
+// offline_pin_<ROOM> before offline operation is needed. It is stored on the
+// device as an HMAC digest; the plaintext is not persisted in SPIFFS.
+#define OFFLINE_OPERATOR_PIN ""
+
+// The fallback AP uses WPA2. Its password is derived per room as:
+// "SA-" + first 13 hex characters of HMAC-SHA256(api_key,
+// "offline-ap:" + room_code). Keep api_key private and record the resulting
+// password in the room's secure deployment inventory.
+
 // --- TLS Security: Root CA Certificate ---
 // Embed the root CA certificate of your endpoint's SSL certificate provider (e.g. Let's Encrypt ISRG Root X1 for Vercel).
 // This enables secure HTTPS verification and prevents Man-in-the-Middle (MitM) attacks.

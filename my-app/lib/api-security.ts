@@ -31,6 +31,22 @@ export async function verifyEsp32Security(req: NextRequest, endpointPath: string
   }
 
   const clientIp = getClientIp(req);
+
+  const providedApiKey = req.headers.get("x-api-key") || "";
+  const providedApiKeyBuffer = Buffer.from(providedApiKey);
+  const expectedApiKeyBuffer = Buffer.from(esp32ApiKey);
+  if (
+    providedApiKeyBuffer.length !== expectedApiKeyBuffer.length ||
+    !crypto.timingSafeEqual(providedApiKeyBuffer, expectedApiKeyBuffer)
+  ) {
+    return {
+      allowed: false,
+      errorResponse: new NextResponse(
+        JSON.stringify({ error: "Invalid device credentials" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      ),
+    };
+  }
   
   // 1. IP Allowlist Filter
   const allowedIps = process.env.ALLOWED_IP_RANGES;
@@ -58,6 +74,20 @@ export async function verifyEsp32Security(req: NextRequest, endpointPath: string
       ) 
     };
   }
+  if (
+    !/^esp32_[A-Za-z0-9_-]{1,50}$/.test(deviceId) ||
+    !/^\d{10}$/.test(timestampStr) ||
+    !/^[a-f0-9]{16,64}$/i.test(nonce) ||
+    !/^[a-f0-9]{64}$/i.test(providedSignature)
+  ) {
+    return {
+      allowed: false,
+      errorResponse: new NextResponse(
+        JSON.stringify({ error: "Invalid security headers" }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      ),
+    };
+  }
 
   // 3. Replay Attack Prevention: Validate Timestamp (Max 60 seconds drift)
   const timestamp = parseInt(timestampStr, 10);
@@ -74,47 +104,13 @@ export async function verifyEsp32Security(req: NextRequest, endpointPath: string
     };
   }
 
-  // 4. Replay Attack Prevention: Check and Consume Nonce in Database
-  const pool = getPool();
-  try {
-    // Insert nonce; will throw a unique constraint error if nonce already exists
-    await pool.query(
-      "INSERT INTO api_nonces (nonce) VALUES ($1)",
-      [nonce]
-    );
-
-    // Asynchronously prune old nonces (older than 2 minutes) to keep the table size small
-    pool.query("DELETE FROM api_nonces WHERE created_at < NOW() - INTERVAL '2 minutes'").catch(err => {
-      console.error("[Security] Nonce pruning error:", err);
-    });
-  } catch (err: any) {
-    if (err.code === "23505") { // UNIQUE violation in PostgreSQL
-      console.warn(`[Security] Replay Attack Blocked! Duplicate Nonce: ${nonce} from IP: ${clientIp}`);
-      return { 
-        allowed: false, 
-        errorResponse: new NextResponse(
-          JSON.stringify({ error: "Replay Detected" }), 
-          { status: 401, headers: { "Content-Type": "application/json" } }
-        ) 
-      };
-    }
-    console.error("[Security] Nonce DB insertion failed:", err);
-    return { 
-      allowed: false, 
-      errorResponse: new NextResponse(
-        JSON.stringify({ error: "Security validation error" }), 
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      ) 
-    };
-  }
-
-  // 5. Key Derivation Function (KDF): Derive unique key for this device
+  // 4. Key Derivation Function (KDF): Derive unique key for this device
   const deviceSecret = crypto
     .createHmac("sha256", esp32ApiKey)
     .update(deviceId)
     .digest("hex");
 
-  // 6. Request Body Hashing (Zero-Trust Payload Integrity Protection)
+  // 5. Request Body Hashing (Zero-Trust Payload Integrity Protection)
   let bodyText = "";
   if (req.method === "POST" || req.method === "PUT" || req.method === "PATCH") {
     try {
@@ -126,7 +122,8 @@ export async function verifyEsp32Security(req: NextRequest, endpointPath: string
   }
   const bodyHash = crypto.createHash("sha256").update(bodyText).digest("hex");
 
-  // 7. Signature Verification
+  // 6. Signature Verification. Verify authenticity before consuming the nonce
+  // so invalid requests cannot fill the replay-prevention table.
   // Format: "deviceId:timestampStr:nonce:endpointPath:bodyHash"
   const payloadToSign = `${deviceId}:${timestampStr}:${nonce}:${endpointPath}:${bodyHash}`;
   const expectedSignature = crypto
@@ -134,7 +131,12 @@ export async function verifyEsp32Security(req: NextRequest, endpointPath: string
     .update(payloadToSign)
     .digest("hex");
 
-  if (expectedSignature !== providedSignature) {
+  const expectedSignatureBuffer = Buffer.from(expectedSignature);
+  const providedSignatureBuffer = Buffer.from(providedSignature);
+  if (
+    expectedSignatureBuffer.length !== providedSignatureBuffer.length ||
+    !crypto.timingSafeEqual(expectedSignatureBuffer, providedSignatureBuffer)
+  ) {
     console.warn(`[Security] HMAC Signature mismatch from IP: ${clientIp}`);
     return { 
       allowed: false, 
@@ -142,6 +144,36 @@ export async function verifyEsp32Security(req: NextRequest, endpointPath: string
         JSON.stringify({ error: "Invalid Signature" }), 
         { status: 401, headers: { "Content-Type": "application/json" } }
       ) 
+    };
+  }
+
+  // 7. Replay Attack Prevention: atomically consume the nonce only after the
+  // credential and request signature have both been verified.
+  const pool = getPool();
+  try {
+    await pool.query("INSERT INTO api_nonces (nonce) VALUES ($1)", [nonce]);
+    pool.query("DELETE FROM api_nonces WHERE created_at < NOW() - INTERVAL '2 minutes'").catch(err => {
+      console.error("[Security] Nonce pruning error:", err);
+    });
+  } catch (err: unknown) {
+    const dbError = err as { code?: string };
+    if (dbError.code === "23505") {
+      console.warn(`[Security] Replay Attack Blocked from IP: ${clientIp}`);
+      return {
+        allowed: false,
+        errorResponse: new NextResponse(
+          JSON.stringify({ error: "Replay Detected" }),
+          { status: 401, headers: { "Content-Type": "application/json" } }
+        ),
+      };
+    }
+    console.error("[Security] Nonce DB insertion failed:", err);
+    return {
+      allowed: false,
+      errorResponse: new NextResponse(
+        JSON.stringify({ error: "Security validation error" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      ),
     };
   }
 

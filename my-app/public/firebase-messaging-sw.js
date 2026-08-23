@@ -1,6 +1,7 @@
-// firebase-messaging-sw.js — SmartAccess Unified Service Worker (PWA Caching & FCM Notifications)
+// firebase-messaging-sw.js — SmartAccess notification-only Service Worker.
 // ไฟล์นี้ตั้งอยู่ที่ root ของ public/ เพื่อให้ FCM SDK สามารถสแกนพบโดยอัตโนมัติ
-// และลงทะเบียนที่ Scope '/' เพื่อดูแลทั้งการแคชไฟล์แบบออฟไลน์และการรับแจ้งเตือนพุชแบบเรียลไทม์
+// ห้าม cache HTML/navigation ของ Next.js เพราะ HTML เก่าอาจอ้าง chunk ที่ถูกลบหลัง deploy
+// และทำให้ Raspberry Pi แสดงหน้าขาวจนต้องล้าง cache ด้วยตนเอง
 
 importScripts('https://www.gstatic.com/firebasejs/11.8.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/11.8.1/firebase-messaging-compat.js');
@@ -91,85 +92,41 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId && !firebase.apps.length) 
   });
 }
 
-const CACHE_NAME = 'smartaccess-cache-v4';
+const APP_CACHE_PREFIX = 'smartaccess-cache-';
 
-// คลังรายการ Static Assets ที่จะ pre-cache ตอนติดตั้ง
-const PRECACHE_ASSETS = [
-  '/admin/login',
-  '/manifest.json',
-  '/icons/icon-128x128.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
-];
+async function clearLegacyAppCaches() {
+  const keys = await caches.keys();
+  const deletions = [];
+  for (const key of keys) {
+    if (key.startsWith(APP_CACHE_PREFIX)) {
+      deletions.push(caches.delete(key));
+    }
+  }
+  await Promise.all(deletions);
+}
 
-// ── Install: เตรียม Pre-cache สำหรับการใช้งานแบบออฟไลน์ ──
+// ── Install: activate immediately; this worker no longer pre-caches pages ──
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      // ใช้ Promise.allSettled กันไฟล์ใดไฟล์หนึ่งโหลดไม่ได้แล้วทำให้ install ล้มทั้งชุด
-      .then((cache) => Promise.allSettled(PRECACHE_ASSETS.map((a) => cache.add(a))))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(clearLegacyAppCaches().then(() => self.skipWaiting()));
 });
 
-// ── Activate: ทำความสะอาดแคชเวอร์ชันเก่าที่ค้างอยู่ในเครื่องผู้ใช้ ──
+// ── Activate: remove every page cache created by previous releases ──
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
+    clearLegacyAppCaches().then(() => self.clients.claim())
   );
 });
 
-// ── Fetch: Network-First Caching Strategy (เน้นข้อมูลเรียลไทม์ / ใช้แคชเมื่อเน็ตหลุด) ──
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
+// The worker intentionally has no fetch handler. Documents and Next.js chunks
+// therefore follow the server's HTTP cache headers and can never be mixed
+// across deployments by Cache Storage.
 
-  // ข้ามคำขอที่ไม่ใช่ GET (เช่นพวก API POST/PUT/DELETE)
-  if (request.method !== 'GET') return;
-
-  const url = new URL(request.url);
-
-  // ข้ามคำขอที่ไม่ใช่ Same-Origin (เช่น cdn.ngrok.com, firebase, googleapis)
-  // หรือเส้นทางที่เป็น API, หน้าเว็บ Next.js ภายใน, คู่มือระบบ, หรือ Chrome-extension
-  if (
-    url.origin !== self.location.origin ||
-    url.pathname.startsWith('/api/') ||
-    url.pathname.startsWith('/_next/') ||
-    url.pathname.startsWith('/complete_system_manual_th') ||
-    url.protocol === 'chrome-extension:'
-  ) return;
-
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        // แคชเฉพาะการดาวน์โหลดหน้าเว็บที่สำเร็จเท่านั้น
-        if (response && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(async () => {
-        // หากเน็ตหลุด (Offline) ดึงเอาแคชที่บันทึกไว้ในเครื่องมาใช้งานแทน
-        const cachedResponse = await caches.match(request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        // ป้องกัน Uncaught (in promise) TypeError: Failed to convert value to 'Response'
-        return new Response('Network error or resource unavailable', {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: { 'Content-Type': 'text/plain' },
-        });
-      })
-  );
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'CLEAR_APP_CACHES') {
+    event.waitUntil(clearLegacyAppCaches());
+  } else if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // ── Notification Click: ดึงโฟกัสหน้าต่างเบราว์เซอร์หรือเปิดหน้าใหม่ ──

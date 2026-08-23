@@ -136,8 +136,16 @@ async function applyIdempotentMigrations(pool: Pool): Promise<void> {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='user_agent') THEN
             ALTER TABLE access_logs ADD COLUMN user_agent VARCHAR(300);
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='source_event_id') THEN
+            ALTER TABLE access_logs ADD COLUMN source_event_id VARCHAR(100);
+        END IF;
     END
     $$;
+  `);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_logs_source_event_id
+      ON access_logs (source_event_id)
+      WHERE source_event_id IS NOT NULL
   `);
   // fcm_tokens: ตารางสำหรับ PWA Push (อาจถูกเพิ่มหลัง seed ครั้งแรก)
   await pool.query(`
@@ -306,11 +314,20 @@ export async function initDatabase(): Promise<void> {
           IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='user_agent') THEN
               ALTER TABLE access_logs ADD COLUMN user_agent VARCHAR(300);
           END IF;
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='access_logs' AND column_name='source_event_id') THEN
+              ALTER TABLE access_logs ADD COLUMN source_event_id VARCHAR(100);
+          END IF;
           -- รวมคอลัมน์ห้องให้เป็นมาตรฐานเดียว (room_code) — backfill จาก room เดิมที่ตกค้าง
           UPDATE access_logs SET room_code = room
             WHERE (room_code IS NULL OR room_code = 'default') AND room IS NOT NULL AND room <> '';
       END
       $$;
+    `);
+
+    await initPool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_logs_source_event_id
+        ON access_logs (source_event_id)
+        WHERE source_event_id IS NOT NULL
     `);
 
     // Index ช่วยกรองตาม severity (เช่น ดึงเฉพาะ critical)

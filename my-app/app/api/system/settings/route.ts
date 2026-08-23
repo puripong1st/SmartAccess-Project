@@ -152,7 +152,8 @@ export async function POST(req: NextRequest) {
 
         // Whitelist check
         const isWhitelisted = ALLOWED_SETTING_KEYS.includes(key);
-        const isDynamicRoomKey = key.startsWith("room_ip_") ||
+        const isDynamicRoomKey = key.startsWith("offline_pin_") ||
+                                 key.startsWith("room_ip_") ||
                                  key.startsWith("room_webhook_register_") ||
                                  key.startsWith("room_webhook_approve_") ||
                                  key.startsWith("room_webhook_logs_") ||
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (isDynamicRoomKey) {
-          const roomPart = key.replace(/^(room_ip_|room_webhook_register_|room_webhook_approve_|room_webhook_logs_|room_telegram_bot_token_|room_telegram_register_|room_telegram_approve_|room_telegram_logs_|room_line_channel_token_|room_line_register_|room_line_approve_|room_line_logs_)/, "");
+          const roomPart = key.replace(/^(offline_pin_|room_ip_|room_webhook_register_|room_webhook_approve_|room_webhook_logs_|room_telegram_bot_token_|room_telegram_register_|room_telegram_approve_|room_telegram_logs_|room_line_channel_token_|room_line_register_|room_line_approve_|room_line_logs_)/, "");
           if (!/^[a-zA-Z0-9_-]+$/.test(roomPart)) {
             return NextResponse.json(
               { error: `Invalid setting key format: ${key}` },
@@ -186,6 +187,15 @@ export async function POST(req: NextRequest) {
 
         // Value type/length validation
         const valStr = value.trim();
+
+        if (key.startsWith("offline_pin_") &&
+            valStr !== "" &&
+            (!/^\d{6,16}$/.test(valStr) || /^(123456|000000|111111)$/.test(valStr))) {
+          return NextResponse.json(
+            { error: `Offline PIN ของ ${key.replace("offline_pin_", "")} ต้องเป็นตัวเลข 6-16 หลักและห้ามใช้รหัสเดาง่าย` },
+            { status: 400 }
+          );
+        }
 
         // 1. Length check
         if (valStr.length >= 500) {
@@ -300,7 +310,7 @@ export async function POST(req: NextRequest) {
       }
 
       // บดบังข้อมูลสำคัญ (Mask sensitive info)
-      const isSensitive = key.includes("token") || key.includes("webhook") || key.includes("secret") || key.includes("url");
+      const isSensitive = key.includes("token") || key.includes("webhook") || key.includes("secret") || key.includes("url") || key.includes("pin");
       let displayOld = oldValue.trim() === "" ? "(ว่าง)" : oldValue;
       let displayNew = newValue.trim() === "" ? "(ว่าง)" : newValue;
       if (isSensitive) {

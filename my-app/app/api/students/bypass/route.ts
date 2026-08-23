@@ -6,6 +6,7 @@ import { sendDiscordNotification } from "@/lib/discord";
 import { rateLimit } from "@/lib/rate-limit";
 import { logEvent, getRequestContext } from "@/lib/access-log";
 import { notifyAdminBypassEntry } from "@/lib/push-notify";
+import { createOfflineDoorGrant, OFFLINE_GRANT_EXPIRY_SECONDS } from "@/lib/qr";
 
 let initialized = false;
 async function ensureInit() {
@@ -165,6 +166,12 @@ export async function POST(req: NextRequest) {
       success: esp32Result.success,
       message: "ปลดล็อกประตูผ่านระบบ Bypass 5 นาทีสำเร็จ",
       esp32: esp32Result,
+      offline_door_grant: esp32Result.success
+        ? createOfflineDoorGrant(room, student.student_id)
+        : undefined,
+      offline_door_grant_expires_in: esp32Result.success
+        ? OFFLINE_GRANT_EXPIRY_SECONDS
+        : undefined,
     });
     response.cookies.set("smartaccess_user_session", JSON.stringify(session), {
       path: "/",

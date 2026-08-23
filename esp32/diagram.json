@@ -56,6 +56,16 @@
       }
     },
     {
+      "type": "wokwi-led",
+      "id": "led-relay",
+      "top": 320,
+      "left": 522.2,
+      "attrs": {
+        "color": "yellow",
+        "label": "RELAY ACTIVE"
+      }
+    },
+    {
       "type": "wokwi-buzzer",
       "id": "buzzer",
       "top": 380,
@@ -84,6 +94,15 @@
       "type": "wokwi-resistor",
       "id": "r-reject",
       "top": 263.15,
+      "left": 403.2,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r-relay",
+      "top": 330,
       "left": 403.2,
       "attrs": {
         "value": "220"
@@ -238,6 +257,24 @@
     ],
     [
       "led-reject:C",
+      "esp:GND.3",
+      "black",
+      []
+    ],
+    [
+      "esp:D25",
+      "r-relay:1",
+      "yellow",
+      []
+    ],
+    [
+      "r-relay:2",
+      "led-relay:A",
+      "yellow",
+      []
+    ],
+    [
+      "led-relay:C",
       "esp:GND.3",
       "black",
       []

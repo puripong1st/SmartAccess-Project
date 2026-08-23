@@ -1,5 +1,21 @@
-// sw.js (SmartAccess - Deprecated in favor of the Unified firebase-messaging-sw.js)
-// เพื่อความปลอดภัยและเสถียรภาพสูงสุด ระบบได้ควบรวมไฟล์ sw.js และ firebase-messaging-sw.js
-// เข้าเป็นไฟล์เดียวกันที่ชื่อว่า /firebase-messaging-sw.js ซึ่งลงทะเบียนโดยตรงที่ Scope '/'
-// ไฟล์ sw.js นี้จะไม่ได้ถูกใช้งานอีกต่อไปเพื่อป้องกันปัญหารันซ้ำซ้อนในเบราว์เซอร์
-console.log('[PWA] sw.js has been successfully merged into /firebase-messaging-sw.js');
+// Legacy cleanup worker. Older Raspberry Pi installations may still check
+// /sw.js for updates, so activate this tiny worker and remove stale page caches.
+self.addEventListener('install', (event) => {
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => {
+        const deletions = [];
+        for (const key of keys) {
+          if (key.startsWith('smartaccess-cache-')) {
+            deletions.push(caches.delete(key));
+          }
+        }
+        return Promise.all(deletions);
+      })
+      .then(() => self.clients.claim())
+  );
+});

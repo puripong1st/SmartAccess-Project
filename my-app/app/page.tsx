@@ -873,6 +873,7 @@ function RegistrationPageInner() {
 
   // Bypass 5-Minutes Returning Door Unlock states
   const [bypassState, setBypassState] = useState<"idle" | "checking" | "success" | "none">("idle");
+  const [offlineDoorGrant, setOfflineDoorGrant] = useState("");
 
   // Polling Status States for Real-Time feedback
   const [currentStatus, setCurrentStatus] = useState<"pending" | "approved" | "rejected">("pending");
@@ -965,6 +966,13 @@ function RegistrationPageInner() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        if (typeof data.offline_door_grant === "string") {
+          setOfflineDoorGrant(data.offline_door_grant);
+          sessionStorage.setItem(
+            `smartaccess_offline_door_grant_${room}`,
+            data.offline_door_grant,
+          );
+        }
         setBypassState("success");
         // We do NOT renew the timestamp so that the 5-minute session is strictly from the original approval time
       } else {
@@ -1269,6 +1277,29 @@ function RegistrationPageInner() {
               </span>
             </div>
           </div>
+
+          {offlineDoorGrant && (
+            <div className="premium-card" style={{ padding: 18, textAlign: "left", marginBottom: 16 }}>
+              <div style={{ fontWeight: 800, marginBottom: 6 }}>Offline QR Grant (ใช้ได้ครั้งเดียว 10 นาที)</div>
+              <p style={{ color: "var(--text-secondary)", fontSize: 12, lineHeight: 1.5, marginBottom: 10 }}>
+                หากอินเทอร์เน็ตของบอร์ดขัดข้อง ให้เชื่อมต่อ AP ของห้อง เปิด http://192.168.4.1 แล้ววางรหัสนี้ในช่อง Offline Door Grant
+              </p>
+              <textarea
+                readOnly
+                value={offlineDoorGrant}
+                aria-label="Offline Door Grant"
+                style={{ width: "100%", minHeight: 76, resize: "vertical", padding: 10, borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 11 }}
+              />
+              <button
+                type="button"
+                className="btn-secondary"
+                style={{ width: "100%", marginTop: 8 }}
+                onClick={() => navigator.clipboard.writeText(offlineDoorGrant)}
+              >
+                คัดลอก Offline Grant
+              </button>
+            </div>
+          )}
 
           <button
             className="btn-secondary"

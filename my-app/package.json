@@ -5,11 +5,12 @@
   "scripts": {
     "dev": "node --max-old-space-size=4096 --no-deprecation node_modules/next/dist/bin/next dev",
     "dev:turbo": "node --max-old-space-size=4096 --no-deprecation node_modules/next/dist/bin/next dev --turbopack",
-    "build": "node --max-old-space-size=4096 node_modules/next/dist/bin/next build",
+    "build": "node scripts/build-with-deployment-id.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "firmware:sync-template": "node scripts/sync-arduino-template.mjs",
     "clean": "powershell -Command \"Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue; Write-Host 'Cache cleaned successfully'\""
   },
   "dependencies": {

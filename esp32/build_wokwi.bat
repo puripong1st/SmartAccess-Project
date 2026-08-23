@@ -60,7 +60,7 @@ echo   Output: build/esp32.ino.bin
 echo.
 
 arduino-cli compile ^
-    --fqbn esp32:esp32:esp32 ^
+    --fqbn esp32:esp32:esp32:PartitionScheme=min_spiffs ^
     --output-dir "%~dp0build" ^
     "%~dp0."
 

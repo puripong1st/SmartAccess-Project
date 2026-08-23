@@ -2,9 +2,10 @@
 // เชื่อมต่อตรงไปยังฐานข้อมูล PostgreSQL ท้องถิ่นแทน Supabase Cloud REST API
 
 import { NextRequest, NextResponse } from "next/server";
-import { hmacSHA256, sha1Hex, secureEqual } from "@/lib/edge-crypto";
+import { sha1Hex } from "@/lib/edge-crypto";
 import { cacheGet, cacheSet } from "@/lib/kv-cache";
 import { initDatabase, getPool } from "@/lib/db";
+import { verifyEsp32Security } from "@/lib/api-security";
 
 // นำ Edge runtime ออกเพื่อให้รันบน Node.js runtime เสมอ ป้องกันข้อผิดพลาดการเชื่อมต่อ pg pool
 // export const runtime = "edge";
@@ -30,82 +31,6 @@ async function ensureDb() {
 
 // แคชสำหรับกรองสแปมการบันทึกสัญญาณชีพ (Heartbeat throttle) บนโลคอลเซิร์ฟเวอร์
 const localHeartbeatCache = new Map<string, number>();
-
-// ─── Zero-Trust HMAC security check using local database ─────────────────────
-async function verifyLocalSecurity(
-  req: NextRequest,
-  endpointPath: string
-): Promise<{ allowed: boolean; error?: NextResponse }> {
-  const apiKey = process.env.ESP32_API_KEY;
-  if (!apiKey) {
-    return { allowed: false, error: NextResponse.json({ error: "Server misconfigured" }, { status: 503 }) };
-  }
-
-  // 1. Retrieve Required Security Headers
-  const deviceId = req.headers.get("x-device-id");
-  const timestampStr = req.headers.get("x-timestamp");
-  const nonce = req.headers.get("x-nonce");
-  const providedSig = req.headers.get("x-hmac-signature");
-
-  if (!deviceId || !timestampStr || !nonce || !providedSig) {
-    return { allowed: false, error: NextResponse.json({ error: "Missing Security Headers" }, { status: 401, headers: CORS }) };
-  }
-
-  // 2. Validate Timestamp (Max 60 seconds drift)
-  const ts = parseInt(timestampStr, 10);
-  const now = Math.floor(Date.now() / 1000);
-  if (isNaN(ts) || Math.abs(now - ts) > 60) {
-    return { allowed: false, error: NextResponse.json({ error: "Token Expired" }, { status: 401, headers: CORS }) };
-  }
-
-  // 3. Database Nonce Verification via local PG pool
-  const pool = getPool();
-  try {
-    await pool.query(
-      `INSERT INTO api_nonces (nonce) VALUES ($1)`,
-      [nonce]
-    );
-  } catch (err: any) {
-    // หากเกิด unique constraint (code '23505') แสดงว่าเป็นการส่งซ้ำ (Replay Attack)
-    if (err && err.code === '23505') {
-      console.warn(`[Security] Replay attack blocked! Nonce: ${nonce}`);
-      return { allowed: false, error: NextResponse.json({ error: "Replay Detected" }, { status: 401, headers: CORS }) };
-    }
-    console.error("[Security] Nonce DB error:", err);
-    return { allowed: false, error: NextResponse.json({ error: "Database error" }, { status: 500, headers: CORS }) };
-  }
-
-  // ล้าง Nonce เก่าทิ้งหลังจากผ่านไป 2 นาที (ทำงานเบื้องหลัง)
-  pool.query(`DELETE FROM api_nonces WHERE created_at < NOW() - INTERVAL '2 minutes'`).catch(e => console.error("[Security] Nonce pruning error:", e));
-
-  // 4. Key Derivation Function (KDF): Derive unique device key
-  const deviceSecret = await hmacSHA256(deviceId, apiKey);
-
-  // 5. Request Body Hashing
-  let bodyText = "";
-  if (req.method === "POST" || req.method === "PUT" || req.method === "PATCH") {
-    try {
-      const clone = req.clone();
-      bodyText = await clone.text();
-    } catch (e) {}
-  }
-
-  const encoder = new TextEncoder();
-  const data = encoder.encode(bodyText);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const bodyHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-
-  // 6. Signature Verification
-  const payloadToSign = `${deviceId}:${timestampStr}:${nonce}:${endpointPath}:${bodyHash}`;
-  const expected = await hmacSHA256(payloadToSign, deviceSecret);
-
-  if (!secureEqual(expected, providedSig)) {
-    return { allowed: false, error: NextResponse.json({ error: "Invalid Signature" }, { status: 401, headers: CORS }) };
-  }
-
-  return { allowed: true };
-}
 
 // ─── Simple edge rate limiter via KV (bucket per IP, 360 req/min) ────────
 async function edgeRateLimit(req: NextRequest): Promise<boolean> {
@@ -136,14 +61,17 @@ export async function GET(req: NextRequest) {
     }
 
     // ตรวจสอบความถูกต้อง HMAC Security
-    const sec = await verifyLocalSecurity(req, "/api/esp32/display");
-    if (!sec.allowed) return sec.error!;
+    const sec = await verifyEsp32Security(req, "/api/esp32/display");
+    if (!sec.allowed) return sec.errorResponse!;
 
     const host = req.headers.get("host") || "localhost:3000";
     const proto = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${proto}://${host}`;
     const { searchParams } = new URL(req.url);
     const room = (searchParams.get("room") || "default").trim();
+    if (req.headers.get("x-device-id") !== `esp32_${room}`) {
+      return NextResponse.json({ error: "Room mismatch" }, { status: 403, headers: CORS });
+    }
 
     const pool = getPool();
 
@@ -306,7 +234,7 @@ export async function GET(req: NextRequest) {
           door_trigger: doorTrigger,
           update_available: updateAvailable,
           firmware_version: serverVer,
-          offline_pin: allSettings[`offline_pin_${room}`] || "123456",
+          offline_pin: allSettings[`offline_pin_${room}`] || "",
         }
       : {
           title: "SmartAccess Door Access",
@@ -330,7 +258,7 @@ export async function GET(req: NextRequest) {
           requested_room: room,
           update_available: updateAvailable,
           firmware_version: serverVer,
-          offline_pin: allSettings[`offline_pin_${room}`] || "123456",
+          offline_pin: allSettings[`offline_pin_${room}`] || "",
           display: {
             width: 320,
             height: 240,
@@ -341,7 +269,7 @@ export async function GET(req: NextRequest) {
 
     // ETag (ข้ามการ ETag เช็คเมื่อมีคำสั่งเปิดประตู)
     if (doorTrigger === "idle") {
-      const etagSrc = `${pendingCount}|${lastStudent?.student_id || ""}|${activeToken || ""}|${updateAvailable}|${serverVer}`;
+      const etagSrc = `${pendingCount}|${lastStudent?.student_id || ""}|${activeToken || ""}|${updateAvailable}|${serverVer}|${allSettings[`offline_pin_${room}`] || ""}`;
       const etagHex = await sha1Hex(etagSrc);
       const etag = `"${etagHex.slice(0, 16)}"`;
 
@@ -365,12 +293,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   await ensureDb();
-  const sec = await verifyLocalSecurity(req, "/api/esp32/display");
-  if (!sec.allowed) return sec.error!;
+  const sec = await verifyEsp32Security(req, "/api/esp32/display");
+  if (!sec.allowed) return sec.errorResponse!;
   try {
     const { searchParams } = new URL(req.url);
     const action = searchParams.get("action");
     const room = (searchParams.get("room") || "default").trim();
+    if (req.headers.get("x-device-id") !== `esp32_${room}`) {
+      return NextResponse.json({ error: "Room mismatch" }, { status: 403, headers: CORS });
+    }
     const ip = req.headers.get("x-forwarded-for")?.split(",").pop()?.trim() || "unknown";
 
     if (action === "exit_button") {

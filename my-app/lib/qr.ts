@@ -62,7 +62,7 @@ const TOKEN_ROTATION_SECONDS = 60;
 /** The total duration (in seconds) a QR token remains valid for verification and consumption.
  * This is set to 5 minutes to accommodate slow mobile data, scan latency, and form fill-in time. */
 const TOKEN_EXPIRY_SECONDS = 300;
-const OFFLINE_GRANT_EXPIRY_SECONDS = 600;
+export const OFFLINE_GRANT_EXPIRY_SECONDS = 600;
 
 /** Minimum entropy: 32 hex chars = 128 bits (brute-force resistant) */
 function generateSecureToken(): string {
@@ -92,7 +92,19 @@ function signPayload(payload: string): string {
 }
 
 export interface OfflineGrantPayload {
+  v: 1;
+  purpose: "registration";
   room: string;
+  nonce: string;
+  issued_at: number;
+  expires_at: number;
+}
+
+export interface OfflineDoorGrantPayload {
+  v: 1;
+  purpose: "door_unlock";
+  room: string;
+  student_id: string;
   nonce: string;
   issued_at: number;
   expires_at: number;
@@ -101,6 +113,8 @@ export interface OfflineGrantPayload {
 export function createOfflineGrant(roomCode: string): string {
   const now = Math.floor(Date.now() / 1000);
   const payload: OfflineGrantPayload = {
+    v: 1,
+    purpose: "registration",
     room: (roomCode || "default").trim(),
     nonce: crypto.randomBytes(16).toString("hex"),
     issued_at: now,
@@ -124,11 +138,53 @@ function parseOfflineGrant(grant: string): OfflineGrantPayload | null {
 
   try {
     const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8")) as OfflineGrantPayload;
-    if (!payload.room || !payload.nonce || !payload.issued_at || !payload.expires_at) return null;
+    if (
+      payload.v !== 1 ||
+      payload.purpose !== "registration" ||
+      !payload.room ||
+      !payload.nonce ||
+      !payload.issued_at ||
+      !payload.expires_at
+    ) return null;
     return payload;
   } catch {
     return null;
   }
+}
+
+/**
+ * Derive a room-scoped verifier for door grants. A compromised controller can
+ * therefore forge grants only for its own room, not for every deployment.
+ */
+export function deriveOfflineDoorSigningKey(roomCode: string): string {
+  const room = (roomCode || "default").trim();
+  return crypto
+    .createHmac("sha256", getOfflineGrantSecret())
+    .update(`offline-door:${room}`)
+    .digest("hex");
+}
+
+export function createOfflineDoorGrant(roomCode: string, studentId: string): string {
+  const room = (roomCode || "default").trim();
+  const normalizedStudentId = studentId.trim();
+  if (!normalizedStudentId) throw new Error("studentId is required for an offline door grant");
+
+  const now = Math.floor(Date.now() / 1000);
+  const payload: OfflineDoorGrantPayload = {
+    v: 1,
+    purpose: "door_unlock",
+    room,
+    student_id: normalizedStudentId,
+    nonce: crypto.randomBytes(16).toString("hex"),
+    issued_at: now,
+    expires_at: now + OFFLINE_GRANT_EXPIRY_SECONDS,
+  };
+  const encodedPayload = base64url(JSON.stringify(payload));
+  const signature = crypto
+    .createHmac("sha256", deriveOfflineDoorSigningKey(room))
+    .update(encodedPayload)
+    .digest("base64url");
+  return `${encodedPayload}.${signature}`;
 }
 
 /**
@@ -260,7 +316,14 @@ export async function consumeOfflineGrant(grant: string, roomCode: string): Prom
 
   const sanitizedRoom = (roomCode || "default").trim();
   const now = Math.floor(Date.now() / 1000);
-  if (payload.room !== sanitizedRoom || payload.expires_at < now || payload.issued_at > now + 30) {
+  const grantLifetime = payload.expires_at - payload.issued_at;
+  if (
+    payload.room !== sanitizedRoom ||
+    payload.expires_at < now ||
+    payload.issued_at > now + 30 ||
+    grantLifetime <= 0 ||
+    grantLifetime > OFFLINE_GRANT_EXPIRY_SECONDS
+  ) {
     return false;
   }
 

@@ -579,6 +579,25 @@ export default function RoomsPage() {
                          {/* Column 2: ESP32 Security & Time Schedule */}
                          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                             <label htmlFor={`offline-pin-${roomItem.room}`} style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text-primary)" }}>
+                               Offline PIN สำหรับหน้าเว็บของบอร์ด
+                             </label>
+                             <input
+                               id={`offline-pin-${roomItem.room}`}
+                               type="password"
+                               inputMode="numeric"
+                               autoComplete="new-password"
+                               minLength={6}
+                               maxLength={16}
+                               pattern="[0-9]{6,16}"
+                               value={cfg.offline_pin}
+                               onChange={e => setRoomConfig(roomItem.room, { offline_pin: e.target.value.replace(/\D/g, "").slice(0, 16) })}
+                               placeholder="ตัวเลข 6-16 หลัก (ห้ามใช้ 123456)"
+                               style={{ width: "100%", padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border)", background: "var(--bg-primary)", color: "var(--text-primary)", fontSize: 12.5 }}
+                             />
+                             <span style={{ fontSize: 11, color: "var(--text-secondary)" }}>บอร์ดจะเก็บเฉพาะ HMAC digest และใช้ PIN นี้เพื่อสร้าง session ควบคุมประตู 10 นาที</span>
+                           </div>
+                           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                              <label style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: 5 }}>
                                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                                  <Lock size={13} />

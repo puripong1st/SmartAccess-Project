@@ -81,6 +81,10 @@ const char *room_code  = "${roomCode}";
 // ห้ามนำ key จริงขึ้น version control
 const char *api_key = "YOUR_UNIQUE_ESP32_API_KEY_HERE";
 
+// Offline portal operator PIN: provision a unique 6-16 digit value per room.
+// The firmware persists only a keyed digest, not this plaintext value.
+#define OFFLINE_OPERATOR_PIN ""
+
 ${certBlock}
 
 #endif // CONFIG_H`;
@@ -88,22 +92,17 @@ ${certBlock}
 
 export const getArduinoCode = (roomCode: string, origin: string, mode: "wokwi" | "physical" = "physical") => {
   const wokwiDefine = mode === "wokwi"
-    ? `#define WOKWI_SIM  // Wokwi Simulator mode — NEVER deploy to production with this defined!
-// 💡 สำหรับจำลองบน Wokwi Web อย่าลืมสร้างแท็บ libraries.txt และระบุ:
-// Adafruit GFX Library
-// Adafruit ILI9341
-// ArduinoJson@6.21.3
-// QRCode`
-    : `// #define WOKWI_SIM  // Uncomment ONLY when running in Wokwi Simulator — NEVER in production!`;
-  return `/*
+    ? "#define WOKWI_SIM  // Simulator only — never deploy this build to production"
+    : "// #define WOKWI_SIM  // Uncomment only for Wokwi Simulator";
+  return String.raw`/*
   ==============================================================
   SmartAccess Door Access Controller - Firmware for ESP32
-  ห้องปฏิบัติการเรียนการสอน: Classroom ${roomCode}
-  โหมด: ${mode === "wokwi" ? "Wokwi Simulator" : "Physical ESP32 Board"}
+  ห้องปฏิบัติการเรียนการสอน: Classroom __ROOM_CODE__
+  โหมด: Physical ESP32 Board
   ระบบรองรับการรันผ่านคลาวด์ Vercel (HTTPS WiFiClientSecure)
   ==============================================================
 */
-${wokwiDefine}
+__WOKWI_DEFINE__
 #define DEBUG_MODE false // ⚠️ Set true for development ONLY
 
 #if DEBUG_MODE
@@ -132,15 +131,54 @@ ${wokwiDefine}
 #include <WiFi.h>
 #include <WiFiClientSecure.h> // สำหรับรัน HTTPS บนระบบคลาวด์ Vercel
 #include <mbedtls/md.h>
+#include <mbedtls/sha256.h>
 #include <sys/time.h> // สำหรับ settimeofday
 #include <time.h>     // สำหรับ NTP time sync (ใช้ใน HMAC timestamp)
 
 #include "config.h"
+#ifndef SMARTACCESS_OFFLINE_PORTAL_H
+#define SMARTACCESS_OFFLINE_PORTAL_H
+
+// Offline web portal embedded in firmware flash.
+// Dynamic placeholders are replaced before the page is sent.
+static const char OFFLINE_PORTAL_HTML[] PROGMEM = R"SMARTACCESS_HTML(
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SmartAccess Offline</title>
+  <style>
+  *{box-sizing:border-box}body{margin:0;padding:18px;background:#07111f;color:#e5e7eb;font:14px system-ui,sans-serif}main{max-width:520px;margin:auto}header,.card{background:#111827;border:1px solid #334155;border-radius:16px;padding:18px;margin:12px 0}header{text-align:center}.status{color:#fbbf24;font-weight:800}h1{font-size:24px}h2{font-size:17px;margin:0 0 12px}.desc,footer{color:#94a3b8}label{display:block;margin:10px 0 5px}input,button{width:100%;min-height:44px;border-radius:10px;font:inherit}input{padding:9px;border:1px solid #475569;background:#0f172a;color:white}button{margin-top:10px;border:0;background:#10b981;font-weight:800}.danger button{background:#ef4444;color:white}.network button{background:#3b82f6;color:white}.warning{color:#fca5a5;font-size:12px}.ok{color:#34d399}footer{text-align:center;font-size:12px}
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="status">● OFFLINE MODE</div>
+      <h1>SmartAccess Door Control</h1>
+      <p class="desc">เชื่อมต่อกับ ESP32 โดยตรง ไม่จำเป็นต้องใช้อินเทอร์เน็ต</p>
+      <p class="ok">{{STATUS_MESSAGE}}</p>
+    </header>
+    {{AUTH_SECTION}}
+    <section class="card"><h2>QR สำหรับเปิดประตูออฟไลน์</h2><form method="post" action="/unlock"><label for="grant">Offline Door Grant</label><input id="grant" name="grant" autocomplete="off" required><button type="submit">ตรวจสอบ QR Grant</button></form></section>
+    {{WIFI_SECTION}}
+    <footer>AP: {{AP_SSID}} · http://{{AP_IP}}/</footer>
+  </main>
+</body>
+</html>
+)SMARTACCESS_HTML";
+
+#endif
+
+#ifndef OFFLINE_OPERATOR_PIN
+#define OFFLINE_OPERATOR_PIN ""
+#endif
 
 // เวอร์ชันซอฟต์แวร์ปัจจุบันของบอร์ด
 const char *CURRENT_VERSION = "1.0.0";
-const char *FIRMWARE_URL =
-    "${origin}/api/esp32/firmware-ota";
+const char *FIRMWARE_URL = "__ORIGIN__/api/esp32/firmware-ota";
+
 
 WiFiServer localServer(80); // เว็บเซิร์ฟเวอร์ LAN สำหรับคิวเปิดประตู/โหมดออฟไลน์
 bool localServerStarted = false;
@@ -156,14 +194,25 @@ bool localServerStarted = false;
 
 // --- การต่อขาอุปกรณ์ (Hardware Pins) ---
 #define TFT_CS 15
-#define TFT_RST 4
-#define TFT_DC 2
+#define TFT_RST 2
+#define TFT_DC 4
 #define RELAY_PIN 12       // รีเลย์ประตู (GPIO 12)
+#define LED_RELAY 25       // Relay active status LED (GPIO 25)
 #define LED_WIFI 14        // WiFi Status LED (GPIO 14)
 #define LED_REJECT 26      // Reject LED (GPIO 26)
 #define BUZZER_PIN 27      // Buzzer (GPIO 27)
 #define EXIT_BUTTON_PIN 13 // Exit Button (GPIO 13)
-#define DOOR_SENSOR_PIN 32 // Magnetic Door Sensor (GPIO 32)
+
+const uint8_t RELAY_LOCKED_LEVEL = HIGH;
+const uint8_t RELAY_UNLOCKED_LEVEL = LOW;
+const uint8_t RELAY_LED_ACTIVE_LEVEL = HIGH;
+const uint8_t RELAY_LED_INACTIVE_LEVEL = LOW;
+
+void setDoorLocked(bool locked) {
+  digitalWrite(RELAY_PIN, locked ? RELAY_LOCKED_LEVEL : RELAY_UNLOCKED_LEVEL);
+  digitalWrite(LED_RELAY,
+               locked ? RELAY_LED_INACTIVE_LEVEL : RELAY_LED_ACTIVE_LEVEL);
+}
 
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
@@ -176,16 +225,16 @@ private:
   Adafruit_ILI9341 &tft;
 public:
   TFT_DirectCanvas(Adafruit_ILI9341 &_tft) : Adafruit_GFX(320, 240), tft(_tft) {}
-  
+
   void drawPixel(int16_t x, int16_t y, uint16_t color) override {
     tft.drawPixel(x, y, color);
   }
-  
+
   void fillScreen(uint16_t color) override { tft.fillScreen(color); }
   void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) override { tft.drawFastVLine(x, y, h, color); }
   void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override { tft.drawFastHLine(x, y, w, color); }
   void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override { tft.fillRect(x, y, w, h, color); }
-  
+
   void drawRGBBitmap(int16_t x, int16_t y, const uint16_t *bitmap, int16_t w, int16_t h) {
     tft.drawRGBBitmap(x, y, bitmap, w, h);
   }
@@ -235,7 +284,6 @@ unsigned long doorOpenStartTime =
 // กันเปิดประตูซ้ำข้ามช่องทาง (MQTT + DB poll + LAN push ส่งคำสั่งเดียวกันมาหลายทาง)
 unsigned long lastUnlockAt = 0;
 const unsigned long UNLOCK_COOLDOWN_MS = 15000;
-
 
 // ฟังก์ชันสำหรับสร้างและวาดภาพ QR Code แท้ๆ ที่สแกนได้ด้วยโทรศัพท์มือถือ 100%!
 void drawQRCode(const String &qrText, int startX, int startY, int boxSize) {
@@ -371,8 +419,8 @@ void drawClockRegion(const String &timeStr) {
 
 // ─── Dirty-region state + helpers สำหรับหน้าหลัก (วาดเฉพาะส่วนที่เปลี่ยน กันจอแฟลชทั้งจอ) ───
 int rendered_queue = -999;
-String rendered_id = "\\x01"; // sentinel ค่าเริ่มต้นที่ไม่มีทางตรงกับค่าจริง
-String rendered_qr = "\\x01";
+String rendered_id = "\x01"; // sentinel ค่าเริ่มต้นที่ไม่มีทางตรงกับค่าจริง
+String rendered_qr = "\x01";
 
 // วาดเนื้อหา QR ภายในกรอบ (drawQRCode ล้างพื้นขาวให้เองอยู่แล้ว)
 void drawQRContent(const String &qrText) {
@@ -490,7 +538,7 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.setTextColor(tft.color565(240, 244, 240));
   canvas.setCursor(145, 36);
   canvas.print("Room: " + String(room_code));
-  
+
   canvas.setTextColor(tft.color565(59, 130, 246));
   canvas.setCursor(145, 50);
   canvas.print("Door Control System");
@@ -503,7 +551,7 @@ void drawMainScreen(int queueCount, const String &lastApprovedName,
   canvas.setTextColor(tft.color565(245, 158, 11));
   canvas.setCursor(153, 78);
   canvas.print("Pending Requests");
-  
+
   canvas.setTextColor(tft.color565(156, 163, 175));
   canvas.setCursor(153, 98);
   canvas.print("Queue Count");
@@ -698,20 +746,41 @@ unsigned long last_student_sync = 0;
 unsigned long last_log_sync = 0;
 const unsigned long SYNC_STUDENTS_INTERVAL = 300000; // 5 minutes
 const unsigned long SYNC_LOGS_INTERVAL = 60000;      // 1 minute
+const unsigned long WIFI_BOOT_TIMEOUT_MS = 60000;    // เปิด Offline AP หากต่อ Wi-Fi ไม่ได้ใน 1 นาที
+const char *OFFLINE_PORTAL_URL = "http://192.168.4.1/";
 
 String cached_qr_key = "";
 const char *cache_students_file = "/student_cache.json";
 const char *cache_logs_file = "/offline_logs.json";
 const char *cache_key_file = "/qr_key.bin";
-String cached_offline_pin = "123456"; // Default PIN
+const char *cache_pin_hash_file = "/offline_pin.hash";
+const char *used_qr_nonces_file = "/used_qr_nonces.json";
+String cached_offline_pin_hash = "";
 String active_ssid = "";
 String active_password = "";
 const char *wifi_creds_file = "/wifi_credentials.json";
+String boot_id = "";
+uint32_t offline_log_sequence = 0;
+
+String portal_session_token = "";
+String portal_csrf_token = "";
+unsigned long portal_session_expires_at = 0;
+unsigned long portal_lockout_until = 0;
+uint8_t portal_failed_pin_attempts = 0;
+const uint8_t PORTAL_MAX_PIN_ATTEMPTS = 5;
+const unsigned long PORTAL_SESSION_TTL_MS = 10UL * 60UL * 1000UL;
+const unsigned long PORTAL_PIN_LOCKOUT_MS = 5UL * 60UL * 1000UL;
 
 // Forward declarations
-bool validateOfflineQR(const String &grant);
-void triggerDoorOpenOffline(const String &grant);
-void saveOfflineLog(const String &student_id);
+String generateHMACHex(const String &payload, const String &key);
+String getOfflineApPassword();
+String randomHexToken();
+bool verifyOfflinePin(const String &pin);
+void setOfflinePin(const String &pin);
+bool validateOfflineQR(const String &grant, String &student_id, String &nonce);
+bool triggerDoorOpenOffline(const String &student_id, const String &method,
+                            const String &qr_nonce = "");
+void saveOfflineLog(const String &student_id, const String &method);
 void syncStudentCache();
 void syncOfflineLogs();
 bool secureCompare(const char *a, const char *b);
@@ -850,6 +919,29 @@ void startLocalServer() {
   }
 }
 
+void startOfflineAccessPoint() {
+  is_offline_mode = true;
+  currentScreen = SCREEN_BOOT; // บังคับวาดหน้าจอและ QR ใหม่
+  WiFi.mode(WIFI_AP_STA);
+
+  String apSsid = "SmartAccess_Offline_" + String(room_code);
+  String apPassword = getOfflineApPassword();
+  portal_session_token = "";
+  portal_csrf_token = "";
+  portal_session_expires_at = 0;
+  if (WiFi.softAP(apSsid.c_str(), apPassword.c_str())) {
+    ip_address_str = WiFi.softAPIP().toString();
+    Serial.println("[OFFLINE] Access Point started: " + apSsid);
+    Serial.println("[OFFLINE] Portal: " + String(OFFLINE_PORTAL_URL));
+  } else {
+    Serial.println("[ERROR] Failed to start Offline Access Point");
+  }
+
+  startLocalServer();
+  drawMainScreen(0, "OFFLINE WEB PORTAL", getTimeString(),
+                 String(OFFLINE_PORTAL_URL));
+}
+
 String base64Decode(const String &input) {
   String decodedInput = input;
   decodedInput.replace("-", "+");
@@ -883,7 +975,7 @@ String base64Decode(const String &input) {
       out[decoded_len++] = (val >> bits) & 0xFF;
     }
   }
-  out[decoded_len] = '\\0';
+  out[decoded_len] = '\0';
   String res = String((char *)out);
   free(out);
   return res;
@@ -906,8 +998,79 @@ String generateHMACHex(const String &payload, const String &key) {
   for (int i = 0; i < 32; i++) {
     sprintf(hexBuf + i * 2, "%02x", hmacResult[i]);
   }
-  hexBuf[64] = '\\0';
+  hexBuf[64] = '\0';
   return String(hexBuf);
+}
+
+String sha256Hex(const String &payload) {
+  uint8_t result[32];
+  mbedtls_md(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),
+             (const unsigned char *)payload.c_str(), payload.length(), result);
+  char hexBuf[65];
+  for (int i = 0; i < 32; i++) {
+    sprintf(hexBuf + i * 2, "%02x", result[i]);
+  }
+  hexBuf[64] = '\0';
+  return String(hexBuf);
+}
+
+String randomHexToken() {
+  char token[33];
+  for (int i = 0; i < 4; i++) {
+    sprintf(token + (i * 8), "%08x", esp_random());
+  }
+  token[32] = '\0';
+  return String(token);
+}
+
+String getOfflineApPassword() {
+  String digest = generateHMACHex("offline-ap:" + String(room_code),
+                                  String(api_key));
+  return "SA-" + digest.substring(0, 13);
+}
+
+String offlinePinDigest(const String &pin) {
+  return generateHMACHex("offline-pin:" + String(room_code) + ":" + pin,
+                         String(api_key));
+}
+
+bool verifyOfflinePin(const String &pin) {
+  if (cached_offline_pin_hash.length() != 64 || pin.length() < 6 ||
+      pin.length() > 16) {
+    return false;
+  }
+  String digest = offlinePinDigest(pin);
+  return secureCompare(digest.c_str(), cached_offline_pin_hash.c_str());
+}
+
+void setOfflinePin(const String &pin) {
+  if (pin.length() < 6 || pin.length() > 16) {
+    return;
+  }
+  if (pin == "123456" || pin == "000000" || pin == "111111") {
+    return;
+  }
+  for (size_t i = 0; i < pin.length(); i++) {
+    if (!isDigit(pin[i])) {
+      return;
+    }
+  }
+  cached_offline_pin_hash = offlinePinDigest(pin);
+  File f = SPIFFS.open(cache_pin_hash_file, "w");
+  if (f) {
+    f.print(cached_offline_pin_hash);
+    f.close();
+  }
+}
+
+String htmlEscape(const String &value) {
+  String escaped = value;
+  escaped.replace("&", "&amp;");
+  escaped.replace("<", "&lt;");
+  escaped.replace(">", "&gt;");
+  escaped.replace("\"", "&quot;");
+  escaped.replace("'", "&#39;");
+  return escaped;
 }
 
 // Base64url-encoded HMAC-SHA256 (ใช้สำหรับ offline grant validation)
@@ -943,7 +1106,8 @@ String generateHMAC(const String &payload, const String &key) {
   return encoded;
 }
 
-void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
+void addZeroTrustHeaders(HTTPClient &http, const String &endpoint,
+                         const String &body = "") {
   time_t nowTs = time(nullptr);
   String timestampStr = String((long)nowTs);
 
@@ -957,8 +1121,7 @@ void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
   sprintf(nonceBuf, "%08x%08x", r1, r2);
   String nonce = String(nonceBuf);
 
-  String body_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7"
-                     "852b855"; // SHA-256 of empty string
+  String body_hash = sha256Hex(body);
 
   // 1. KDF: Derive device secret key
   String device_secret = generateHMACHex(device_id, String(api_key));
@@ -977,6 +1140,7 @@ void addZeroTrustHeaders(HTTPClient &http, const String &endpoint) {
   http.addHeader("x-timestamp", timestampStr);
   http.addHeader("x-nonce", nonce);
   http.addHeader("x-hmac-signature", signature);
+  http.addHeader("ngrok-skip-browser-warning", "true");
 }
 
 String urlDecode(const String &src) {
@@ -1013,7 +1177,61 @@ String getFormParam(const String &body, const String &key) {
   return urlDecode(val);
 }
 
-bool validateOfflineQR(const String &grant) {
+bool isOfflineQrNonceUsed(const String &nonce) {
+  if (!SPIFFS.exists(used_qr_nonces_file)) {
+    return false;
+  }
+  File f = SPIFFS.open(used_qr_nonces_file, "r");
+  if (!f) {
+    return true;
+  }
+  DynamicJsonDocument doc(3072);
+  DeserializationError error = deserializeJson(doc, f);
+  f.close();
+  if (error || !doc.is<JsonArray>()) {
+    return true;
+  }
+  for (JsonVariant item : doc.as<JsonArray>()) {
+    if (item.as<String>() == nonce) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool rememberOfflineQrNonce(const String &nonce) {
+  DynamicJsonDocument doc(3072);
+  if (SPIFFS.exists(used_qr_nonces_file)) {
+    File f = SPIFFS.open(used_qr_nonces_file, "r");
+    if (!f) {
+      return false;
+    }
+    DeserializationError error = deserializeJson(doc, f);
+    f.close();
+    if (error || !doc.is<JsonArray>()) {
+      return false;
+    }
+  } else {
+    doc.to<JsonArray>();
+  }
+  JsonArray used = doc.as<JsonArray>();
+  while (used.size() >= 40) {
+    used.remove(0);
+  }
+  used.add(nonce);
+  File f = SPIFFS.open(used_qr_nonces_file, "w");
+  if (!f) {
+    return false;
+  }
+  bool written = serializeJson(doc, f) > 0;
+  f.close();
+  return written;
+}
+
+bool validateOfflineQR(const String &grant, String &student_id,
+                       String &nonce) {
+  student_id = "";
+  nonce = "";
   if (cached_qr_key == "") {
     DBG("No cached QR signing key. Cannot validate offline.");
     return false;
@@ -1039,10 +1257,24 @@ bool validateOfflineQR(const String &grant) {
     return false;
   }
 
-  const char *room = doc["room"];
-  const char *student_id = doc["student_id"];
+  int version = doc["v"] | 0;
+  String purpose = doc["purpose"] | "";
+  String room = doc["room"] | "";
+  student_id = doc["student_id"] | "";
+  nonce = doc["nonce"] | "";
+  long issuedAt = doc["issued_at"] | 0;
+  long expiresAt = doc["expires_at"] | 0;
 
-  if (String(room) != String(room_code)) {
+  time_t currentTime = time(nullptr);
+  if (version != 1 || purpose != "door_unlock" || student_id.length() == 0 ||
+      nonce.length() < 16 || issuedAt <= 0 || expiresAt <= issuedAt ||
+      expiresAt - issuedAt > 600 || currentTime < 1704067200UL ||
+      currentTime < issuedAt - 60 || currentTime > expiresAt) {
+    DBG("Expired or malformed offline door grant.");
+    return false;
+  }
+
+  if (room != String(room_code)) {
     DBG("Room mismatch in offline grant!");
     return false;
   }
@@ -1068,7 +1300,7 @@ bool validateOfflineQR(const String &grant) {
   JsonArray arr = cacheDoc.as<JsonArray>();
   bool found = false;
   for (JsonVariant v : arr) {
-    if (v.as<String>() == String(student_id)) {
+    if (v.as<String>() == student_id) {
       found = true;
       break;
     }
@@ -1077,33 +1309,50 @@ bool validateOfflineQR(const String &grant) {
     DBG("Student ID not found in local offline cache!");
     return false;
   }
+  if (isOfflineQrNonceUsed(nonce)) {
+    DBG("Offline QR grant was already used.");
+    return false;
+  }
   DBG("Offline QR validation successful!");
   return true;
 }
 
-void saveOfflineLog(const String &student_id) {
-  DynamicJsonDocument logDoc(
-      3072); // Allocated on Heap to prevent Stack Overflow
+void saveOfflineLog(const String &student_id, const String &method) {
+  DynamicJsonDocument logDoc(12288);
   if (SPIFFS.exists(cache_logs_file)) {
     File f = SPIFFS.open(cache_logs_file, "r");
     if (f) {
-      deserializeJson(logDoc, f);
+      DeserializationError error = deserializeJson(logDoc, f);
       f.close();
+      if (error || (logDoc["schema_version"] | 0) != 1 ||
+          String(logDoc["room_code"] | "") != String(room_code) ||
+          !logDoc["events"].is<JsonArray>()) {
+        logDoc.clear();
+      }
     }
   }
-  JsonArray logs;
-  if (logDoc.containsKey("logs")) {
-    logs = logDoc["logs"].as<JsonArray>();
-  } else {
-    logs = logDoc.to<JsonArray>();
-  }
+  logDoc["schema_version"] = 1;
+  logDoc["room_code"] = room_code;
+  JsonArray logs = logDoc["events"].is<JsonArray>()
+                       ? logDoc["events"].as<JsonArray>()
+                       : logDoc.createNestedArray("events");
   if (logs.size() >= 50) {
     logs.remove(0);
   }
+  offline_log_sequence++;
   JsonObject newLog = logs.createNestedObject();
-  newLog["student_id"] = student_id;
+  newLog["event_id"] = String(room_code) + ":" + boot_id + ":" +
+                       String(offline_log_sequence);
+  newLog["student_code"] = student_id;
   newLog["action"] = "door_opened_offline";
-  newLog["timestamp"] = millis() / 1000;
+  newLog["method"] = method;
+  time_t now = time(nullptr);
+  if (now >= 1704067200UL) {
+    newLog["occurred_at"] = (long)now;
+  } else {
+    newLog["occurred_at"] = nullptr;
+  }
+  newLog["uptime_seconds"] = millis() / 1000;
   File f = SPIFFS.open(cache_logs_file, "w");
   if (f) {
     serializeJson(logDoc, f);
@@ -1112,30 +1361,24 @@ void saveOfflineLog(const String &student_id) {
   }
 }
 
-void triggerDoorOpenOffline(const String &grant) {
-  int dotIdx = grant.indexOf(".");
-  String encodedPayload = grant.substring(0, dotIdx);
-  String decoded = base64Decode(encodedPayload);
-  StaticJsonDocument<256> doc;
-  deserializeJson(doc, decoded);
-  String student_id = doc["student_id"].as<String>();
-
-  if (millis() - lastUnlockAt < UNLOCK_COOLDOWN_MS)
-    return; // กันสั่งซ้ำข้ามช่องทาง
+bool claimDoorUnlock() {
+  if (lastUnlockAt != 0 && millis() - lastUnlockAt < UNLOCK_COOLDOWN_MS) {
+    return false;
+  }
   lastUnlockAt = millis();
+  return true;
+}
 
-  saveOfflineLog(student_id);
-
+void runDoorUnlockSequence(const String &name, const String &studentId,
+                           unsigned long scanDelayMs) {
   Serial.println("[INFO] Door unlocked");
-  DBG("🔓 OFFLINE ACCESS GRANTED! Opening door...");
   last_door_trigger = "open";
-
   drawScanningScreen();
   tone(BUZZER_PIN, 1500, 100);
-  delay(1200);
+  delay(scanDelayMs);
 
-  drawUnlockedScreen("OFFLINE MEMBER", student_id);
-  digitalWrite(RELAY_PIN, HIGH);
+  drawUnlockedScreen(name, studentId);
+  setDoorLocked(false);
 
   tone(BUZZER_PIN, 1000, 150);
   delay(180);
@@ -1147,55 +1390,41 @@ void triggerDoorOpenOffline(const String &grant) {
     drawCountdownRing(100 - (i * 100 / 38));
     delay(100);
   }
-  digitalWrite(RELAY_PIN, LOW);
+  setDoorLocked(true);
   Serial.println("[INFO] Door locked");
-  DBG("🔒 Door auto locked (Offline).");
   tone(BUZZER_PIN, 800, 250);
 
   last_queue_count = -1;
   last_approved_name = "FORCE_REDRAW";
   last_active_token = "FORCE_REDRAW";
+}
+
+bool triggerDoorOpenOffline(const String &student_id, const String &method,
+                            const String &qr_nonce) {
+  if (!claimDoorUnlock()) {
+    return false;
+  }
+  if (qr_nonce.length() > 0 && !rememberOfflineQrNonce(qr_nonce)) {
+    lastUnlockAt = 0;
+    return false;
+  }
+  saveOfflineLog(student_id, method);
+  runDoorUnlockSequence(method == "qr" ? "OFFLINE MEMBER" : "OFFLINE OPERATOR",
+                        student_id.length() ? student_id : "LOCAL ACCESS", 1200);
+  return true;
 }
 
 void triggerDoorOpenInstant(String name, String studentId) {
-  // กันสั่งซ้ำ: ถ้าเพิ่งเปิดประตูไปไม่นาน ให้ข้าม (คำสั่งเดิมส่งมาหลายช่องทาง)
-  if (millis() - lastUnlockAt < UNLOCK_COOLDOWN_MS)
+  if (!claimDoorUnlock()) {
     return;
-  lastUnlockAt = millis();
-  Serial.println("[INFO] Door unlocked via MQTT/Real-time");
-  last_door_trigger = "open";
-  drawScanningScreen();
-  tone(BUZZER_PIN, 1500, 100);
-  delay(300);
-
-  drawUnlockedScreen(name, studentId);
-  digitalWrite(RELAY_PIN, HIGH);
-
-  tone(BUZZER_PIN, 1000, 150);
-  delay(180);
-  tone(BUZZER_PIN, 1500, 150);
-  delay(180);
-  tone(BUZZER_PIN, 2000, 300);
-
-  for (int i = 0; i <= 38; i++) {
-    drawCountdownRing(100 - (i * 100 / 38));
-    delay(100);
   }
-
-  digitalWrite(RELAY_PIN, LOW);
-  Serial.println("[INFO] Door locked");
-  tone(BUZZER_PIN, 800, 250);
-
-  last_queue_count = -1;
-  last_approved_name = "FORCE_REDRAW";
-  last_active_token = "FORCE_REDRAW";
+  runDoorUnlockSequence(name, studentId, 300);
 }
-
 void triggerDoorRejectInstant() {
   Serial.println("[INFO] Access denied/rejected");
   digitalWrite(LED_REJECT, HIGH);
   drawRejectedScreen();
-  tone(BUZZER_PIN, 500, 1000); // 500Hz rejection tone for 1 second
+  tone(BUZZER_PIN, 2000, 300); // 500Hz rejection tone for 1 second
   delay(3000);                 // Show screen for 3 seconds
   digitalWrite(LED_REJECT, LOW);
 
@@ -1243,289 +1472,251 @@ void mqttCallback(char *topic, byte *payload, unsigned int length) {
 }
 #endif
 
+String getHttpHeader(const String &headers, const String &name) {
+  String lowerHeaders = headers;
+  String lowerName = name;
+  lowerHeaders.toLowerCase();
+  lowerName.toLowerCase();
+  int start = lowerHeaders.indexOf("\r\n" + lowerName + ":");
+  if (start < 0) return "";
+  start = headers.indexOf(':', start) + 1;
+  int end = headers.indexOf("\r\n", start);
+  String value = headers.substring(start, end);
+  value.trim();
+  return value;
+}
+
+bool portalSessionActive() {
+  return portal_session_token.length() == 32 &&
+         (long)(portal_session_expires_at - millis()) > 0;
+}
+
+bool requestHasPortalSession(const String &headers) {
+  if (!portalSessionActive()) return false;
+  String cookie = getHttpHeader(headers, "cookie");
+  String expected = "smartaccess_session=" + portal_session_token;
+  int start = 0;
+  while (start < (int)cookie.length()) {
+    int end = cookie.indexOf(';', start);
+    if (end < 0) end = cookie.length();
+    String pair = cookie.substring(start, end);
+    pair.trim();
+    if (secureCompare(pair.c_str(), expected.c_str())) return true;
+    start = end + 1;
+  }
+  return false;
+}
+
+bool requestHasValidCsrf(const String &body) {
+  String supplied = getFormParam(body, "csrf");
+  return portal_csrf_token.length() == 32 &&
+         secureCompare(supplied.c_str(), portal_csrf_token.c_str());
+}
+
+void sendHttpResponse(WiFiClient &client, int status, const String &contentType,
+                      const String &body, const String &extraHeaders = "") {
+  const char *reason = status == 200 ? "OK" :
+                       status == 400 ? "Bad Request" :
+                       status == 401 ? "Unauthorized" :
+                       status == 403 ? "Forbidden" :
+                       status == 404 ? "Not Found" :
+                       status == 413 ? "Payload Too Large" :
+                       status == 429 ? "Too Many Requests" :
+                       "Service Unavailable";
+  client.print("HTTP/1.1 " + String(status) + " " + reason + "\r\n");
+  client.print("Content-Type: " + contentType + "\r\n");
+  client.print("Content-Length: " + String(body.length()) + "\r\n");
+  client.print("Cache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\n");
+  client.print("X-Frame-Options: DENY\r\nReferrer-Policy: no-referrer\r\n");
+  client.print("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'\r\n");
+  if (extraHeaders.length()) client.print(extraHeaders);
+  client.print("Connection: close\r\n\r\n");
+  client.print(body);
+}
+
 void handleLocalValidation() {
   WiFiClient client = localServer.available();
-  if (!client)
-    return;
-  DBG("New client connected to local offline validation server.");
-  unsigned long timeout = millis() + 2000;
-  String req = "";
-  while (client.connected() && millis() < timeout) {
-    if (client.available()) {
-      char c = client.read();
-      req += c;
-      if (req.endsWith("\\r\\n\\r\\n"))
-        break;
+  if (!client) return;
+
+  unsigned long deadline = millis() + 3000;
+  String headers = "";
+  while (client.connected() && (long)(deadline - millis()) > 0 &&
+         headers.length() <= 4096) {
+    while (client.available()) {
+      headers += (char)client.read();
+      if (headers.endsWith("\r\n\r\n")) break;
     }
+    if (headers.endsWith("\r\n\r\n")) break;
+    delay(1);
   }
-  // Read remaining body bytes (e.g. POST form data)
-  delay(15);
-  while (client.available()) {
-    req += (char)client.read();
-  }
-  if (req.indexOf("POST /door/open") != -1) {
-    // ─── [Real-Time HTTP Push opening from Next.js (Online Mode)] ───
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-Type: application/json; charset=utf-8");
-    client.println("Connection: close");
-    client.println();
-    client.println("{\\"success\\":true}");
+  if (!headers.endsWith("\r\n\r\n") || headers.length() > 4096) {
+    sendHttpResponse(client, 400, "text/plain; charset=utf-8", "Bad request");
     client.stop();
-
-    // Extract studentId from request body if present
-    String studentId = "";
-    int bodyIdx = req.indexOf("\\r\\n\\r\\n");
-    if (bodyIdx != -1) {
-      String body = req.substring(bodyIdx + 4);
-      int sIdIdx = body.indexOf("\\"studentId\\"");
-      if (sIdIdx != -1) {
-        int colonIdx = body.indexOf(":", sIdIdx);
-        if (colonIdx != -1) {
-          int quoteStart = body.indexOf("\\"", colonIdx);
-          if (quoteStart != -1) {
-            int quoteEnd = body.indexOf("\\"", quoteStart + 1);
-            if (quoteEnd != -1) {
-              studentId = body.substring(quoteStart + 1, quoteEnd);
-            }
-          }
-        }
-      }
-    }
-
-    // กันสั่งซ้ำข้ามช่องทาง (คำสั่งเดียวกันอาจมาทั้ง MQTT / DB poll / LAN push)
-    if (millis() - lastUnlockAt < UNLOCK_COOLDOWN_MS)
-      return;
-    lastUnlockAt = millis();
-
-    Serial.println("[INFO] Real-time Door unlocked via HTTP Push");
-    DBG("🔓 REAL-TIME ACCESS GRANTED! Opening door...");
-    last_door_trigger = "open";
-
-    drawScanningScreen();
-    tone(BUZZER_PIN, 1500, 100);
-    delay(1200);
-
-    drawUnlockedScreen("VERIFIED MEMBER",
-                       studentId != "" ? studentId : "ONLINE STUDENT");
-    digitalWrite(RELAY_PIN, HIGH);
-
-    tone(BUZZER_PIN, 1000, 150);
-    delay(180);
-    tone(BUZZER_PIN, 1500, 150);
-    delay(180);
-    tone(BUZZER_PIN, 2000, 300);
-
-    for (int i = 0; i <= 38; i++) {
-      drawCountdownRing(100 - (i * 100 / 38));
-      delay(100);
-    }
-    digitalWrite(RELAY_PIN, LOW);
-    Serial.println("[INFO] Door locked");
-    DBG("🔒 Door auto locked (Real-time).");
-    tone(BUZZER_PIN, 800, 250);
-
-    last_queue_count = -1;
-    last_approved_name = "FORCE_REDRAW";
-    last_active_token = "FORCE_REDRAW";
     return;
   }
 
-  if (req.indexOf("POST /unlock") != -1 || req.indexOf("GET /unlock") != -1) {
-    int grantIdx = req.indexOf("grant=");
-    if (grantIdx != -1) {
-      int endIdx = req.indexOf(" ", grantIdx);
-      if (endIdx == -1)
-        endIdx = req.indexOf("\\r", grantIdx);
-      String grant = req.substring(grantIdx + 6, endIdx);
-      grant.replace("%2E", ".");
-      grant.replace("%2D", "-");
-      grant.replace("%5F", "_");
+  int firstLineEnd = headers.indexOf("\r\n");
+  String requestLine = headers.substring(0, firstLineEnd);
+  int firstSpace = requestLine.indexOf(' ');
+  int secondSpace = requestLine.indexOf(' ', firstSpace + 1);
+  if (firstSpace < 1 || secondSpace < 0) {
+    sendHttpResponse(client, 400, "text/plain; charset=utf-8", "Bad request");
+    client.stop();
+    return;
+  }
+  String method = requestLine.substring(0, firstSpace);
+  String path = requestLine.substring(firstSpace + 1, secondSpace);
+  int queryStart = path.indexOf('?');
+  if (queryStart >= 0) path = path.substring(0, queryStart);
 
-      bool valid = validateOfflineQR(grant);
-      if (valid) {
-        client.println("HTTP/1.1 200 OK");
-        client.println("Content-Type: text/plain; charset=utf-8");
-        client.println("Connection: close");
-        client.println();
-        client.println("ACCESS GRANTED");
-        triggerDoorOpenOffline(grant);
-      } else {
-        client.println("HTTP/1.1 403 Forbidden");
-        client.println("Content-Type: text/plain; charset=utf-8");
-        client.println("Connection: close");
-        client.println();
-        client.println("ACCESS DENIED");
-      }
+  int contentLength = getHttpHeader(headers, "content-length").toInt();
+  if (contentLength < 0 || contentLength > 2048) {
+    sendHttpResponse(client, 413, "text/plain; charset=utf-8", "Request too large");
+    client.stop();
+    return;
+  }
+  String body = "";
+  body.reserve(contentLength);
+  while ((int)body.length() < contentLength && client.connected() &&
+         (long)(deadline - millis()) > 0) {
+    while (client.available() && (int)body.length() < contentLength) {
+      body += (char)client.read();
     }
-  } else if (req.indexOf("POST /unlock-pin") != -1) {
-    int pinIdx = req.indexOf("pin=");
-    if (pinIdx != -1) {
-      int endIdx = req.indexOf(" ", pinIdx);
-      if (endIdx == -1)
-        endIdx = req.indexOf("\\r", pinIdx);
-      if (endIdx == -1)
-        endIdx = req.indexOf("&", pinIdx);
-      if (endIdx == -1)
-        endIdx = req.length();
-      String enteredPin = req.substring(pinIdx + 4, endIdx);
-      enteredPin.trim();
-      if (secureCompare(enteredPin.c_str(), cached_offline_pin.c_str())) {
-        client.println("HTTP/1.1 200 OK");
-        client.println("Content-Type: text/html; charset=utf-8");
-        client.println("Connection: close");
-        client.println();
-        client.println("<h1>ACCESS GRANTED</h1><p>Door is open.</p>");
-        triggerDoorOpenOffline("PIN_OVERRIDE.dummy");
-      } else {
-        client.println("HTTP/1.1 403 Forbidden");
-        client.println("Content-Type: text/html; charset=utf-8");
-        client.println("Connection: close");
-        client.println();
-        client.println("<h1>ACCESS DENIED</h1><p>Invalid PIN.</p>");
-      }
+    delay(1);
+  }
+  if ((int)body.length() != contentLength) {
+    sendHttpResponse(client, 400, "text/plain; charset=utf-8", "Incomplete request");
+    client.stop();
+    return;
+  }
+
+  bool authenticated = requestHasPortalSession(headers);
+  bool csrfValid = authenticated && requestHasValidCsrf(body);
+
+  if (method == "GET" && path == "/status") {
+    sendHttpResponse(client, 200, "application/json; charset=utf-8",
+                     "{\"online\":true,\"door_status\":\"locked\"}");
+  } else if (method == "POST" && path == "/unlock") {
+    String grant = getFormParam(body, "grant");
+    String studentId;
+    String nonce;
+    if (!validateOfflineQR(grant, studentId, nonce)) {
+      sendHttpResponse(client, 403, "text/plain; charset=utf-8", "ACCESS DENIED");
+    } else if (!triggerDoorOpenOffline(studentId, "qr", nonce)) {
+      sendHttpResponse(client, 429, "text/plain; charset=utf-8", "DOOR BUSY");
     } else {
-      client.println("HTTP/1.1 400 Bad Request");
-      client.println("Content-Type: text/html; charset=utf-8");
-      client.println("Connection: close");
-      client.println();
-      client.println("<h1>Bad Request</h1><p>Missing PIN parameter.</p>");
+      sendHttpResponse(client, 200, "text/plain; charset=utf-8", "ACCESS GRANTED");
     }
-  } else if (req.indexOf("POST /change-wifi") != -1) {
-    int bodyIdx = req.indexOf("\\r\\n\\r\\n");
-    String body = "";
-    if (bodyIdx != -1) {
-      body = req.substring(bodyIdx + 4);
-    }
-    String newSsid = getFormParam(body, "ssid");
-    String newPass = getFormParam(body, "password");
-
-    if (newSsid.length() > 0) {
-      DynamicJsonDocument credsDoc(256);
-      credsDoc["ssid"] = newSsid;
-      credsDoc["password"] = newPass;
-      File f = SPIFFS.open(wifi_creds_file, "w");
-      if (f) {
-        serializeJson(credsDoc, f);
-        f.close();
-        DBG("Saved new Wi-Fi credentials to SPIFFS.");
+  } else if (method == "POST" && path == "/unlock-pin") {
+    bool lockedOut = portal_lockout_until != 0 &&
+                     (long)(portal_lockout_until - millis()) > 0;
+    if (lockedOut) {
+      sendHttpResponse(client, 429, "text/plain; charset=utf-8",
+                       "Too many attempts. Try again later.");
+    } else if (cached_offline_pin_hash.length() != 64) {
+      sendHttpResponse(client, 503, "text/plain; charset=utf-8",
+                       "Offline operator PIN is not configured.");
+    } else if (!verifyOfflinePin(getFormParam(body, "pin"))) {
+      portal_failed_pin_attempts++;
+      if (portal_failed_pin_attempts >= PORTAL_MAX_PIN_ATTEMPTS) {
+        portal_lockout_until = millis() + PORTAL_PIN_LOCKOUT_MS;
+        portal_failed_pin_attempts = 0;
       }
-      active_ssid = newSsid;
-      active_password = newPass;
-
-      client.println("HTTP/1.1 200 OK");
-      client.println("Content-Type: text/html; charset=utf-8");
-      client.println("Connection: close");
-      client.println();
-      client.println("<!DOCTYPE html><html><head><meta charset='utf-8'>");
-      client.println("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
-      client.println("<title>Wi-Fi Configured</title>");
-      client.println("<style>");
-      client.println("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 20px; text-align: center; }");
-      client.println(".container { max-width: 500px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }");
-      client.println("h1 { color: #10B981; font-size: 24px; margin-bottom: 20px; }");
-      client.println("p { font-size: 16px; color: #4b5563; line-height: 1.5; }");
-      client.println("</style></head>");
-      client.println("<body><div class='container'>");
-      client.println("<h1>💾 บันทึกตั้งค่า Wi-Fi สำเร็จ!</h1>");
-      client.println("<p>กำลังรีสตาร์ทบอร์ดเพื่อเชื่อมต่อเครือข่ายใหม่...</p>");
-      client.println("<p>ระบบจะลองเชื่อมต่อกับ Wi-Fi: <strong>" + newSsid + "</strong></p>");
-      client.println("</div></body></html>");
-      client.flush();
-      delay(10);
-      client.stop();
-      delay(1000);
-      ESP.restart();
-      return;
+      sendHttpResponse(client, 403, "text/plain; charset=utf-8", "ACCESS DENIED");
     } else {
-      client.println("HTTP/1.1 400 Bad Request");
-      client.println("Content-Type: text/html; charset=utf-8");
-      client.println("Connection: close");
-      client.println();
-      client.println("<h1>Bad Request</h1><p>Missing SSID parameter.</p>");
+      portal_failed_pin_attempts = 0;
+      portal_lockout_until = 0;
+      portal_session_token = randomHexToken();
+      portal_csrf_token = randomHexToken();
+      portal_session_expires_at = millis() + PORTAL_SESSION_TTL_MS;
+      bool opened = triggerDoorOpenOffline("", "pin");
+      String cookie = "Set-Cookie: smartaccess_session=" + portal_session_token +
+                      "; Max-Age=600; HttpOnly; SameSite=Strict; Path=/\r\nLocation: /\r\n";
+      sendHttpResponse(client, 200, "text/plain; charset=utf-8",
+                       opened ? "ACCESS GRANTED" : "SIGNED IN - DOOR BUSY", cookie);
     }
+  } else if (method == "POST" && path == "/door/open-local") {
+    if (!authenticated || !csrfValid) {
+      sendHttpResponse(client, 401, "text/plain; charset=utf-8", "Authentication required");
+    } else if (!triggerDoorOpenOffline("", "portal")) {
+      sendHttpResponse(client, 429, "text/plain; charset=utf-8", "DOOR BUSY");
+    } else {
+      sendHttpResponse(client, 200, "text/plain; charset=utf-8", "ACCESS GRANTED");
+    }
+  } else if (method == "POST" && path == "/portal/logout") {
+    if (!authenticated || !csrfValid) {
+      sendHttpResponse(client, 401, "text/plain; charset=utf-8", "Authentication required");
+    } else {
+      portal_session_token = "";
+      portal_csrf_token = "";
+      portal_session_expires_at = 0;
+      sendHttpResponse(client, 200, "text/plain; charset=utf-8", "SIGNED OUT",
+                       "Set-Cookie: smartaccess_session=; Max-Age=0; HttpOnly; SameSite=Strict; Path=/\r\n");
+    }
+  } else if (method == "POST" && path == "/change-wifi") {
+    if (!authenticated || !csrfValid) {
+      sendHttpResponse(client, 401, "text/plain; charset=utf-8", "Authentication required");
+    } else {
+      String newSsid = getFormParam(body, "ssid");
+      String newPass = getFormParam(body, "password");
+      if (newSsid.length() < 1 || newSsid.length() > 32 || newPass.length() > 63) {
+        sendHttpResponse(client, 400, "text/plain; charset=utf-8", "Invalid Wi-Fi settings");
+      } else {
+        DynamicJsonDocument credsDoc(256);
+        credsDoc["ssid"] = newSsid;
+        credsDoc["password"] = newPass;
+        File f = SPIFFS.open(wifi_creds_file, "w");
+        if (!f || serializeJson(credsDoc, f) == 0) {
+          if (f) f.close();
+          sendHttpResponse(client, 503, "text/plain; charset=utf-8", "Could not save settings");
+        } else {
+          f.close();
+          active_ssid = newSsid;
+          active_password = newPass;
+          String response = "<!doctype html><meta charset=utf-8><h1>บันทึก Wi-Fi สำเร็จ</h1><p>กำลังรีสตาร์ทเพื่อเชื่อมต่อ " +
+                            htmlEscape(newSsid) + "</p>";
+          sendHttpResponse(client, 200, "text/html; charset=utf-8", response);
+          client.flush();
+          client.stop();
+          delay(1000);
+          ESP.restart();
+          return;
+        }
+      }
+    }
+  } else if (method == "GET" && path == "/") {
+    String authSection;
+    String wifiSection;
+    if (authenticated) {
+      authSection = "<section class='card danger'><h2>ควบคุมประตู</h2><form method='post' action='/door/open-local'><input type='hidden' name='csrf' value='" +
+                    portal_csrf_token + "'><button type='submit'>เปิดประตู</button></form><form method='post' action='/portal/logout'><input type='hidden' name='csrf' value='" +
+                    portal_csrf_token + "'><button type='submit'>ออกจากระบบ</button></form></section>";
+      int n = WiFi.scanNetworks();
+      String options = "<option value=''>-- เลือก Wi-Fi --</option>";
+      for (int i = 0; i < n && i < 20; i++) {
+        String network = WiFi.SSID(i);
+        if (network.length()) {
+          String safe = htmlEscape(network);
+          options += "<option value='" + safe + "'>" + safe + "</option>";
+        }
+      }
+      wifiSection = "<section class='card network'><h2>ตั้งค่า Wi-Fi</h2><form method='post' action='/change-wifi'><input type='hidden' name='csrf' value='" +
+                    portal_csrf_token + "'><label>SSID</label><input name='ssid' list='networks' maxlength='32' required><datalist id='networks'>" +
+                    options + "</datalist><label>รหัสผ่าน</label><input name='password' type='password' maxlength='63'><button type='submit'>บันทึกและรีสตาร์ท</button></form></section>";
+    } else {
+      authSection = "<section class='card'><h2>ยืนยันผู้ควบคุม</h2><form method='post' action='/unlock-pin'><label>Offline PIN</label><input name='pin' type='password' inputmode='numeric' minlength='6' maxlength='16' required><button type='submit'>เข้าสู่ระบบและเปิดประตู</button></form><p class='warning'>จำกัด 5 ครั้งก่อนล็อก 5 นาที</p></section>";
+      wifiSection = "";
+    }
+    String portalHtml = FPSTR(OFFLINE_PORTAL_HTML);
+    portalHtml.replace("{{STATUS_MESSAGE}}",
+                       cached_offline_pin_hash.length() == 64 ? "พร้อมใช้งาน" : "ยังไม่ได้ตั้ง Offline PIN");
+    portalHtml.replace("{{AUTH_SECTION}}", authSection);
+    portalHtml.replace("{{WIFI_SECTION}}", wifiSection);
+    portalHtml.replace("{{AP_IP}}", WiFi.softAPIP().toString());
+    portalHtml.replace("{{AP_SSID}}", htmlEscape("SmartAccess_Offline_" + String(room_code)));
+    sendHttpResponse(client, 200, "text/html; charset=utf-8", portalHtml);
   } else {
-    int n = WiFi.scanNetworks();
-    String wifi_options = "";
-    if (n <= 0) {
-      wifi_options = "<option value=''>ไม่พบเครือข่าย Wi-Fi ในบริเวณนี้</option>";
-    } else {
-      wifi_options = "<option value=''>-- เลือกเครือข่าย Wi-Fi --</option>";
-      String seen_ssids[20];
-      int seen_count = 0;
-      for (int i = 0; i < n && seen_count < 20; ++i) {
-        String s = WiFi.SSID(i);
-        if (s.length() == 0) continue;
-        bool dup = false;
-        for (int j = 0; j < seen_count; ++j) {
-          if (seen_ssids[j] == s) {
-            dup = true;
-            break;
-          }
-        }
-        if (!dup) {
-          seen_ssids[seen_count++] = s;
-          wifi_options += "<option value='" + s + "'>" + s + " (" + String(WiFi.RSSI(i)) + " dBm)</option>";
-        }
-      }
-    }
-
-    client.println("HTTP/1.1 200 OK");
-    client.println("Content-Type: text/html; charset=utf-8");
-    client.println("Connection: close");
-    client.println();
-    client.println("<!DOCTYPE html><html><head><meta charset='utf-8'>");
-    client.println("<meta name='viewport' content='width=device-width, initial-scale=1.0'>");
-    client.println("<title>SmartAccess Offline Mode</title>");
-    client.println("<style>");
-    client.println("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; color: #1f2937; padding: 15px; text-align: center; }");
-    client.println(".container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }");
-    client.println("h1 { color: #f59e0b; margin-bottom: 10px; font-size: 22px; }");
-    client.println(".desc { color: #4b5563; font-size: 14px; margin-bottom: 20px; }");
-    client.println(".card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; margin-bottom: 15px; background-color: #fafafa; text-align: left; }");
-    client.println(".card-title { font-weight: bold; margin-bottom: 10px; font-size: 15px; color: #374151; }");
-    client.println("input, select { width: 100%; padding: 8px 10px; margin: 6px 0 12px 0; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 14px; }");
-    client.println("button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; }");
-    client.println("button:hover { background: #059669; }");
-    client.println(".warn { color: #dc2626; font-size: 12px; font-weight: bold; margin-top: -6px; margin-bottom: 12px; line-height: 1.4; }");
-    client.println(".info { color: #6b7280; font-size: 12px; margin-top: 15px; }");
-    client.println("</style></head>");
-    client.println("<body><div class='container'>");
-    client.println("<h1>⚠️ OFFLINE MODE ACTIVE</h1>");
-    client.println("<p class='desc'>ระบบอยู่ในโหมดออฟไลน์ (อินเทอร์เน็ตขัดข้อง)</p>");
-    
-    // Form 1: PIN Unlock
-    client.println("<div class='card'>");
-    client.println("<div class='card-title'>🚪 ปลดล็อกประตูด้วยรหัส PIN</div>");
-    client.println("<form method='POST' action='/unlock-pin'>");
-    client.println("<input type='password' name='pin' placeholder='ป้อนรหัสผ่านออฟไลน์ (PIN)' required>");
-    client.println("<button type='submit'>ยืนยันรหัสเพื่อปลดล็อก</button>");
-    client.println("</form></div>");
-    
-    // Form 2: Wi-Fi Config
-    client.println("<div class='card'>");
-    client.println("<div class='card-title'>⚙️ ตั้งค่าเครือข่าย Wi-Fi ใหม่</div>");
-    client.println("<form method='POST' action='/change-wifi'>");
-    
-    client.println("<label style='font-size: 12px; color: #4b5563;'>เลือก Wi-Fi ที่สแกนได้:</label>");
-    client.println("<select onchange=\\"document.getElementById('wifi_ssid').value = this.value\\">");
-    client.println(wifi_options.c_str());
-    client.println("</select>");
-    
-    client.println("<label style='font-size: 12px; color: #4b5563;'>หรือพิมพ์ SSID เอง:</label>");
-    client.println("<input type='text' name='ssid' id='wifi_ssid' placeholder='SSID / ชื่อ Wi-Fi' required>");
-    
-    client.println("<label style='font-size: 12px; color: #4b5563;'>รหัสผ่าน Wi-Fi:</label>");
-    client.println("<input type='password' name='password' placeholder='รหัสผ่าน Wi-Fi (ถ้ามี)'>");
-    
-    client.println("<div class='warn'>");
-    client.println("⚠️ เครื่อง ESP32 รองรับเฉพาะ Wi-Fi คลื่นความถี่ 2.4GHz เท่านั้น! ไม่รองรับคลื่นความถี่ 5GHz");
-    client.println("</div>");
-    
-    client.println("<button type='submit' style='background: #3b82f6;'>บันทึกและเชื่อมต่อใหม่</button>");
-    client.println("</form></div>");
-    
-    client.println("<div class='info'>สถานะบอร์ด: ออฟไลน์ | IP: " + WiFi.softAPIP().toString() + "</div>");
-    client.println("</div></body></html>");
+    sendHttpResponse(client, 404, "text/plain; charset=utf-8", "Not found");
   }
   delay(1);
   client.stop();
@@ -1535,19 +1726,25 @@ void syncStudentCache() {
   if (WiFi.status() != WL_CONNECTED)
     return;
   HTTPClient http;
-  String syncUrl = String(server_url) + "&sync=1";
+  String syncUrl = String(server_url);
+  int displayIndex = syncUrl.indexOf("/display");
+  if (displayIndex < 0) return;
+  syncUrl = syncUrl.substring(0, displayIndex) + "/offline-cache?room=" +
+            String(room_code);
   static WiFiClientSecure secureClient;
   WiFiClientSecure *client = &secureClient;
   client->setInsecure();
   http.begin(*client, syncUrl);
-  addZeroTrustHeaders(http, "/api/esp32/display");
+  addZeroTrustHeaders(http, "/api/esp32/offline-cache");
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
     DynamicJsonDocument doc(4096); // Heap allocated to support larger responses
     DeserializationError error = deserializeJson(doc, payload);
     if (!error) {
-      if (doc.containsKey("qr_key")) {
+      if ((doc["schema_version"] | 0) == 1 &&
+          String(doc["room"] | "") == String(room_code) &&
+          doc.containsKey("qr_key")) {
         const char *key = doc["qr_key"];
         cached_qr_key = String(key);
         File f = SPIFFS.open(cache_key_file, "w");
@@ -1557,7 +1754,8 @@ void syncStudentCache() {
           DBG("Synced and saved QR signing key.");
         }
       }
-      if (doc.containsKey("students")) {
+      if ((doc["schema_version"] | 0) == 1 &&
+          doc["students"].is<JsonArray>()) {
         File f = SPIFFS.open(cache_students_file, "w");
         if (f) {
           serializeJson(doc["students"], f);
@@ -1582,17 +1780,49 @@ void syncOfflineLogs() {
   f.close();
   HTTPClient http;
   String logUrl = String(server_url);
-  logUrl.replace("display", "logs/sync");
+  int displayIndex = logUrl.indexOf("/display");
+  if (displayIndex < 0) return;
+  logUrl = logUrl.substring(0, displayIndex) + "/logs/sync";
   static WiFiClientSecure secureClient;
   WiFiClientSecure *client = &secureClient;
   client->setInsecure();
   http.begin(*client, logUrl);
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("x-api-key", api_key);
+  addZeroTrustHeaders(http, "/api/esp32/logs/sync", content);
   int httpCode = http.POST(content);
   if (httpCode == 200 || httpCode == 201) {
-    SPIFFS.remove(cache_logs_file);
-    DBG("Successfully synchronized and cleared offline access logs.");
+    String response = http.getString();
+    DynamicJsonDocument responseDoc(4096);
+    DynamicJsonDocument sourceDoc(12288);
+    if (!deserializeJson(responseDoc, response) &&
+        responseDoc["ack_event_ids"].is<JsonArray>() &&
+        !deserializeJson(sourceDoc, content) &&
+        sourceDoc["events"].is<JsonArray>()) {
+      DynamicJsonDocument remainingDoc(12288);
+      remainingDoc["schema_version"] = 1;
+      remainingDoc["room_code"] = room_code;
+      JsonArray remaining = remainingDoc.createNestedArray("events");
+      for (JsonVariant event : sourceDoc["events"].as<JsonArray>()) {
+        String eventId = event["event_id"] | "";
+        bool acknowledged = false;
+        for (JsonVariant ack : responseDoc["ack_event_ids"].as<JsonArray>()) {
+          if (ack.as<String>() == eventId) {
+            acknowledged = true;
+            break;
+          }
+        }
+        if (!acknowledged) remaining.add(event);
+      }
+      if (remaining.size() == 0) {
+        SPIFFS.remove(cache_logs_file);
+      } else {
+        File remainingFile = SPIFFS.open(cache_logs_file, "w");
+        if (remainingFile) {
+          serializeJson(remainingDoc, remainingFile);
+          remainingFile.close();
+        }
+      }
+      DBG("Successfully synchronized offline access logs.");
+    }
   }
   http.end();
 }
@@ -1628,6 +1858,7 @@ void syncTimeViaHTTP() {
   }
 
   http.setTimeout(4000);
+  http.addHeader("ngrok-skip-browser-warning", "true");
   int httpCode = http.GET();
   if (httpCode == 200) {
     String payload = http.getString();
@@ -1643,7 +1874,7 @@ void syncTimeViaHTTP() {
                      String((long)time(nullptr)));
     }
   } else {
-    Serial.printf("[ERROR] HTTP Time Sync fallback failed, HTTP Code: %d\\n",
+    Serial.printf("[ERROR] HTTP Time Sync fallback failed, HTTP Code: %d\n",
                   httpCode);
   }
   http.end();
@@ -1652,6 +1883,7 @@ void syncTimeViaHTTP() {
 void setup() {
   Serial.begin(115200);
   Serial.println("[BOOT] System starting...");
+  boot_id = randomHexToken().substring(0, 16);
 
   // Initialize SPIFFS cache storage
   if (!SPIFFS.begin(true)) {
@@ -1666,13 +1898,31 @@ void setup() {
         DBG("Loaded cached QR signing key from SPIFFS.");
       }
     }
+    if (SPIFFS.exists(cache_pin_hash_file)) {
+      File f = SPIFFS.open(cache_pin_hash_file, "r");
+      if (f) {
+        cached_offline_pin_hash = f.readString();
+        cached_offline_pin_hash.trim();
+        f.close();
+        if (cached_offline_pin_hash.length() != 64) {
+          cached_offline_pin_hash = "";
+        }
+      }
+    }
+    // One-time migration: replace legacy plaintext storage with a keyed hash.
     if (SPIFFS.exists("/offline_pin.txt")) {
       File f = SPIFFS.open("/offline_pin.txt", "r");
       if (f) {
-        cached_offline_pin = f.readString();
+        String legacyPin = f.readString();
+        legacyPin.trim();
         f.close();
-        DBG("Loaded cached offline PIN from SPIFFS.");
+        setOfflinePin(legacyPin);
       }
+      SPIFFS.remove("/offline_pin.txt");
+    }
+    if (cached_offline_pin_hash.length() != 64 &&
+        String(OFFLINE_OPERATOR_PIN).length() > 0) {
+      setOfflinePin(String(OFFLINE_OPERATOR_PIN));
     }
     if (SPIFFS.exists(wifi_creds_file)) {
       File f = SPIFFS.open(wifi_creds_file, "r");
@@ -1695,18 +1945,18 @@ void setup() {
 
   // Pin modes
   pinMode(RELAY_PIN, OUTPUT);
+  pinMode(LED_RELAY, OUTPUT);
   pinMode(LED_WIFI, OUTPUT);
   pinMode(LED_REJECT, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(EXIT_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(DOOR_SENSOR_PIN, INPUT_PULLUP);
 
-  digitalWrite(RELAY_PIN, LOW); // Default locked
+  setDoorLocked(true);
   digitalWrite(LED_WIFI, LOW);
   digitalWrite(LED_REJECT, LOW);
 
   tft.begin();
-  tft.setRotation(1); // Landscape
+  tft.setRotation(3); // Landscape
 
   canvas.fillScreen(tft.color565(6, 7, 13));
   canvas.fillRect(0, 0, 320, 45, tft.color565(14, 17, 28));
@@ -1734,41 +1984,49 @@ void setup() {
   }
 
   DBG("Connecting to Wi-Fi...");
+  WiFi.mode(WIFI_STA);
   WiFi.begin(active_ssid.c_str(), active_password.c_str());
 
   bool wifi_led_state = false;
-  while (WiFi.status() != WL_CONNECTED) {
+  unsigned long wifiConnectStartedAt = millis();
+  while (WiFi.status() != WL_CONNECTED &&
+         millis() - wifiConnectStartedAt < WIFI_BOOT_TIMEOUT_MS) {
     wifi_led_state = !wifi_led_state;
     digitalWrite(LED_WIFI, wifi_led_state ? HIGH : LOW);
     delay(400);
     DBG(".");
   }
 
-  digitalWrite(LED_WIFI, HIGH);
-  DBG("\\nWiFi connected successfully!");
+  if (WiFi.status() == WL_CONNECTED) {
+    digitalWrite(LED_WIFI, HIGH);
+    DBG("\nWiFi connected successfully!");
 
-  // UTC+7 (Bangkok ICT) — offset 7*3600 = 25200
-  configTime(25200, 0, "pool.ntp.org", "time.cloudflare.com");
-  {
-    int ntp_wait = 0;
-    while (time(nullptr) < 1000000000UL && ntp_wait < 50) {
-      delay(100);
-      ntp_wait++;
+    // UTC+7 (Bangkok ICT) — offset 7*3600 = 25200
+    configTime(25200, 0, "pool.ntp.org", "time.cloudflare.com");
+    {
+      int ntp_wait = 0;
+      while (time(nullptr) < 1000000000UL && ntp_wait < 50) {
+        delay(100);
+        ntp_wait++;
+      }
     }
-  }
 
-  // NTP Fallback
-  if (time(nullptr) < 1000000000UL) {
-    Serial.println(
-        "[WARNING] NTP Sync Timeout. Attempting HTTP Time Fallback...");
-    syncTimeViaHTTP();
+    // NTP Fallback
+    if (time(nullptr) < 1000000000UL) {
+      Serial.println(
+          "[WARNING] NTP Sync Timeout. Attempting HTTP Time Fallback...");
+      syncTimeViaHTTP();
+    } else {
+      Serial.println("[INFO] NTP synced: " + String((long)time(nullptr)));
+    }
+
+    ip_address_str = WiFi.localIP().toString();
+    Serial.print("[INFO] ESP32 IP Address: ");
+    Serial.println(ip_address_str);
   } else {
-    Serial.println("[INFO] NTP synced: " + String((long)time(nullptr)));
+    Serial.println("[WARNING] Wi-Fi connection timed out after 60 seconds.");
+    startOfflineAccessPoint();
   }
-
-  ip_address_str = WiFi.localIP().toString();
-  Serial.print("[INFO] ESP32 IP Address: ");
-  Serial.println(ip_address_str);
 
   tone(BUZZER_PIN, 1200, 150);
   delay(180);
@@ -1783,7 +2041,12 @@ void setup() {
   mqttClient.setCallback(mqttCallback);
 #endif
 
-  drawMainScreen(0, "", "12:00:00", "");
+  if (is_offline_mode) {
+    drawMainScreen(0, "OFFLINE WEB PORTAL", getTimeString(),
+                   String(OFFLINE_PORTAL_URL));
+  } else {
+    drawMainScreen(0, "", getTimeString(), "");
+  }
 }
 
 void loop() {
@@ -1797,27 +2060,6 @@ void loop() {
       drawClockRegion(t);
     }
     drawQrFreshness(); // อัปเดตแถบความสด QR ทุกวินาที (วาดเล็ก ไม่กระพริบ)
-  }
-
-  // Check door sensor open-state warning
-  // MC-38 outputs HIGH when door is open (magnet away), LOW when closed (magnet
-  // close)
-  int doorState = digitalRead(DOOR_SENSOR_PIN);
-
-  if (doorState == HIGH) {
-    if (doorOpenStartTime == 0) {
-      doorOpenStartTime = millis();
-    } else if (millis() - doorOpenStartTime >
-               10000) { // 10 seconds warning threshold
-      static unsigned long lastAlertBeep = 0;
-      if (millis() - lastAlertBeep > 500) {
-        lastAlertBeep = millis();
-        tone(BUZZER_PIN, 2000, 200); // Play 2000Hz alert beep for 200ms
-        Serial.println("[WARNING] Door open for too long!");
-      }
-    }
-  } else {
-    doorOpenStartTime = 0; // Reset
   }
 
   // Check physical exit button (Active-LOW or Active-HIGH depending on module
@@ -1878,54 +2120,20 @@ void loop() {
 
   if (is_offline_mode) {
     bool hasCache = SPIFFS.exists(cache_students_file);
-    if (hasCache) {
-      static unsigned long lastBlink = 0;
-      static bool ledState = false;
-      if (millis() - lastBlink > 1000) {
-        lastBlink = millis();
-        ledState = !ledState;
-        digitalWrite(LED_WIFI, ledState ? HIGH : LOW);
-        digitalWrite(LED_REJECT, LOW);
-      }
+    static unsigned long lastBlink = 0;
+    static bool ledState = false;
+    if (millis() - lastBlink > 1000) {
+      lastBlink = millis();
+      ledState = !ledState;
+      digitalWrite(LED_WIFI, ledState ? HIGH : LOW);
+      digitalWrite(LED_REJECT, LOW);
+    }
 
-      unsigned long sec = millis() / 1000;
-      unsigned long hh = (sec / 3600) % 24;
-      unsigned long mm = (sec / 60) % 60;
-      unsigned long ss = sec % 60;
-      char timeBuf[10];
-      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", (int)hh, (int)mm,
-               (int)ss);
-
-      static unsigned long lastScreenUpdate = 0;
-      if (millis() - lastScreenUpdate > 5000) {
-        lastScreenUpdate = millis();
-        drawMainScreen(0, "OFFLINE CACHE ACTIVE", String(timeBuf), "");
-      }
-    } else {
-      digitalWrite(LED_WIFI, LOW);
-      digitalWrite(LED_REJECT, HIGH);
-
-      // วาดครั้งเดียวตอนเพิ่งเข้าสถานะนี้ (กันจอแฟลชซ้ำทุก 5 วิ)
-      if (currentScreen != SCREEN_REJECTED) {
-        currentScreen = SCREEN_REJECTED;
-        canvas.fillScreen(tft.color565(15, 3, 3));
-        canvas.fillCircle(160, 70, 30, tft.color565(127, 29, 29));
-        canvas.drawCircle(160, 70, 31, tft.color565(239, 68, 68));
-        for (int t = 0; t < 4; t++) {
-          canvas.drawLine(149, 59 + t, 171, 81 + t, ILI9341_WHITE);
-          canvas.drawLine(171, 59 + t, 149, 81 + t, ILI9341_WHITE);
-        }
-        printCentered("OFFLINE MODE", 142, &FreeSansBold12pt7b,
-                      tft.color565(239, 68, 68));
-        printCentered("No cached data available", 165, NULL,
-                      tft.color565(239, 68, 68));
-        printCentered("Connect AP: SmartAccess_Offline_" + String(room_code), 185, NULL,
-                      ILI9341_WHITE);
-        printCentered("Web Config: http://192.168.4.1/", 205, NULL,
-                      tft.color565(16, 185, 129));
-        printCentered("To configure Wi-Fi / Enter PIN", 222, NULL,
-                      tft.color565(156, 163, 175));
-      }
+    static unsigned long lastScreenUpdate = 0;
+    if (millis() - lastScreenUpdate > 5000) {
+      lastScreenUpdate = millis();
+      drawMainScreen(0, hasCache ? "OFFLINE CACHE ACTIVE" : "OFFLINE WEB PORTAL",
+                     getTimeString(), String(OFFLINE_PORTAL_URL));
     }
   }
 
@@ -1993,7 +2201,9 @@ void loop() {
           WiFi.mode(WIFI_STA);
           DBG("Restored online mode. AP stopped.");
         }
-        if (millis() - last_student_sync > SYNC_STUDENTS_INTERVAL) {
+        if (cached_qr_key.length() == 0 ||
+            !SPIFFS.exists(cache_students_file) ||
+            millis() - last_student_sync > SYNC_STUDENTS_INTERVAL) {
           last_student_sync = millis();
           syncStudentCache();
         }
@@ -2020,13 +2230,9 @@ void loop() {
 
           if (doc.containsKey("offline_pin")) {
             String new_pin = doc["offline_pin"].as<String>();
-            if (new_pin != cached_offline_pin) {
-              cached_offline_pin = new_pin;
-              File f = SPIFFS.open("/offline_pin.txt", "w");
-              if (f) {
-                f.print(cached_offline_pin);
-                f.close();
-              }
+            if (new_pin.length() >= 6 &&
+                offlinePinDigest(new_pin) != cached_offline_pin_hash) {
+              setOfflinePin(new_pin);
             }
           }
 
@@ -2051,7 +2257,7 @@ void loop() {
 
           String qrText = "";
           if (active_token) {
-            String baseUrl = "https://smartaccess-project.vercel.app";
+            String baseUrl = "https://homotaxic-rayford-supersecure.ngrok-free.dev";
             String currentRoom = String(room_code);
 
             if (register_url) {
@@ -2077,7 +2283,7 @@ void loop() {
                      "&room=" + currentRoom;
           }
 
-          DBGF("Door command: %s | Queue: %d\\n",
+          DBGF("Door command: %s | Queue: %d\n",
                door_trigger ? door_trigger : "NULL", pending_count);
 
           if (String(door_trigger) == "open") {
@@ -2099,38 +2305,8 @@ void loop() {
 
           // เปิดประตูเฉพาะตอน "ขอบขาขึ้น" (idle→open) เท่านั้น — ถ้าเซิร์ฟเวอร์ยังส่ง
           // "open" ค้างมา (ยังไม่ถูก consume) บอร์ดจะไม่เปิดซ้ำและกลับไปหน้า QR ตามปกติ
-          if (isOpenCmd && last_door_trigger != "open" &&
-              millis() - lastUnlockAt >= UNLOCK_COOLDOWN_MS) {
-            lastUnlockAt = millis();
-            Serial.println("[INFO] Door unlocked");
-            DBG("🔓 UNLOCK SIGNAL RECEIVED! Opening door...");
-
-            drawScanningScreen();
-            tone(BUZZER_PIN, 1500, 100);
-            delay(300);
-
-            drawUnlockedScreen(approvedName, studentId);
-            digitalWrite(RELAY_PIN, HIGH);
-
-            tone(BUZZER_PIN, 1000, 150);
-            delay(180);
-            tone(BUZZER_PIN, 1500, 150);
-            delay(180);
-            tone(BUZZER_PIN, 2000, 300);
-
-            for (int i = 0; i <= 38; i++) {
-              drawCountdownRing(100 - (i * 100 / 38));
-              delay(100);
-            }
-
-            digitalWrite(RELAY_PIN, LOW);
-            Serial.println("[INFO] Door locked");
-            DBG("🔒 Door auto locked.");
-            tone(BUZZER_PIN, 800, 250);
-
-            last_queue_count = -1;
-            last_approved_name = "FORCE_REDRAW";
-            last_active_token = "FORCE_REDRAW";
+          if (isOpenCmd && last_door_trigger != "open") {
+            triggerDoorOpenInstant(approvedName, studentId);
           } else if (door_trigger && String(door_trigger) == "reject") {
             triggerDoorRejectInstant();
           } else if (pending_count != last_queue_count ||
@@ -2153,7 +2329,7 @@ void loop() {
           last_door_trigger = isOpenCmd ? "open" : "idle";
         }
       } else {
-        Serial.printf("[ERROR] Poll failed, HTTP code: %d\\n", httpCode);
+        Serial.printf("[ERROR] Poll failed, HTTP code: %d\n", httpCode);
 #ifndef WOKWI_SIM
         // ปิด TLS keep-alive ที่อาจถูกปิดไปแล้ว เพื่อเปิดการเชื่อมต่อใหม่สด ๆ รอบหน้า
         persistentTlsClient.stop();
@@ -2185,9 +2361,7 @@ void loop() {
             is_offline_mode = true;
             currentScreen = SCREEN_BOOT; // Force full redraw
             DBG("Entering offline fallback mode. Starting AP.");
-            String ap_ssid = "SmartAccess_Offline_" + String(room_code);
-            WiFi.mode(WIFI_AP_STA);
-            WiFi.softAP(ap_ssid.c_str(), "");
+            startOfflineAccessPoint();
           }
         }
       }
@@ -2228,5 +2402,8 @@ bool secureCompare(const char *a, const char *b) {
   }
   return result == 0;
 }
-`;
+`
+    .replaceAll("__WOKWI_DEFINE__", wokwiDefine)
+    .replaceAll("__ROOM_CODE__", roomCode)
+    .replaceAll("__ORIGIN__", origin.replace(/\/$/, ""));
 };

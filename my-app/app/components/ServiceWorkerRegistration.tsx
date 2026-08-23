@@ -3,9 +3,15 @@
 import { useEffect } from 'react';
 import { getFirebaseConfig } from '@/lib/firebase';
 
+declare global {
+  interface Window {
+    __smartaccessMarkHydrated?: () => void;
+  }
+}
+
 /**
- * ServiceWorkerRegistration — ลงทะเบียน Service Worker เดี่ยวที่ชื่อ firebase-messaging-sw.js ที่ Scope '/'
- * เพื่อให้สามารถควบคุมระบบแคชไฟล์ออฟไลน์และเชื่อมเข้ากับ FCM JS SDK ได้อย่างสมบูรณ์แบบไม่ขัดแย้งกัน
+ * ลงทะเบียน Service Worker สำหรับ FCM ที่ scope '/' และสั่งล้างเฉพาะ
+ * Cache Storage รุ่นเก่าซึ่งเคยเก็บหน้าเว็บไว้ โดยไม่แตะข้อมูลผู้ใช้ส่วนอื่น
  *
  * หมายเหตุสำคัญ: เราแนบ Firebase config ผ่าน query string ของ URL ไฟล์ SW
  * เพื่อให้ตัว SW สามารถ initialize Firebase ได้ทันทีตอน "Initial Evaluation"
@@ -15,6 +21,24 @@ import { getFirebaseConfig } from '@/lib/firebase';
 export default function ServiceWorkerRegistration() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    window.__smartaccessMarkHydrated?.();
+
+    // Clear only Cache Storage created by old SmartAccess workers. Keep
+    // localStorage, cookies, IndexedDB and push preferences intact.
+    if ('caches' in window) {
+      caches.keys()
+        .then((keys) => {
+          const deletions: Promise<boolean>[] = [];
+          for (const key of keys) {
+            if (key.startsWith('smartaccess-cache-')) {
+              deletions.push(caches.delete(key));
+            }
+          }
+          return Promise.all(deletions);
+        })
+        .catch((error) => console.warn('[PWA] Legacy cache cleanup failed:', error));
+    }
+
     if (!('serviceWorker' in navigator)) {
       console.warn('[PWA] Service Worker is not supported in this browser');
       return;
@@ -37,8 +61,12 @@ export default function ServiceWorkerRegistration() {
     }
 
     navigator.serviceWorker
-      .register(swUrl, { scope: '/' })
-      .then((registration) => {
+      .register(swUrl, { scope: '/', updateViaCache: 'none' })
+      .then(async (registration) => {
+        registration.installing?.postMessage({ type: 'SKIP_WAITING' });
+        registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+        registration.active?.postMessage({ type: 'CLEAR_APP_CACHES' });
+        await registration.update();
         console.log('[PWA] Unified Service Worker registered successfully at root scope:', registration.scope);
       })
       .catch((error) => {
